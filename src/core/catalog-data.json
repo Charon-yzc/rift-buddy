@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.05.15",
+  "version": "2026.11.05.16",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -3034,8 +3034,8 @@
         "Vi"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 凯特琳技能资料",
@@ -3066,6 +3066,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -3101,21 +3107,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d19bdcd858382502",
-          "observedAt": "2026-10-23T02:03:51.454Z",
+          "observedAt": "2026-11-05T02:19:26.063Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Caitlyn",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/caitlyn/caitlyn.bin.json",
               "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6c728252e5826813"
             }
           }
@@ -3125,21 +3131,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e0588c7ab7dba463",
-          "observedAt": "2026-10-23T02:03:51.543Z",
+          "observedAt": "2026-11-05T02:19:26.158Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Morgana",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/morgana/morgana.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/morgana/morgana.bin.json",
               "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "57d5f698304a1f45"
             }
           }
@@ -3435,8 +3441,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 凯特琳技能资料",
@@ -3467,6 +3473,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -3502,21 +3514,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d19bdcd858382502",
-          "observedAt": "2026-10-23T02:03:51.454Z",
+          "observedAt": "2026-11-05T02:19:26.063Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Caitlyn",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/caitlyn/caitlyn.bin.json",
               "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6c728252e5826813"
             }
           }
@@ -3526,21 +3538,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -4571,8 +4583,8 @@
         "Galio"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 艾希技能资料",
@@ -4603,6 +4615,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -4638,21 +4656,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f363e1846cfe0370",
-          "observedAt": "2026-10-23T02:03:51.451Z",
+          "observedAt": "2026-11-05T02:19:26.059Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ashe",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ashe/ashe.bin.json",
               "sha256": "ada00af1ea15a42094a914a05794e0d3cedcb66c150ed52e8d3762b8d12dc6b5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1ab1be4161ebeecc"
             }
           }
@@ -4662,21 +4680,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f653495a90d1586e",
-          "observedAt": "2026-10-23T02:03:51.644Z",
+          "observedAt": "2026-11-05T02:19:26.255Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zyra",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zyra/zyra.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zyra/zyra.bin.json",
               "sha256": "18f1cd91897b66a60a6c5c3b7205668e4c2ceb6305ce5e1e4e86d0cf649f89d3"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e6ad7484cbc1effe"
             }
           }
@@ -4815,8 +4833,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 艾希技能资料",
@@ -4847,6 +4865,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -4882,21 +4906,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f363e1846cfe0370",
-          "observedAt": "2026-10-23T02:03:51.451Z",
+          "observedAt": "2026-11-05T02:19:26.059Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ashe",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ashe/ashe.bin.json",
               "sha256": "ada00af1ea15a42094a914a05794e0d3cedcb66c150ed52e8d3762b8d12dc6b5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1ab1be4161ebeecc"
             }
           }
@@ -4906,21 +4930,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2b7d4e998553b365",
-          "observedAt": "2026-10-23T02:03:51.536Z",
+          "observedAt": "2026-11-05T02:19:26.083Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Leona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
               "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7ff3b8a69842091d"
             }
           }
@@ -4936,15 +4960,15 @@
         "连续控制"
       ],
       "why": "艾希箭与泰坦控制可按双方距离和实际命中错开。",
-      "plan": "艾希 R 命中首个敌方英雄才眩晕，附近其他目标只是减速。 泰坦根据队友距离及 Q/普攻/R 的实际命中接控或留一段保护。 远箭命中但队友到不了、控制落空或射手被绕时不要继续追。",
+      "plan": "艾希 R 实际命中首个敌方英雄才眩晕，附近其他目标受到减速，但不会因此眩晕。 泰坦根据队友距离及 Q/普攻/R 的实际命中接控或留一段保护。 远箭命中但队友到不了、控制落空或射手被绕时不要继续追。",
       "risk": "艾希无位移，泰坦追击过深会失去后排保护。",
       "partners": [
         "Shen",
         "Galio"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 艾希技能资料",
@@ -4975,6 +4999,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -4987,7 +5017,7 @@
           "champion": "Ashe",
           "role": "bottom",
           "loadoutId": "default",
-          "job": "下路补刀并保持安全距离；R 眩晕首名命中英雄，周围仅减速。"
+          "job": "下路补刀并保持安全距离；R 实际命中首名敌方英雄才眩晕，周围目标受到减速但不会因此眩晕。"
         },
         {
           "champion": "Nautilus",
@@ -4997,7 +5027,7 @@
         }
       ],
       "steps": [
-        "艾希 R 命中首个敌方英雄才眩晕，附近其他目标只是减速。",
+        "艾希 R 实际命中首个敌方英雄才眩晕，附近其他目标受到减速，但不会因此眩晕。",
         "泰坦根据队友距离及 Q/普攻/R 的实际命中接控或留一段保护。",
         "远箭命中但队友到不了、控制落空或射手被绕时不要继续追。"
       ],
@@ -5010,21 +5040,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f363e1846cfe0370",
-          "observedAt": "2026-10-23T02:03:51.451Z",
+          "observedAt": "2026-11-05T02:19:26.059Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ashe",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ashe/ashe.bin.json",
               "sha256": "ada00af1ea15a42094a914a05794e0d3cedcb66c150ed52e8d3762b8d12dc6b5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1ab1be4161ebeecc"
             }
           }
@@ -5034,21 +5064,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -8179,8 +8209,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Demonsedge90 · Attack Damage / On-Hit（目录更新10/15）",
@@ -8217,6 +8247,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -8238,21 +8274,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "792e7d85c3acdc09",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kaisa",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kaisa/kaisa.bin.json",
               "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e793368118ed867a"
             }
           }
@@ -8262,21 +8298,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -8313,8 +8349,8 @@
         "Diana"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 卡莎技能资料",
@@ -8345,6 +8381,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -8380,21 +8422,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "792e7d85c3acdc09",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kaisa",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kaisa/kaisa.bin.json",
               "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e793368118ed867a"
             }
           }
@@ -8404,21 +8446,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e2aa1310b144ff1f",
-          "observedAt": "2026-10-23T02:03:51.449Z",
+          "observedAt": "2026-11-05T02:19:26.057Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Alistar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/alistar/alistar.bin.json",
               "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "60b70b49d6326ac5"
             }
           }
@@ -8441,8 +8483,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 卡莎技能资料",
@@ -8473,6 +8515,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -8508,21 +8556,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "792e7d85c3acdc09",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kaisa",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kaisa/kaisa.bin.json",
               "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e793368118ed867a"
             }
           }
@@ -8532,21 +8580,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "bec49be1ddcf29c0",
-          "observedAt": "2026-10-23T02:03:51.549Z",
+          "observedAt": "2026-11-05T02:19:26.164Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rell",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rell/rell.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rell/rell.bin.json",
               "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f5469dea7fbc0dcb"
             }
           }
@@ -9508,8 +9556,8 @@
         "Sejuani"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 卡莉丝塔技能资料",
@@ -9534,6 +9582,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Alistar.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -9569,21 +9623,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "1793244f0dc8a65c",
-          "observedAt": "2026-10-23T02:03:51.532Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kalista",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kalista/kalista.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kalista/kalista.bin.json",
               "sha256": "d9745c7fdf99f1ec7baded98bba9547e6b6f0a9ec604edce4f88f0dbdfe30b39"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "44f72f75e4385140"
             }
           }
@@ -9593,21 +9647,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e2aa1310b144ff1f",
-          "observedAt": "2026-10-23T02:03:51.449Z",
+          "observedAt": "2026-11-05T02:19:26.057Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Alistar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/alistar/alistar.bin.json",
               "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "60b70b49d6326ac5"
             }
           }
@@ -9630,8 +9684,8 @@
         "JarvanIV"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 卡莉丝塔技能资料",
@@ -9650,6 +9704,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -9685,21 +9745,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "1793244f0dc8a65c",
-          "observedAt": "2026-10-26T13:38:40.401Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kalista",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kalista/kalista.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kalista/kalista.bin.json",
               "sha256": "d9745c7fdf99f1ec7baded98bba9547e6b6f0a9ec604edce4f88f0dbdfe30b39"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "44f72f75e4385140"
             }
           }
@@ -9709,21 +9769,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "040340652360d067",
-          "observedAt": "2026-10-26T13:38:40.515Z",
+          "observedAt": "2026-11-05T02:19:26.165Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Renata",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/renata/renata.bin.json",
               "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "849f2ea81ec5e47e"
             }
           }
