@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.05.7",
+  "version": "2026.11.05.8",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -12060,8 +12060,8 @@
         "Kindred"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 斯维因技能资料",
@@ -12080,6 +12080,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -12114,21 +12120,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2df9ea554c5ac91d",
-          "observedAt": "2026-10-26T13:38:40.523Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Swain",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
-              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/swain/swain.bin.json",
+              "sha256": "7e99c46dd1723f49ddf39db87846550e287276dcf4366ed39240b68b634c11c6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f08241c738bc1369"
             }
           }
@@ -12138,21 +12144,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-26T13:38:40.506Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -12175,8 +12181,8 @@
         "Tristana"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 斯维因技能资料",
@@ -12195,6 +12201,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -12230,21 +12242,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2df9ea554c5ac91d",
-          "observedAt": "2026-10-26T13:38:40.523Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Swain",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
-              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/swain/swain.bin.json",
+              "sha256": "7e99c46dd1723f49ddf39db87846550e287276dcf4366ed39240b68b634c11c6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f08241c738bc1369"
             }
           }
@@ -12254,21 +12266,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2b7d4e998553b365",
-          "observedAt": "2026-10-26T13:38:40.498Z",
+          "observedAt": "2026-11-05T02:19:26.083Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Leona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
               "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7ff3b8a69842091d"
             }
           }
@@ -24055,8 +24067,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 斯维因技能资料",
@@ -24081,6 +24093,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -24116,21 +24134,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2df9ea554c5ac91d",
-          "observedAt": "2026-10-26T13:38:40.523Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Swain",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
-              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/swain/swain.bin.json",
+              "sha256": "7e99c46dd1723f49ddf39db87846550e287276dcf4366ed39240b68b634c11c6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f08241c738bc1369"
             }
           }
@@ -24140,21 +24158,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d7034e2662bef2b0",
-          "observedAt": "2026-10-26T13:38:40.593Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taric",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
               "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a0599325a1012892"
             }
           }
@@ -24177,8 +24195,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 斯维因技能资料",
@@ -24197,6 +24215,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -24232,21 +24256,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2df9ea554c5ac91d",
-          "observedAt": "2026-10-26T13:38:40.523Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Swain",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
-              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/swain/swain.bin.json",
+              "sha256": "7e99c46dd1723f49ddf39db87846550e287276dcf4366ed39240b68b634c11c6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f08241c738bc1369"
             }
           }
@@ -24256,21 +24280,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e0588c7ab7dba463",
-          "observedAt": "2026-10-26T13:38:40.504Z",
+          "observedAt": "2026-11-05T02:19:26.158Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Morgana",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/morgana/morgana.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/morgana/morgana.bin.json",
               "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "57d5f698304a1f45"
             }
           }
@@ -25921,8 +25945,8 @@
         "Poppy",
         "Vi"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 斯维因 16.20 技能",
@@ -25941,6 +25965,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -25953,21 +25983,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2df9ea554c5ac91d",
-          "observedAt": "2026-10-26T13:38:40.523Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Swain",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
-              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/swain/swain.bin.json",
+              "sha256": "7e99c46dd1723f49ddf39db87846550e287276dcf4366ed39240b68b634c11c6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f08241c738bc1369"
             }
           }
@@ -25977,21 +26007,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "040340652360d067",
-          "observedAt": "2026-10-26T13:38:40.515Z",
+          "observedAt": "2026-11-05T02:19:26.165Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Renata",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/renata/renata.bin.json",
               "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "849f2ea81ec5e47e"
             }
           }
@@ -40958,8 +40988,8 @@
       "window": "敌人可实际接触、队友保持保护距离且有安全撤离路线时。",
       "early": "格雷福斯保清野与弹药，斯维因补下路，塔里克保血蓝和视野。",
       "economy": "格雷福斯保野区，斯维因补下路线，塔里克负责辅助任务和视野。",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · Graves 16.20.1 技能",
@@ -40990,6 +41020,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -41004,21 +41040,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ea75172ee2199edb",
-          "observedAt": "2026-10-26T13:38:40.396Z",
+          "observedAt": "2026-11-05T02:19:26.072Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Graves",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/graves/graves.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/graves/graves.bin.json",
               "sha256": "9b4618aabfaf278a604ee9a59972ea4650d42aa659039f3314a110a748351e2a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "177b5090af77b3cf"
             }
           }
@@ -41028,21 +41064,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2df9ea554c5ac91d",
-          "observedAt": "2026-10-26T13:38:40.523Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Swain",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
-              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/swain/swain.bin.json",
+              "sha256": "7e99c46dd1723f49ddf39db87846550e287276dcf4366ed39240b68b634c11c6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f08241c738bc1369"
             }
           }
@@ -41052,21 +41088,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d7034e2662bef2b0",
-          "observedAt": "2026-10-26T13:38:40.593Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taric",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
               "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a0599325a1012892"
             }
           }
