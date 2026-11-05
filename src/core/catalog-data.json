@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.05.1",
+  "version": "2026.11.05.2",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -17098,9 +17098,9 @@
         "远程控制",
         "范围爆发"
       ],
-      "why": "妮蔻 E 命中禁锢后，梅尔 E 在实际中心位置命中可继续限制同一目标。",
-      "plan": "妮蔻 E 命中后报目标位置，梅尔对实际位置使用 E。 梅尔 W 在自身周围生成屏障，可反弹符合技能条件的敌方英雄弹体；先确认威胁与站位，不把该屏障写成施加给妮蔻。",
-      "risk": "梅尔补刀、妮蔻辅助；双法伤且脆弱，空技能或被绕后先退。",
+      "why": "妮蔻 E 实际禁锢后，梅尔 E 中心命中可继续限制同一目标，再按实际位置接 Q。",
+      "plan": "妮蔻 E 实际禁锢后报目标位置，梅尔确认 E 可用并瞄准中心，命中后按目标位置接 Q。16.22 起，梅尔 W 可摧毁范围内符合条件的敌方飞行物、结束时反击，并为她和范围内友军提供护盾与移速；先确认妮蔻实际在覆盖范围内。",
+      "risk": "梅尔补刀、妮蔻辅助；双法伤且脆弱。16.22 起梅尔 W 不反射原技能效果；任意版本都不能抵挡所有伤害或控制。空技能、位置不够或被绕后先退。",
       "partners": [
         "Graves",
         "Shen"
@@ -17118,13 +17118,43 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot · 26.22 更新说明",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "技能依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "腾讯 · 26.22 更新说明",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "技能依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · 梅尔下路位置参考",
+          "url": "https://op.gg/lol/champions/mel/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "位置配置参考",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · 妮蔻辅助位置参考",
+          "url": "https://op.gg/lol/champions/neeko/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "位置配置参考",
+          "checkedAt": "2026-11-05"
         }
       ],
-      "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "evidence": "社区玩法启发 · 16.22 技能机制人工推演，未经组合实战验证",
+      "reviewedAt": "2026-11-05",
+      "patch": "16.22",
       "reviewBaseline": {
-        "champion:Mel": "005f11b8be4651c1",
+        "champion:Mel": "9a8972c9b3a74e9d",
         "champion:Neeko": "d6f4984cd7330b72"
       },
       "tempo": "poke",
@@ -17132,45 +17162,45 @@
         {
           "champion": "Mel",
           "role": "bottom",
-          "job": "梅尔补刀，妮蔻实际禁锢后瞄准 E 中心；W 是自身屏障，仅反弹符合条件的敌方英雄弹体。",
+          "job": "梅尔负责补刀；妮蔻实际禁锢后按目标位置瞄准 E 中心并接 Q，16.22 起 W 可用且搭档在范围内时协调保护。",
           "loadoutId": "default"
         },
         {
           "champion": "Neeko",
           "role": "support",
-          "job": "妮蔻辅助，E 实际命中后报目标位置，留意控制结束与撤退。",
+          "job": "妮蔻辅助，E 实际禁锢后报目标位置和剩余控制窗口；留意梅尔跟进距离、16.22 起 W 的友军覆盖范围与撤退路线。",
           "loadoutId": "default"
         }
       ],
       "steps": [
-        "妮蔻 E 命中后报目标位置，梅尔对实际位置使用 E。",
-        "梅尔 W 在自身周围生成屏障，可反弹符合技能条件的敌方英雄弹体；先确认威胁与站位，不把该屏障写成施加给妮蔻。"
+        "妮蔻 E 实际命中并禁锢后报目标位置；梅尔 E 可用且中心可命中时接续，再按实际位置用 Q。",
+        "16.22 起，有来袭飞行物或保护需求时，梅尔确认 W 可用和双方站位；W 摧毁符合条件的敌方飞行物并反击，为范围内的自己与友军提供护盾、移速。"
       ],
-      "window": "妮蔻 E 与梅尔 E 的命中范围和控制持续时间必须各自成立。",
-      "early": "先处理各自兵线或野区，按已学技能和实际位置确认机会；条件不成立就撤退。",
-      "economy": "下路成员负责补刀，辅助按辅助经济与视野任务行动，提前沟通资源。",
+      "window": "妮蔻 E 与梅尔 E 的命中范围、实际控制及队友跟进距离均需成立；16.22 起梅尔 E 禁锢时长随距离变化，不能预设固定连控。",
+      "early": "先处理兵线、辅助任务与站位，按已学技能确认命中和安全退路；条件不成立就撤退。",
+      "economy": "梅尔补刀，妮蔻承担辅助任务与视野。E 接续不要求特定装备或符文；两人的配置按各自英雄位置及可用版本资料参考，不是组合作者配装或实战证明。",
       "reviewSourceAnchors": {
         "Mel": {
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "005f11b8be4651c1",
-          "observedAt": "2026-10-26T13:38:40.502Z",
+          "legacyFingerprint": "9a8972c9b3a74e9d",
+          "observedAt": "2026-11-05T02:19:26.156Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Mel",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/mel/mel.bin.json",
-              "sha256": "07d7ab98a7576cde9bf618a9a114da9953a5928fca56c05bf967d62b091f56f6"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/mel/mel.bin.json",
+              "sha256": "2859575d9908531b2c2ff11287472241e2d9e1e2b62ab22314a999af49964047"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "cd94e6b83839dc9d"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "488bc91738d3923f"
             }
           }
         },
@@ -17179,21 +17209,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d6f4984cd7330b72",
-          "observedAt": "2026-10-26T13:38:40.506Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Neeko",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/neeko/neeko.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/neeko/neeko.bin.json",
               "sha256": "0d2d79949fbeecdbb851ae627b1dfa189ceab975e17627c57c8f7de546d9d12a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1d597517ddd4f92e"
             }
           }
@@ -29217,6 +29247,73 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "e6ad7484cbc1effe"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Mel",
+        "Neeko"
+      ],
+      "comboId": "mel-neeko",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "53a7ed3edb1d979f",
+      "baseline": {
+        "Mel": "9a8972c9b3a74e9d",
+        "Neeko": "d6f4984cd7330b72"
+      },
+      "anchors": {
+        "Mel": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9a8972c9b3a74e9d",
+          "observedAt": "2026-11-05T02:19:26.156Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Mel",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/mel/mel.bin.json",
+              "sha256": "2859575d9908531b2c2ff11287472241e2d9e1e2b62ab22314a999af49964047"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "488bc91738d3923f"
+            }
+          }
+        },
+        "Neeko": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d6f4984cd7330b72",
+          "observedAt": "2026-11-05T02:19:26.159Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Neeko",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/neeko/neeko.bin.json",
+              "sha256": "0d2d79949fbeecdbb851ae627b1dfa189ceab975e17627c57c8f7de546d9d12a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "1d597517ddd4f92e"
             }
           }
         }
