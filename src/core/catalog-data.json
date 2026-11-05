@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.23",
+  "version": "2026.11.06.24",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -8609,8 +8609,8 @@
         "Vi"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 崔丝塔娜技能资料",
@@ -8641,6 +8641,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -8676,21 +8682,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "931894a6ac7e80f4",
-          "observedAt": "2026-10-23T02:03:51.635Z",
+          "observedAt": "2026-11-05T02:19:26.176Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Tristana",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/tristana/tristana.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/tristana/tristana.bin.json",
               "sha256": "62d0dcaec7b4f7498a55af4d7ca3a30ac433fa08913fa095194a5c920dfb7891"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "dedfd8b3d11580bb"
             }
           }
@@ -8700,21 +8706,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2b7d4e998553b365",
-          "observedAt": "2026-10-23T02:03:51.536Z",
+          "observedAt": "2026-11-05T02:19:26.083Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Leona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
               "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7ff3b8a69842091d"
             }
           }
@@ -10341,8 +10347,8 @@
         "JarvanIV"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 莎弥拉技能资料",
@@ -10367,36 +10373,24 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Samira": "fb97a340c89c0ba1",
-        "champion:Leona": "2b7d4e998553b365",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3072": "5c29525fccb26a37",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032"
+        "champion:Leona": "2b7d4e998553b365"
       },
       "tempo": "teamfight",
       "members": [
         {
           "champion": "Samira",
           "role": "bottom",
-          "loadoutId": "samira-reset",
+          "loadoutId": "default",
           "job": "补刀并确认对方受控和退路；安全时普攻接近、交替不同攻击与技能积累评价，S 且可安全施法时才考虑 R。"
         },
         {
@@ -10414,28 +10408,28 @@
       ],
       "early": "先保补刀、经验和血量，蕾欧娜按对手距离与技能决定接近。",
       "window": "控制实际命中、队友跟进与退路成立时；禁锢和晕眩不是击飞。",
-      "economy": "莎弥拉补刀，蕾欧娜完成辅助任务并布置安全视野。 莎弥拉采用共享机制备选，其他配置按各自英雄位置参考。",
+      "economy": "莎弥拉补刀，蕾欧娜完成辅助任务并布置安全视野；默认配置按各自英雄位置的当前来源和实际状态显示，不冒称组合专配。",
       "reviewSourceAnchors": {
         "Samira": {
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "fb97a340c89c0ba1",
-          "observedAt": "2026-10-23T02:03:51.551Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Samira",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/samira/samira.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/samira/samira.bin.json",
               "sha256": "66207c6c2fbf270bfa686b40c2e39d6197c632bd26e959c7c75ed3843d6a24bb"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "12851dd9ef379ec4"
             }
           }
@@ -10445,21 +10439,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2b7d4e998553b365",
-          "observedAt": "2026-10-23T02:03:51.536Z",
+          "observedAt": "2026-11-05T02:19:26.083Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Leona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
               "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7ff3b8a69842091d"
             }
           }
@@ -20321,8 +20315,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 卡莉丝塔技能资料",
@@ -20341,6 +20335,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -20376,21 +20376,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "1793244f0dc8a65c",
-          "observedAt": "2026-10-26T13:38:40.401Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kalista",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kalista/kalista.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kalista/kalista.bin.json",
               "sha256": "d9745c7fdf99f1ec7baded98bba9547e6b6f0a9ec604edce4f88f0dbdfe30b39"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "44f72f75e4385140"
             }
           }
@@ -20400,21 +20400,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2b7d4e998553b365",
-          "observedAt": "2026-10-26T13:38:40.498Z",
+          "observedAt": "2026-11-05T02:19:26.083Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Leona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
               "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7ff3b8a69842091d"
             }
           }
@@ -33544,8 +33544,8 @@
       "why": "蕾欧娜实际留到目标后，卡牌与魔腾按范围和落点支援。",
       "plan": "卡牌先处理中线，三人确认支援范围；蕾欧娜实际命中后，卡牌和魔腾判断安全落点并跟进。",
       "risk": "对手反蹲、目标出范围或支援者来不及到场时取消；蕾欧娜 R 中心与边缘效果不同。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 魔腾技能资料",
@@ -33570,6 +33570,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -33588,7 +33594,7 @@
         {
           "champion": "Leona",
           "role": "support",
-          "loadoutId": "tank-engage",
+          "loadoutId": "default",
           "job": "保辅助经济和视野；E 命中最后一名敌方英雄后接近，Q 下一次普攻实际命中才晕；R 中心晕眩、外围减速。"
         }
       ],
@@ -33603,21 +33609,7 @@
       "reviewBaseline": {
         "champion:Nocturne": "2759f235cb713880",
         "champion:TwistedFate": "4b3a9807b94dcc47",
-        "champion:Leona": "2b7d4e998553b365",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8453": "f9a0180e7f2f0432"
+        "champion:Leona": "2b7d4e998553b365"
       },
       "reviewSourceAnchors": {
         "Nocturne": {
@@ -33625,21 +33617,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2759f235cb713880",
-          "observedAt": "2026-10-23T02:03:51.545Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nocturne",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nocturne/nocturne.bin.json",
-              "sha256": "93338da160b2ed4c8ff61ee45eac0e21363f69939f6202524c29910e7beabf58"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nocturne/nocturne.bin.json",
+              "sha256": "8de4d928ce7dee799b759c87a7114069b297f9228ef8e51c21ba9f1da5b0ab49"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7e6432fe64cf372b"
             }
           }
@@ -33649,21 +33641,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "4b3a9807b94dcc47",
-          "observedAt": "2026-10-23T02:03:51.635Z",
+          "observedAt": "2026-11-05T02:19:26.177Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "TwistedFate",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twistedfate/twistedfate.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twistedfate/twistedfate.bin.json",
               "sha256": "ec60137c806e0ca6e86bad8bcf6a216b8295761503dbb7a61eddc6b7e82bf4f4"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f83bddbc2f7bb85b"
             }
           }
@@ -33673,21 +33665,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2b7d4e998553b365",
-          "observedAt": "2026-10-23T02:03:51.536Z",
+          "observedAt": "2026-11-05T02:19:26.083Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Leona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
               "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7ff3b8a69842091d"
             }
           }
@@ -36310,11 +36302,11 @@
           "champion": "Leona",
           "role": "support",
           "job": "女枪和阿木木能跟上才 E/Q 或 R 先手，W 承接反击，后手交给阿木木；控制落空或女枪被迫撤离时回身保护，不三人同时挤进窄口追人。",
-          "loadoutId": "tank-engage"
+          "loadoutId": "default"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 阿木木技能资料",
@@ -36357,26 +36349,18 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Amumu": "958a576cfa8191dd",
         "champion:MissFortune": "10b496d2ce7c344d",
-        "champion:Leona": "2b7d4e998553b365",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8453": "f9a0180e7f2f0432"
+        "champion:Leona": "2b7d4e998553b365"
       },
       "reviewSourceAnchors": {
         "Amumu": {
@@ -36384,21 +36368,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "958a576cfa8191dd",
-          "observedAt": "2026-10-23T02:03:51.450Z",
+          "observedAt": "2026-11-05T02:19:26.058Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Amumu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/amumu/amumu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/amumu/amumu.bin.json",
               "sha256": "32ae8f1ffe870b3a94dd62e285bf7b2dedca0cc730abeabccf197d56f5174de3"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "8166548fe1af8c89"
             }
           }
@@ -36408,21 +36392,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "10b496d2ce7c344d",
-          "observedAt": "2026-10-23T02:03:51.542Z",
+          "observedAt": "2026-11-05T02:19:26.157Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "MissFortune",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
               "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "45c6c8d43f1a5c2f"
             }
           }
@@ -36432,21 +36416,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2b7d4e998553b365",
-          "observedAt": "2026-10-23T02:03:51.536Z",
+          "observedAt": "2026-11-05T02:19:26.083Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Leona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
               "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7ff3b8a69842091d"
             }
           }
@@ -36973,8 +36957,8 @@
           "job": "保视野；E 末个命中英雄才冲过去并禁锢，Q 需普攻命中，R 中心才晕。"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-01",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 魔腾技能资料",
@@ -36999,6 +36983,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -37012,21 +37002,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2759f235cb713880",
-          "observedAt": "2026-10-26T13:38:40.508Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nocturne",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nocturne/nocturne.bin.json",
-              "sha256": "93338da160b2ed4c8ff61ee45eac0e21363f69939f6202524c29910e7beabf58"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nocturne/nocturne.bin.json",
+              "sha256": "8de4d928ce7dee799b759c87a7114069b297f9228ef8e51c21ba9f1da5b0ab49"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7e6432fe64cf372b"
             }
           }
@@ -37036,21 +37026,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "6c42062d13c38ce6",
-          "observedAt": "2026-10-26T13:38:40.522Z",
+          "observedAt": "2026-11-05T02:19:26.172Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Sivir",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sivir/sivir.bin.json",
-              "sha256": "12c68a433a466cff6396e4e8642834ae342650bb54d7b4251a10152b501703b4"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sivir/sivir.bin.json",
+              "sha256": "35d1e7b95979b476552adc682c619c303ad04309d21e6564435de101091d7ac3"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6b46b8e16bb65277"
             }
           }
@@ -37060,21 +37050,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2b7d4e998553b365",
-          "observedAt": "2026-10-26T13:38:40.498Z",
+          "observedAt": "2026-11-05T02:19:26.083Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Leona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
               "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7ff3b8a69842091d"
             }
           }
