@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.24",
+  "version": "2026.11.06.25",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -2647,14 +2647,14 @@
       ],
       "why": "斯维因实际伤害同一敌方英雄后，烬可在标记有效期内用 W 尝试禁锢；斯维因 E 的返回段可另行禁锢。 W 命中时标记仍有效才禁锢。",
       "plan": "烬下路补刀，斯维因辅助负责安全消耗与视野。斯维因 E 返回爆炸实际命中目标，或 W 延迟后实际造成英雄伤害，报同一目标；烬确认 W 已学会可用、首个敌方英雄与标记窗口，再射击。E 实际禁锢英雄后，斯维因才按落点决定是否重施拉回。 留足 W 的施法与弹道时间，命中目标时标记仍有效才会禁锢。",
-      "risk": "E 返回落空、W 区域被避开、敌人挡住烬 W 或双方距离不利时停止追击；烬换弹期间斯维因不要独自深入。",
+      "risk": "E 返回落空、W 区域被避开、敌人挡住烬 W 或双方距离不利时停止追击；烬换弹期间斯维因不要独自深入。 烬 W 的技能摘要与详细说明对其他标记来源不一致；此处只采用友方英雄实际伤害路径，不排除其他来源。",
       "partners": [
         "JarvanIV",
         "Sejuani",
         "Orianna"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 烬技能资料",
@@ -2673,6 +2673,12 @@
           "name": "Riot Data Dragon · 16.21.1 全英雄技能原文",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -2709,21 +2715,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "226e6c11b8a992f5",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Jhin",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
-              "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3aaa1bcaed04d760"
             }
           }
@@ -2733,21 +2739,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2df9ea554c5ac91d",
-          "observedAt": "2026-10-23T02:03:51.632Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Swain",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
-              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/swain/swain.bin.json",
+              "sha256": "7e99c46dd1723f49ddf39db87846550e287276dcf4366ed39240b68b634c11c6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f08241c738bc1369"
             }
           }
@@ -3686,14 +3692,14 @@
       ],
       "why": "泽拉斯先实际伤害目标，烬可在标记窗口内用 W 接同一目标，两人从安全距离进行后续消耗。 W 命中时标记仍有效才禁锢。",
       "plan": "烬下路补刀，泽拉斯辅助兼顾视野。泽拉斯 Q、W 或 E 实际伤害敌方英雄后报目标；烬确认 W 已学会可用且目标是弹道首个敌方英雄，在标记期内尝试命中。泽拉斯 E 命中首个敌人，晕眩时间随飞行距离变化。 留足 W 的施法与弹道时间，命中目标时标记仍有效才会禁锢。",
-      "risk": "泽拉斯蓄力或引导时侧翼暴露；技能落空、被突进或双方无法安全覆盖目标时后撤，不因射程盲追。",
+      "risk": "泽拉斯蓄力或引导时侧翼暴露；技能落空、被突进或双方无法安全覆盖目标时后撤，不因射程盲追。 烬 W 的技能摘要与详细说明对其他标记来源不一致；此处只采用友方英雄实际伤害路径，不排除其他来源。",
       "partners": [
         "Shen",
         "Poppy"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 烬技能资料",
@@ -3712,6 +3718,12 @@
           "name": "Riot Data Dragon · 16.21.1 全英雄技能原文",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -3748,21 +3760,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "226e6c11b8a992f5",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Jhin",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
-              "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3aaa1bcaed04d760"
             }
           }
@@ -3772,21 +3784,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c6bf3b1c613437cd",
-          "observedAt": "2026-10-23T02:03:51.640Z",
+          "observedAt": "2026-11-05T02:19:26.182Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Xerath",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xerath/xerath.bin.json",
-              "sha256": "cd93216a854d592f605c11be9bb9e00acd9f35dab0bf98828909809f94145796"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/xerath/xerath.bin.json",
+              "sha256": "aef22fe15a5dfae05f3871bfc36bb3090fee429753500f2d2a04a638cac76d08"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "fe85c3d422f63fd0"
             }
           }
@@ -3803,14 +3815,14 @@
       ],
       "why": "维克兹先实际伤害目标，烬可在标记期内尝试 W 禁锢；维克兹 E 可视贴近威胁用于反制。 W 命中时标记仍有效才禁锢。",
       "plan": "烬下路补刀，维克兹辅助兼顾视野。维克兹 Q 或 W 实际伤害敌方英雄后报目标，烬确认已学会 W 且弹道首个敌方英雄为目标，再在标记期内射击；维克兹 E 实际命中后才算发生击飞或近处击退。 留足 W 的施法与弹道时间，命中目标时标记仍有效才会禁锢。",
-      "risk": "Q 可被前方目标截住，R 需要引导；侧翼不安全、目标走出射线或技能落空时停止追击。",
+      "risk": "Q 可被前方目标截住，R 需要引导；侧翼不安全、目标走出射线或技能落空时停止追击。 烬 W 的技能摘要与详细说明对其他标记来源不一致；此处只采用友方英雄实际伤害路径，不排除其他来源。",
       "partners": [
         "Sejuani",
         "Galio"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 烬技能资料",
@@ -3829,6 +3841,12 @@
           "name": "Riot Data Dragon · 16.21.1 全英雄技能原文",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -3864,21 +3882,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "226e6c11b8a992f5",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Jhin",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
-              "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3aaa1bcaed04d760"
             }
           }
@@ -3888,21 +3906,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "4fc6f59617324dce",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Velkoz",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/velkoz/velkoz.bin.json",
-              "sha256": "d7083b07c94482f1814bd603cd7831d0de5fd1ba1170dc9b5ff386793ab08ffb"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/velkoz/velkoz.bin.json",
+              "sha256": "d97af687f9a5022448d28e44de1913ddab8dd29b551323f9bf8ad4d56e794621"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "83d561abb744eab5"
             }
           }
@@ -3919,14 +3937,14 @@
       ],
       "why": "拉克丝 Q 或 E 爆炸实际伤害目标后，烬可在标记期内用 W 尝试禁锢；Q 命中时另有束缚。 W 命中时标记仍有效才禁锢。",
       "plan": "烬下路补刀，拉克丝辅助兼顾视野。拉克丝 Q 命中敌方英雄，或由拉克丝引爆 E 并实际造成英雄伤害后报目标；烬确认 W 可用、射线的首个敌方英雄为该目标且标记未过期，再射击。双方 Q/W 实际命中后再评估是否跟进。 留足 W 的施法与弹道时间，命中目标时标记仍有效才会禁锢。",
-      "risk": "拉克丝 E 放置区域的减速本身不等于已造成伤害；Q 只束缚前两个敌方单位。侧翼不安全或射线被挡时撤退。",
+      "risk": "拉克丝 E 放置区域的减速本身不等于已造成伤害；Q 只束缚前两个敌方单位。侧翼不安全或射线被挡时撤退。 烬 W 的技能摘要与详细说明对其他标记来源不一致；此处只采用友方英雄实际伤害路径，不排除其他来源。",
       "partners": [
         "Vi",
         "JarvanIV"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 烬技能资料",
@@ -3945,6 +3963,12 @@
           "name": "Riot Data Dragon · 16.21.1 全英雄技能原文",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -3981,21 +4005,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "226e6c11b8a992f5",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Jhin",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
-              "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3aaa1bcaed04d760"
             }
           }
@@ -4005,21 +4029,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "50314ad04c92f1a6",
-          "observedAt": "2026-10-23T02:03:51.540Z",
+          "observedAt": "2026-11-05T02:19:26.155Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lux",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lux/lux.bin.json",
-              "sha256": "9223cdf0a3d94223309fc69eb0c3865444b2884004b443dbcd066e70ffe0b952"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lux/lux.bin.json",
+              "sha256": "bcb1ca7a7e82072b504985d84dc1fa905471f3c249fbafb3ab72658a50f7595b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "cc7818802b8d5fc7"
             }
           }
@@ -34463,8 +34487,8 @@
       "why": "努努 W 实际命中击飞后冰鸟 Q 可跟进；队友造成伤害后烬 W 可按标记接控。",
       "plan": "努努 W 先选择可通过路线并确认实际碰撞；冰鸟 Q 瞄准实际落点。 采用队友伤害接续时，烬 W 命中同一目标且目标是弹道首个敌方英雄、伤害窗口仍有效时可禁锢。",
       "risk": "努努打野、冰鸟中路、烬下路；引导受打断或此接续的伤害窗口失效时撤退。烬 W 的技能摘要与详细说明对其他标记来源不一致，尚待核实。",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 努努和威朗普技能资料",
@@ -34489,6 +34513,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -34529,21 +34559,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "8f44e57080d4e3bf",
-          "observedAt": "2026-10-26T13:38:40.508Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nunu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nunu/nunu.bin.json",
-              "sha256": "67dd9b93b8f4a6a81ef708291d4223d06323b67979755f1391599b92473fe472"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nunu/nunu.bin.json",
+              "sha256": "7a2b29421a6aefc57b5bb8f60c70896ecfa439bddba809d557c4cb7a09a68914"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "bc9ade1baeb3270d"
             }
           }
@@ -34553,21 +34583,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "52343f9ffaa815a9",
-          "observedAt": "2026-10-26T13:38:40.305Z",
+          "observedAt": "2026-11-05T02:19:26.058Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Anivia",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/anivia/anivia.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/anivia/anivia.bin.json",
               "sha256": "c0a7fec988a4af4386b82c5eca35a7c895461a4c30f6af5bb772f199387eef79"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "d7796f24d403cc8c"
             }
           }
@@ -34577,21 +34607,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "226e6c11b8a992f5",
-          "observedAt": "2026-10-26T13:38:40.400Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Jhin",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
-              "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3aaa1bcaed04d760"
             }
           }
@@ -35100,7 +35130,7 @@
       "tags": [
         "控制消耗"
       ],
-      "why": "小法的牢笼限制出口，莫甘娜禁锢后烬 W 跟进，适合逐个留人。",
+      "why": "小法的牢笼限制出口；莫甘娜实际伤害目标后，烬可按友方伤害窗口尝试 W 接控。",
       "plan": "小法 E 限制退路，莫甘娜 Q 找目标；采用队友伤害接续时，烬 W 命中同一目标且目标是弹道首个敌方英雄、伤害窗口仍有效时可禁锢。黑盾提前给即将受到控制的队友。",
       "risk": "小法 E 只有触碰边缘才眩晕，莫甘娜 Q 会被首个单位挡住；黑盾只吸魔伤、存续时阻挡适用控制，不能事后解控。烬 W 的技能摘要与详细说明对其他标记来源不一致，尚待核实。",
       "early": "烬在换弹时后撤，小法先清中线，莫甘娜不要为了摸 Q 越过兵线。",
@@ -35131,8 +35161,8 @@
           "loadoutId": "default"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 维迦技能资料",
@@ -35175,6 +35205,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -35188,21 +35224,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -35212,21 +35248,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "226e6c11b8a992f5",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Jhin",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
-              "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3aaa1bcaed04d760"
             }
           }
@@ -35236,21 +35272,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e0588c7ab7dba463",
-          "observedAt": "2026-10-23T02:03:51.543Z",
+          "observedAt": "2026-11-05T02:19:26.158Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Morgana",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/morgana/morgana.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/morgana/morgana.bin.json",
               "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "57d5f698304a1f45"
             }
           }
