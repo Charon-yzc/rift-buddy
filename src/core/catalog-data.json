@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.05.17",
+  "version": "2026.11.05.18",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -715,8 +715,8 @@
         "Sejuani",
         "Galio"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 艾希技能资料",
@@ -747,6 +747,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -782,21 +788,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f363e1846cfe0370",
-          "observedAt": "2026-10-23T02:03:51.451Z",
+          "observedAt": "2026-11-05T02:19:26.059Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ashe",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ashe/ashe.bin.json",
               "sha256": "ada00af1ea15a42094a914a05794e0d3cedcb66c150ed52e8d3762b8d12dc6b5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1ab1be4161ebeecc"
             }
           }
@@ -806,21 +812,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "18e4440868d92eb5",
-          "observedAt": "2026-10-23T02:03:51.552Z",
+          "observedAt": "2026-11-05T02:19:26.168Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Seraphine",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
               "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b29132146d6ad36b"
             }
           }
@@ -2027,8 +2033,8 @@
         "XinZhao",
         "Shen"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Reddit · 非常规下路联动",
@@ -2041,6 +2047,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -2076,21 +2088,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "18e4440868d92eb5",
-          "observedAt": "2026-10-26T13:38:40.519Z",
+          "observedAt": "2026-11-05T02:19:26.168Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Seraphine",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
               "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b29132146d6ad36b"
             }
           }
@@ -2100,21 +2112,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2313d851c59e6f93",
-          "observedAt": "2026-10-26T13:38:40.523Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Sona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sona/sona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sona/sona.bin.json",
               "sha256": "8ad8fdcf17aff949bc7a9f8b6e0c7235f396346f7cba27f7bff26528975560a1"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "8146f69f6cdef897"
             }
           }
@@ -2795,8 +2807,8 @@
         "Sejuani",
         "Galio"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 伊泽瑞尔技能资料",
@@ -2827,6 +2839,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -2862,21 +2880,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c2201358b91fa06b",
-          "observedAt": "2026-10-23T02:03:51.460Z",
+          "observedAt": "2026-11-05T02:19:26.069Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ezreal",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ezreal/ezreal.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ezreal/ezreal.bin.json",
               "sha256": "017fe85cc1493ac674d9ff34600edfa48ec7af0f20cde53c12f184ea6d6b40a1"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6b1155906c9a8a0b"
             }
           }
@@ -2886,21 +2904,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "36385f1555005577",
-          "observedAt": "2026-10-23T02:03:51.532Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Karma",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/karma/karma.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/karma/karma.bin.json",
               "sha256": "7b6328b43d94f80ea6eec0998d8f81d9e54f3f8c6bb7a37a12ebbd04d569bcf5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1f2620463bdb38d1"
             }
           }
@@ -4717,8 +4735,8 @@
         "Shen"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 艾希技能资料",
@@ -4737,6 +4755,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -4772,21 +4796,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f363e1846cfe0370",
-          "observedAt": "2026-10-23T02:03:51.451Z",
+          "observedAt": "2026-11-05T02:19:26.059Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ashe",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ashe/ashe.bin.json",
               "sha256": "ada00af1ea15a42094a914a05794e0d3cedcb66c150ed52e8d3762b8d12dc6b5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1ab1be4161ebeecc"
             }
           }
@@ -4796,21 +4820,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "9176ff8b22c1f1c9",
-          "observedAt": "2026-10-23T02:03:51.541Z",
+          "observedAt": "2026-11-05T02:19:26.156Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Milio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/milio/milio.bin.json",
               "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "32194f4e3319e474"
             }
           }
@@ -6189,8 +6213,8 @@
         "Shen"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 薇恩技能资料",
@@ -6209,6 +6233,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -6244,21 +6274,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "0287a9893e0d8431",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Vayne",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/vayne/vayne.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vayne/vayne.bin.json",
               "sha256": "33694471c394311b26fbe6293ca50a0f40fd8995c4d0136c606d03725562ba81"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b68f21a8631fe4af"
             }
           }
@@ -6268,21 +6298,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f5091380ca45272",
-          "observedAt": "2026-10-23T02:03:51.539Z",
+          "observedAt": "2026-11-05T02:19:26.154Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lulu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lulu/lulu.bin.json",
               "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "33e697bcb063b28b"
             }
           }
@@ -6305,8 +6335,8 @@
         "Poppy"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 薇恩技能资料",
@@ -6337,6 +6367,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -6372,21 +6408,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "0287a9893e0d8431",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Vayne",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/vayne/vayne.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vayne/vayne.bin.json",
               "sha256": "33694471c394311b26fbe6293ca50a0f40fd8995c4d0136c606d03725562ba81"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b68f21a8631fe4af"
             }
           }
@@ -6396,21 +6432,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "174e8cfdc4e26ceb",
-          "observedAt": "2026-10-23T02:03:51.529Z",
+          "observedAt": "2026-11-05T02:19:26.075Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Janna",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/janna/janna.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/janna/janna.bin.json",
               "sha256": "4cec640827c538d66a8dba07f2330b0d11a6749bdbf85691628f6a2fd08320cf"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "59f8d2d99e76564e"
             }
           }
@@ -7848,8 +7884,8 @@
         "Sejuani"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-01",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 伊泽瑞尔技能资料",
@@ -7868,6 +7904,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -7903,21 +7945,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c2201358b91fa06b",
-          "observedAt": "2026-10-26T13:38:40.393Z",
+          "observedAt": "2026-11-05T02:19:26.069Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ezreal",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ezreal/ezreal.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ezreal/ezreal.bin.json",
               "sha256": "017fe85cc1493ac674d9ff34600edfa48ec7af0f20cde53c12f184ea6d6b40a1"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6b1155906c9a8a0b"
             }
           }
@@ -7927,21 +7969,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b10366f1187813b9",
-          "observedAt": "2026-10-26T13:38:40.505Z",
+          "observedAt": "2026-11-05T02:19:26.158Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nami",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nami/nami.bin.json",
               "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "d41e55e60af3c37e"
             }
           }
@@ -7964,8 +8006,8 @@
         "Ornn"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 伊泽瑞尔技能资料",
@@ -7990,6 +8032,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Yuumi.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -8026,21 +8074,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c2201358b91fa06b",
-          "observedAt": "2026-10-23T02:03:51.460Z",
+          "observedAt": "2026-11-05T02:19:26.069Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ezreal",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ezreal/ezreal.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ezreal/ezreal.bin.json",
               "sha256": "017fe85cc1493ac674d9ff34600edfa48ec7af0f20cde53c12f184ea6d6b40a1"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6b1155906c9a8a0b"
             }
           }
@@ -8050,21 +8098,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "74372983c2c1dbfe",
-          "observedAt": "2026-10-23T02:03:51.642Z",
+          "observedAt": "2026-11-05T02:19:26.184Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Yuumi",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yuumi/yuumi.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yuumi/yuumi.bin.json",
               "sha256": "b65fd4e92df3a120fe88ee2ebd588f55a7f1a642f249c22d0668eae860f9c3aa"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2bfcd21ddb05bd3f"
             }
           }
@@ -8087,8 +8135,8 @@
         "Galio"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 伊泽瑞尔技能资料",
@@ -8113,6 +8161,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Bard.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -8148,21 +8202,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c2201358b91fa06b",
-          "observedAt": "2026-10-23T02:03:51.460Z",
+          "observedAt": "2026-11-05T02:19:26.069Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ezreal",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ezreal/ezreal.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ezreal/ezreal.bin.json",
               "sha256": "017fe85cc1493ac674d9ff34600edfa48ec7af0f20cde53c12f184ea6d6b40a1"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6b1155906c9a8a0b"
             }
           }
@@ -8172,21 +8226,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "59e4186e87276c5f",
-          "observedAt": "2026-10-23T02:03:51.452Z",
+          "observedAt": "2026-11-05T02:19:26.061Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Bard",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/bard/bard.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/bard/bard.bin.json",
               "sha256": "4b73426120b4a794709001352620eeb7b5644f1b7c78d674aee68a5e2b0ac692"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "20f447261a6d2716"
             }
           }
@@ -22997,8 +23051,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 伊泽瑞尔技能资料",
@@ -23017,6 +23071,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -23052,21 +23112,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c2201358b91fa06b",
-          "observedAt": "2026-10-26T13:38:40.393Z",
+          "observedAt": "2026-11-05T02:19:26.069Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ezreal",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ezreal/ezreal.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ezreal/ezreal.bin.json",
               "sha256": "017fe85cc1493ac674d9ff34600edfa48ec7af0f20cde53c12f184ea6d6b40a1"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6b1155906c9a8a0b"
             }
           }
@@ -23076,21 +23136,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "18e4440868d92eb5",
-          "observedAt": "2026-10-26T13:38:40.519Z",
+          "observedAt": "2026-11-05T02:19:26.168Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Seraphine",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
               "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b29132146d6ad36b"
             }
           }
