@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.38",
+  "version": "2026.11.06.39",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -21176,8 +21176,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -21208,11 +21208,15 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
-        "champion:Nilah": "30e5ef1b4f79390e",
-        "champion:Alistar": "e2aa1310b144ff1f",
         "item:6676": "f75b10fbdb261e7f",
         "item:3031": "0ccdceb96f0cd392",
         "item:3036": "fcf5de31162e9e9d",
@@ -21231,6 +21235,7 @@
         "rune:8014": "04092c4f9754532b",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8410": "da4ec8f245880032",
+        "champion:Nilah": "30e5ef1b4f79390e",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
         "item:3050": "c3e25c9df9075147",
@@ -21242,7 +21247,8 @@
         "rune:8347": "def2a55844436c47",
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "rune:8306": "68d4bd3d69d9d19c",
+        "champion:Alistar": "e2aa1310b144ff1f"
       },
       "tempo": "teamfight",
       "members": [
@@ -21273,21 +21279,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-23T02:03:51.545Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -21297,21 +21303,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e2aa1310b144ff1f",
-          "observedAt": "2026-10-23T02:03:51.449Z",
+          "observedAt": "2026-11-05T02:19:26.057Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Alistar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/alistar/alistar.bin.json",
               "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "60b70b49d6326ac5"
             }
           }
@@ -28231,6 +28237,114 @@
           }
         }
       }
+    },
+    {
+      "id": "fiora-top-trundle-jungle",
+      "name": "冰柱封路 · 破绽追击",
+      "style": "fun",
+      "difficulty": "适中",
+      "tags": [
+        "上野",
+        "地形减速",
+        "短换血"
+      ],
+      "tempo": "early",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "why": "特朗德尔用冰柱限制目标退路，菲奥娜利用对方移动受限的窗口寻找破绽；按当版技能机制整理。",
+      "plan": "菲奥娜保上路线和经验。特朗德尔先报能到的时间、己方视野与兵线位置，再决定是否靠近。 冰柱优先放在目标撤退侧，给菲奥娜保留绕向破绽和退出的路线。敌人没受到减速或已经交位移离开时，不强追。 菲奥娜根据破绽方向用 Q 或普攻跟进，W 留给自己实际将承受的限制效果。双方大招均可用时，再决定是否集火同一目标。 打不满破绽或兵线、视野不利时就撤，优先把线推回安全位置或转向附近资源。",
+      "risk": "冰柱也占用通行空间，落点错误会挡住己方追击和撤退。菲奥娜 W 是否眩晕取决于她实际格挡的定身与刺击命中。特朗德尔 R 偷抗性，不能据此放大破绽真伤。",
+      "steps": [
+        "菲奥娜保上路线和经验。特朗德尔先报能到的时间、己方视野与兵线位置，再决定是否靠近。",
+        "冰柱优先放在目标撤退侧，给菲奥娜保留绕向破绽和退出的路线。敌人没受到减速或已经交位移离开时，不强追。",
+        "菲奥娜根据破绽方向用 Q 或普攻跟进，W 留给自己实际将承受的限制效果。双方大招均可用时，再决定是否集火同一目标。",
+        "打不满破绽或兵线、视野不利时就撤，优先把线推回安全位置或转向附近资源。"
+      ],
+      "early": "先处理上路线和视野，无安全路线就保留冰柱，避免为了一个破绽走进敌方兵线。",
+      "window": "目标可被冰柱限制、两人能接近且有退路；菲奥娜大招治疗仍须满足破绽命中条件。",
+      "economy": "菲奥娜收上路兵线，特朗德尔以野区和中立资源为主；装备分别参考 16.22 的同英雄同位置数据。",
+      "members": [
+        {
+          "champion": "Fiora",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "补刀控线，确认破绽和安全落点后跟进，保留 W 和退路。"
+        },
+        {
+          "champion": "Trundle",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "按野区路线和可见信息决定支援；冰柱放在敌方退路，避免阻断菲奥娜。"
+        }
+      ],
+      "sources": [
+        {
+          "name": "苦瓜大王KuG · 2026-08-03 峡谷片段",
+          "url": "https://www.bilibili.com/video/BV1ptMX6VEji/",
+          "kind": "历史同场片段，非此位置或配置出处",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Fiora": "f06589f734c844bf",
+        "champion:Trundle": "63bbe05e19260ce3"
+      },
+      "reviewSourceAnchors": {
+        "Fiora": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f06589f734c844bf",
+          "observedAt": "2026-11-05T02:19:26.070Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Fiora",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/fiora/fiora.bin.json",
+              "sha256": "090506b4d3dd2d7319a8f915c4ab60b8055f06d2335fe8fb5124df6b6561e25c"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f93af67e3da46305"
+            }
+          }
+        },
+        "Trundle": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "63bbe05e19260ce3",
+          "observedAt": "2026-11-05T02:19:26.176Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Trundle",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/trundle/trundle.bin.json",
+              "sha256": "cc871076dceaa7cd474c1dc994f3c0e859ac814e4f687307eb693f61bcc48847"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "1d69ff1938c31389"
+            }
+          }
+        }
+      }
     }
   ],
   "linkReviews": [
@@ -31255,9 +31369,9 @@
       ],
       "why": "牛头 Q 的实际击飞为亚索提供接 R 窗口，黛安娜按月光条件和位置跟进。",
       "plan": "牛头确认两名队友位置后以 Q 实际击飞；皎月按安全和月光条件选择 E/R，再由亚索对仍浮空的敌方英雄判断 R。",
-      "risk": "三人贴近容易被反开；Q 落空、月光未命中或亚索无法接应时退出，不把皎月 R 拉拽直接当成已证实的亚索 R 入口。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "risk": "三人贴近容易被反开；Q 落空、月光未命中或亚索无法接应时退出，不把皎月 R 拉拽直接当成已证实的亚索 R 入口。 本版亚索 Q 伤害系数下调，跟进按实际血量评估。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot Diana 16.20.1 技能",
@@ -31282,6 +31396,18 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 正式公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "亚索 Q 数值调整",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -31315,7 +31441,6 @@
       "reviewBaseline": {
         "champion:Diana": "0c1ee1b395e630d3",
         "champion:Yasuo": "d36ebea001e3d1cb",
-        "champion:Alistar": "e2aa1310b144ff1f",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
         "item:3050": "c3e25c9df9075147",
@@ -31329,7 +31454,8 @@
         "rune:8347": "def2a55844436c47",
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "rune:8306": "68d4bd3d69d9d19c",
+        "champion:Alistar": "e2aa1310b144ff1f"
       },
       "reviewSourceAnchors": {
         "Diana": {
@@ -31337,21 +31463,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "0c1ee1b395e630d3",
-          "observedAt": "2026-10-23T02:03:51.458Z",
+          "observedAt": "2026-11-05T02:19:26.067Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Diana",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/diana/diana.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/diana/diana.bin.json",
               "sha256": "fb9d9bc84621daf0df393c08c655f8798c75baecc7bd6f871867126813e4925f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "d9313d8c48c88394"
             }
           }
@@ -31361,21 +31487,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d36ebea001e3d1cb",
-          "observedAt": "2026-10-23T02:03:51.641Z",
+          "observedAt": "2026-11-05T02:19:26.182Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Yasuo",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
-              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "5c4d9aa5346ca2f7"
             }
           }
@@ -31385,21 +31511,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e2aa1310b144ff1f",
-          "observedAt": "2026-10-23T02:03:51.449Z",
+          "observedAt": "2026-11-05T02:19:26.057Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Alistar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/alistar/alistar.bin.json",
               "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "60b70b49d6326ac5"
             }
           }
@@ -37381,7 +37507,7 @@
       ],
       "why": "扎克或阿利斯塔实际击飞后，亚索在目标仍浮空时判断 R。",
       "plan": "先分配先手与保护，确认亚索下路可跟进；扎克 E 或牛头 Q 实际击飞后，亚索按距离与落点决定是否接 R。",
-      "risk": "扎克 E 蓄力可被观察，牛头 W 可能推走目标；落点无接应、控制落空或亚索 R 不可用就撤。",
+      "risk": "扎克 E 蓄力可被观察，牛头 W 可能推走目标；落点无接应、控制落空或亚索 R 不可用就撤。 本版亚索 Q 伤害系数下调，跟进按实际血量评估。",
       "early": "扎克保野区，亚索与牛头处理下路对线与视野。",
       "window": "实际敌方英雄浮空、亚索 R 已学可用且队友能接应。",
       "economy": "扎克保野区资源，亚索拿下路补刀，牛头保辅助任务经济。",
@@ -37410,8 +37536,8 @@
           "job": "保辅助任务和视野；Q 命中才击飞，W 有击退方向，未进场者可留技能保护。"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 扎克技能资料",
@@ -37436,12 +37562,23 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 正式公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "亚索 Q 数值调整",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Zac": "79df9b9e7571e89c",
         "champion:Yasuo": "d36ebea001e3d1cb",
-        "champion:Alistar": "e2aa1310b144ff1f",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
         "item:3050": "c3e25c9df9075147",
@@ -37455,7 +37592,8 @@
         "rune:8347": "def2a55844436c47",
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "rune:8306": "68d4bd3d69d9d19c",
+        "champion:Alistar": "e2aa1310b144ff1f"
       },
       "reviewSourceAnchors": {
         "Zac": {
@@ -37463,21 +37601,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "79df9b9e7571e89c",
-          "observedAt": "2026-10-23T02:03:51.642Z",
+          "observedAt": "2026-11-05T02:19:26.252Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zac",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zac/zac.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zac/zac.bin.json",
               "sha256": "40df6abd439891c7e6733966c1ec367a15392cb8b52754a7df145b6b854f0ff5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "cf22bab2f64d09f2"
             }
           }
@@ -37487,21 +37625,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d36ebea001e3d1cb",
-          "observedAt": "2026-10-23T02:03:51.641Z",
+          "observedAt": "2026-11-05T02:19:26.182Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Yasuo",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
-              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "5c4d9aa5346ca2f7"
             }
           }
@@ -37511,21 +37649,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e2aa1310b144ff1f",
-          "observedAt": "2026-10-23T02:03:51.449Z",
+          "observedAt": "2026-11-05T02:19:26.057Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Alistar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/alistar/alistar.bin.json",
               "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "60b70b49d6326ac5"
             }
           }
@@ -46972,9 +47110,9 @@
         "guardian",
         "aftershock"
       ],
-      "why": "辅助经济先保任务装、视野与补给，核心装按实际威胁和回城金币取舍。鸟盾要在队友承伤前主动覆盖附近友军，不能隔地图保护；骑士之誓先绑定当前要保护的友军，并留在有效距离，自己低血时也要计入分担风险。基克需自己施放 R，伤害需敌方英雄在附近；两份资料对风暴出现时机不同，请以游戏内实际为准。追不上敌人时不要为触发它走出保护距离。守护者依赖附近或实际受术的友军承伤；余震需真实定身：布隆要被动叠满或R，塔里克要E命中，塔姆要三层Q或W击飞，波比要实际击退/打断，牛头要Q/W或叠满E后普攻。普通减速不算，未满足时不要预算余震抗性。荆棘需敌方普攻击中自己才给该攻击者重伤；魔法或远程威胁为主时按对手改鞋和抗性，不机械堆甲。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "why": "云游图鉴与两瓶药出门；首回城按金币考虑鞋或燃烧宝石。烈阳要主动覆盖附近友军，单保优先绑定实际承伤者并注意骑士之誓的距离。施放大招后留意基克风暴，敌方英雄在范围内才受影响；组合不要求基克。守护者看附近或实际受术友军是否承伤。余震要实际定身：布隆四层被动或 R 击飞，塔里克 E 命中，塔姆三层 Q 或 W 击飞，波比 E 实际击退或撞墙眩晕，阿利斯塔 Q、W 或 E 满层普攻。普通减速不触发。荆棘在敌方英雄普攻击中自己时针对该攻击者，魔法威胁较重时按局势更换鞋或抗性。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "reviewBaseline": {
         "champion:Braum": "ae3aa48403ffcbe5",
         "champion:Taric": "d7034e2662bef2b0",
@@ -47062,6 +47200,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewSourceAnchors": {
@@ -47070,21 +47214,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ae3aa48403ffcbe5",
-          "observedAt": "2026-10-23T02:03:51.454Z",
+          "observedAt": "2026-11-05T02:19:26.062Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Braum",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/braum/braum.bin.json",
               "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e136059064aa1034"
             }
           }
@@ -47094,21 +47238,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d7034e2662bef2b0",
-          "observedAt": "2026-10-23T02:03:51.634Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taric",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
               "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a0599325a1012892"
             }
           }
@@ -47118,21 +47262,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "9635271a9add58c5",
-          "observedAt": "2026-10-23T02:03:51.633Z",
+          "observedAt": "2026-11-05T02:19:26.174Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "TahmKench",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/tahmkench/tahmkench.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/tahmkench/tahmkench.bin.json",
               "sha256": "2c4d245e198a57458a95879789133f011276421c3cbc2f5a5293507a8ba34073"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "324a3700d293797b"
             }
           }
@@ -47142,21 +47286,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "af33a45e62ad30e5",
-          "observedAt": "2026-10-23T02:03:51.547Z",
+          "observedAt": "2026-11-05T02:19:26.162Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Poppy",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/poppy/poppy.bin.json",
               "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "984283b0f66ff725"
             }
           }
@@ -47166,21 +47310,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e2aa1310b144ff1f",
-          "observedAt": "2026-10-23T02:03:51.449Z",
+          "observedAt": "2026-11-05T02:19:26.057Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Alistar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/alistar/alistar.bin.json",
               "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "60b70b49d6326ac5"
             }
           }
@@ -50142,9 +50286,9 @@
       ],
       "priority": "QEW",
       "first": "QEW",
-      "why": "收集者与无尽提供暴击，护甲威胁出现时再比较多米尼克领主的致意；需要续航可考虑饮血。尼菈 Q 命中敌方单位或建筑才获得额外射程；W 可躲避攻击并减轻魔法伤害，接触友军才能共享，不能免所有技能。征服者要持续命中叠层，强攻要连续三次普攻击中同一英雄；没有安全接触机会时先撤。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "why": "多兰剑和药出门，首回城按金币考虑锯齿短匕或长剑。核心从收集者、无尽和领主按经济、护甲压力取舍；鞋按实际对线压力，续航看饮血，怕反开再看守护天使。Q 实际命中敌方单位或建筑才获得额外射程。W 可闪避攻击并减轻魔法伤害，接触友军才能共享。征服者需实际伤害命中，强攻需连续三次普攻击中同一敌方英雄。无安全接近机会时先退。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "reviewBaseline": {
         "champion:Nilah": "30e5ef1b4f79390e",
         "item:6676": "f75b10fbdb261e7f",
@@ -50214,6 +50358,30 @@
           "url": "https://op.gg/lol/champions/nilah/build?type=ranked",
           "kind": "单英雄统计参考",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 尼菈下路单英雄加点与召唤师技能",
+          "url": "https://op.gg/lol/champions/nilah/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置参考，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewSourceAnchors": {
@@ -50222,28 +50390,32 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-23T02:03:51.545Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
         }
       },
       "skillOrder": "QEWQQRQEQEREEWWRWW",
-      "skillReason": "参考 OP.GG 16.21 尼菈下路单英雄前 15 级；第 16–18 级按技能等级上限补齐。该路线不是本组合实测，可按对线调整。"
+      "skillReason": "前 15 级采用同英雄同位置的当版记录，剩余节点按合法技能等级补齐。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ]
     },
     {
       "id": "samira-reset",
