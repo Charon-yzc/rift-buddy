@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.19",
+  "version": "2026.11.06.20",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -1648,8 +1648,8 @@
         "JarvanIV",
         "Galio"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "MOBAFire · 26.19 塔里克指南",
@@ -1674,54 +1674,30 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Nilah": "30e5ef1b4f79390e",
-        "champion:Taric": "d7034e2662bef2b0",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3072": "5c29525fccb26a37",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "item:1029": "9d0944aabf48d059",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "champion:Taric": "d7034e2662bef2b0"
       },
       "tempo": "protect",
       "members": [
         {
           "role": "bottom",
           "champion": "Nilah",
-          "loadoutId": "nilah-sustain",
+          "loadoutId": "default",
           "job": "负责下路补刀；Q 命中敌方单位或建筑才有额外射程，控制实际命中且安全时再接普攻，W 留攻击压力并接触友军共享，E 留有效退出单位。"
         },
         {
           "role": "support",
           "champion": "Taric",
-          "loadoutId": "taric-guardian",
+          "loadoutId": "default",
           "job": "W 绑定实际承伤者并确认距离，E 延迟命中后再报眩晕；R 有延迟，按实际爆发窗口提前安排，保护未生效不要催队友深入。"
         }
       ],
@@ -1732,28 +1708,28 @@
       ],
       "window": "双方技能实际可用、距离与退路成立且关键控制命中时再接；条件不成立就保留撤退。",
       "early": "尼菈先保补刀、经验与血量；辅助照看视野和兵线，按实际等级、蓝量及对手技能决定换血。",
-      "economy": "尼菈以补刀为主，辅助保留任务和视野经济；双方配置是单英雄共享机制参考，不代表本组合实测配装。",
+      "economy": "尼菈以补刀为主，辅助保留任务和视野经济；双方使用同位置默认参考，实际来源以界面显示为准，不代表组合实测。",
       "reviewSourceAnchors": {
         "Nilah": {
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-23T02:03:51.545Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -1763,21 +1739,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d7034e2662bef2b0",
-          "observedAt": "2026-10-23T02:03:51.634Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taric",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
               "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a0599325a1012892"
             }
           }
@@ -2942,8 +2918,8 @@
         "Galio",
         "Sejuani"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "MOBAFire · 26.19 塔里克指南",
@@ -2956,6 +2932,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -2991,21 +2973,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "1793244f0dc8a65c",
-          "observedAt": "2026-10-26T13:38:40.401Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kalista",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kalista/kalista.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kalista/kalista.bin.json",
               "sha256": "d9745c7fdf99f1ec7baded98bba9547e6b6f0a9ec604edce4f88f0dbdfe30b39"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "44f72f75e4385140"
             }
           }
@@ -3015,21 +2997,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d7034e2662bef2b0",
-          "observedAt": "2026-10-26T13:38:40.593Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taric",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
               "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a0599325a1012892"
             }
           }
@@ -9860,8 +9842,8 @@
         "Diana"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -9892,55 +9874,30 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Nilah": "30e5ef1b4f79390e",
-        "champion:Rakan": "69d7edc48cac55e5",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3072": "5c29525fccb26a37",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "item:3050": "c3e25c9df9075147",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:2065": "a30335c7d456f5fd",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8242": "37935df8d31dd429"
+        "champion:Rakan": "69d7edc48cac55e5"
       },
       "tempo": "protect",
       "members": [
         {
           "role": "bottom",
           "champion": "Nilah",
-          "loadoutId": "nilah-sustain",
+          "loadoutId": "default",
           "job": "下路补刀；洛实际击飞且落点安全时再 Q 与普攻接触，E 进场前确认可退出的有效单位；W 留攻击压力并接触队友才共享。"
         },
         {
           "role": "support",
           "champion": "Rakan",
-          "loadoutId": "rakan-engage",
+          "loadoutId": "default",
           "job": "先确认 W 落点和 E 范围内安全回跳友军；W 实际击飞后报同一目标，Q 命中英雄或史诗级野怪后按实际回复范围接应，无法返回时停止深入。"
         }
       ],
@@ -9951,28 +9908,28 @@
       ],
       "window": "双方技能实际可用、距离与退路成立且关键控制命中时再接；条件不成立就保留撤退。",
       "early": "尼菈先保补刀、经验与血量；辅助照看视野和兵线，按实际等级、蓝量及对手技能决定换血。",
-      "economy": "尼菈以补刀为主，辅助保留任务和视野经济；双方配置是单英雄共享机制参考，不代表本组合实测配装。",
+      "economy": "尼菈以补刀为主，辅助保留任务和视野经济；双方使用同位置默认参考，实际来源以界面显示为准，不代表组合实测。",
       "reviewSourceAnchors": {
         "Nilah": {
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-23T02:03:51.545Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -9982,21 +9939,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "69d7edc48cac55e5",
-          "observedAt": "2026-10-23T02:03:51.548Z",
+          "observedAt": "2026-11-05T02:19:26.163Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rakan",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
               "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "14165b7ab2f27514"
             }
           }
@@ -10019,8 +9976,8 @@
         "Sejuani"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -10051,36 +10008,24 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Nilah": "30e5ef1b4f79390e",
-        "champion:Soraka": "46ec394f508ebcc0",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3072": "5c29525fccb26a37",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032"
+        "champion:Soraka": "46ec394f508ebcc0"
       },
       "tempo": "protect",
       "members": [
         {
           "role": "bottom",
           "champion": "Nilah",
-          "loadoutId": "nilah-sustain",
+          "loadoutId": "default",
           "job": "下路补刀；先保血量、兵线与退出路线，Q 命中敌方单位或建筑才有额外射程，E 冲向单位前确认可接应的退路。"
         },
         {
@@ -10097,28 +10042,28 @@
       ],
       "window": "双方技能实际可用、距离和退路成立时再行动；控制或保护没有实际生效就取消。",
       "early": "尼菈先保补刀、经验与血量；辅助照看视野和兵线，按实际等级、蓝量和对手技能决定换血。",
-      "economy": "尼菈以补刀为主，索拉卡保留任务和视野经济；尼菈共享配置是机制参考，辅助为位置默认配置，来源以界面实际显示，不代表组合实测。",
+      "economy": "尼菈以补刀为主，索拉卡保留任务和视野经济；双方使用同位置默认参考，实际来源以界面显示为准，不代表组合实测。",
       "reviewSourceAnchors": {
         "Nilah": {
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-23T02:03:51.545Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -10128,21 +10073,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "46ec394f508ebcc0",
-          "observedAt": "2026-10-23T02:03:51.632Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Soraka",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/soraka/soraka.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/soraka/soraka.bin.json",
               "sha256": "efdf1cfccf0fbb6bb3de9f8e2e7e5641eb0e628955c602dbe93be699b2ce8e83"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "43b0fc1302f2816c"
             }
           }
@@ -20166,14 +20111,14 @@
       ],
       "why": "艾希实际减速或远程命中后，塔里克可按距离预判延迟控制，并保护没有位移的射手。",
       "plan": "艾希补刀并留安全位置，塔里克确认联结与法力。 艾希普攻或 W 实际减速，或 R 命中目标后，塔里克按距离预判 E；实际命中才报眩晕。 需要保护时提前 R 并确认覆盖；箭落空、联结失距或受到过量消耗就回撤。",
-      "risk": "塔里克手短且缺法力时难接近；艾希 R 命中目标周围的敌人只受减速，不能说全部眩晕。",
+      "risk": "塔里克手短且缺法力时难接近；艾希 R 只晕眩命中的首个敌方英雄，目标周围敌人受到伤害和减速，不会因此全部眩晕。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 艾希技能资料",
@@ -20204,25 +20149,17 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Taric.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Ashe": "f363e1846cfe0370",
-        "champion:Taric": "d7034e2662bef2b0",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "item:1029": "9d0944aabf48d059",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "champion:Taric": "d7034e2662bef2b0"
       },
       "tempo": "protect",
       "members": [
@@ -20235,7 +20172,7 @@
         {
           "role": "support",
           "champion": "Taric",
-          "loadoutId": "taric-guardian",
+          "loadoutId": "default",
           "job": "先确认 W 联结、距离和法力，再预判延迟 E；R 有延迟且仅生效后免伤，不免控制。"
         }
       ],
@@ -20246,28 +20183,28 @@
       ],
       "window": "相关技能已学可用、联结与攻击距离成立、队友能安全接应时再行动。",
       "early": "下路成员先保补刀、经验、血量和视野；按实际技能、距离和来敌方向决定是否换血。",
-      "economy": "下路英雄以补刀为主，辅助保留任务与视野经济；射手为位置默认资料，辅助复用共享配置，均不代表组合实测。",
+      "economy": "下路英雄以补刀为主，辅助保留任务与视野经济；双方使用同位置默认参考，实际来源以界面显示为准，不代表组合实测。",
       "reviewSourceAnchors": {
         "Ashe": {
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f363e1846cfe0370",
-          "observedAt": "2026-10-23T02:03:51.451Z",
+          "observedAt": "2026-11-05T02:19:26.059Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ashe",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ashe/ashe.bin.json",
               "sha256": "ada00af1ea15a42094a914a05794e0d3cedcb66c150ed52e8d3762b8d12dc6b5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1ab1be4161ebeecc"
             }
           }
@@ -20277,21 +20214,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d7034e2662bef2b0",
-          "observedAt": "2026-10-23T02:03:51.634Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taric",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
               "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a0599325a1012892"
             }
           }
@@ -20546,8 +20483,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-01",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -20566,6 +20503,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -20601,21 +20544,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-26T13:38:40.507Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -20625,21 +20568,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b10366f1187813b9",
-          "observedAt": "2026-10-26T13:38:40.505Z",
+          "observedAt": "2026-11-05T02:19:26.158Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nami",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nami/nami.bin.json",
               "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "d41e55e60af3c37e"
             }
           }
@@ -20662,8 +20605,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-01",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -20682,6 +20625,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -20717,21 +20666,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-26T13:38:40.507Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -20741,21 +20690,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f5091380ca45272",
-          "observedAt": "2026-10-26T13:38:40.500Z",
+          "observedAt": "2026-11-05T02:19:26.154Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lulu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lulu/lulu.bin.json",
               "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "33e697bcb063b28b"
             }
           }
@@ -20778,8 +20727,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-01",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -20798,6 +20747,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -20833,21 +20788,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-26T13:38:40.507Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -20857,21 +20812,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "040340652360d067",
-          "observedAt": "2026-10-26T13:38:40.515Z",
+          "observedAt": "2026-11-05T02:19:26.165Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Renata",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/renata/renata.bin.json",
               "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "849f2ea81ec5e47e"
             }
           }
@@ -21210,8 +21165,8 @@
         "JarvanIV"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-01",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -21230,6 +21185,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -21265,21 +21226,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-26T13:38:40.507Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -21289,21 +21250,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "74372983c2c1dbfe",
-          "observedAt": "2026-10-26T13:38:40.605Z",
+          "observedAt": "2026-11-05T02:19:26.184Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Yuumi",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yuumi/yuumi.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yuumi/yuumi.bin.json",
               "sha256": "b65fd4e92df3a120fe88ee2ebd588f55a7f1a642f249c22d0668eae860f9c3aa"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2bfcd21ddb05bd3f"
             }
           }
