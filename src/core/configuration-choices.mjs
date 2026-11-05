@@ -1,4 +1,4 @@
-import {getBuild} from './builds.mjs';
+import {getBuild,validCurrentHexReference} from './builds.mjs';
 import {configurationKey} from './preparation.mjs';
 import {createItemSet} from './item-sets.mjs';
 import {isCurrentHexData} from './hex-data-current.mjs';
@@ -18,7 +18,7 @@ const nameOf=(build,data)=>{
 // Each row is a complete, materialized preparation. Switching never merges a
 // previous row's manual rune, item, spell or skill overrides into the next row.
 export function configurationChoices(data,selection,currentBuild){
- if(currentBuild?.unavailable||selection.mode==='hex'&&!isCurrentHexData(data))return [];
+ if(currentBuild?.unavailable||selection.mode==='hex'&&!isCurrentHexData(data)&&!validCurrentHexReference(data.hexBuilds?.[selection.id],data.champions.find(hero=>hero.id===selection.id),data))return [];
  const dependencies=[data.items,data.runes,data.builds,data.buildSources,data.catalog,data.catalogInfo,data.hexBuilds,data.patch,data.flashSlot,data.clientFlashSlot],key=JSON.stringify([configurationKey(selection),selection.readOnly===true,selection.localReference===true]);
  let cache=caches.get(data);
  if(!cache||dependencies.some((value,index)=>value!==cache.dependencies[index])){cache={dependencies,values:new Map()};caches.set(data,cache);}

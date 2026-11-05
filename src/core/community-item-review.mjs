@@ -2,6 +2,33 @@ import {fingerprint} from './content-fingerprint.mjs';
 import {hasItemModeTooltip,ITEM_MODE_TOOLTIP_REVISION} from './item-mode-tooltip.mjs';
 
 export const hexRouteItemFingerprint=item=>fingerprint({name:item?.name,description:item?.description,stats:item?.stats});
+// The route has a known hero but no verified teammate context. Never infer an
+// ally-gated item is available, and check champion ownership on both receipt
+// and projection. An upgrade not sold in-store needs a separately sourced buy.
+export function validHexRouteTarget(item,hero){
+ if(!item?.maps?.['12']||typeof hero!=='string'||!hero)return false;
+ if(item.requiredAlly!==undefined&&item.requiredAlly!==null&&item.requiredAlly!=='')return false;
+ const required=item.requiredChampion;
+ return required===undefined||required===null||required===''||typeof required==='string'&&required.toLowerCase()===hero.toLowerCase();
+}
+export function validHexRoutePurchase(item,hero){
+ return validHexRouteTarget(item,hero)&&item.inStore===true&&item.gold?.purchasable===true;
+}
+// Absent means unknown; an empty list explicitly reviews this interaction as
+// independent of named equipment. It does not by itself scope route text;
+// UI coreItems remain display metadata.
+export function validCommunityRequiredItems(route){
+ if(route?.requiredItems===undefined)return true;
+ if(!Array.isArray(route.requiredItems)||route.requiredItems.length>12||new Set(route.requiredItems).size!==route.requiredItems.length||!Array.isArray(route.gear)||!route.gear.every(group=>Array.isArray(group)&&Array.isArray(group[1])))return false;
+ const gear=new Set(route.gear.flatMap(group=>group[1]));
+ return route.requiredItems.every(id=>Number.isSafeInteger(id)&&id>0&&gear.has(id));
+}
+// An explicit human review scopes route text to required equipment and each
+// gear group's condition and explanation to that group's own dependencies.
+// It also covers the route's skill priority independently of optional gear.
+export function validCommunityEquipmentTextScope(route){
+ return route?.equipmentTextScoped===undefined||route.equipmentTextScoped===true&&Array.isArray(route.requiredItems)&&!!route.itemReview;
+}
 // Bind the explanation to this item's displayed effects, including Hex overrides.
 // A collector's file-wide source hash or fetch time is not an effect change.
 export function communityHexItemFingerprint(item,patch){

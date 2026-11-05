@@ -4,7 +4,7 @@ import {compareBuildPatches} from './core/builds.mjs';
 import {itemModeTooltip} from './core/item-mode-tooltip.mjs';
 import {itemSourceConflict,itemSourceDescriptions} from './core/item-source-conflict.mjs';
 import {hexAugmentReference} from './core/hex-augment-reference.mjs';
-import {isCurrentHexData} from './core/hex-data-current.mjs';
+import {isCurrentHexData,isReadableHexData} from './core/hex-data-current.mjs';
 import {tooltipPlacement} from './core/window-placement.mjs';
 const numbers=value=>String(value).split(/(\d+(?:\.\d+)?(?:%|秒|金币|金)?)/g).map((part,index)=>index%2?`<strong>${e(part)}</strong>`:e(part)).join('');
 export function gameTooltipView(data,kind,id,{mode='rift',image=asset,compact=false,brief='',poolStatus='',hidePartialNote=false}={}){
@@ -26,7 +26,7 @@ export function gameTooltipView(data,kind,id,{mode='rift',image=asset,compact=fa
   const spell=data.spells[id];if(!spell)return '';
   name=spell.name;description=spell.description;meta=[data.patch,spell.cooldownBurn?'冷却 '+spell.cooldownBurn+' 秒':''].filter(Boolean).join(' · ');
  }else if(kind==='augment'){
-  if(mode!=='hex'||!isCurrentHexData(data))return '';
+  if(mode!=='hex'||!isCurrentHexData(data)&&!isReadableHexData(data))return '';
   const augment=hexAugmentReference(data.augments.find(a=>String(a.id)===String(id)),{patch:data.patch});if(!augment)return '';
   name=augment.name;description=augment.description;partial=augment.descriptionStatus!=='complete';meta=[data.patch,poolStatus].filter(Boolean).join(' · ');
  }else return '';

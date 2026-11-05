@@ -1,4 +1,4 @@
-import {isCurrentHexData} from './hex-data-current.mjs';
+import {isCurrentHexData,isReadableHexData} from './hex-data-current.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
 const update='https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/';
 const missions='https://support.riotgames.com/en-us/league-of-legends/events/aram-mayhem-journey-to-stardom';
@@ -12,14 +12,14 @@ const unlocks=new Map([
 ]);
 const skills=new Map([[3170,'Q'],[3171,'W'],[3172,'E'],[3173,'R']]);
 export function hexAugmentAcquisition(data,augment){
- const ordinary={kind:'ordinary',displayable:true,ordinaryOption:true};
+ const ordinary={kind:'ordinary',displayable:true,ordinaryOption:true,manualOption:true};
  if(!augment)return ordinary;
  const current=isCurrentHexData(data);
  // Withdrawing an explanation cannot promote a system record into an ordinary
  // offer. Preserve the ID/namespace boundary even if source identity drifts.
  const system=skills.has(augment.id)||augment.id===3176||/^GoH_PentakillAug_/.test(augment.key||'');
- if(system&&(!current||augment.key!==(augment.id===3176?'GoH_PentakillAug_Generic':'GoH_PentakillAug_'+skills.get(augment.id))))return {kind:'unverified-special',displayable:false,ordinaryOption:false};
- if(!current)return ordinary;
+ if(system&&(!current||augment.key!==(augment.id===3176?'GoH_PentakillAug_Generic':'GoH_PentakillAug_'+skills.get(augment.id))))return {kind:'unverified-special',displayable:false,ordinaryOption:false,manualOption:false};
+ if(!current)return {kind:'unknown',displayable:true,ordinaryOption:false,manualOption:true,note:'当前版本的普通获取资格尚未确认；仅手动记录局内实际出现或已选的强化。'};
  if(augment.id===3176&&augment.key==='GoH_PentakillAug_Generic')return {kind:'placeholder',displayable:false,ordinaryOption:false,sourceUrl:update};
  const slot=skills.get(augment.id);
  if(slot&&augment.key==='GoH_PentakillAug_'+slot)return {kind:'headliner-skill',displayable:true,ordinaryOption:false,slot,note:`Pentakill 主秀的${slot}技能增强记录，来自开局或18级的技能增强，不作为普通三选一；本局绑定技能以游戏为准。`,sourceUrl:update};
@@ -29,10 +29,11 @@ export function hexAugmentAcquisition(data,augment){
 }
 // Disabled catalogue records remain in the immutable source for diagnostics and
 // explicitly entered live choices, never in browse/recommendation pickers.
-export const hexHandbookAugments=(data,{includeDisabled=false}={})=>isCurrentHexData(data)?data.augments.filter(a=>hexAugmentAcquisition(data,a).displayable&&(includeDisabled||!hexCatalogDisabled(data,a))):[];
+export const hexHandbookAugments=(data,{includeDisabled=false}={})=>isCurrentHexData(data)||isReadableHexData(data)?data.augments.filter(a=>hexAugmentAcquisition(data,a).displayable&&(includeDisabled||!hexCatalogDisabled(data,a))):[];
 export const hexOrdinaryAugments=(data,options)=>hexHandbookAugments(data,options).filter(a=>hexAugmentAcquisition(data,a).ordinaryOption);
+export const hexManualAugments=(data,options)=>hexHandbookAugments(data,options).filter(a=>hexAugmentAcquisition(data,a).manualOption);
 export function hexCurrentAugmentIds(data,ids){
- if(!isCurrentHexData(data)||!Array.isArray(ids))return [];
+ if(!isCurrentHexData(data)&&!isReadableHexData(data)||!Array.isArray(ids))return [];
  return [...new Set(ids)].filter(id=>{const a=data.augments.find(a=>a.id===id);return a&&hexAugmentAcquisition(data,a).displayable&&!hexCatalogDisabled(data,a);});
 }
 // Hide obsolete Hex favorites without deleting personal files or changing

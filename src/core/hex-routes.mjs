@@ -1,14 +1,15 @@
-import {isCurrentHexData} from './hex-data-current.mjs';
+import {isCurrentHexData,isReadableHexData} from './hex-data-current.mjs';
 import {communityHexAugmentFingerprint,validCommunityAugmentReview,validCommunityExclusions,validCommunityCoreBrief} from './community-augment-review.mjs';
 import itemsReview from './hex-route-items.json' with {type:'json'};
-import {hexRouteItemFingerprint,communityHexItemFingerprint,validCommunityItemReview} from './community-item-review.mjs';
+import {hexRouteItemFingerprint,communityHexItemFingerprint,validCommunityItemReview,validCommunityRequiredItems,validCommunityEquipmentTextScope,validHexRoutePurchase} from './community-item-review.mjs';
 export {hexRouteItemFingerprint} from './community-item-review.mjs';
 import {currentHexReview,hexChampionReview} from './hex-review.mjs';
 import {reviewedHexMechanic,hexUltimateRequirement} from './hex-mechanics.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
 import communityRoutes from './hex-community-routes.json' with {type:'json'};
 import {mechanicReview} from './mechanic-review.mjs';
-import {communitySourceLabel,communitySourceMedium,validCommunitySkillPriority} from './community-source.mjs';
+import {mechanicSourceInput} from './mechanic-source.mjs';
+import {communitySourceLabel,communitySourceMedium,validCommunitySkillPriority,validCommunitySource} from './community-source.mjs';
 
 const augmentComplements={1118:'提供25%暴击几率；治疗护盾实际暴击时多40%效果。',1141:'用于友军的治疗和护盾增强。',
  1047:'获得50%暴击几率；按当前暴击率重新比较装备。',1077:'暴击伤害的12%治疗自身，获得25%暴击几率。',1080:'以暴击几率进行会心防御，触发几率最多50%；获得25%暴击几率。',
@@ -73,27 +74,44 @@ export function hexCommunitySourceURLs(data){
 }
 export function hexPlayerRoutes(params){return playerRoutes(params);}
 function playerRoutes({data,hero,owned=[],options=[]},communityCandidates){
- if(!isCurrentHexData(data))return [];
+ if(!isCurrentHexData(data)&&!isReadableHexData(data))return [];
  const champion=data.champions.find(c=>c.id===hero);
  const itemReview=currentHexReview(data.patch);
- if(!champion||!itemReview)return [];
- const baseReviewed=hexChampionReview(champion,data.patch)==='current';
+ if(!champion)return [];
+ if(!itemReview&&(data.mechanicSourceRevision!==1||data.itemTooltipRevision!==1||mechanicSourceInput(champion,data.patch)?.version!==data.version))return [];
+ const baseReviewed=!!itemReview&&hexChampionReview(champion,data.patch)==='current';
  const community=data.communityHexRoutes||communityRoutes;
  const communityReviewed=community.patch===data.patch&&mechanicReview(champion,data.patch,community.championReview)==='current';
  if(!baseReviewed&&!communityReviewed)return [];
- const noUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
+ const globalNoUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
+ const basic=data.augments.find(a=>a.id===1004);
+ // A separately reviewed 1004 route can establish only the current shared
+ // effect, not another hero's route, equipment, or source eligibility.
+ const sharedNoUltimate=!itemReview&&owned.includes(1004)&&community.patch===data.patch&&basic?.key==='ARAM_BacktoBasics'&&/不能使用.*终极/.test(basic.description||'')&&community.routes.some(row=>{
+  const review=row.augmentReview,effect=review?.effects?.[1004],hero=data.champions.find(value=>value.id===row.hero);
+  return row.patch===data.patch&&row.augment===1004&&mechanicReview(hero,data.patch,community.championReview)==='current'&&validCommunitySource(row.communitySource,community.reviewedAt,data.patch)&&validCommunityAugmentReview(review,row,data.patch,community.reviewedAt)&&effect?.fingerprint===communityHexAugmentFingerprint(basic,data,effect.coverage);
+ });
  const authored=[...(baseReviewed?routes.filter(r=>r.hero===hero).map(route=>({route,fromCommunity:false})):[]),...(communityReviewed?(communityCandidates||community.routes.filter(r=>r.hero===hero)).map(route=>({route,fromCommunity:true})):[])];
  return authored.filter(({route})=>!route.patch||route.patch===data.patch).flatMap(({route,fromCommunity})=>{
-  if(itemReview.communityPolicy==='current-source-only'&&route.community&&!route.communitySource)return [];
-  if(route.requiresUltimate&&noUltimate)return [];
+  if(itemReview?.communityPolicy==='current-source-only'&&route.community&&!route.communitySource)return [];
   if(!validCommunitySkillPriority(route))return [];
   const scopedItems=fromCommunity&&route.itemReview!==undefined;
+  if(!itemReview&&(!fromCommunity||!scopedItems||route.augmentReview===undefined))return [];
+  if(!itemReview&&!validCommunitySource(route.communitySource,community.reviewedAt,data.patch))return [];
+  if(!itemReview&&route.coreItems!==undefined&&(!Array.isArray(route.coreItems)||!Array.isArray(route.gear)||route.coreItems.some(id=>!Number.isSafeInteger(id)||!route.gear.some(group=>Array.isArray(group)&&Array.isArray(group[1])&&group[1].includes(id)))))return [];
+  if(!validCommunityRequiredItems(route)||!validCommunityEquipmentTextScope(route))return [];
   if(scopedItems&&!validCommunityItemReview(route.itemReview,route,data.patch,community.reviewedAt))return [];
   const scopedEffects=fromCommunity&&route.augmentReview!==undefined;
   if(!validCommunityExclusions(route)||route.excludedAugments!==undefined&&!scopedEffects)return [];
   if(route.coreBrief!==undefined&&(!scopedEffects||!validCommunityCoreBrief(route)))return [];
   if(scopedEffects&&!validCommunityAugmentReview(route.augmentReview,route,data.patch,community.reviewedAt))return [];
   const effectCurrent=a=>scopedEffects?!!route.augmentReview.effects[a?.id]&&route.augmentReview.effects[a.id].fingerprint===communityHexAugmentFingerprint(a,data,route.augmentReview.effects[a.id].coverage):reviewedHexMechanic(a,data.patch);
+  // A new patch may use the disabling rule only when this exact route also
+  // reviewed the current 1004 effect and supplies its basic-skill alternative.
+  const scopedNoUltimate=!itemReview&&owned.includes(1004)&&scopedEffects&&basic?.key==='ARAM_BacktoBasics'&&/不能使用.*终极/.test(basic.description||'')&&effectCurrent(basic);
+  const noUltimate=globalNoUltimate||scopedNoUltimate||sharedNoUltimate;
+  if(!itemReview&&owned.includes(1004)&&(!noUltimate||!Array.isArray(route.basicPlay)||!route.basicPlay.length))return [];
+  if(route.requiresUltimate&&noUltimate)return [];
   // Offers are not selections. Review the negative dependency as carefully as
   // the core, but never display it as a compatible augment or gear requirement.
   if((route.excludedAugments||[]).some(id=>owned.includes(id)||!effectCurrent(data.augments.find(a=>a.id===id))))return [];
@@ -106,21 +124,43 @@ function playerRoutes({data,hero,owned=[],options=[]},communityCandidates){
    return a?.descriptionStatus==='complete'&&effectCurrent(a)&&!(noUltimate&&needsUltimate(a))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+(scopedEffects?scopedEffectBrief(a):reviewedHexMechanic(a,data.patch)?(hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id]||a.description:a.tooltip.description.replaceAll('攻击力攻击力','攻击力'))}]:[];
   });
   let pendingItems=0;
+  // Required item validity is independent of whether a mixed recommendation
+  // group also contains an optional item which has since become unavailable.
+  const validItem=id=>{const item=data.items[id];return !!(validHexRoutePurchase(item,hero)&&(itemReview||item.tooltipParserRevision===2&&item.tooltip?.status==='complete'&&item.modeTooltips?.hex?.status!=='partial')&&reviewedItems[id]===itemFingerprint(item,data.patch));};
+  // The same reviewed augment/ultimate conditions govern both displaying a
+  // group and deriving support for an independently valid required item.
+  const requirementsCurrent=requires=>requires.every(id=>{const a=data.augments.find(a=>a.id===id);return a?.descriptionStatus==='complete'&&effectCurrent(a)&&!(noUltimate&&needsUltimate(a))&&(!hexCatalogDisabled(data,a)||owned.includes(id));});
+  const groupAllowed=group=>!(noUltimate&&group[4]===true)&&requirementsCurrent(group[3]||[]);
   const gear=route.gear.flatMap(([when,ids,why,requires=[],requiresUltimate=false])=>{
    if(requiresUltimate&&noUltimate)return [];
-   if(requires.some(id=>{const a=data.augments.find(a=>a.id===id);return a?.descriptionStatus!=='complete'||!effectCurrent(a)||noUltimate&&needsUltimate(a)||hexCatalogDisabled(data,a)&&!owned.includes(id);}))return [];
+   if(!requirementsCurrent(requires)){pendingItems++;return [];}
    const items=ids.flatMap(id=>{
     const item=data.items[id];
-    if(!item?.maps?.['12']||!item.inStore||item.gold?.purchasable===false||reviewedItems[id]!==itemFingerprint(item,data.patch)){pendingItems++;return [];}
-    return [{id,name:item.name,description:item.description,...(route.coreItems?.includes(id)?{core:true}:{})}];
+    if(!validItem(id)){pendingItems++;return [];}
+    return [{id,name:item.name,description:item.description,...(route.coreItems?.includes(id)?{core:true}:{}),...(route.requiredItems?.includes(id)?{required:true}:{})}];
    });
    // A group explanation can depend on every listed item. Never leave old
    // combined claims behind when one of those item effects changes.
    return items.length===ids.length?[{when,why,items}]:[];
   });
-  if(route.coreItems?.some(id=>!gear.some(group=>group.items.some(item=>item.id===id))))return [];
-  return [{id:hero+'-'+augment.id,hero,family:route.family,optionalAugments,title:route.title,summary:route.summary,play:noUltimate&&route.basicPlay?route.basicPlay:route.play,caution:(noUltimate?'已选回归基本功，终极技能不可使用。':'')+route.caution,gear,pendingItems,ultimateUnavailable:!!noUltimate,catalogDisabled:hexCatalogDisabled(data,augment),augment:{id:augment.id,name:augment.name},state:owned.includes(augment.id)?'owned':options.includes(augment.id)?'offered':'preview',patch:data.patch,
-   ...(scopedEffects?{brief:(noUltimate?'终极技能不可使用。':'')+(route.coreBrief||augment.tooltip.description)}:{}),...(route.communitySource?{communitySource:route.communitySource}:{}),...(route.skillPriority?{skillPriority:route.skillPriority}:{}),...(route.skillPriorityOrigin?{skillPriorityOrigin:route.skillPriorityOrigin}:{}),
-   sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(['Jhin','Camille'].includes(hero)?[{name:'技能完整资料',url:champion.mechanicSource.character.url}]:[]),...(route.communitySource?[{name:communitySourceLabel(route.communitySource),url:route.communitySource.url}]:[]),...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:route.communitySource?route.communitySource.adaptation:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
+  const present=id=>gear.some(group=>group.items.some(item=>item.id===id));
+  if(route.requiredItems!==undefined?route.requiredItems.some(id=>!validItem(id)):itemReview?route.coreItems?.some(id=>!present(id)):pendingItems>0)return [];
+  // A required item must be supported by a group whose augment conditions
+  // remain current. Other optional items in that group may still be pending.
+  if((route.requiredItems||[]).some(id=>!route.gear.some(group=>group[1].includes(id)&&groupAllowed(group))))return [];
+  // Keep individually valid mandatory items visible when an otherwise eligible
+  // group was withdrawn for another item. No old group effect is carried over.
+  const missingRequired=(route.requiredItems||[]).filter(id=>!present(id));
+  if(missingRequired.length){gear.unshift({when:'玩法必需',why:'已核必需装备；原装备组的其他条件或物品待核。',requiredFallback:true,items:missingRequired.map(id=>({id,name:data.items[id].name,description:data.items[id].description,required:true,...(route.coreItems?.includes(id)?{core:true}:{})}))});pendingItems++;}
+  // Without an explicit scoped-text review, an unknown withdrawn group's
+  // effects may also be mentioned elsewhere. Keep the current augment and
+  // independently checked item names, but withhold untraceable claims.
+  const textPending=pendingItems>0&&route.equipmentTextScoped!==true;
+  const visibleGear=textPending?gear.map(group=>({...group,when:group.requiredFallback?'玩法必需':'装备参考',why:'部分装备组待核对，原条件说明暂不展示。'})):gear;
+  const neutral='部分装备组待核对；请查看当前强化原文。';
+  const source=textPending&&route.communitySource?{...route.communitySource,adaptation:neutral}:route.communitySource;
+  return [{id:hero+'-'+augment.id,hero,family:route.family,optionalAugments,title:textPending?augment.name+' · 装备待核':route.title,summary:textPending?neutral:route.summary,play:textPending?[neutral]:noUltimate&&route.basicPlay?route.basicPlay:route.play,caution:(noUltimate?'已选回归基本功，终极技能不可使用。':'')+(textPending?neutral:route.caution),gear:visibleGear,pendingItems,ultimateUnavailable:!!noUltimate,catalogDisabled:hexCatalogDisabled(data,augment),augment:{id:augment.id,name:augment.name},state:owned.includes(augment.id)?'owned':options.includes(augment.id)?'offered':'preview',patch:data.patch,
+   ...(scopedEffects?{brief:(noUltimate?'终极技能不可使用。':'')+(textPending?augment.tooltip.description:route.coreBrief||augment.tooltip.description)}:{}),...(source?{communitySource:source}:{}),...(!textPending&&route.skillPriority?{skillPriority:route.skillPriority}:{}),...(!textPending&&route.skillPriorityOrigin?{skillPriorityOrigin:route.skillPriorityOrigin}:{}),
+   sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(['Jhin','Camille'].includes(hero)?[{name:'技能完整资料',url:champion.mechanicSource.character.url}]:[]),...(route.communitySource?[{name:communitySourceLabel(route.communitySource),url:route.communitySource.url}]:[]),...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:textPending?neutral:route.communitySource?route.communitySource.adaptation:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
  }).sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered')).filter((route,index,all)=>!route.family||!all.slice(0,index).some(other=>other.family===route.family));
 }

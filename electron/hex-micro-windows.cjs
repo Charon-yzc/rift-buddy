@@ -91,8 +91,10 @@ module.exports=function createHexMicroWindows({root,getState,setState,getPayload
    const player=p.equipment?.available&&p.equipment[input.side]?.players?.find(row=>row.id===input.id);if(!player||!['ally','enemy'].includes(input.side))return false;
    name=player.name;brief=player.known&&Number.isFinite(player.value)?'公开装备标价 '+Math.floor(player.value)+' 金；不含未花金币。':'装备尚未读全。';
   }else if(input.kind==='status'&&!p.routes.length){name=p.hero?.name;brief=p.pending;}else{
-   const route=p.routes.find(row=>row.id===input.route),list=input.kind==='augment'?route?.augments:input.kind==='item'?route?.items:null,entry=list?.find(row=>String(row.id)===String(input.id));if(!entry)return false;
-   ({name,brief}=hexMicroHint(route,entry,input.kind));
+   const route=p.routes.find(row=>row.id===input.route);if(!route)return false;
+   if(input.kind==='pending'&&route.pendingItems){name='装备待核';brief='部分装备组待核对。';}
+   else if(input.kind==='group'&&/^[1-9]\d*$/.test(input.id||'')){const group=route.gearGroups?.[Number(input.id)];if(!group)return false;name=group.when;brief=group.items.map(item=>item.name).join('、')+'。'+group.why;}
+   else{const list=input.kind==='augment'?route.augments:input.kind==='item'?route.items:null,entry=list?.find(row=>String(row.id)===String(input.id));if(!entry)return false;({name,brief}=hexMicroHint(route,entry,input.kind));}
   }
   const r=input.rect,b=e.win.getBounds();if(!r||!['x','y','width','height'].every(k=>Number.isFinite(r[k]))||r.x<0||r.y<0||r.width<1||r.height<1||r.x+r.width>b.width+1||r.y+r.height>b.height+1)return false;
   const key=JSON.stringify([kind,p.context,name,brief,r]);if(key===tipKey)return true;hideTooltip();tipKey=key;tipKind=kind;const serial=hoverSerial,pointer=screen.getCursorScreenPoint();

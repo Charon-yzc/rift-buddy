@@ -4,7 +4,7 @@ import {communitySourceMedium,validCommunitySkillPriority} from './community-sou
 export function hexRouteCard(route,build={}){
  const community=[route.source,...(route.sources||[]).map(s=>s.url)].find(url=>typeof url==='string'&&/^https:\/\/arammayhem\.com\//.test(url));
  const creator=communitySourceMedium(route.communitySource)?route.communitySource:null;
- const source=route.kind==='reference'?'当前配置':creator?creator.author+' · 改编':community?'ARAM Mayhem · 改编':'机制整理';
+ const source=route.kind==='reference'?(route.sourceOnly?'OP.GG 来源':'当前配置'):creator?creator.author+' · 改编':community?'ARAM Mayhem · 改编':'机制整理';
  const authored=creator&&validCommunitySkillPriority(route)&&Array.isArray(route.skillPriority);
  const project=authored&&route.skillPriorityOrigin==='project';
  const order=authored?route.skillPriority:creator?[]:typeof build.priority==='string'?[...new Set(build.priority.toUpperCase().replace(/[^QWE]/g,''))]:[];

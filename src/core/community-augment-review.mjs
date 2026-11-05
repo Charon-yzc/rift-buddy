@@ -1,12 +1,12 @@
 import {fingerprint} from './content-fingerprint.mjs';
-import {isCurrentHexData} from './hex-data-current.mjs';
+import {isCurrentHexData,isReadableHexData} from './hex-data-current.mjs';
 import {validAugmentCounterBasis} from './augment-counter-basis.mjs';
 
 // A manual, signed route review binds full static text and source objects.
 // Explicit current-player counters may remain dynamic; formulas may not.
 // It never renews shared rules or other authors.
 export function communityHexAugmentFingerprint(augment,data,coverage='complete'){
- if(!['complete','dynamic-counters','buff-counter'].includes(coverage)||!isCurrentHexData(data)||!augment||!Number.isSafeInteger(augment.id)||augment.id<=0||typeof augment.key!=='string'||!augment.key||typeof augment.description!=='string'||!augment.description||augment.description.length>7000||augment.descriptionStatus!=='complete'||!Array.isArray(augment.unresolved)||augment.unresolved.length||augment.tooltip?.revision!==1||typeof augment.tooltip.description!=='string'||!augment.tooltip.description||augment.tooltip.description.length>7000||!Array.isArray(augment.tooltip.unresolved)||augment.tooltipParserRevision!==5||!/^[a-f0-9]{64}$/.test(augment.effectSourceHash||''))return null;
+ if(!['complete','dynamic-counters','buff-counter'].includes(coverage)||!isCurrentHexData(data)&&!isReadableHexData(data)||!augment||!Number.isSafeInteger(augment.id)||augment.id<=0||typeof augment.key!=='string'||!augment.key||typeof augment.description!=='string'||!augment.description||augment.description.length>7000||augment.descriptionStatus!=='complete'||!Array.isArray(augment.unresolved)||augment.unresolved.length||augment.tooltip?.revision!==1||typeof augment.tooltip.description!=='string'||!augment.tooltip.description||augment.tooltip.description.length>7000||!Array.isArray(augment.tooltip.unresolved)||augment.tooltipParserRevision!==5||!/^[a-f0-9]{64}$/.test(augment.effectSourceHash||''))return null;
  const detail=augment.tooltip,unknown=/〔数值未解析〕|@|\{\{|\}\}/;if(unknown.test(augment.description)||augment.description.includes('〔动态数值〕')||unknown.test(detail.description))return null;
  if(coverage==='complete'?(detail.status!=='complete'||detail.unresolved.length||detail.description.includes('〔动态数值〕')):(detail.status!=='partial'||!detail.unresolved.length||detail.unresolved.length>16||new Set(detail.unresolved).size!==detail.unresolved.length||!detail.description.includes('〔动态数值〕')))return null;
  if(coverage==='dynamic-counters'&&!detail.unresolved.every(key=>typeof key==='string'&&/^f\d{1,3}(?:\.\d{1,3})?$/.test(key)))return null;

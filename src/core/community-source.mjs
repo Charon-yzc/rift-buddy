@@ -21,13 +21,23 @@ export function communitySourceMedium(source){
  if((source?.medium===undefined||source.medium==='video')&&(videoURL.test(source?.url||'')||isYouTubeCommunitySourceURL(source?.url)))return 'video';
  return source?.medium==='text'&&(textURL.test(source.url||'')||kitchenURL.test(source.url||'')||editorialURL.test(source.url||'')||isDouyinCommunitySourceURL(source.url))?'text':null;
 }
-export function validCommunitySource(source,reviewedAt){
+// Author patch numbers use either the game resource major (16) or the
+// published season year (26). An omitted patch remains unknown.
+export function communitySourcePatchCompatible(source,patch){
+ if(source?.sourcePatch===undefined||source.sourcePatch===null)return true;
+ if(typeof source.sourcePatch!=='string')return false;
+ const input=/^(1[5-9]|2[5-9])\.(\d{1,2})$/.exec(source.sourcePatch||''),target=/^(1[5-9])\.(\d{1,2})$/.exec(patch||'');
+ if(!input||!target||Number(input[2])<1||Number(target[2])<1)return false;
+ const year=Number(input[1])<20?Number(input[1])+10:Number(input[1]),current=Number(target[1])+10;
+ return year<current||year===current&&Number(input[2])<=Number(target[2]);
+}
+export function validCommunitySource(source,reviewedAt,patch){
  const medium=communitySourceMedium(source);
  const dated=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))&&(!reviewedAt||value.slice(0,10)<=reviewedAt);
  // This article reports modification time but no first-publication date.
  // Keep the missing fact explicit instead of relabelling an update as publication.
  const updatedOnly=editorialURL.test(source?.url||'')&&source?.publishedAt===null&&source.dateBasis==='author-updated'&&dated(source.editedAt);
- if(!medium||!text(source.author,100)||!updatedOnly&&!dated(source.publishedAt)||source.dateBasis!==undefined&&!updatedOnly||!text(source.adaptation,1000))return false;
+ if(!medium||!text(source.author,100)||!updatedOnly&&!dated(source.publishedAt)||source.dateBasis!==undefined&&!updatedOnly||!text(source.adaptation,1000)||patch!==undefined&&!communitySourcePatchCompatible(source,patch))return false;
  const kitchenDay=kitchenURL.exec(source.url||'')?.[1];
  if(kitchenDay&&(source.publishedAt.slice(0,10)!==kitchenDay||new Date(kitchenDay).toISOString().slice(0,10)!==kitchenDay))return false;
  if(source.editedAt!==undefined&&(!dated(source.editedAt)||!updatedOnly&&Date.parse(source.editedAt)<Date.parse(source.publishedAt)))return false;
