@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.29",
+  "version": "2026.11.06.30",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -32624,8 +32624,8 @@
       "why": "慎的护盾与支援、璐璐的保护帮助克格莫在安全距离寻找输出窗口。",
       "plan": "克格莫与璐璐处理下路线并保持支援距离；慎确认自身引导安全与目标位置。敌人进场时按实际距离使用保护或控制，条件不成立就撤。",
       "risk": "慎引导可能被打断；克格莫缺常规位移，护盾和支援不保证生存。敌人可绕开魂刃结界或从另一侧突入。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot Shen 技能说明",
@@ -32638,13 +32638,19 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "当前单英雄技能依据，不代表组合实测",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
         {
           "role": "top",
           "champion": "Shen",
-          "job": "保上路线；R 先为目标友方英雄提供护盾，再引导，完成引导才传送到队友位置。落地后 E 实际命中才嘲讽；W 在魂刃处形成结界，格挡结界内友方英雄受到的攻击。",
+          "job": "保上路线；R 先为目标友方英雄提供护盾，再引导，完成引导才传送到队友位置。落地后 E 实际命中才嘲讽；W 在魂刃处形成结界，格挡结界内友方英雄受到的普攻。",
           "loadoutId": "default"
         },
         {
@@ -32679,21 +32685,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e59438000b98dd56",
-          "observedAt": "2026-10-23T02:03:51.553Z",
+          "observedAt": "2026-11-05T02:19:26.169Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Shen",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/shen/shen.bin.json",
-              "sha256": "ff70810a319271f9cc076508d6e6a5d877b06899ac6f69516963d975575284e5"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/shen/shen.bin.json",
+              "sha256": "74cb0c892cd17455b5b0cc635c3d396fbba9f6ef3663145ed701cfc6c895b142"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "56dbf98c4bc9628e"
             }
           }
@@ -32703,21 +32709,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ba006aa34e05e235",
-          "observedAt": "2026-10-23T02:03:51.535Z",
+          "observedAt": "2026-11-05T02:19:26.082Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "KogMaw",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kogmaw/kogmaw.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kogmaw/kogmaw.bin.json",
               "sha256": "2b7676bd783ef9d58380c1f10aefff5546e71946ba21c91bd44980befeb0376c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ad3707a256c213e5"
             }
           }
@@ -32727,21 +32733,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f5091380ca45272",
-          "observedAt": "2026-10-23T02:03:51.539Z",
+          "observedAt": "2026-11-05T02:19:26.154Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lulu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lulu/lulu.bin.json",
               "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "33e697bcb063b28b"
             }
           }
@@ -32760,8 +32766,8 @@
       "why": "图奇选择侧翼开火位置，璐璐与慎在各自技能可及的条件下提供保护。",
       "plan": "图奇 Q 伪装前报告方向；璐璐保持安全施法距离，慎确认 R 与引导安全；目标或退路不合适就收缩。",
       "risk": "伪装可能被发现；慎引导可被打断，队友距离过远或落点被包时无法保证救援。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot Shen 技能说明",
@@ -32774,13 +32780,19 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "当前单英雄技能依据，不代表组合实测",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
         {
           "role": "top",
           "champion": "Shen",
-          "job": "保上路线；R 先为目标友方英雄提供护盾，再引导，完成引导才传送到队友位置。落地后 E 实际命中才嘲讽；W 在魂刃处形成结界，格挡结界内友方英雄受到的攻击。",
+          "job": "保上路线；R 先为目标友方英雄提供护盾，再引导，完成引导才传送到队友位置。落地后 E 实际命中才嘲讽；W 在魂刃处形成结界，格挡结界内友方英雄受到的普攻。",
           "loadoutId": "default"
         },
         {
@@ -32815,21 +32827,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e59438000b98dd56",
-          "observedAt": "2026-10-23T02:03:51.553Z",
+          "observedAt": "2026-11-05T02:19:26.169Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Shen",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/shen/shen.bin.json",
-              "sha256": "ff70810a319271f9cc076508d6e6a5d877b06899ac6f69516963d975575284e5"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/shen/shen.bin.json",
+              "sha256": "74cb0c892cd17455b5b0cc635c3d396fbba9f6ef3663145ed701cfc6c895b142"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "56dbf98c4bc9628e"
             }
           }
@@ -32839,21 +32851,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ab3e76d629cf2787",
-          "observedAt": "2026-10-23T02:03:51.636Z",
+          "observedAt": "2026-11-05T02:19:26.177Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Twitch",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twitch/twitch.bin.json",
               "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "461e810ef4e30853"
             }
           }
@@ -32863,21 +32875,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f5091380ca45272",
-          "observedAt": "2026-10-23T02:03:51.539Z",
+          "observedAt": "2026-11-05T02:19:26.154Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lulu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lulu/lulu.bin.json",
               "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "33e697bcb063b28b"
             }
           }
@@ -37438,8 +37450,8 @@
           "job": "保辅助视野，W 实际命中才击飞，E 需范围内可选友军与可用次数。"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-01",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 慎技能资料",
@@ -37464,6 +37476,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -37477,21 +37495,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e59438000b98dd56",
-          "observedAt": "2026-10-26T13:38:40.520Z",
+          "observedAt": "2026-11-05T02:19:26.169Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Shen",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/shen/shen.bin.json",
-              "sha256": "ff70810a319271f9cc076508d6e6a5d877b06899ac6f69516963d975575284e5"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/shen/shen.bin.json",
+              "sha256": "74cb0c892cd17455b5b0cc635c3d396fbba9f6ef3663145ed701cfc6c895b142"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "56dbf98c4bc9628e"
             }
           }
@@ -37501,21 +37519,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "79df9b9e7571e89c",
-          "observedAt": "2026-10-26T13:38:40.606Z",
+          "observedAt": "2026-11-05T02:19:26.252Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zac",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zac/zac.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zac/zac.bin.json",
               "sha256": "40df6abd439891c7e6733966c1ec367a15392cb8b52754a7df145b6b854f0ff5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "cf22bab2f64d09f2"
             }
           }
@@ -37525,21 +37543,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "69d7edc48cac55e5",
-          "observedAt": "2026-10-26T13:38:40.512Z",
+          "observedAt": "2026-11-05T02:19:26.163Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rakan",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
               "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "14165b7ab2f27514"
             }
           }
@@ -38059,8 +38077,8 @@
           "loadoutId": "default"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 慎技能资料",
@@ -38085,6 +38103,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -38098,21 +38122,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e59438000b98dd56",
-          "observedAt": "2026-10-26T13:38:40.520Z",
+          "observedAt": "2026-11-05T02:19:26.169Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Shen",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/shen/shen.bin.json",
-              "sha256": "ff70810a319271f9cc076508d6e6a5d877b06899ac6f69516963d975575284e5"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/shen/shen.bin.json",
+              "sha256": "74cb0c892cd17455b5b0cc635c3d396fbba9f6ef3663145ed701cfc6c895b142"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "56dbf98c4bc9628e"
             }
           }
@@ -38122,21 +38146,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "fb97a340c89c0ba1",
-          "observedAt": "2026-10-26T13:38:40.518Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Samira",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/samira/samira.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/samira/samira.bin.json",
               "sha256": "66207c6c2fbf270bfa686b40c2e39d6197c632bd26e959c7c75ed3843d6a24bb"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "12851dd9ef379ec4"
             }
           }
@@ -38146,21 +38170,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "bec49be1ddcf29c0",
-          "observedAt": "2026-10-26T13:38:40.515Z",
+          "observedAt": "2026-11-05T02:19:26.164Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rell",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rell/rell.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rell/rell.bin.json",
               "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f5469dea7fbc0dcb"
             }
           }
