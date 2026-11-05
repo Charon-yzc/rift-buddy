@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.26",
+  "version": "2026.11.06.27",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -13682,8 +13682,8 @@
         "Graves"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 赛恩技能资料",
@@ -13701,6 +13701,12 @@
           "name": "Riot 16.21.1 英雄技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -13741,7 +13747,7 @@
         "确认技能实际命中与退路；辅助优先任务与视野经济，无法接应或状态不足时停止追击。"
       ],
       "early": "下路英雄负责补刀与保血量，辅助按任务和视野经济支援；技能或资源不足时不强行前压。",
-      "economy": "下路英雄承担补刀；辅助维持任务、视野与实际经济，装备按情况调整，不保证成型或最优。",
+      "economy": "赛恩下路补刀并使用人工机制参考，赛娜按辅助任务和视野经济使用同英雄同位置参考；实际来源与金币以界面和对局为准，非作者当版专配或组合实测。",
       "window": "以实际技能可用、范围、目标与退路为准，控制未命中或队友无法接应时取消接续。",
       "reviewSourceAnchors": {
         "Sion": {
@@ -13749,21 +13755,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "0852586a5d53c2bc",
-          "observedAt": "2026-10-26T13:38:40.521Z",
+          "observedAt": "2026-11-05T02:19:26.171Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Sion",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sion/sion.bin.json",
-              "sha256": "d78a9dc86390b3f25099939467de83f4cce5d5e4dc5fd171237ae84ded0d869d"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sion/sion.bin.json",
+              "sha256": "32c72f1a0efc61ecdbe2721b6d816c97f3c41ce57763b06176ae4f5d2f56ec6d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e93d37d5494eda42"
             }
           }
@@ -13773,21 +13779,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5e547c9cf10f2a05",
-          "observedAt": "2026-10-26T13:38:40.518Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Senna",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/senna/senna.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/senna/senna.bin.json",
               "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "58582c22f3d6346b"
             }
           }
@@ -15026,11 +15032,17 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "official",
           "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "技能资料与社区攻略文字推断 · 非当版对局验证",
-      "reviewedAt": "2026-11-03",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Sion": "0852586a5d53c2bc",
         "champion:Zilean": "60f40731a1259a4a",
@@ -15077,21 +15089,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "0852586a5d53c2bc",
-          "observedAt": "2026-10-26T13:38:40.521Z",
+          "observedAt": "2026-11-05T02:19:26.171Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Sion",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sion/sion.bin.json",
-              "sha256": "d78a9dc86390b3f25099939467de83f4cce5d5e4dc5fd171237ae84ded0d869d"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sion/sion.bin.json",
+              "sha256": "32c72f1a0efc61ecdbe2721b6d816c97f3c41ce57763b06176ae4f5d2f56ec6d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e93d37d5494eda42"
             }
           }
@@ -15101,21 +15113,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "60f40731a1259a4a",
-          "observedAt": "2026-10-26T13:38:40.608Z",
+          "observedAt": "2026-11-05T02:19:26.254Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zilean",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
               "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3e2480aa7362c964"
             }
           }
@@ -15279,11 +15291,17 @@
           "name": "Riot 16.21.1 英雄技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Galio": "62214853523131ad",
         "champion:Senna": "5e547c9cf10f2a05",
@@ -15322,7 +15340,7 @@
         "确认技能实际命中与退路；辅助优先任务与视野经济，无法接应或状态不足时停止追击。"
       ],
       "early": "下路英雄负责补刀与保血量，辅助按任务和视野经济支援；技能或资源不足时不强行前压。",
-      "economy": "下路英雄承担补刀；辅助维持任务、视野与实际经济，装备按情况调整，不保证成型或最优。",
+      "economy": "加里奥承担下路补刀并使用人工机制参考，赛娜按辅助任务与视野经济使用同英雄同位置参考；实际来源与金币以界面和对局为准，非作者当版专配或组合实测。",
       "window": "以实际技能可用、范围、目标与退路为准，控制未命中或队友无法接应时取消接续。",
       "reviewSourceAnchors": {
         "Galio": {
@@ -15330,21 +15348,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "62214853523131ad",
-          "observedAt": "2026-10-26T13:38:40.394Z",
+          "observedAt": "2026-11-05T02:19:26.071Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Galio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
               "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e3a8cfa71c0b2970"
             }
           }
@@ -15354,21 +15372,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5e547c9cf10f2a05",
-          "observedAt": "2026-10-26T13:38:40.518Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Senna",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/senna/senna.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/senna/senna.bin.json",
               "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "58582c22f3d6346b"
             }
           }
@@ -28979,8 +28997,8 @@
         "Zilean"
       ],
       "comboId": "sion-zilean",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-03",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "basis": "champion-mechanics",
       "verification": "inferred-not-match-tested",
       "linkFingerprint": "001c2aa5bd494a23",
@@ -28994,21 +29012,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "0852586a5d53c2bc",
-          "observedAt": "2026-10-26T13:38:40.521Z",
+          "observedAt": "2026-11-05T02:19:26.171Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Sion",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sion/sion.bin.json",
-              "sha256": "d78a9dc86390b3f25099939467de83f4cce5d5e4dc5fd171237ae84ded0d869d"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sion/sion.bin.json",
+              "sha256": "32c72f1a0efc61ecdbe2721b6d816c97f3c41ce57763b06176ae4f5d2f56ec6d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e93d37d5494eda42"
             }
           }
@@ -29018,21 +29036,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "60f40731a1259a4a",
-          "observedAt": "2026-10-26T13:38:40.608Z",
+          "observedAt": "2026-11-05T02:19:26.254Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zilean",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
               "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3e2480aa7362c964"
             }
           }
@@ -54129,7 +54147,7 @@
       "runes": [
         "manual-sion-bottom-tank"
       ],
-      "why": "人工机制适配的下路参考，非作者原配或同位置统计，未经对局验证。近战补刀要保血量与退路；出门和成装按经济、威胁及玩家选择调整。",
+      "why": "人工机制适配的赛恩下路参考，非作者原配或同位置统计，未经对局验证。近战补刀要保血量与退路；出门和成装按经济、威胁及玩家选择调整。日炎、荆棘与狂徒的当前详细说明仍有未解析数值，不预支数值或效果；两种配合均不要求特定装备。",
       "priority": "QWE",
       "skillOrder": "QWEQQRQWQWRWWEEREE",
       "skillReason": "人工主 Q，并按本英雄技能顺序调整，有 R 点 R；非同位置统计。",
@@ -54137,8 +54155,8 @@
         "SummonerFlash",
         "SummonerBarrier"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot 16.21.1 英雄技能",
@@ -54154,6 +54172,12 @@
           "name": "Riot 16.21.1 符文",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
           "kind": "符文依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -54177,21 +54201,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "0852586a5d53c2bc",
-          "observedAt": "2026-10-26T13:38:40.521Z",
+          "observedAt": "2026-11-05T02:19:26.171Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Sion",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sion/sion.bin.json",
-              "sha256": "d78a9dc86390b3f25099939467de83f4cce5d5e4dc5fd171237ae84ded0d869d"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sion/sion.bin.json",
+              "sha256": "32c72f1a0efc61ecdbe2721b6d816c97f3c41ce57763b06176ae4f5d2f56ec6d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e93d37d5494eda42"
             }
           }
@@ -54405,7 +54429,7 @@
       "runes": [
         "manual-galio-bottom-comet"
       ],
-      "why": "人工机制适配的下路参考，非作者原配或同位置统计，未经对局验证。近战补刀要保血量与退路；出门和成装按经济、威胁及玩家选择调整。",
+      "why": "人工机制适配的加里奥下路参考，非作者原配或同位置统计，未经对局验证。近战补刀要保血量与退路；出门和成装按经济、威胁及玩家选择调整。卢登详细说明仍有未解析数值，不依赖该数值或承诺效果，本配合也不要求特定装备。",
       "priority": "QWE",
       "skillOrder": "QWEQQRQWQWRWWEEREE",
       "skillReason": "人工主 Q，并按本英雄技能顺序调整，有 R 点 R；非同位置统计。",
@@ -54413,8 +54437,8 @@
         "SummonerFlash",
         "SummonerBarrier"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot 16.21.1 英雄技能",
@@ -54430,6 +54454,12 @@
           "name": "Riot 16.21.1 符文",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
           "kind": "符文依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -54453,21 +54483,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "62214853523131ad",
-          "observedAt": "2026-10-26T13:38:40.394Z",
+          "observedAt": "2026-11-05T02:19:26.071Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Galio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
               "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e3a8cfa71c0b2970"
             }
           }
@@ -61148,6 +61178,102 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "galio-bottom-manual-galio-bottom-magic",
+      "name": "加里奥下路补刀与接控参考",
+      "champion": "Galio",
+      "role": "bottom",
+      "loadoutId": "manual-galio-bottom-magic",
+      "order": "QWEQQRQWQWRWWEEREE",
+      "reason": "项目人工参考：Q/W/E开局，主Q副W，R在6、11、16级升级；技能可用与点法以对局为准。Q按实际位置清线，W释放且目标在范围内才嘲讽，E遇地形停止并击飞首个命中的敌方英雄；近战下路先保血量与退路。非同位置统计或原作者加点。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Galio": "62214853523131ad"
+      },
+      "reviewSourceAnchors": {
+        "Galio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "62214853523131ad",
+          "observedAt": "2026-11-05T02:19:26.071Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Galio",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
+              "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e3a8cfa71c0b2970"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sion-bottom-manual-sion-bottom-front",
+      "name": "赛恩下路补刀与控制参考",
+      "champion": "Sion",
+      "role": "bottom",
+      "loadoutId": "manual-sion-bottom-front",
+      "order": "QWEQQRQWQWRWWEEREE",
+      "reason": "项目人工参考：Q/W/E开局，主Q副W，R于6、11、16级升级；实际点法按对局调整。Q蓄力至少一秒且命中才击飞和眩晕；W护盾仍存在才可在允许时重施引爆，E击中非英雄单位可将其击退。先保护血量与退路，非同位置统计或原作者加点。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sion": "0852586a5d53c2bc"
+      },
+      "reviewSourceAnchors": {
+        "Sion": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "0852586a5d53c2bc",
+          "observedAt": "2026-11-05T02:19:26.171Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sion",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sion/sion.bin.json",
+              "sha256": "32c72f1a0efc61ecdbe2721b6d816c97f3c41ce57763b06176ae4f5d2f56ec6d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e93d37d5494eda42"
             }
           }
         }
