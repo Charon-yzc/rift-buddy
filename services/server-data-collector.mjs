@@ -59,7 +59,8 @@ export async function collectServerData({root,seedRoot,clock=()=>new Date().toIS
   const candidate=await (providers.game||collectSnapshot)(()=>{},game,{readJSON:network.readJSON,recheckVersion:true});
   validateServerGame(candidate);
   const next=candidate.version.split('.').map(Number),old=game.version.split('.').map(Number);
-  if((next[0]-old[0]||next[1]-old[1]||next[2]-old[2])<0||candidate.contentRevision<game.contentRevision)throw Error('拒绝基础资料版本回退');
+  // Content revisions include patch-specific formulas and are comparable only within a patch.
+  if((next[0]-old[0]||next[1]-old[1]||next[2]-old[2])<0||(candidate.patch===game.patch&&candidate.contentRevision<game.contentRevision))throw Error('拒绝基础资料版本回退');
   if(!contentEqual(game,candidate)){game=candidate;base.changed++;}
  }catch(error){fail(base,'game',error);}
  finish(base);
