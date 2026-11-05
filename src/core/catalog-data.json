@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.31",
+  "version": "2026.11.06.32",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -3154,7 +3154,7 @@
         "控制接夹",
         "游走"
       ],
-      "why": "巴德 R 的凝滞可提供观察落点与布置女警 W 的准备窗口；恢复后仍须敌方英雄实际踩中已激活的陷阱才禁锢、显形并触发女警的陷阱爆头收益。这是技能条件推断，不保证接控命中，未经对局验证。",
+      "why": "巴德 R 的凝滞给女警观察落点和布置 W 的窗口。恢复后，敌方英雄实际踩中已激活的夹子才被禁锢并显形，女警获得对该目标的陷阱爆头机会；实际普攻命中才造成伤害。",
       "plan": "女警下路正常补刀，巴德辅助先保血量和视野。准备接控时先沟通目标、夹子充能和可安全站到的位置；巴德 R 命中后，女警仅在不必冒险近身时于敌方英雄恢复后的可能路径布夹。凝滞中目标不可被选取且免疫伤害，不提前交伤害技能；恢复后确认敌方英雄实际踩中已激活的夹子，再接爆头与 Q。巴德 Q 须实际命中首个敌人，再继续命中第二个敌人或墙体才眩晕；只命中首个敌人时须减速实际生效，Q 落空没有控制，不能继续当作接控。",
       "risk": "巴德 R 也会影响友军、单位和建筑，可能打断队友输出或替敌人挡伤害；先沟通投放区域。夹子需要激活，凝滞结束后的触发取决于放置位置、敌人移动与技能状态，不能按凝滞时长保证无缝接控。巴德离线游走时女警容易被越塔；敌方突进接近或视野不足就保留女警 E 与撤退路线。",
       "partners": [
@@ -3162,8 +3162,8 @@
         "Galio"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-03",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 凯特琳技能资料",
@@ -3191,6 +3191,12 @@
           "name": "腾讯英雄详情 · 巴德 16.21 已存详细文本",
           "url": "https://game.gtimg.cn/images/lol/act/img/js/hero/432.js",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -3228,21 +3234,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d19bdcd858382502",
-          "observedAt": "2026-10-26T13:38:40.311Z",
+          "observedAt": "2026-11-05T02:19:26.063Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Caitlyn",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/caitlyn/caitlyn.bin.json",
               "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6c728252e5826813"
             }
           }
@@ -3252,21 +3258,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "59e4186e87276c5f",
-          "observedAt": "2026-10-26T13:38:40.309Z",
+          "observedAt": "2026-11-05T02:19:26.061Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Bard",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/bard/bard.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/bard/bard.bin.json",
               "sha256": "4b73426120b4a794709001352620eeb7b5644f1b7c78d674aee68a5e2b0ac692"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "20f447261a6d2716"
             }
           }
@@ -12642,15 +12648,15 @@
         "回复"
       ],
       "why": "娜美 E 增益下的实际命中可先减速，为萨勒芬妮 E 后续控制创造条件。",
-      "plan": "娜美 E 增益队友，先实际命中造成减速，再由萨勒芬妮 E 寻找命中。",
+      "plan": "娜美 E 增益能先命中的友军，先实际命中并确认目标已减速。萨勒芬妮随后另行施放 E，在减速仍有效时实际命中才按禁锢接续。",
       "risk": "起手时娜美 E 已失效或无次数、减速消失或音波未中时不预设禁锢；两人缺少主动位移，退路受威胁时撤。",
       "partners": [
         "Sejuani",
         "Graves"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 萨勒芬妮技能资料",
@@ -12669,6 +12675,18 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 26.22 正式补丁公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "当版数值改动复核",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -12704,21 +12722,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "18e4440868d92eb5",
-          "observedAt": "2026-10-26T13:38:40.519Z",
+          "observedAt": "2026-11-05T02:19:26.168Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Seraphine",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
               "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b29132146d6ad36b"
             }
           }
@@ -12728,21 +12746,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b10366f1187813b9",
-          "observedAt": "2026-10-26T13:38:40.505Z",
+          "observedAt": "2026-11-05T02:19:26.158Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nami",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nami/nami.bin.json",
               "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "d41e55e60af3c37e"
             }
           }
@@ -12758,15 +12776,15 @@
         "非常规下路"
       ],
       "why": "辅助艾希提供减速，萨勒芬妮补刀并按目标状态接 E。",
-      "plan": "萨勒芬妮保下路补刀，辅助艾希先确认减速仍覆盖目标。 E 命中已减速目标才禁锢，命中已定身目标才眩晕；控制可留一段保护。 敌人绕后或技能落空时撤回安全距离，不按射手经济安排辅助装备。",
+      "plan": "萨勒芬妮负责下路补刀。辅助艾希先用实际命中的普攻造成减速，或用 R 晕住首个命中的敌方英雄；萨勒芬妮 E 实际命中时按目标已有的减速或定身接控。技能落空或有人绕后就退回安全距离。",
       "risk": "双人缺位移；艾希 R 的眩晕只作用于首个命中英雄。",
       "partners": [
         "Shen",
         "Graves"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 萨勒芬妮技能资料",
@@ -12797,6 +12815,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -12819,7 +12843,7 @@
         }
       ],
       "steps": [
-        "萨勒芬妮保下路补刀，辅助艾希先确认减速仍覆盖目标。",
+        "萨勒芬妮保下路补刀，辅助艾希按安全距离实际命中普攻施加减速；R 只晕首个命中的敌方英雄。",
         "E 命中已减速目标才禁锢，命中已定身目标才眩晕；控制可留一段保护。",
         "敌人绕后或技能落空时撤回安全距离，不按射手经济安排辅助装备。"
       ],
@@ -12832,21 +12856,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "18e4440868d92eb5",
-          "observedAt": "2026-10-23T02:03:51.552Z",
+          "observedAt": "2026-11-05T02:19:26.168Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Seraphine",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
               "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b29132146d6ad36b"
             }
           }
@@ -12856,21 +12880,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f363e1846cfe0370",
-          "observedAt": "2026-10-23T02:03:51.451Z",
+          "observedAt": "2026-11-05T02:19:26.059Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ashe",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ashe/ashe.bin.json",
               "sha256": "ada00af1ea15a42094a914a05794e0d3cedcb66c150ed52e8d3762b8d12dc6b5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1ab1be4161ebeecc"
             }
           }
@@ -16273,7 +16297,7 @@
         "持续法术"
       ],
       "why": "阿木木 Q 或 R 实际眩晕可为龙王 Q 引导争取时间。",
-      "plan": "阿木木先确认 Q 目标实际命中，或等 R 覆盖范围内敌人。 龙王在安全距离接 Q；需要移动或被打断时停止按完整引导计算。",
+      "plan": "阿木木 Q 须命中首个敌人才眩晕，R 须实际覆盖目标。龙王从安全位置接 Q，确认首个命中目标与实际引导时长；需移动或引导中断时立即重新站位。",
       "risk": "龙王补刀、阿木木辅助；前期压力和双法伤需由队伍处理。",
       "partners": [
         "Shen",
@@ -16292,11 +16316,23 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 26.22 正式补丁公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "当版数值改动复核",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:AurelionSol": "0feb05c65d40708e",
         "champion:Amumu": "958a576cfa8191dd"
@@ -16329,22 +16365,22 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "0feb05c65d40708e",
-          "observedAt": "2026-10-26T13:38:40.308Z",
+          "observedAt": "2026-11-05T02:19:26.060Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "AurelionSol",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/aurelionsol/aurelionsol.bin.json",
-              "sha256": "48b613586dd4d13d04c49140758eac0c5183fef0e615b4b5b1a653411fce7f93"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/aurelionsol/aurelionsol.bin.json",
+              "sha256": "ccb16560a7fc3d22b1f741bd5cdcdd0f50b6b0354e8d643664392c8e8aff1731"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "1e1ed30a0f63af68"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "be9df474cda1788b"
             }
           }
         },
@@ -16353,21 +16389,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "958a576cfa8191dd",
-          "observedAt": "2026-10-26T13:38:40.305Z",
+          "observedAt": "2026-11-05T02:19:26.058Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Amumu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/amumu/amumu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/amumu/amumu.bin.json",
               "sha256": "32ae8f1ffe870b3a94dd62e285bf7b2dedca0cc730abeabccf197d56f5174de3"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "8166548fe1af8c89"
             }
           }
@@ -17145,11 +17181,23 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 26.22 正式补丁公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "当版数值改动复核",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Katarina": "98848fc7138b49b3",
         "champion:Amumu": "958a576cfa8191dd"
@@ -17182,21 +17230,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "98848fc7138b49b3",
-          "observedAt": "2026-10-26T13:38:40.494Z",
+          "observedAt": "2026-11-05T02:19:26.079Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Katarina",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/katarina/katarina.bin.json",
-              "sha256": "6cf261f42c08dc7cad52bbaf91309e1db259836d265ec0fe8a833d6f8bec2360"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/katarina/katarina.bin.json",
+              "sha256": "ef3a3a5778e1e41895a94b38554e6ce1921ae1aa0a9c44c1e5fd85e7c93c97c1"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "4e7c2f4db28dab8c"
             }
           }
@@ -17206,21 +17254,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "958a576cfa8191dd",
-          "observedAt": "2026-10-26T13:38:40.305Z",
+          "observedAt": "2026-11-05T02:19:26.058Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Amumu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/amumu/amumu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/amumu/amumu.bin.json",
               "sha256": "32ae8f1ffe870b3a94dd62e285bf7b2dedca0cc730abeabccf197d56f5174de3"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "8166548fe1af8c89"
             }
           }
@@ -17883,11 +17931,17 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Xerath": "c6bf3b1c613437cd",
         "champion:Velkoz": "4fc6f59617324dce"
@@ -17903,7 +17957,7 @@
         {
           "champion": "Velkoz",
           "role": "support",
-          "job": "维克兹保辅助任务，技能实际命中后再判断被动与控制。",
+          "job": "维克兹保辅助任务与视野；E 实际命中后按距离判断控制，近身目标被击退，其余命中目标被击飞；被动按自己的实际命中累计。",
           "loadoutId": "default"
         }
       ],
@@ -17921,21 +17975,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c6bf3b1c613437cd",
-          "observedAt": "2026-10-26T13:38:40.603Z",
+          "observedAt": "2026-11-05T02:19:26.182Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Xerath",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xerath/xerath.bin.json",
-              "sha256": "cd93216a854d592f605c11be9bb9e00acd9f35dab0bf98828909809f94145796"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/xerath/xerath.bin.json",
+              "sha256": "aef22fe15a5dfae05f3871bfc36bb3090fee429753500f2d2a04a638cac76d08"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "fe85c3d422f63fd0"
             }
           }
@@ -17945,21 +17999,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "4fc6f59617324dce",
-          "observedAt": "2026-10-26T13:38:40.598Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Velkoz",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/velkoz/velkoz.bin.json",
-              "sha256": "d7083b07c94482f1814bd603cd7831d0de5fd1ba1170dc9b5ff386793ab08ffb"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/velkoz/velkoz.bin.json",
+              "sha256": "d97af687f9a5022448d28e44de1913ddab8dd29b551323f9bf8ad4d56e794621"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "83d561abb744eab5"
             }
           }
@@ -18209,7 +18263,7 @@
         "加速保护"
       ],
       "why": "辛德拉 E 推出的法球实际命中敌人后才眩晕，可为基兰 Q 的落点争取时间。",
-      "plan": "辛德拉先有可推法球，E 推出的法球实际命中敌人后才眩晕。 基兰 Q 炸弹实际附着后，再以 W 和第二次 Q 判断同一载体；未成立则不声称双弹眩晕。",
+      "plan": "辛德拉 E 推出的法球实际命中后才眩晕。基兰确认首枚 Q 附着，按 W 缩短后的实际冷却判断第二次 Q；第二枚实际放到同一已附着载体才引爆首弹，只有爆炸范围内的敌人会晕。",
       "risk": "辛德拉补刀、基兰辅助；不以范围控制必中为前提。",
       "partners": [
         "Graves",
@@ -18228,11 +18282,17 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Syndra": "6fd0f8bd70c981dd",
         "champion:Zilean": "60f40731a1259a4a"
@@ -18253,11 +18313,11 @@
         }
       ],
       "steps": [
-        "辛德拉先有可推法球，E 推出的法球实际命中敌人后才眩晕。",
-        "基兰 Q 炸弹实际附着后，再以 W 和第二次 Q 判断同一载体；未成立则不声称双弹眩晕。"
+        "辛德拉先有可推的法球，E 推出的法球实际命中后才眩晕。",
+        "基兰确认首枚 Q 附着，按 W 缩短后的实际冷却判断第二次 Q；第二枚实际放到同一已附着载体才引爆首弹，确认敌人仍在爆炸范围。"
       ],
       "window": "控制结束、炸弹未附着或载体死亡时取消原接力。",
-      "early": "先处理各自兵线或野区，按已学技能和实际位置确认机会；条件不成立就撤退。",
+      "early": "辛德拉负责下路补刀和法力，基兰负责辅助任务与视野；待对应技能已学、位置安全，再按实际命中接控。",
       "economy": "下路成员负责补刀，辅助按辅助经济与视野任务行动，提前沟通资源。",
       "reviewSourceAnchors": {
         "Syndra": {
@@ -18265,21 +18325,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "6fd0f8bd70c981dd",
-          "observedAt": "2026-10-26T13:38:40.591Z",
+          "observedAt": "2026-11-05T02:19:26.174Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Syndra",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/syndra/syndra.bin.json",
-              "sha256": "e42adeaf766c60a65630d3a83c9520d4f5eeae4690aa9c523e9119635286d938"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/syndra/syndra.bin.json",
+              "sha256": "f42d81319186b2116372a631911fcbbe5128937923c801c39dac0c872226e724"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "5426d3509eaceba8"
             }
           }
@@ -18289,21 +18349,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "60f40731a1259a4a",
-          "observedAt": "2026-10-26T13:38:40.608Z",
+          "observedAt": "2026-11-05T02:19:26.254Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zilean",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
               "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3e2480aa7362c964"
             }
           }
@@ -25260,8 +25320,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 维克兹技能资料",
@@ -25280,6 +25340,18 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 26.22 正式补丁公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "当版数值改动复核",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -25291,7 +25363,7 @@
         {
           "champion": "Velkoz",
           "role": "bottom",
-          "job": "维克兹补刀，阿木木实际控制后瞄准 E；R 引导可能被打断，被动只算自身技能命中。",
+          "job": "维克兹补刀，阿木木实际控制后瞄准 E；E 命中近身敌人是击退。R 引导可能被打断，解构层数按自身技能实际命中和射线作用判断。",
           "loadoutId": "default"
         },
         {
@@ -25306,7 +25378,7 @@
         "维克兹在安全位置选择 R；引导仍可能被控制打断。"
       ],
       "window": "维克兹被动层数来自其实际技能命中，不能把队友伤害算作层数。",
-      "early": "先处理各自兵线或野区，按已学技能和实际位置确认机会；条件不成立就撤退。",
+      "early": "维克兹负责下路补刀，阿木木负责辅助任务与视野。等双方已学会对应技能且有退路，再按实际命中接控。",
       "economy": "下路成员负责补刀，辅助按辅助经济与视野任务行动，提前沟通资源。",
       "reviewSourceAnchors": {
         "Velkoz": {
@@ -25314,21 +25386,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "4fc6f59617324dce",
-          "observedAt": "2026-10-26T13:38:40.598Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Velkoz",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/velkoz/velkoz.bin.json",
-              "sha256": "d7083b07c94482f1814bd603cd7831d0de5fd1ba1170dc9b5ff386793ab08ffb"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/velkoz/velkoz.bin.json",
+              "sha256": "d97af687f9a5022448d28e44de1913ddab8dd29b551323f9bf8ad4d56e794621"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "83d561abb744eab5"
             }
           }
@@ -25338,21 +25410,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "958a576cfa8191dd",
-          "observedAt": "2026-10-26T13:38:40.305Z",
+          "observedAt": "2026-11-05T02:19:26.058Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Amumu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/amumu/amumu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/amumu/amumu.bin.json",
               "sha256": "32ae8f1ffe870b3a94dd62e285bf7b2dedca0cc730abeabccf197d56f5174de3"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "8166548fe1af8c89"
             }
           }
