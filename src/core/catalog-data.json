@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.71",
+  "version": "2026.11.07.72",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -34328,73 +34328,6 @@
     {
       "schema": 1,
       "heroes": [
-        "Cassiopeia",
-        "Teemo"
-      ],
-      "comboId": "cassiopeia-teemo",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-03",
-      "basis": "champion-mechanics",
-      "verification": "inferred-not-match-tested",
-      "linkFingerprint": "03758b457fc2bc91",
-      "baseline": {
-        "Cassiopeia": "74ace7fa9d54e0e4",
-        "Teemo": "b29454e3375baf8c"
-      },
-      "anchors": {
-        "Cassiopeia": {
-          "schema": 1,
-          "kind": "explicit-review",
-          "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "74ace7fa9d54e0e4",
-          "observedAt": "2026-10-26T13:38:40.312Z",
-          "input": {
-            "schema": 1,
-            "normalizer": 1,
-            "champion": "Cassiopeia",
-            "patch": "16.21",
-            "version": "16.21.1",
-            "locale": "zh_CN",
-            "character": {
-              "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/cassiopeia/cassiopeia.bin.json",
-              "sha256": "57e4216d0882399f0a68f8087cab824c7ae331040c9a6e74cf7ab6379e69c737"
-            },
-            "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "328eb9f058249ee8"
-            }
-          }
-        },
-        "Teemo": {
-          "schema": 1,
-          "kind": "explicit-review",
-          "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "b29454e3375baf8c",
-          "observedAt": "2026-10-26T13:38:40.593Z",
-          "input": {
-            "schema": 1,
-            "normalizer": 1,
-            "champion": "Teemo",
-            "patch": "16.21",
-            "version": "16.21.1",
-            "locale": "zh_CN",
-            "character": {
-              "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/teemo/teemo.bin.json",
-              "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
-            },
-            "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "0795d6a5dc4ba5bb"
-            }
-          }
-        }
-      }
-    },
-    {
-      "schema": 1,
-      "heroes": [
         "Anivia",
         "Poppy"
       ],
@@ -36250,7 +36183,7 @@
     [
       "Cassiopeia",
       "Teemo",
-      "提莫 E 已学且普攻命中同一目标后可施毒；蛇女 E 已学可用并命中时目标仍中毒，才有中毒额外伤害与治疗。"
+      "提莫 Q 实际命中才致盲，蛇女可据目标位置用自身 Q/W 施毒。蛇女 E 命中同一目标时，确认她施加的中毒仍有效；提莫的毒能否触发额外效果待核。"
     ],
     [
       "Jhin",
