@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.70",
+  "version": "2026.11.07.71",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -33091,6 +33091,366 @@
       "window": "双方 R 已学且可用、E 已让魔偶实际附着后可尝试；落点需在队友可接应的范围。",
       "early": "上中各自处理兵线和补刀，一级至五级不按双大招联动规划；避免为抢一个带球落点丢线。",
       "economy": "墨菲特使用当版上单个人构筑，承担承伤与开团；奥莉安娜使用当版中单个人构筑，保法力和输出。"
+    },
+    {
+      "id": "nocturne-galio-jungle-mid-landing",
+      "name": "魔腾切入接加里奥落地",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "中野联动",
+        "落点支援",
+        "物法接力"
+      ],
+      "why": "魔腾 R 二段实际到达可接应的位置后，加里奥可选他施放 R，在该位置延迟落地，实际覆盖目标才击飞。",
+      "plan": "先对好施法距离、目标和退路。魔腾二段到位后报落点；加里奥确认可选友军与敌方位置再交 R。魔腾 E 只有灵链未断才恐惧。",
+      "risk": "距离不足、目标离开落区、魔腾在支援落地前已需撤退或侧翼不安全时取消后续。关灯本身不提供命中或位置确认。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 三路救援队",
+          "url": "https://github.com/Legender134/rift-buddy/blob/6b09452c94ef33029bcaf19dc6e33e7f366f534b/src/core/catalog-data.json#L36614",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 魔腾 jungle",
+          "url": "https://op.gg/lol/champions/nocturne/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 加里奥 mid",
+          "url": "https://op.gg/lol/champions/galio/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Nocturne": "2759f235cb713880",
+        "champion:Galio": "62214853523131ad"
+      },
+      "reviewSourceAnchors": {
+        "Nocturne": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2759f235cb713880",
+          "observedAt": "2026-11-05T02:19:26.160Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nocturne",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nocturne/nocturne.bin.json",
+              "sha256": "8de4d928ce7dee799b759c87a7114069b297f9228ef8e51c21ba9f1da5b0ab49"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7e6432fe64cf372b"
+            }
+          }
+        },
+        "Galio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "62214853523131ad",
+          "observedAt": "2026-11-05T02:19:26.071Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Galio",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
+              "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e3a8cfa71c0b2970"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Nocturne",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "清野后确认实际可接应的目标与退路。R 二段到达后报位，E 须维持灵链才恐惧。"
+        },
+        {
+          "champion": "Galio",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "处理中线并观察魔腾。R 选范围内的友方英雄位置作为落点；敌人须仍在落区才可击飞。"
+        }
+      ],
+      "steps": [
+        "检查双方大招、施放距离、目标位置与撤退路径。",
+        "魔腾在 R 期间选可到达的敌方英雄，实际抵达后确认接应。",
+        "加里奥只在可选魔腾且落点合理时施放 R；目标离区或退路断开时停止追加。"
+      ],
+      "window": "双 R 可用、魔腾可抵达且加里奥能够在范围内选中他；落地仍按敌人实际位置判断。",
+      "early": "双方先各自稳定经济，未学双 R 时按中野实际位置协助，不把双大当作必有。",
+      "economy": "魔腾保营地和物理输出；加里奥保中线与魔法接应，两人各用同位置个人参考。"
+    },
+    {
+      "id": "renekton-lissandra-top-mid-control",
+      "name": "雷克顿留人接丽桑卓控场",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "上中联动",
+        "同目标接控",
+        "物法接力"
+      ],
+      "why": "雷克顿 W 强化普攻实际晕眩目标后，丽桑卓可在可达距离用 W 接禁锢，或用已学 R 对敌施放接晕眩。",
+      "plan": "上中先处理兵线再会合。雷克顿在可退位置实际命中，丽桑卓依目标位置错开控制。丽桑卓若自施 R 自保，就重新判断敌方目标。",
+      "risk": "目标离开普攻或 W 范围、侧翼有支援、需要自施 R 或 E 位移落点危险时取消追击。怒气按当时状态判断。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 中上野接控",
+          "url": "https://github.com/Legender134/rift-buddy/blob/6b09452c94ef33029bcaf19dc6e33e7f366f534b/src/core/catalog-data.json#L36768",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 雷克顿 top",
+          "url": "https://op.gg/lol/champions/renekton/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 丽桑卓 mid",
+          "url": "https://op.gg/lol/champions/lissandra/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Renekton": "5a98c4b4b1f08e37",
+        "champion:Lissandra": "599da97edcf817b9"
+      },
+      "reviewSourceAnchors": {
+        "Renekton": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5a98c4b4b1f08e37",
+          "observedAt": "2026-11-05T02:19:26.165Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Renekton",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/renekton/renekton.bin.json",
+              "sha256": "20447bf1a1f2867c12442110f5430443a7dab367dea231831cb7d5092987004d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "1b5d01b58ae2dfac"
+            }
+          }
+        },
+        "Lissandra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "599da97edcf817b9",
+          "observedAt": "2026-11-05T02:19:26.153Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lissandra",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lissandra/lissandra.bin.json",
+              "sha256": "a6ec51003dc0dd7956bc6f5aad1e6e6d61cd0d506eb59e91e651b7866cb4cbfe"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f6bc405fcfcae9d6"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Renekton",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "稳上路线和怒气。W 要强化普攻实际命中才晕，避免为了接控交掉全部退路。"
+        },
+        {
+          "champion": "Lissandra",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "处理中线后按距离选择 W 或敌方 R。W 要覆盖目标；自施 R 只提供自身凝滞与治疗及周围区域效果，不对同一个敌人施加敌方 R 的晕眩。"
+        }
+      ],
+      "steps": [
+        "先看兵线、怒气、共同目标与撤退位置。",
+        "雷克顿 W 实际晕眩后，丽桑卓在可达位置错开交 W 或已学的敌方 R。",
+        "未覆盖、需要自保或对手支援到场时停止加深，保留可撤位置。"
+      ],
+      "window": "上中都能在安全距离接触同一目标，按怒气和已学技能分段接控。",
+      "early": "双方实际学到 W 即可找短配合，不依赖双六。中路离线前先处理兵线。",
+      "economy": "上路承担物理近战输出，中路负责法术伤害和后续控制，两人使用同位置个人参考。"
+    },
+    {
+      "id": "vi-nautilus-jungle-support-control",
+      "name": "蔚与诺提勒斯分段留人",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "野辅联动",
+        "同目标接控",
+        "物法接力"
+      ],
+      "why": "诺提勒斯实际钩中敌方单位或用普攻禁锢共同目标后，蔚可按距离接蓄力 Q 或已学 R，双方分段留住同一目标。",
+      "plan": "野辅先确认路线、视野和输出能否到场。用实际命中确认共同目标，再错开第二段控制。诺提勒斯 Q 命中地形只拉自己，不按已留住敌人继续。",
+      "risk": "钩中错误单位、Q 先撞到其他英雄、R 接触前退路中断或缺少后续输出时撤回。不能默认射手跟进。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 逐个留客",
+          "url": "https://github.com/Legender134/rift-buddy/blob/6b09452c94ef33029bcaf19dc6e33e7f366f534b/src/core/catalog-data.json#L38523",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 蔚 jungle",
+          "url": "https://op.gg/lol/champions/vi/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 诺提勒斯 support",
+          "url": "https://op.gg/lol/champions/nautilus/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Vi": "ed4ccc20b476dc0e",
+        "champion:Nautilus": "67da151a84906467"
+      },
+      "reviewSourceAnchors": {
+        "Vi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ed4ccc20b476dc0e",
+          "observedAt": "2026-11-05T02:19:26.180Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Vi",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vi/vi.bin.json",
+              "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "8c5f2d227a1d26cb"
+            }
+          }
+        },
+        "Nautilus": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "67da151a84906467",
+          "observedAt": "2026-11-05T02:19:26.159Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nautilus",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
+              "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "21ceeeee51e3b384"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Vi",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先保打野营地。Q 按蓄力和实际英雄碰撞判断击退；R 已学且能实际接触选定英雄时才安排击飞。"
+        },
+        {
+          "champion": "Nautilus",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "优先辅助任务和视野。Q 实际钩中共同目标或普攻触发禁锢后报位；R 已学且可用时可按敌方实际位置接控。"
+        }
+      ],
+      "steps": [
+        "双方核对视野、共同目标、技能与退路，确认其他输出是否真的可接应。",
+        "首段实际命中再报目标，另一人按同一目标的位置接 Q、普攻或已学的 R。",
+        "错钩或触及地形、接应超距或侧翼不安全时停止追击。"
+      ],
+      "window": "实际目标、技能射线和队友距离同时成立才接；大招仅在已学且可用时纳入计划。",
+      "early": "两人实际学会基础控制即可按安全路线协助，不以辅助离线或强行越塔为前提。",
+      "economy": "蔚打野保营地并承担物理输出，诺提勒斯辅助保任务和视野；各用同位置个人构筑。"
     }
   ],
   "linkReviews": [
