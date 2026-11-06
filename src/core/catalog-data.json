@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.59",
+  "version": "2026.11.06.60",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -30958,6 +30958,113 @@
       "window": "洛 W 实际击飞、李青有无遮挡且可安全跟进的路径；洛要用 E 时，须有真实可达的友方英雄。",
       "early": "两人先处理各自资源与兵线；双方基础技能已学、队友安全且能会合时，才约野区或河道接应。",
       "economy": "李青以野区营地为主，辅助按任务、视野及下路队友安全安排游走。各用当版同英雄同位置默认参考。"
+    },
+    {
+      "id": "leblanc-rakan-mid-support-airborne-chain",
+      "name": "洛抬起，妖姬接链",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "较高",
+      "tags": [
+        "中辅配合",
+        "实际控制"
+      ],
+      "why": "洛 W 实际击飞同一目标，为妖姬 E 争取出手角度。链条须命中首个敌人并维持 1.5 秒才禁锢。",
+      "plan": "妖姬先处理可安全处理的中线，洛先确认下路队友安全。会合后，洛 W 实际击飞共同目标，妖姬从无遮挡方向尝试用 E 接链。E 必须先命中该目标，并保持连接 1.5 秒才禁锢。敌方支援到场或安全距离不足时停止追击。妖姬可在 W 返回点仍安全时撤回，洛使用 E 前确认可达友方英雄。",
+      "risk": "洛 W 会落空，妖姬 E 可能先命中其他敌人，目标也可在 1.5 秒前拉断链条。敌方支援更快或退路失守时撤离。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "直播吧 · NIP 对 WBG 第二局赛况",
+          "url": "https://news.zhibo8.com/game/2023-07-23/64bcf99dd00cdnative.htm",
+          "kind": "历史赛况；6:24记载洛抬起、妖姬接链，另有盲僧跟进",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "独立复核当版技能与条件",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Leblanc": "7c6be3d94aa080db",
+        "champion:Rakan": "69d7edc48cac55e5"
+      },
+      "reviewSourceAnchors": {
+        "Leblanc": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "7c6be3d94aa080db",
+          "observedAt": "2026-11-05T02:19:26.082Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Leblanc",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leblanc/leblanc.bin.json",
+              "sha256": "889d0275962fac17c4c8ce0536d4930548acabccfe0a122f7fe979a6e1f9d357"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "4b02fbdb42c5987e"
+            }
+          }
+        },
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-11-05T02:19:26.163Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Leblanc",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理中线并确认能到场。E 找无遮挡角度并维持链条；用过 W 时保留安全返回点。"
+        },
+        {
+          "champion": "Rakan",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "先确认下路队友安全，W 实际击飞再约后续。用 E 接应或撤离前确认可达的友方英雄。"
+        }
+      ],
+      "steps": [
+        "处理各自兵线和视野，只有能到场、队友安全且有退路时才在河道会合。",
+        "洛 W 实际击飞同一敌方英雄后，妖姬 E 从可命中的角度接链。先命中该目标并维持 1.5 秒才禁锢。",
+        "落点偏离、链条被挡或拉断、敌方增援或退路失守时停止原计划。"
+      ],
+      "window": "洛 W 实际击飞且妖姬 E 有可命中角度，双方能在安全距离内接应。洛 E 需要真实可达友军。",
+      "early": "双方学到所需基础技能后，根据中下兵线和到场时间选择会合。辅助离线前先确认下路队友能安全处理。",
+      "economy": "中路兵线优先给妖姬，洛安排辅助任务和安全视野。两人使用当版同英雄同位置默认参考。"
     }
   ],
   "linkReviews": [
