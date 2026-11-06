@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.77",
+  "version": "2026.11.07.78",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -33691,6 +33691,246 @@
       "window": "金牌命中，烬 W 可用，友方伤害窗口仍在且射线能先命中共同目标。",
       "early": "双方都学到 W 后可按实际距离找短抓，未学 R 也可从安全路线会合。",
       "economy": "卡牌保中路与魔法伤害，烬保下路经济与物理输出，两人用同位置个人参考。"
+    },
+    {
+      "id": "shen-zac-top-jungle-shield-landing",
+      "name": "慎护盾接扎克进场",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "上野联动",
+        "落点支援",
+        "分段控制"
+      ],
+      "why": "慎 R 先给扎克护盾，完成引导才到场。扎克 E 在实际落点命中后击飞，慎到位再按角度接 E。",
+      "plan": "先对好扎克落点、慎的安全引导点和输出接应。由慎按进场时机选扎克施放 R，扎克以实际可达目标为准。慎落地后看敌人位置，再决定接控或保护撤离。",
+      "risk": "慎的引导可被打断，护盾可能在到场前被打破。扎克落空、敌人离开或没有输出接应时撤回。",
+      "members": [
+        {
+          "champion": "Shen",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "先保上路线，从安全位置用 R 选中扎克。完成引导才到场，E 只有实际触碰敌方才嘲讽。"
+        },
+        {
+          "champion": "Zac",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先保营地。E 蓄力后选安全落点，按实际落地命中判断击飞；落空时留退路。"
+        }
+      ],
+      "steps": [
+        "核对护盾时机、慎的引导位置及扎克的落点。",
+        "扎克 E 实际落地后报命中和敌方位置，慎引导完成才判断后续。",
+        "有队友输出且路线可退时再错开接控，条件失效就撤。"
+      ],
+      "early": "未学慎 R 时按实际位置与基础技能协作，慎不为远程支援放弃上路线。",
+      "window": "慎 R 已学且可安全引导，扎克 E 可实际命中，其他输出能接应。",
+      "economy": "慎保上路线和支援条件，扎克保打野经济。两人用各自分路的个人构筑。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 双线救援",
+          "url": "https://github.com/Legender134/rift-buddy/blob/1a733bce394837d56d6e657f09b96dd244b4c6f3/src/core/catalog-data.json#L45839",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 慎 top",
+          "url": "https://op.gg/lol/champions/shen/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 扎克 jungle",
+          "url": "https://op.gg/lol/champions/zac/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Shen": "e59438000b98dd56",
+        "champion:Zac": "79df9b9e7571e89c"
+      },
+      "reviewSourceAnchors": {
+        "Shen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e59438000b98dd56",
+          "observedAt": "2026-11-05T02:19:26.169Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Shen",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/shen/shen.bin.json",
+              "sha256": "74cb0c892cd17455b5b0cc635c3d396fbba9f6ef3663145ed701cfc6c895b142"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "56dbf98c4bc9628e"
+            }
+          }
+        },
+        "Zac": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "79df9b9e7571e89c",
+          "observedAt": "2026-11-05T02:19:26.252Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zac",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zac/zac.bin.json",
+              "sha256": "40df6abd439891c7e6733966c1ec367a15392cb8b52754a7df145b6b854f0ff5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "cf22bab2f64d09f2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "ornn-sejuani-top-jungle-brittle",
+      "name": "奥恩易碎接瑟庄妮定身",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "上野联动",
+        "同目标接控",
+        "易碎触发"
+      ],
+      "why": "奥恩 W 最后一道炎息实际命中才施加易碎。瑟庄妮可对实际叠满四层霜冻的同一目标施放 E，若易碎仍在，可触发其额外效果。",
+      "plan": "上野先确认兵线、共同目标和退路。附近奥恩的近战普攻可帮叠霜，但也可能先消耗自己施加的易碎。若要让瑟庄妮 E 接易碎，先处理层数，再确认 W 末段命中和实际残留状态。",
+      "risk": "没有四层、易碎提前消耗、层数分给不同目标或队友输出未到时，按现有控制收手。没有地形撞击时，奥恩 E 只按实际作用处理。",
+      "members": [
+        {
+          "champion": "Ornn",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "先保上路线。普攻协助叠霜，W 末段确认易碎，注意自己的普攻会消耗已施加的易碎。E 撞地形且冲击覆盖目标才击飞。"
+        },
+        {
+          "champion": "Sejuani",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先保营地。按实际命中叠同一目标的霜冻，只有满四层且 E 可用才尝试晕眩。"
+        }
+      ],
+      "steps": [
+        "先确认目标与视野，按实际近战普攻和技能命中判断霜冻。",
+        "奥恩 W 最后一道炎息实际命中后，瑟庄妮核对易碎和四层是否同时成立，再用 E。",
+        "按队友输出和站位决定是否再接奥恩 E；条件不足则结束换血。"
+      ],
+      "early": "基础技能齐备即可找接控机会，按实叠层数与站位，双大仅在已学可用时纳入。",
+      "window": "同目标易碎未被消耗，实际满四层且 E 可用；有输出接应时再续。",
+      "economy": "奥恩保上路线和承压，瑟庄妮保野区并负责先手。两人采用同位置个人构筑。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 三道防线",
+          "url": "https://github.com/Legender134/rift-buddy/blob/1a733bce394837d56d6e657f09b96dd244b4c6f3/src/core/catalog-data.json#L45993",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 奥恩 top",
+          "url": "https://op.gg/lol/champions/ornn/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 瑟庄妮 jungle",
+          "url": "https://op.gg/lol/champions/sejuani/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Ornn": "aec2b0070700de64",
+        "champion:Sejuani": "1d8d94f1d8414573"
+      },
+      "reviewSourceAnchors": {
+        "Ornn": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "aec2b0070700de64",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ornn",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ornn/ornn.bin.json",
+              "sha256": "05269a1bc1d2b9eabe5036dde9306ebb3b8684dc56f9eebfb28a9c41434c0d29"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3b1b1c0431079787"
+            }
+          }
+        },
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        }
+      }
     }
   ],
   "linkReviews": [
@@ -38383,6 +38623,274 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Shen",
+        "Zac"
+      ],
+      "comboId": "shen-zac-top-jungle-shield-landing",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "3d2619eeb6985e5f",
+      "baseline": {
+        "Shen": "e59438000b98dd56",
+        "Zac": "79df9b9e7571e89c"
+      },
+      "anchors": {
+        "Shen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e59438000b98dd56",
+          "observedAt": "2026-11-05T02:19:26.169Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Shen",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/shen/shen.bin.json",
+              "sha256": "74cb0c892cd17455b5b0cc635c3d396fbba9f6ef3663145ed701cfc6c895b142"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "56dbf98c4bc9628e"
+            }
+          }
+        },
+        "Zac": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "79df9b9e7571e89c",
+          "observedAt": "2026-11-05T02:19:26.252Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zac",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zac/zac.bin.json",
+              "sha256": "40df6abd439891c7e6733966c1ec367a15392cb8b52754a7df145b6b854f0ff5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "cf22bab2f64d09f2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Ornn",
+        "Sejuani"
+      ],
+      "comboId": "ornn-sejuani-top-jungle-brittle",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "c2af64a6d5d23028",
+      "baseline": {
+        "Ornn": "aec2b0070700de64",
+        "Sejuani": "1d8d94f1d8414573"
+      },
+      "anchors": {
+        "Ornn": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "aec2b0070700de64",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ornn",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ornn/ornn.bin.json",
+              "sha256": "05269a1bc1d2b9eabe5036dde9306ebb3b8684dc56f9eebfb28a9c41434c0d29"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3b1b1c0431079787"
+            }
+          }
+        },
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Ezreal",
+        "Bard"
+      ],
+      "comboId": "ezreal-bard",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "010800d6c1564e72",
+      "baseline": {
+        "Ezreal": "c2201358b91fa06b",
+        "Bard": "59e4186e87276c5f"
+      },
+      "anchors": {
+        "Ezreal": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c2201358b91fa06b",
+          "observedAt": "2026-11-05T02:19:26.069Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ezreal",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ezreal/ezreal.bin.json",
+              "sha256": "017fe85cc1493ac674d9ff34600edfa48ec7af0f20cde53c12f184ea6d6b40a1"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "6b1155906c9a8a0b"
+            }
+          }
+        },
+        "Bard": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "59e4186e87276c5f",
+          "observedAt": "2026-11-05T02:19:26.061Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Bard",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/bard/bard.bin.json",
+              "sha256": "4b73426120b4a794709001352620eeb7b5644f1b7c78d674aee68a5e2b0ac692"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "20f447261a6d2716"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Veigar",
+        "Braum"
+      ],
+      "comboId": "veigar-braum",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "c55a85a5745e1f84",
+      "baseline": {
+        "Veigar": "b0c876605f73d7f8",
+        "Braum": "ae3aa48403ffcbe5"
+      },
+      "anchors": {
+        "Veigar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b0c876605f73d7f8",
+          "observedAt": "2026-11-05T02:19:26.179Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Veigar",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "0d5181fbdf1760ef"
+            }
+          }
+        },
+        "Braum": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ae3aa48403ffcbe5",
+          "observedAt": "2026-11-05T02:19:26.062Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Braum",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/braum/braum.bin.json",
+              "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e136059064aa1034"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -39140,6 +39648,26 @@
       "Lux",
       "Soraka",
       "拉克丝 Q 仅束缚实际命中的前两个敌方单位。索拉卡 E 覆盖共同目标后，只有敌方英雄在领域消失时仍处于其中才禁锢，单纯沉默不算。"
+    ],
+    [
+      "Shen",
+      "Zac",
+      "慎 R 实际给扎克护盾，完成引导后才到场。扎克 E 只在落点实际命中才击飞，慎到位后按敌人当时位置接控。引导被打断、落空或无人输出接应时取消追击。"
+    ],
+    [
+      "Ornn",
+      "Sejuani",
+      "奥恩 W 末段实际施加易碎，瑟庄妮只对同时叠满四层且 E 可用的同一目标接晕眩。附近奥恩近战普攻可帮叠霜，也可能先消耗易碎，先处理层数并核对状态。"
+    ],
+    [
+      "Ezreal",
+      "Bard",
+      "巴德 Q 在命中首个敌人后还须碰到第二个敌人或墙才眩晕。伊泽瑞尔须确认 Q 射线上首个敌人仍是该目标，再用 Q 跟进。巴德 R 凝滞期间目标不能受伤，按实际结束时机重判。"
+    ],
+    [
+      "Veigar",
+      "Braum",
+      "维迦 E 成形后只有敌人碰到边缘才晕。布隆 Q 首个命中单位是该敌方英雄，或布隆普攻实际命中，才可挂第一层。免叠期结束后再按双方安全普攻到四层接控，维迦技能伤害不代替普攻。"
     ]
   ],
   "trios": [
