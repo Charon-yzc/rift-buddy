@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.45",
+  "version": "2026.11.06.46",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -28894,6 +28894,137 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1d69ff1938c31389"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "brand-pyke-lane-pressure",
+      "name": "布兰德 × 派克 · 下路接控",
+      "tempo": "early",
+      "style": "balanced",
+      "difficulty": "中等",
+      "tags": [
+        "非常规下路",
+        "接控"
+      ],
+      "why": "派克实际拉拽或晕眩后，布兰德可以按目标位置施加灼烧，再尝试接 Q 晕眩。",
+      "plan": "等敌方兵线出现空隙、双方距离和退路成立。派克蓄力 Q 实际钩到英雄后，布兰德按落点先用技能施加灼烧。 布兰德 Q 只有实际命中仍受其自身灼烧的同一目标时才会晕。派克 E 要等魅影实际命中；按位置错开控制，别预设能无缝衔接。 派克 R 已学且可用时按实际处决线和 X 区域判断。钩空、目标脱离或侧翼失守就停手，优先保兵线。",
+      "risk": "拉拽可能被前方单位挡住，布兰德 Q 需实际命中仍受其自身灼烧的目标，派克 E 的魅影要实际命中。队友不在跟进距离时停止追击。",
+      "early": "布兰德保下路补刀和法力，派克负责辅助任务与视野。有安全射线和退路时再换血。",
+      "window": "两人能跟进同一目标且技能实际可用。派克 R 只在已学可用、目标进入 X 且满足实际处决条件时考虑。",
+      "economy": "布兰德补刀并复用项目人工下路配置，派克承担辅助任务及视野，使用当前位置所选来源。",
+      "steps": [
+        "等敌方兵线出现空隙、双方距离和退路成立。派克蓄力 Q 实际钩到英雄后，布兰德按落点先用技能施加灼烧。",
+        "布兰德 Q 只有实际命中仍受其自身灼烧的同一目标时才会晕。派克 E 要等魅影实际命中；按位置错开控制，别预设能无缝衔接。",
+        "派克 R 已学且可用时按实际处决线和 X 区域判断。钩空、目标脱离或侧翼失守就停手，优先保兵线。"
+      ],
+      "members": [
+        {
+          "champion": "Brand",
+          "role": "bottom",
+          "loadoutId": "manual-brand-bottom-mage-2622",
+          "job": "补刀并保法力。先用技能施加自身灼烧；Q 实际命中同一目标且该目标仍有灼烧时才晕。"
+        },
+        {
+          "champion": "Pyke",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "承担辅助任务和视野。蓄力 Q 看第一个可命中的敌方单位，E 留魅影回返的命中路线和撤退空间。"
+        }
+      ],
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Berke Gursoy · 非常规双人下路例子（2023-03-01）",
+          "url": "https://gamelevate.com/ivern-rengar-bot-lane-guide-tilt-your-enemies/",
+          "kind": "历史作者正文举例，操作与配置为项目现版整理",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制依据，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 全区更新公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "正式补丁核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 派克辅助位置参考",
+          "url": "https://op.gg/lol/champions/pyke/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版独立位置来源，不是组合统计或作者配置",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Brand": "dfe0f7f6ef8e7e6e",
+        "item:3116": "1ca09887b440d0f6",
+        "item:6653": "dae566be4a35ad25",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3020": "357a162d6a40286e",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3089": "a8a9b060b253391c",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47",
+        "champion:Pyke": "750b7cf6d1187481"
+      },
+      "reviewSourceAnchors": {
+        "Brand": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "dfe0f7f6ef8e7e6e",
+          "observedAt": "2026-11-05T02:19:26.062Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Brand",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/brand/brand.bin.json",
+              "sha256": "6fa48fcc58833650750981e3f64657fdd6ba8392741ee11947fd48d6a7da96d4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "12112af12e321441"
+            }
+          }
+        },
+        "Pyke": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "750b7cf6d1187481",
+          "observedAt": "2026-11-05T02:19:26.162Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Pyke",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/pyke/pyke.bin.json",
+              "sha256": "86f12c6d02089846d871822760da759289bc2a1a4907782ba8e53372afb5c041"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "2fc94ca452c59007"
             }
           }
         }
