@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.64",
+  "version": "2026.11.06.65",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -31773,6 +31773,244 @@
       "window": "牛头 Q 已学可用，亚索 R 已学可用，实际浮空仍在并能安全跟进。",
       "early": "亚索六级前该段大招接力未成立；按基础技能和下路安全安排短打。",
       "economy": "中线给亚索，牛头负责辅助任务和视野。两人用当版同位置默认参考。"
+    },
+    {
+      "id": "renekton-sejuani-top-jungle-frost",
+      "name": "鳄鱼留人接永冻",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "上野配合",
+        "条件接力"
+      ],
+      "why": "雷克顿 W 命中后可限制共同目标，在安全距离内的近战普攻能协助瑟庄妮叠永冻。瑟庄妮核对同一目标实际四层后才用 E。",
+      "plan": "雷克顿先看上路线和怒气，瑟庄妮按营地、视野决定到场。从能撤退的方向接近同一目标，雷克顿 W 实际命中后沟通目标。瑟庄妮 W 按两段各自命中计算霜冻，等控制将结束且四层确认再决定接 E。",
+      "risk": "只计算实际命中。不要把鳄鱼强化 W 的打击次数直接当作永冻层数。未满层、敌方反蹲先到或鳄鱼不能安全接应时撤离。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "既有组合 · 中上野接控",
+          "url": "https://github.com/Legender134/rift-buddy/blob/08cb288d064fc5ed85b4553ea2397ce852cd5c34/src/core/catalog-data.json#L35450",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 雷克顿 top",
+          "url": "https://op.gg/lol/champions/renekton/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 瑟庄妮 jungle",
+          "url": "https://op.gg/lol/champions/sejuani/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Renekton": "5a98c4b4b1f08e37",
+        "champion:Sejuani": "1d8d94f1d8414573"
+      },
+      "reviewSourceAnchors": {
+        "Renekton": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5a98c4b4b1f08e37",
+          "observedAt": "2026-11-05T02:19:26.165Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Renekton",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/renekton/renekton.bin.json",
+              "sha256": "20447bf1a1f2867c12442110f5430443a7dab367dea231831cb7d5092987004d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "1b5d01b58ae2dfac"
+            }
+          }
+        },
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Renekton",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "保上路线，W 实际命中后报目标；近身安全时才继续普攻，优先留退路。"
+        },
+        {
+          "champion": "Sejuani",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "清安全营地、确认上路视野；按 W 实际命中和近战队友攻击核对同一目标层数。"
+        }
+      ],
+      "steps": [
+        "先核上路兵线、敌方退路和双方技能。",
+        "雷克顿 W 实际命中后报目标，瑟庄妮判断 W 落点及同一目标实际层数。",
+        "四层、E 可用且目标可及才接控，增援或退路变化时撤离。"
+      ],
+      "window": "雷克顿 W 与瑟庄妮 E 已学可用，能安全接触同一目标并达到四层。",
+      "early": "不依赖双方大招。技能未齐或只有部分霜冻时做安全换血。",
+      "economy": "上路兵线给雷克顿，营地给瑟庄妮。两人均引用同英雄同位置的当版默认配置。"
+    },
+    {
+      "id": "camille-sejuani-top-jungle-frost",
+      "name": "卡蜜尔留人接永冻",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "上野配合",
+        "条件接力"
+      ],
+      "why": "卡蜜尔通过实际命中的 E 或已学可用的 R 限制共同目标，安全近战普攻协助瑟庄妮叠永冻。瑟庄妮核对四层后再判断接 E。",
+      "plan": "卡蜜尔先处理上路线，瑟庄妮清营地后看上路视野。会合前确认可利用墙体、退路和敌方增援。卡蜜尔 E 是否接到敌人以实际落点为准，R 为可选的目标限制。瑟庄妮按 W 实际命中和同目标层数决定 E，留 Q 作接应。",
+      "risk": "墙体距离、进场路线、友军接应不足或敌方反包时不进。卡蜜尔 R 不能代替瑟庄妮 E 的四层条件，双方都应保留离场方式。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "既有组合 · 包围与支援",
+          "url": "https://github.com/Legender134/rift-buddy/blob/08cb288d064fc5ed85b4553ea2397ce852cd5c34/src/core/catalog-data.json#L38190",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 卡蜜尔 top",
+          "url": "https://op.gg/lol/champions/camille/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 瑟庄妮 jungle",
+          "url": "https://op.gg/lol/champions/sejuani/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Camille": "d8925ce8a69d2250",
+        "champion:Sejuani": "1d8d94f1d8414573"
+      },
+      "reviewSourceAnchors": {
+        "Camille": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d8925ce8a69d2250",
+          "observedAt": "2026-11-05T02:19:26.063Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Camille",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/camille/camille.bin.json",
+              "sha256": "4a71a33c3849552befed54f0ae747ad470c25ac1a4921095d44c43ee3167df80"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "67751120f662608d"
+            }
+          }
+        },
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Camille",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "保上路线，核对 E 墙体和实际命中，安全近战攻击后回报目标；R 按风险选择。"
+        },
+        {
+          "champion": "Sejuani",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "清营地并确认上路接应路线；只在同一目标实际四层时用 E。"
+        }
+      ],
+      "steps": [
+        "确认上路线、墙体、敌方视野和退路。",
+        "按卡蜜尔实际命中与近战攻击，配合瑟庄妮 W 核对同一目标层数。",
+        "四层且可安全接应才用永冻，落点偏离或支援先到时撤离。"
+      ],
+      "window": "卡蜜尔有可用切入方式，瑟庄妮 E 已学且能接应实际四层目标。",
+      "early": "卡蜜尔六级前可看墙体和 E 的实际命中尝试短打，双方不用等 R 才能按四层接 E。",
+      "economy": "上路兵线给卡蜜尔，营地给瑟庄妮。两人均引用同英雄同位置的当版默认配置。"
     }
   ],
   "linkReviews": [
