@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.47",
+  "version": "2026.11.06.48",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -29139,6 +29139,126 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "70b671b76c9f1fba"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "lissandra-mid-nidalee-jungle-root-spear",
+      "name": "丽桑卓 × 奈德丽 · 控制接标枪",
+      "tempo": "early",
+      "style": "balanced",
+      "difficulty": "较高",
+      "tags": [
+        "中野联动",
+        "控制衔接"
+      ],
+      "why": "丽桑卓 W 实际禁锢敌人后，奈德丽可尝试以人形 Q 在控制窗口内命中同一目标。",
+      "plan": "丽桑卓先处理兵线；奈德丽按野区、惩戒与视野情况规划路线，确认双方技能、距离和安全退路。 丽桑卓靠近后 W 实际命中才会禁锢附近敌人；这是定身，不阻止目标施放所有技能。 奈德丽在人形且 Q 可用时，判断目标位置及弹道，尝试在控制期间投掷标枪；障碍、视野、距离、目标动作或敌方保护都可能导致未命中。 标枪实际命中并对敌方英雄造成伤害后才按当前技能触发捕猎；是否变身近身、继续追击或撤离取决于血量、反打及附近敌人。",
+      "risk": "W 是定身而非沉默；目标仍可能使用技能或受队友保护。标枪可能被拦截或落空，接近和追击也可能遭反打，不保证击杀。",
+      "early": "丽桑卓处理兵线并留意视野；奈德丽按野区资源和惩戒节奏选择是否支援。",
+      "window": "双方技能已学且可用、目标在 W 范围且标枪路径和距离可行；不满足时保持距离或撤退。",
+      "economy": "两人使用当版相应中路和打野单英雄默认参考；历史文章的 9.3 符文与装备不视作当前方案，也没有组合胜率。",
+      "steps": [
+        "丽桑卓先处理兵线；奈德丽按野区、惩戒与视野情况规划路线，确认双方技能、距离和安全退路。",
+        "丽桑卓靠近后 W 实际命中才会禁锢附近敌人；这是定身，不阻止目标施放所有技能。",
+        "奈德丽在人形且 Q 可用时，判断目标位置及弹道，尝试在控制期间投掷标枪；障碍、视野、距离、目标动作或敌方保护都可能导致未命中。",
+        "标枪实际命中并对敌方英雄造成伤害后才按当前技能触发捕猎；是否变身近身、继续追击或撤离取决于血量、反打及附近敌人。"
+      ],
+      "members": [
+        {
+          "champion": "Lissandra",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "处理中路兵线与视野，安全接近并以 W 实际禁锢目标，为队友争取标枪窗口。"
+        },
+        {
+          "champion": "Nidalee",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "结合惩戒和视野支援，在人形判断弹道后尝试 Q；实际命中并造成伤害、安全条件满足时再决定是否跟进。"
+        }
+      ],
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "桀骜哥 · 9.3 中野双排文章（2019-02-19）",
+          "url": "https://lol.te5.com/2019/408255.html",
+          "kind": "历史原文：丽桑卓 W 配合奈德丽 Q；非当前版本实战或配置",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能依据；并非组合胜率",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Lissandra mid 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/lissandra/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版单英雄位置构筑，非组合统计或原作者配装",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Nidalee jungle 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/nidalee/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版单英雄位置构筑，非组合统计或原作者配装",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Lissandra": "599da97edcf817b9",
+        "champion:Nidalee": "e54aff9035f36827"
+      },
+      "reviewSourceAnchors": {
+        "Lissandra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "599da97edcf817b9",
+          "observedAt": "2026-11-05T02:19:26.153Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lissandra",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lissandra/lissandra.bin.json",
+              "sha256": "a6ec51003dc0dd7956bc6f5aad1e6e6d61cd0d506eb59e91e651b7866cb4cbfe"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f6bc405fcfcae9d6"
+            }
+          }
+        },
+        "Nidalee": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e54aff9035f36827",
+          "observedAt": "2026-11-05T02:19:26.159Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nidalee",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nidalee/nidalee.bin.json",
+              "sha256": "f5c3a3abf2db4ddfe9a86ad3f27f03b36b2bcd063b64900ab5d55108ecd43180"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "60b5273e0f23a85d"
             }
           }
         }
