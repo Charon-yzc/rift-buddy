@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.56",
+  "version": "2026.11.06.57",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -30411,6 +30411,220 @@
       "window": "墨菲特 R 已学会且可用，雷恩加尔实际满足草丛或伪装跳跃条件，两人都能安全覆盖同一位置。",
       "early": "墨菲特以上路线和经验为主，雷恩加尔先保安全营地；六级前有草丛和安全路线才看基础技能机会，不预设大招联动。",
       "economy": "石头人以上路兵线为主，狮子狗以野区营地为主；各用当版同英雄同分路默认参考。"
+    },
+    {
+      "id": "vi-yasuo-jungle-mid-airborne",
+      "name": "锁定突进接风",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "中野配合",
+        "实际击飞接大"
+      ],
+      "why": "蔚 R 实际抵达并击飞锁定的敌方英雄后，亚索只对范围内仍浮空的敌方英雄衔接 R。",
+      "plan": "亚索处理安全中线，蔚先按营地和视野安排支援。蔚选择两人都能接应的敌方英雄，R 只有实际触碰锁定英雄后才击飞；亚索确认该英雄仍浮空、能覆盖落点再接 R。对手可以用站位、位移、控制免疫或队友支援化解计划，先确认退路。",
+      "risk": "蔚沿途碰撞其他敌人只按签名文本的震开与晕眩描述处理，不能据此保证亚索能接。落点过深、目标脱离或亚索不在范围内就停。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "GankerEve · 中野组合原文",
+          "url": "https://lol.17173.com/news/01102016/104535138.shtml",
+          "kind": "2016 年锐派原文，17173 转载；历史中野打法出处，非当版强度或出装依据",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版独立技能复核",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Vi": "ed4ccc20b476dc0e",
+        "champion:Yasuo": "d36ebea001e3d1cb"
+      },
+      "reviewSourceAnchors": {
+        "Vi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ed4ccc20b476dc0e",
+          "observedAt": "2026-11-05T02:19:26.180Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Vi",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vi/vi.bin.json",
+              "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "8c5f2d227a1d26cb"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-11-05T02:19:26.182Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Vi",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先处理安全营地；R 前确认目标与亚索能到的落点，实际击飞锁定英雄后报目标。"
+        },
+        {
+          "champion": "Yasuo",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理安全中线，确认 R 可用、同一敌方英雄仍浮空和后续退路再接；不要为了接大放弃安全位置。"
+        }
+      ],
+      "steps": [
+        "先分别处理兵线与营地，约目标、进场角度和撤退路线。",
+        "蔚选择两人都能接应的敌方英雄，R 只有实际触碰锁定英雄后才击飞；亚索确认该英雄仍浮空、能覆盖落点再接 R。",
+        "目标未实际浮空、技能无法覆盖或敌方支援到场时不强行跟进。"
+      ],
+      "window": "两人 R 均已学会且可用，蔚抵达并击飞锁定英雄，亚索能在目标实际浮空时安全接近。",
+      "early": "六级前可以按蔚 Q 的实际碰撞打普通小规模配合，不预设亚索大招联动。",
+      "economy": "亚索以中线经验和兵线为主，打野以营地为主；分别采用当版同英雄同分路默认参考。"
+    },
+    {
+      "id": "gragas-yasuo-jungle-mid-airborne",
+      "name": "酒桶入场接风",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "中野配合",
+        "实际击飞接大"
+      ],
+      "why": "古拉加斯 E 撞击首个敌人后击飞附近敌人，亚索等实际有敌方英雄浮空再接 R。",
+      "plan": "亚索处理安全中线，古拉加斯先按营地和视野安排支援。古拉加斯从兵线侧面寻找 E 路径。确认 E 实际撞击且附近敌方英雄被击飞后，亚索在该英雄仍浮空且距离合适时决定是否接 R。对手可以用站位、位移、控制免疫或队友支援化解计划，先确认退路。",
+      "risk": "E 可能先撞到前方单位，且共同目标不在击飞范围内；R 可能把目标送离队友。浮空没发生或落点过深时取消。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "GankerEve · 中野组合原文",
+          "url": "https://lol.17173.com/news/01102016/104535138.shtml",
+          "kind": "2016 年锐派原文，17173 转载；历史中野打法出处，非当版强度或出装依据",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版独立技能复核",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Gragas": "5703c0be06b9ebf2",
+        "champion:Yasuo": "d36ebea001e3d1cb"
+      },
+      "reviewSourceAnchors": {
+        "Gragas": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5703c0be06b9ebf2",
+          "observedAt": "2026-11-05T02:19:26.072Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Gragas",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/gragas/gragas.bin.json",
+              "sha256": "5b7a63175a2c0e545c74b391cf34237baa809689ccb1b126250ff7d243b5148d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "34e130a71102aad7"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-11-05T02:19:26.182Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Gragas",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "按野区和中线状态安排支援，确认 E 路径及第一碰撞对象；R 若使用，先看爆炸中心与撤退方向。"
+        },
+        {
+          "champion": "Yasuo",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理安全中线，确认 R 可用、同一敌方英雄仍浮空和后续退路再接；不要为了接大放弃安全位置。"
+        }
+      ],
+      "steps": [
+        "先分别处理兵线与营地，约目标、进场角度和撤退路线。",
+        "古拉加斯从兵线侧面寻找 E 路径。确认 E 实际撞击且附近敌方英雄被击飞后，亚索在该英雄仍浮空且距离合适时决定是否接 R。",
+        "目标未实际浮空、技能无法覆盖或敌方支援到场时不强行跟进。"
+      ],
+      "window": "古拉加斯 E 实际击飞共同目标，亚索 R 已学会且可用，目标仍浮空且队友可覆盖落点。",
+      "early": "亚索 R 未学会时可以打 E 命中后的普通跟进，不预设接大。",
+      "economy": "亚索以中线经验和兵线为主，打野以营地为主；分别采用当版同英雄同分路默认参考。"
     }
   ],
   "linkReviews": [
