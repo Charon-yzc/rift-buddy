@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.46",
+  "version": "2026.11.06.47",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -29025,6 +29025,120 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2fc94ca452c59007"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "poppy-kindred-sanctuary-displace",
+      "name": "波比 × 千珏 · 圣域外分隔",
+      "tempo": "teamfight",
+      "style": "fun",
+      "difficulty": "较高",
+      "tags": [
+        "目标争夺",
+        "范围保护"
+      ],
+      "why": "千珏 R 保护范围内各方单位；波比的蓄力 R 有机会将实际命中的敌人送出保护范围，为目标争夺创造条件。",
+      "plan": "波比守住上路并视野充足时靠近争夺区域；千珏按野区与惩戒节奏准备，双方技能和撤退路径均需可用。 千珏必要时用 R 保护区域内的单位；该效果同样保护敌方和中立单位，区域内生命降低到阈值后不再受伤或治疗，结束时仍在其中的单位会获得治疗。 若目标在实际冲击波路径且方向与距离合适，波比蓄力 R 可将命中的首个敌方英雄及其附近敌人向其水晶枢纽方向击退；只有实际将目标移出千珏 R 范围时，才可能令其不再受该范围保护。 被击退的目标飞行时不可被选取，不把全部后续伤害安排在其飞行期间；未蓄力 R 只有短暂击飞，不承诺将其送出范围。若未命中、距离不足、方向不利或反而影响队友，则转为撤离或常规防守。",
+      "risk": "千珏 R 同样保护敌人与中立单位，结束时范围内单位会获治疗；波比蓄力时机、方向、目标距离和命中均不保证，可能浪费大招或打散队友。",
+      "early": "波比先处理上路兵线；千珏根据野区情况与惩戒时机行动，有安全路径时再汇合。",
+      "window": "双方 R 已学且可用，目标在波比实际射程与冲击波路径内，蓄力方向能使敌人离开千珏保护区域且队友能够应对；否则不强行施放。",
+      "economy": "各自使用当版波比上路和千珏打野的位置参考；本组合由项目依据技能整理，非原作者出装、组合胜率或实战保证。",
+      "steps": [
+        "波比守住上路并视野充足时靠近争夺区域；千珏按野区与惩戒节奏准备，双方技能和撤退路径均需可用。",
+        "千珏必要时用 R 保护区域内的单位；该效果同样保护敌方和中立单位，区域内生命降低到阈值后不再受伤或治疗，结束时仍在其中的单位会获得治疗。",
+        "若目标在实际冲击波路径且方向与距离合适，波比蓄力 R 可将命中的首个敌方英雄及其附近敌人向其水晶枢纽方向击退；只有实际将目标移出千珏 R 范围时，才可能令其不再受该范围保护。",
+        "被击退的目标飞行时不可被选取，不把全部后续伤害安排在其飞行期间；未蓄力 R 只有短暂击飞，不承诺将其送出范围。若未命中、距离不足、方向不利或反而影响队友，则转为撤离或常规防守。"
+      ],
+      "members": [
+        {
+          "champion": "Poppy",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "根据距离与方向决定是否蓄力 R 把敌人移出保护区；W 仅在领域实际中断突进时附带限制，E 撞地形才晕眩。"
+        },
+        {
+          "champion": "Kindred",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "根据血量、范围及惩戒时机决定是否施放 R，留意敌人与中立目标同样受保护；保留位置处理区域结束后的局面。"
+        }
+      ],
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前技能依据；组合是项目推论",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 波比上路参考",
+          "url": "https://op.gg/lol/champions/poppy/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄位置参考，非双人组合统计",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 千珏打野参考",
+          "url": "https://op.gg/lol/champions/kindred/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄位置参考，非双人组合统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Poppy": "af33a45e62ad30e5",
+        "champion:Kindred": "b089b055eca4104f"
+      },
+      "reviewSourceAnchors": {
+        "Poppy": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "af33a45e62ad30e5",
+          "observedAt": "2026-11-05T02:19:26.162Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Poppy",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "984283b0f66ff725"
+            }
+          }
+        },
+        "Kindred": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b089b055eca4104f",
+          "observedAt": "2026-11-05T02:19:26.081Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kindred",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kindred/kindred.bin.json",
+              "sha256": "c9ad94593cde53e26f5382a09be44bed274f4ec29a63fedd51500aecaa852c85"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "70b671b76c9f1fba"
             }
           }
         }
