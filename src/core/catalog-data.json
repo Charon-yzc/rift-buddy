@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.73",
+  "version": "2026.11.07.74",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -35971,6 +35971,207 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Seraphine",
+        "Anivia"
+      ],
+      "comboId": "seraphine-anivia",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "bf1c2e8e79a10ec2",
+      "baseline": {
+        "Seraphine": "18e4440868d92eb5",
+        "Anivia": "52343f9ffaa815a9"
+      },
+      "anchors": {
+        "Seraphine": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "18e4440868d92eb5",
+          "observedAt": "2026-11-05T02:19:26.168Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Seraphine",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
+              "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b29132146d6ad36b"
+            }
+          }
+        },
+        "Anivia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "52343f9ffaa815a9",
+          "observedAt": "2026-11-05T02:19:26.058Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Anivia",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/anivia/anivia.bin.json",
+              "sha256": "c0a7fec988a4af4386b82c5eca35a7c895461a4c30f6af5bb772f199387eef79"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "d7796f24d403cc8c"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Veigar",
+        "Seraphine"
+      ],
+      "comboId": "veigar-seraphine",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "239b756e0333f953",
+      "baseline": {
+        "Veigar": "b0c876605f73d7f8",
+        "Seraphine": "18e4440868d92eb5"
+      },
+      "anchors": {
+        "Veigar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b0c876605f73d7f8",
+          "observedAt": "2026-11-05T02:19:26.179Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Veigar",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "0d5181fbdf1760ef"
+            }
+          }
+        },
+        "Seraphine": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "18e4440868d92eb5",
+          "observedAt": "2026-11-05T02:19:26.168Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Seraphine",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
+              "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b29132146d6ad36b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Jhin",
+        "Zyra"
+      ],
+      "comboId": "rose-thorns",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "1a6a6a797886a487",
+      "baseline": {
+        "Jhin": "226e6c11b8a992f5",
+        "Zyra": "f653495a90d1586e"
+      },
+      "anchors": {
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        },
+        "Zyra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f653495a90d1586e",
+          "observedAt": "2026-11-05T02:19:26.255Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zyra",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zyra/zyra.bin.json",
+              "sha256": "18f1cd91897b66a60a6c5c3b7205668e4c2ceb6305ce5e1e4e86d0cf649f89d3"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e6ad7484cbc1effe"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -36597,12 +36798,12 @@
     [
       "Veigar",
       "Seraphine",
-      "笼子限制走位后，萨勒芬妮可接控制与远程伤害。"
+      "维迦 E 成形后，同一目标实际触碰笼边并晕眩；萨勒芬妮 E 在目标仍定身时命中才接晕眩，仅在笼内不算。"
     ],
     [
       "Seraphine",
       "Anivia",
-      "冰鸟提供减速与地形区域，为萨勒芬妮接控制创造空间。"
+      "冰鸟 R 已学并维持，实际减速同一目标；萨勒芬妮 E 命中时减速仍在才禁锢，若目标当时已定身则晕眩。"
     ],
     [
       "Teemo",
@@ -36618,6 +36819,11 @@
       "TwistedFate",
       "Jhin",
       "卡牌锁定金牌并用强化普攻实际命中同一目标后，烬可在友方伤害仍有效时用 W 射击，只有射线首个敌方英雄是该目标才按这段禁锢接续。"
+    ],
+    [
+      "Jhin",
+      "Zyra",
+      "婕拉 Q 或 E 本体实际伤害目标；烬 W 须在友方伤害标记有效时命中同一目标，且目标是弹道首个敌方英雄。植物单独伤害暂未核实。"
     ]
   ],
   "trios": [
