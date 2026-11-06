@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.76",
+  "version": "2026.11.07.77",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -37445,6 +37445,944 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Draven",
+        "Pyke"
+      ],
+      "comboId": "axe-hook",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "e238c23f4f72b504",
+      "baseline": {
+        "Draven": "6e70cb90d9331e71",
+        "Pyke": "750b7cf6d1187481"
+      },
+      "anchors": {
+        "Draven": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6e70cb90d9331e71",
+          "observedAt": "2026-11-05T02:19:26.067Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Draven",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/draven/draven.bin.json",
+              "sha256": "4247519fd03f93caefe06f15e65c5f72e99fec1f419c479efe636b751c5d181b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b7e878515739012b"
+            }
+          }
+        },
+        "Pyke": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "750b7cf6d1187481",
+          "observedAt": "2026-11-05T02:19:26.162Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Pyke",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/pyke/pyke.bin.json",
+              "sha256": "86f12c6d02089846d871822760da759289bc2a1a4907782ba8e53372afb5c041"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "2fc94ca452c59007"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Garen",
+        "Yuumi"
+      ],
+      "comboId": "garen-yuumi",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "d74de6634bc8a2aa",
+      "baseline": {
+        "Garen": "da16a590f3304db3",
+        "Yuumi": "74372983c2c1dbfe"
+      },
+      "anchors": {
+        "Garen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "da16a590f3304db3",
+          "observedAt": "2026-11-05T02:19:26.071Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Garen",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/garen/garen.bin.json",
+              "sha256": "1f70b1e66d622e433606d551b6f23f5d170deba6dc4347ddff88fa9e6053a710"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "63254cd43dff2e1d"
+            }
+          }
+        },
+        "Yuumi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "74372983c2c1dbfe",
+          "observedAt": "2026-11-05T02:19:26.184Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yuumi",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yuumi/yuumi.bin.json",
+              "sha256": "b65fd4e92df3a120fe88ee2ebd588f55a7f1a642f249c22d0668eae860f9c3aa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "2bfcd21ddb05bd3f"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Rammus",
+        "Yuumi"
+      ],
+      "comboId": "rammus-yuumi",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "2eaf1e8d8f699d8d",
+      "baseline": {
+        "Rammus": "f1863a22e11c5376",
+        "Yuumi": "74372983c2c1dbfe"
+      },
+      "anchors": {
+        "Rammus": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f1863a22e11c5376",
+          "observedAt": "2026-11-05T02:19:26.164Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rammus",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rammus/rammus.bin.json",
+              "sha256": "15ad2ce3a25a8e064438fb06479ba10563c0aff6239b635a4f84f15eb8145110"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7826ab9afdaf8fd0"
+            }
+          }
+        },
+        "Yuumi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "74372983c2c1dbfe",
+          "observedAt": "2026-11-05T02:19:26.184Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yuumi",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yuumi/yuumi.bin.json",
+              "sha256": "b65fd4e92df3a120fe88ee2ebd588f55a7f1a642f249c22d0668eae860f9c3aa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "2bfcd21ddb05bd3f"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Quinn",
+        "Pyke"
+      ],
+      "comboId": "quinn-pyke",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "1c9dbbbde15537ad",
+      "baseline": {
+        "Quinn": "96eaff1d877b5c1a",
+        "Pyke": "750b7cf6d1187481"
+      },
+      "anchors": {
+        "Quinn": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "96eaff1d877b5c1a",
+          "observedAt": "2026-11-05T02:19:26.163Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Quinn",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/quinn/quinn.bin.json",
+              "sha256": "fbc33f35bced23f5dfdce3c5fcc7a64f6b44c8083883bc3724f6836f9cb37c6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "646da0026bf9e301"
+            }
+          }
+        },
+        "Pyke": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "750b7cf6d1187481",
+          "observedAt": "2026-11-05T02:19:26.162Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Pyke",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/pyke/pyke.bin.json",
+              "sha256": "86f12c6d02089846d871822760da759289bc2a1a4907782ba8e53372afb5c041"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "2fc94ca452c59007"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Ekko",
+        "Zilean"
+      ],
+      "comboId": "ekko-zilean",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "d41b6db37575651c",
+      "baseline": {
+        "Ekko": "d17ece4a263656b8",
+        "Zilean": "60f40731a1259a4a"
+      },
+      "anchors": {
+        "Ekko": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d17ece4a263656b8",
+          "observedAt": "2026-11-05T02:19:26.068Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ekko",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ekko/ekko.bin.json",
+              "sha256": "cc5b259955ce7c0062fb8a1e38e742b587f0f10a70c91945ccc62b2db7a14fc5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "d146dbafe0178dc0"
+            }
+          }
+        },
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-11-05T02:19:26.254Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "TahmKench",
+        "Zac"
+      ],
+      "comboId": "tahmkench-zac",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "ec5de74e32dd62fe",
+      "baseline": {
+        "TahmKench": "9635271a9add58c5",
+        "Zac": "79df9b9e7571e89c"
+      },
+      "anchors": {
+        "TahmKench": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9635271a9add58c5",
+          "observedAt": "2026-11-05T02:19:26.174Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "TahmKench",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/tahmkench/tahmkench.bin.json",
+              "sha256": "2c4d245e198a57458a95879789133f011276421c3cbc2f5a5293507a8ba34073"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "324a3700d293797b"
+            }
+          }
+        },
+        "Zac": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "79df9b9e7571e89c",
+          "observedAt": "2026-11-05T02:19:26.252Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zac",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zac/zac.bin.json",
+              "sha256": "40df6abd439891c7e6733966c1ec367a15392cb8b52754a7df145b6b854f0ff5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "cf22bab2f64d09f2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Katarina",
+        "Sejuani"
+      ],
+      "comboId": "katarina-sejuani",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "7b62d7f5c548e9ed",
+      "baseline": {
+        "Katarina": "98848fc7138b49b3",
+        "Sejuani": "1d8d94f1d8414573"
+      },
+      "anchors": {
+        "Katarina": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "98848fc7138b49b3",
+          "observedAt": "2026-11-05T02:19:26.079Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Katarina",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/katarina/katarina.bin.json",
+              "sha256": "ef3a3a5778e1e41895a94b38554e6ce1921ae1aa0a9c44c1e5fd85e7c93c97c1"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "4e7c2f4db28dab8c"
+            }
+          }
+        },
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Poppy",
+        "Zilean"
+      ],
+      "comboId": "poppy-zilean",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "8fd844ef991d3580",
+      "baseline": {
+        "Poppy": "af33a45e62ad30e5",
+        "Zilean": "60f40731a1259a4a"
+      },
+      "anchors": {
+        "Poppy": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "af33a45e62ad30e5",
+          "observedAt": "2026-11-05T02:19:26.162Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Poppy",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "984283b0f66ff725"
+            }
+          }
+        },
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-11-05T02:19:26.254Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "DrMundo",
+        "Lulu"
+      ],
+      "comboId": "drmundo-lulu",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "958de72b1901048c",
+      "baseline": {
+        "DrMundo": "4f965c27d85177a6",
+        "Lulu": "5f5091380ca45272"
+      },
+      "anchors": {
+        "DrMundo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "4f965c27d85177a6",
+          "observedAt": "2026-11-05T02:19:26.068Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "DrMundo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/drmundo/drmundo.bin.json",
+              "sha256": "fbd58123cf7f38d552b6b877dc5f4dafc0e7b24178cfe7a8f56152affc1b5d92"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "6541b61e26cdad84"
+            }
+          }
+        },
+        "Lulu": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5f5091380ca45272",
+          "observedAt": "2026-11-05T02:19:26.154Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lulu",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lulu/lulu.bin.json",
+              "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "33e697bcb063b28b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Tristana",
+        "Pyke"
+      ],
+      "comboId": "tristana-pyke",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "d1403e5176a060d0",
+      "baseline": {
+        "Tristana": "931894a6ac7e80f4",
+        "Pyke": "750b7cf6d1187481"
+      },
+      "anchors": {
+        "Tristana": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "931894a6ac7e80f4",
+          "observedAt": "2026-11-05T02:19:26.176Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Tristana",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/tristana/tristana.bin.json",
+              "sha256": "62d0dcaec7b4f7498a55af4d7ca3a30ac433fa08913fa095194a5c920dfb7891"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "dedfd8b3d11580bb"
+            }
+          }
+        },
+        "Pyke": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "750b7cf6d1187481",
+          "observedAt": "2026-11-05T02:19:26.162Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Pyke",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/pyke/pyke.bin.json",
+              "sha256": "86f12c6d02089846d871822760da759289bc2a1a4907782ba8e53372afb5c041"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "2fc94ca452c59007"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "MissFortune",
+        "Taric"
+      ],
+      "comboId": "missfortune-taric",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "7c379136e34cdc6b",
+      "baseline": {
+        "MissFortune": "10b496d2ce7c344d",
+        "Taric": "d7034e2662bef2b0"
+      },
+      "anchors": {
+        "MissFortune": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "10b496d2ce7c344d",
+          "observedAt": "2026-11-05T02:19:26.157Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "MissFortune",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
+              "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "45c6c8d43f1a5c2f"
+            }
+          }
+        },
+        "Taric": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d7034e2662bef2b0",
+          "observedAt": "2026-11-05T02:19:26.175Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taric",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
+              "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "a0599325a1012892"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Ziggs",
+        "Taric"
+      ],
+      "comboId": "ziggs-taric",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "cb0040b6cc2c25ee",
+      "baseline": {
+        "Ziggs": "301986c8fed3e8fb",
+        "Taric": "d7034e2662bef2b0"
+      },
+      "anchors": {
+        "Ziggs": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "301986c8fed3e8fb",
+          "observedAt": "2026-11-05T02:19:26.253Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ziggs",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ziggs/ziggs.bin.json",
+              "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "fdb99302b5ecb565"
+            }
+          }
+        },
+        "Taric": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d7034e2662bef2b0",
+          "observedAt": "2026-11-05T02:19:26.175Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taric",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
+              "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "a0599325a1012892"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Xayah",
+        "Kayle"
+      ],
+      "comboId": "xayah-kayle-guard",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "0f8a421252a27c33",
+      "baseline": {
+        "Xayah": "6218a12d2240d28e",
+        "Kayle": "454aeb50df3f8fea"
+      },
+      "anchors": {
+        "Xayah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6218a12d2240d28e",
+          "observedAt": "2026-11-05T02:19:26.182Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Xayah",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/xayah/xayah.bin.json",
+              "sha256": "94e7c4f849daefb1f7967fda0b4abd1848747fceb9ff04b2530e00471f848de5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "ef84e7c599b03475"
+            }
+          }
+        },
+        "Kayle": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "454aeb50df3f8fea",
+          "observedAt": "2026-11-05T02:19:26.080Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kayle",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kayle/kayle.bin.json",
+              "sha256": "7daa911709b87dae13804b8ced3cf21854bbaa817e1739fcac5bdf9c3cd79cec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "9407b87b31897991"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Lux",
+        "Soraka"
+      ],
+      "comboId": "community-lux-soraka-2621",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "5c920014efa42b75",
+      "baseline": {
+        "Lux": "50314ad04c92f1a6",
+        "Soraka": "46ec394f508ebcc0"
+      },
+      "anchors": {
+        "Lux": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "50314ad04c92f1a6",
+          "observedAt": "2026-11-05T02:19:26.155Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lux",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lux/lux.bin.json",
+              "sha256": "bcb1ca7a7e82072b504985d84dc1fa905471f3c249fbafb3ab72658a50f7595b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "cc7818802b8d5fc7"
+            }
+          }
+        },
+        "Soraka": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "46ec394f508ebcc0",
+          "observedAt": "2026-11-05T02:19:26.173Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Soraka",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/soraka/soraka.bin.json",
+              "sha256": "efdf1cfccf0fbb6bb3de9f8e2e7e5641eb0e628955c602dbe93be699b2ce8e83"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "43b0fc1302f2816c"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -37871,7 +38809,7 @@
     [
       "Rammus",
       "Yuumi",
-      "龙龟负责近身承伤，悠米提供回复和保护。"
+      "拉莫斯 Q 实际撞到敌人或 E 实际嘲讽时，可承接正面压力。悠米实际附身后 E 才把护盾给到拉莫斯，R 每波须实际命中友军才治疗该友军。"
     ],
     [
       "Anivia",
@@ -37926,7 +38864,7 @@
     [
       "Quinn",
       "Pyke",
-      "派克寻找控制窗口，奎因跟进短时爆发与游走。"
+      "派克 E 返回魅影实际晕眩目标后，奎因可按站位接近。奎因 E 实际接触后击退目标并向后跳开，退路被封或会脱离队友时不强接。"
     ],
     [
       "Seraphine",
@@ -37956,7 +38894,7 @@
     [
       "Ekko",
       "Zilean",
-      "基兰加速支持艾克接近，复活作为额外保护。"
+      "基兰 E 实际选中艾克可给他加速，艾克按可达角度接近或退出。基兰 R 须已经保护艾克，且艾克在保护期内将要阵亡才会触发复活。"
     ],
     [
       "Naafiri",
@@ -37976,7 +38914,7 @@
     [
       "TahmKench",
       "Zac",
-      "扎克与塔姆可交错进场控制，轮流吸收压力。"
+      "扎克 E 只有着陆区域实际命中才击飞，塔姆 W 须按目标当时位置另行落地命中。任一先手落空或队友无法接应时不按连控追击。"
     ],
     [
       "Teemo",
@@ -37986,7 +38924,7 @@
     [
       "Katarina",
       "Sejuani",
-      "近战队友可协助瑟庄妮叠层，为卡特提供接近窗口。"
+      "瑟庄妮 E 已学后，附近近战卡特琳娜的普攻实际命中同一目标可协助叠层。该目标到四层且瑟庄妮 E 可用才晕眩，不预设匕首或位移技能可叠层。"
     ],
     [
       "Viego",
@@ -38011,7 +38949,7 @@
     [
       "Poppy",
       "Zilean",
-      "基兰加速支持波比找撞墙角度，并提供保命机会。"
+      "基兰 E 实际给波比加速可帮助她调整角度。波比 E 须实际把共同目标带到地形才眩晕，只有位移或墙角不成立时不追。"
     ],
     [
       "Syndra",
@@ -38021,7 +38959,7 @@
     [
       "DrMundo",
       "Lulu",
-      "璐璐保护与加速帮助蒙多接近并持续作战。"
+      "璐璐 W 实际给蒙多移速，或 E 实际给蒙多护盾，可争取接近和撤出窗口。走位仍须按当时控制与伤害判断，不能据此预设免控或蒙多 R 的额外效果。"
     ],
     [
       "Cassiopeia",
@@ -38167,6 +39105,41 @@
       "MissFortune",
       "Seraphine",
       "萨勒芬妮 R 实际魅惑共同目标后，厄运小姐确认目标仍在 R 锥形覆盖和可安全引导的位置，再开弹幕。魅惑未命中或引导被打断时，按实际命中处理。"
+    ],
+    [
+      "Draven",
+      "Pyke",
+      "派克 E 的返回魅影实际晕眩共同目标后，德莱文确认 Q 已备好且有安全斧落点，再普攻换血。需要绕进危险位置接斧时停止。"
+    ],
+    [
+      "Garen",
+      "Yuumi",
+      "悠米 W 实际附身盖伦后，E 护盾覆盖盖伦，移速加成随护盾存续。盖伦可据此接近，Q 强化普攻实际命中才沉默，护盾破裂或退路不安全时收手。"
+    ],
+    [
+      "Tristana",
+      "Pyke",
+      "派克 E 返回魅影实际晕眩后，小炮才考虑安全的 W 落点。W 落地命中才伤害并减速，只在参与击杀或满层 E 爆炸时按重置再跳。"
+    ],
+    [
+      "MissFortune",
+      "Taric",
+      "塔里克 R 延迟结束且厄运小姐实际获得伤害免疫后，再按锥形覆盖和站位决定是否引导弹幕。伤害免疫不挡控制，引导仍可能被打断。"
+    ],
+    [
+      "Ziggs",
+      "Taric",
+      "塔里克 R 有延迟，吉格斯须实际获得伤害免疫才按保护窗口行动。吉格斯 W 爆炸可以震开自己，按实际炸点、落点和退路决定是否使用。"
+    ],
+    [
+      "Xayah",
+      "Kayle",
+      "凯尔 R 实际给霞免疫伤害，霞 R 则在自身跃起时不可被选取。按敌方出手分开使用，任何一段未生效或已结束时重新判断退路。"
+    ],
+    [
+      "Lux",
+      "Soraka",
+      "拉克丝 Q 仅束缚实际命中的前两个敌方单位。索拉卡 E 覆盖共同目标后，只有敌方英雄在领域消失时仍处于其中才禁锢，单纯沉默不算。"
     ]
   ],
   "trios": [
