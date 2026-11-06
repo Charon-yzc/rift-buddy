@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.72",
+  "version": "2026.11.07.73",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -33451,6 +33451,246 @@
       "window": "实际目标、技能射线和队友距离同时成立才接；大招仅在已学且可用时纳入计划。",
       "early": "两人实际学会基础控制即可按安全路线协助，不以辅助离线或强行越塔为前提。",
       "economy": "蔚打野保营地并承担物理输出，诺提勒斯辅助保任务和视野；各用同位置个人构筑。"
+    },
+    {
+      "id": "kennen-viktor-top-mid-zone",
+      "name": "凯南控场接维克托重力场",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "上中联动",
+        "区域控制",
+        "侧翼接应"
+      ],
+      "why": "凯南让同一目标实际叠满三层印记后，维克托可以把 W 放在交战位置。敌人在场内实际停留满 1.25 秒才触发 W 的晕眩。",
+      "plan": "先处理中上兵线，确定能互相覆盖的狭口或侧翼。凯南按能量、退路和实际命中入场。维克托从安全侧提前覆盖交战位置，以实际印记、命中和停留时间判断后续。",
+      "risk": "敌人分散、离开力场或已绕开侧翼时改守退路；两名成员的主要技能伤害偏法术，组全队时留其他伤害来源。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 雷电守阵",
+          "url": "https://github.com/Legender134/rift-buddy/blob/a5240e34f7b684c1f6821a2db1e9b1be955df910/src/core/catalog-data.json#L43874",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 凯南 top",
+          "url": "https://op.gg/lol/champions/kennen/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 维克托 mid",
+          "url": "https://op.gg/lol/champions/viktor/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Kennen": "acea9254a0f94a5c",
+        "champion:Viktor": "550827716c13075f"
+      },
+      "reviewSourceAnchors": {
+        "Kennen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "acea9254a0f94a5c",
+          "observedAt": "2026-11-05T02:19:26.080Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kennen",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kennen/kennen.bin.json",
+              "sha256": "1f304430b94732440506d967be3a786532dbcfb840ef8e08c76200f74f6f8553"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "8217ba3a90c36528"
+            }
+          }
+        },
+        "Viktor": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "550827716c13075f",
+          "observedAt": "2026-11-05T02:19:26.180Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Viktor",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/viktor/viktor.bin.json",
+              "sha256": "78e4afed5555bd1f9d0416c472b3693b5da0efdcca03b950acdcf6f910bdb731"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "ef737928ffc1b9ac"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Kennen",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "保上路线和能量，视野与退路成立才用可用技能入场，三层印记实际触发后报告目标。"
+        },
+        {
+          "champion": "Viktor",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "处理中线，从安全侧在共同落点布置 W，实际停留满 1.25 秒才按晕眩继续。"
+        }
+      ],
+      "steps": [
+        "处理中上兵线，确认视野、双方有效距离和退路。",
+        "维克托用 W 覆盖预期交战位置，凯南用实际命中叠印记并报告控制。",
+        "按目标在 W 内的真实停留时间和撤离方向决定继续或退出。"
+      ],
+      "window": "双方能覆盖同一交战区，凯南实际叠层，维克托 W 可用并覆盖目标。",
+      "early": "双方先保兵线与可用技能；凯南未学 R 时按实际印记和短窗口协助。",
+      "economy": "凯南保上路经济，维克托保中路经济，配置是各自同分路参考。"
+    },
+    {
+      "id": "tf-jhin-mid-bottom-gold-mark",
+      "name": "卡牌金牌接烬致命华彩",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "中下联动",
+        "金牌接禁锢",
+        "物法接力"
+      ],
+      "why": "卡牌锁定金牌并用强化普攻实际命中同一目标后，烬可在友方伤害仍有效时用 W 射击，只有射线首个敌方英雄是该目标才按这段禁锢接续。",
+      "plan": "中路先处理兵线，卡牌从安全路线会合。金牌实际命中后确认共同目标和射线，烬结合控制剩余时间错开 W；可用 R 只作可选转线。",
+      "risk": "目标超距、W 被另一英雄挡住或友方伤害窗口已经结束时取消接控；卡牌只开 R 显形或只锁牌均不能当作已打出金牌。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 黄牌路障",
+          "url": "https://github.com/Legender134/rift-buddy/blob/a5240e34f7b684c1f6821a2db1e9b1be955df910/src/core/catalog-data.json#L44243",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 崔斯特 mid",
+          "url": "https://op.gg/lol/champions/twistedfate/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 烬 bottom",
+          "url": "https://op.gg/lol/champions/jhin/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:TwistedFate": "4b3a9807b94dcc47",
+        "champion:Jhin": "226e6c11b8a992f5"
+      },
+      "reviewSourceAnchors": {
+        "TwistedFate": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "4b3a9807b94dcc47",
+          "observedAt": "2026-11-05T02:19:26.177Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "TwistedFate",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twistedfate/twistedfate.bin.json",
+              "sha256": "ec60137c806e0ca6e86bad8bcf6a216b8295761503dbb7a61eddc6b7e82bf4f4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f83bddbc2f7bb85b"
+            }
+          }
+        },
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "TwistedFate",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "保中线，先确认近身距离与金牌，再以强化普攻对共同目标实际造成伤害和眩晕。"
+        },
+        {
+          "champion": "Jhin",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "保下路线，从安全射角对共同目标接 W；核对友方伤害时间窗和首个敌方英雄。"
+        }
+      ],
+      "steps": [
+        "确认中下两路经济、会合路线、可用 W 和共同目标。",
+        "卡牌金牌强化普攻实际命中后报告目标。",
+        "烬在伤害窗口内从可达射角接 W，目标不是首个敌方英雄就停追。"
+      ],
+      "window": "金牌命中，烬 W 可用，友方伤害窗口仍在且射线能先命中共同目标。",
+      "early": "双方都学到 W 后可按实际距离找短抓，未学 R 也可从安全路线会合。",
+      "economy": "卡牌保中路与魔法伤害，烬保下路经济与物理输出，两人用同位置个人参考。"
     }
   ],
   "linkReviews": [
@@ -35597,6 +35837,140 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Kennen",
+        "Viktor"
+      ],
+      "comboId": "kennen-viktor-top-mid-zone",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "891d1fe8caaebef0",
+      "baseline": {
+        "Kennen": "acea9254a0f94a5c",
+        "Viktor": "550827716c13075f"
+      },
+      "anchors": {
+        "Kennen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "acea9254a0f94a5c",
+          "observedAt": "2026-11-05T02:19:26.080Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kennen",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kennen/kennen.bin.json",
+              "sha256": "1f304430b94732440506d967be3a786532dbcfb840ef8e08c76200f74f6f8553"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "8217ba3a90c36528"
+            }
+          }
+        },
+        "Viktor": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "550827716c13075f",
+          "observedAt": "2026-11-05T02:19:26.180Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Viktor",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/viktor/viktor.bin.json",
+              "sha256": "78e4afed5555bd1f9d0416c472b3693b5da0efdcca03b950acdcf6f910bdb731"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "ef737928ffc1b9ac"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "TwistedFate",
+        "Jhin"
+      ],
+      "comboId": "tf-jhin-mid-bottom-gold-mark",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "ead0b0ec81731eda",
+      "baseline": {
+        "TwistedFate": "4b3a9807b94dcc47",
+        "Jhin": "226e6c11b8a992f5"
+      },
+      "anchors": {
+        "TwistedFate": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "4b3a9807b94dcc47",
+          "observedAt": "2026-11-05T02:19:26.177Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "TwistedFate",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twistedfate/twistedfate.bin.json",
+              "sha256": "ec60137c806e0ca6e86bad8bcf6a216b8295761503dbb7a61eddc6b7e82bf4f4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f83bddbc2f7bb85b"
+            }
+          }
+        },
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -36234,6 +36608,16 @@
       "Teemo",
       "Milio",
       "米利欧提供射程和保护，帮助提莫保持普攻距离。"
+    ],
+    [
+      "Kennen",
+      "Viktor",
+      "凯南让同一目标实际叠满三层印记后，维克托可以把 W 放在交战位置。敌人在场内实际停留满 1.25 秒才触发 W 的晕眩。"
+    ],
+    [
+      "TwistedFate",
+      "Jhin",
+      "卡牌锁定金牌并用强化普攻实际命中同一目标后，烬可在友方伤害仍有效时用 W 射击，只有射线首个敌方英雄是该目标才按这段禁锢接续。"
     ]
   ],
   "trios": [
