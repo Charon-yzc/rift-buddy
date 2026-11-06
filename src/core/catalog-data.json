@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.68",
+  "version": "2026.11.07.69",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -32608,6 +32608,369 @@
       "window": "上路兵线允许接应，双方有可用控制并能安全接触同一目标。",
       "early": "六级前用 E 接地形与蔚 Q 的实际命中创造机会。大招仅在已学且实际可用时纳入。",
       "economy": "卡蜜尔保留上路补刀和经验，蔚以野区经济为主。双方引用当版同英雄同位置的默认构筑。"
+    },
+    {
+      "id": "elise-twistedfate-jungle-mid-gold-cocoon",
+      "name": "卡牌黄牌接伊莉丝结茧",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "中野联动",
+        "同目标接控"
+      ],
+      "why": "崔斯特锁定黄牌后用强化普攻实际晕眩目标，为伊莉丝从无遮挡方向接人形 E 留出窗口。",
+      "plan": "处理中线并确认野区进场路径。崔斯特在安全普攻距离交黄牌，伊莉丝确认控制命中，错开控制并让结茧先碰到同一目标。",
+      "risk": "锁定黄牌本身没有晕眩。小兵或其他单位挡住结茧、队友距离不足或对手支援到场时，停止追击。崔斯特 R 支援需考虑引导、距离和落点。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 前期围点",
+          "url": "https://github.com/Legender134/rift-buddy/blob/5376387eb7674694ab23e74da4087fde07221bb3/src/core/catalog-data.json#L38871",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 伊莉丝 jungle",
+          "url": "https://op.gg/lol/champions/elise/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 崔斯特 mid",
+          "url": "https://op.gg/lol/champions/twistedfate/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Elise": "5429cb162ef90291",
+        "champion:TwistedFate": "4b3a9807b94dcc47"
+      },
+      "reviewSourceAnchors": {
+        "Elise": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5429cb162ef90291",
+          "observedAt": "2026-11-05T02:19:26.068Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Elise",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/elise/elise.bin.json",
+              "sha256": "8a721ee2df45d859bc047662d4283847469f95ce62595a3a2e97f30390e52a55"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "000ddd3584c2cf29"
+            }
+          }
+        },
+        "TwistedFate": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "4b3a9807b94dcc47",
+          "observedAt": "2026-11-05T02:19:26.177Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "TwistedFate",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twistedfate/twistedfate.bin.json",
+              "sha256": "ec60137c806e0ca6e86bad8bcf6a216b8295761503dbb7a61eddc6b7e82bf4f4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f83bddbc2f7bb85b"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Elise",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先保清野节奏，报人形 E 和安全出手角度。看黄牌实际命中再接结茧，按实际控制决定后续进退。"
+        },
+        {
+          "champion": "TwistedFate",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "保中路兵线并确认能安全普攻。锁定黄牌后命中同一目标，给伊莉丝让出无阻挡的出手方向。"
+        }
+      ],
+      "steps": [
+        "核中路线、野区路径和敌方遮挡。",
+        "崔斯特黄牌强化普攻实际晕眩目标。",
+        "伊莉丝从安全方向接人形 E，按第一个实际命中目标继续。"
+      ],
+      "window": "崔斯特 W、伊莉丝人形 E 已学可用，目标在双方可安全接触的范围内。",
+      "early": "基础技能即可接续。先保兵线和清野，六级后的跨区支援按崔斯特 R 实际可用情况决定。",
+      "economy": "伊莉丝保野区资源，崔斯特保中路补刀和经验。两位英雄引用当版同位置默认构筑。"
+    },
+    {
+      "id": "rumble-jarvan-top-jungle-fireline-terrain",
+      "name": "嘉文围场接兰博火线",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "上野联动",
+        "区域封路"
+      ],
+      "why": "嘉文 R 形成地形后，兰博按目标位置和撤离方向布 R，让目标在穿越火线或绕开地形之间作选择。",
+      "plan": "先确认兰博能覆盖嘉文落点与退路。嘉文按需要进场形成地形，兰博看敌人实际位置拖出火线。目标移出覆盖或队友受阻时及时撤离。",
+      "risk": "嘉文 R 地形会影响友军，敌人可以用可越地形的位移离开。地形挡住队友或撤退时按需要重施拆除。嘉文 Q 只有接旗并实际碰到目标才击飞。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 峡谷封路",
+          "url": "https://github.com/Legender134/rift-buddy/blob/5376387eb7674694ab23e74da4087fde07221bb3/src/core/catalog-data.json#L36439",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "兰博 R 当版改动与模式核对",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 兰博 top",
+          "url": "https://op.gg/lol/champions/rumble/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 嘉文四世 jungle",
+          "url": "https://op.gg/lol/champions/jarvaniv/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Rumble": "8a349d0b8197b1d4",
+        "champion:JarvanIV": "c9d96bc727699c9b"
+      },
+      "reviewSourceAnchors": {
+        "Rumble": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "8a349d0b8197b1d4",
+          "observedAt": "2026-11-05T02:19:26.166Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rumble",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rumble/rumble.bin.json",
+              "sha256": "c2bbedb15375a937ef3159f045a9291a11e6678ec86a4267c1cfff7ce9e142c8"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b24e1536e120ad82"
+            }
+          }
+        },
+        "JarvanIV": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c9d96bc727699c9b",
+          "observedAt": "2026-11-05T02:19:26.076Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "JarvanIV",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jarvaniv/jarvaniv.bin.json",
+              "sha256": "aa9591a707369ff6352cbb4f21e8fd8d10657e83bb690ba462cecdeb898e4ca0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "62ea4f1e9467d2b7"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Rumble",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "先处理上路线，报 R 覆盖角度和撤离位置。嘉文实际落地后按目标与出口方向布火线。"
+        },
+        {
+          "champion": "JarvanIV",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "清野后核对兰博能否覆盖进场点。E/Q 按实际命中判断击飞，R 地形挡住队友或退路时及时拆除。"
+        }
+      ],
+      "steps": [
+        "确认双方技能和火线可覆盖的位置。",
+        "嘉文按实际进场和目标走位决定是否开 R。",
+        "兰博按实际目标和出口方向布 R，目标脱离或队友受阻时撤。"
+      ],
+      "window": "两位大招已学可用，目标在嘉文可达与兰博可覆盖的重叠区域。",
+      "early": "六级前只按嘉文 E/Q 实际击飞和兰博基础技能接应。先保兵线与营地。",
+      "economy": "兰博保上路补刀与经验，嘉文以野区资源为主。两位英雄引用当版同位置默认构筑。"
+    },
+    {
+      "id": "kindred-taric-jungle-support-protection-relay",
+      "name": "千珏领域接塔里克无敌",
+      "style": "balanced",
+      "tempo": "protect",
+      "difficulty": "较高",
+      "tags": [
+        "野辅联动",
+        "保护接力"
+      ],
+      "why": "千珏 R 先在领域内阻止阵亡，塔里克看领域结束提前安排延迟 R，以无敌实际落到己方成员的时机承接。",
+      "plan": "先报两人大招和撤离方向，塔里克确认 W 联结对象及覆盖。按领域剩余时间安排延迟 R，以己方实际获得无敌为准。无法衔接时按预留方向撤退。",
+      "risk": "千珏领域也保护敌人和中立单位，降到 10% 后圈内单位暂时不能再受伤或治疗，结束时圈内敌人也会恢复。过早重叠会浪费保护时间，联结超距或塔里克无敌未生效时提前撤。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 双重保命窗",
+          "url": "https://github.com/Legender134/rift-buddy/blob/5376387eb7674694ab23e74da4087fde07221bb3/src/core/catalog-data.json#L37683",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 千珏 jungle",
+          "url": "https://op.gg/lol/champions/kindred/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 塔里克 support",
+          "url": "https://op.gg/lol/champions/taric/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Kindred": "b089b055eca4104f",
+        "champion:Taric": "d7034e2662bef2b0"
+      },
+      "reviewSourceAnchors": {
+        "Kindred": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b089b055eca4104f",
+          "observedAt": "2026-11-05T02:19:26.081Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kindred",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kindred/kindred.bin.json",
+              "sha256": "c9ad94593cde53e26f5382a09be44bed274f4ec29a63fedd51500aecaa852c85"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "70b671b76c9f1fba"
+            }
+          }
+        },
+        "Taric": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d7034e2662bef2b0",
+          "observedAt": "2026-11-05T02:19:26.175Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taric",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
+              "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "a0599325a1012892"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Kindred",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "提前报领域位置和结束时机，保持与塔里克可接应的距离。敌人还在领域里时按实际保护状态决定输出。"
+        },
+        {
+          "champion": "Taric",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "提前 W 联结承伤者并确认距离，按延迟预开 R。以己方成员实际获得无敌为准，E 留给敌方反扑或撤退。"
+        }
+      ],
+      "steps": [
+        "确认双方 R、塔里克 W 联结和撤退方向。",
+        "千珏按实际站位放领域并报预计结束。",
+        "塔里克提前施放延迟 R，确认无敌生效后再决定留人或撤退。"
+      ],
+      "window": "两个大招已学可用，承伤者可以留在领域内，并处于塔里克本人或有效联结的保护覆盖。",
+      "early": "六级前用实际 W/E 覆盖协助千珏进退。进野区前先确认辅助离线和双方退路。",
+      "economy": "千珏保野区资源，塔里克按辅助职责行动。默认构筑若走眼泪线，先购女神之泪并合成凛冬之临，叠满后转成末日寒冬。"
     }
   ],
   "linkReviews": [
