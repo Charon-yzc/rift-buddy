@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.63",
+  "version": "2026.11.06.64",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -31291,6 +31291,488 @@
       "window": "洛 W 已学可用，亚索 R 已学可用，目标实际处于浮空且在可接应范围内。",
       "early": "亚索六级前这段接力尚未成立。先稳住各自分路，按实际基础技能命中换血。",
       "economy": "中线归亚索，洛负责辅助任务和安全视野。各用同英雄同位置默认参考。"
+    },
+    {
+      "id": "malphite-yasuo-top-mid-airborne",
+      "name": "石头人撞起接大",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "上中配合",
+        "条件接力"
+      ],
+      "why": "墨菲特 R 的实际落点覆盖敌方英雄才击飞，亚索在目标仍浮空且可安全接应时接 R。",
+      "plan": "先各自处理上路和中路兵线，确认双方大招和落点。墨菲特 R 命中并实际击飞后报目标，亚索核对距离和浮空是否仍在，再决定是否跟进。",
+      "risk": "R 路径或落点没有击飞目标、目标已落地、亚索超距或没有退路时取消。敌方支援先到时保留后续技能。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "既有组合 · 击飞开演",
+          "url": "https://github.com/Legender134/rift-buddy/blob/b10985dcebbe45a5dc68ee564ea3c363d2212b53/src/core/catalog-data.json#L35288",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 墨菲特 top",
+          "url": "https://op.gg/lol/champions/malphite/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 亚索 mid",
+          "url": "https://op.gg/lol/champions/yasuo/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Malphite": "1cef2e2fdec84d8d",
+        "champion:Yasuo": "d36ebea001e3d1cb"
+      },
+      "reviewSourceAnchors": {
+        "Malphite": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1cef2e2fdec84d8d",
+          "observedAt": "2026-11-05T02:19:26.155Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Malphite",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/malphite/malphite.bin.json",
+              "sha256": "5a179a096f00299a2fbe60453c0b2b14aec2fbb1f93d0a6da3f1f43515c44d34"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "998655a1cdd4352a"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-11-05T02:19:26.182Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Malphite",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "保上路线，R 实际命中后报告目标和落点。"
+        },
+        {
+          "champion": "Yasuo",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "处理中线后按范围和实际浮空判断 R，确认能撤出再跟进。"
+        }
+      ],
+      "steps": [
+        "上中先处理兵线并商量目标、落点和退路。",
+        "墨菲特 R 实际击飞后，亚索只对范围内仍浮空的敌方英雄接 R。",
+        "落点超出接应或敌方反包时停止。"
+      ],
+      "window": "两人的 R 已学可用、共同敌方目标实际浮空且亚索能安全接应。",
+      "early": "六级前各自保线，只有安全到场时按基础技能换血。",
+      "economy": "上路兵线给墨菲特，中路兵线给亚索。两人各使用当版同位置默认参考。"
+    },
+    {
+      "id": "jarvan-orianna-jungle-mid-flag-ball",
+      "name": "军旗进场接发条球",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "中野配合",
+        "条件接力"
+      ],
+      "why": "奥莉安娜先确认魔偶附着嘉文，嘉文 E 接 Q 冲刺并实际命中后，发条按魔偶当前的位置决定是否接 R。",
+      "plan": "嘉文先报能到场的路线，发条先处理安全中线。E 送球到位后，嘉文用 Q 接上已经放置的军旗，按实际冲刺命中和落点报目标。发条看魔偶实际位置和敌方走位，再决定延迟冲击波。嘉文 R 是可选封路，必要时按实际情况解除地形。",
+      "risk": "单独 Q、放旗和 R 地形都不能代替 E/Q 实际击飞。魔偶未到或已返回、敌方离开落区、己方出路被地形挡住时调整或撤离。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "既有组合 · 送球接力",
+          "url": "https://github.com/Legender134/rift-buddy/blob/b10985dcebbe45a5dc68ee564ea3c363d2212b53/src/core/catalog-data.json#L34148",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "既有组合 · 峡谷封路",
+          "url": "https://github.com/Legender134/rift-buddy/blob/b10985dcebbe45a5dc68ee564ea3c363d2212b53/src/core/catalog-data.json#L35122",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 嘉文四世 jungle",
+          "url": "https://op.gg/lol/champions/jarvaniv/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 奥莉安娜 mid",
+          "url": "https://op.gg/lol/champions/orianna/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:JarvanIV": "c9d96bc727699c9b",
+        "champion:Orianna": "6897daa00a80bf73"
+      },
+      "reviewSourceAnchors": {
+        "JarvanIV": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c9d96bc727699c9b",
+          "observedAt": "2026-11-05T02:19:26.076Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "JarvanIV",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jarvaniv/jarvaniv.bin.json",
+              "sha256": "aa9591a707369ff6352cbb4f21e8fd8d10657e83bb690ba462cecdeb898e4ca0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "62ea4f1e9467d2b7"
+            }
+          }
+        },
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "c4c8d45a2747f2c75e09e82185fd862a7424198fd34da2037389a4ab8409abc7"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b761493a33a91024"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "JarvanIV",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "处理安全营地；E/Q 实际接上军旗后按命中报落点，R 地形先考虑队友退路。"
+        },
+        {
+          "champion": "Orianna",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先保中线，确认 E 魔偶到位，再看球实际位置和目标走位决定 R。"
+        }
+      ],
+      "steps": [
+        "沟通落点和退路，发条 E 给嘉文并确认魔偶已附着。",
+        "嘉文 E/Q 实际击飞后报落点，发条确认魔偶和目标仍在合适位置再考虑 R。",
+        "无法继续接应就停止追击；嘉文按需解除自己制造的地形。"
+      ],
+      "window": "嘉文 E/Q 与发条 E、R 已学可用，魔偶实际在可覆盖目标的位置，双方能安全接应。",
+      "early": "发条 R 尚未学到时按 E/Q 实际命中短打，先处理营地和中线。",
+      "economy": "营地优先给嘉文，中线给发条。两人各用当版同位置默认参考，封路和接球依赖技能。"
+    },
+    {
+      "id": "vi-galio-jungle-mid-landing",
+      "name": "蔚留人接英雄登场",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "中野配合",
+        "条件接力"
+      ],
+      "why": "蔚 R 实际接触敌方英雄后判断落点；加里奥 R 选施法时可达的友军位置，延迟后实际覆盖敌人才击飞。",
+      "plan": "蔚先报可接应的目标和落点。加里奥按范围和敌方走位选定蔚所在的位置，判断延迟落地时能否覆盖。蔚实际接触敌方英雄才有主目标击飞，加里奥落地后按命中结果错开后续控制。",
+      "risk": "加里奥大招以友军作为施放目标，不能追踪敌人或把已经选定的落点当作跟随蔚。敌方离开落区、加里奥无法选中友军、蔚撑不到接应或退路失守时停止深入。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "既有组合 · 定点抓人",
+          "url": "https://github.com/Legender134/rift-buddy/blob/b10985dcebbe45a5dc68ee564ea3c363d2212b53/src/core/catalog-data.json#L34642",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 蔚 jungle",
+          "url": "https://op.gg/lol/champions/vi/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 加里奥 mid",
+          "url": "https://op.gg/lol/champions/galio/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Vi": "ed4ccc20b476dc0e",
+        "champion:Galio": "62214853523131ad"
+      },
+      "reviewSourceAnchors": {
+        "Vi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ed4ccc20b476dc0e",
+          "observedAt": "2026-11-05T02:19:26.180Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Vi",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vi/vi.bin.json",
+              "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "8c5f2d227a1d26cb"
+            }
+          }
+        },
+        "Galio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "62214853523131ad",
+          "observedAt": "2026-11-05T02:19:26.071Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Galio",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
+              "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e3a8cfa71c0b2970"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Vi",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "按营地及中线决定到场。R 接触敌方英雄后报实际落点，并留安全退路。"
+        },
+        {
+          "champion": "Galio",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理安全中线，R 选择范围内的友军并确认选定位置和延迟；落地后按实际命中接控。"
+        }
+      ],
+      "steps": [
+        "先沟通共同目标，确认加里奥能选到蔚且落点可接应。",
+        "蔚 R 接触敌方英雄后报位置；加里奥按选定落点与当前敌方走位判断是否投入 R。",
+        "目标离区、友军退走或安全接应条件消失时转保护撤离。"
+      ],
+      "window": "两个 R 已学可用，加里奥能选到友军，选定位置和落地延迟允许覆盖目标。",
+      "early": "先各自处理营地与中线，六级前按蔚 Q 和加里奥基础技能的实际命中短打。",
+      "economy": "营地给蔚，中线给加里奥。各用同英雄同位置的当版默认配置。"
+    },
+    {
+      "id": "yasuo-alistar-mid-support-pulverize",
+      "name": "牛头击飞接亚索大招",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "中辅配合",
+        "条件接力"
+      ],
+      "why": "阿利斯塔 Q 实际击飞同一目标，亚索只对范围内仍浮空的敌方英雄接 R。",
+      "plan": "亚索先处理中线，阿利斯塔先确认下路队友安全。会合后牛头用 Q 实际击飞目标再报落点。若用 W 作为可选近身手段，先看方向，避免把敌人推出队友范围；亚索确认 R 可用和浮空后才接。",
+      "risk": "牛头未覆盖目标、目标已落地或被推向危险位置时取消。辅助离线影响下路安全或敌方能先支援时不强行会合。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "既有组合 · 月下起飞",
+          "url": "https://github.com/Legender134/rift-buddy/blob/b10985dcebbe45a5dc68ee564ea3c363d2212b53/src/core/catalog-data.json#L34308",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 亚索 mid",
+          "url": "https://op.gg/lol/champions/yasuo/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 阿利斯塔 support",
+          "url": "https://op.gg/lol/champions/alistar/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Yasuo": "d36ebea001e3d1cb",
+        "champion:Alistar": "e2aa1310b144ff1f"
+      },
+      "reviewSourceAnchors": {
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-11-05T02:19:26.182Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        },
+        "Alistar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e2aa1310b144ff1f",
+          "observedAt": "2026-11-05T02:19:26.057Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Alistar",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/alistar/alistar.bin.json",
+              "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "60b70b49d6326ac5"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Yasuo",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理中线，只有敌方英雄实际浮空、R 在范围且落点可接应时才跟进。"
+        },
+        {
+          "champion": "Alistar",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "辅助任务和视野优先，确认 Q 实际击飞后报目标，W 先看方向和队友位置。"
+        }
+      ],
+      "steps": [
+        "先处理各自兵线、视野和退路，再决定会合。",
+        "牛头 Q 实际击飞后报目标，亚索确认范围和浮空状态再接。",
+        "落点或退路不安全、目标已落地或敌方增援时取消。"
+      ],
+      "window": "牛头 Q 已学可用，亚索 R 已学可用，实际浮空仍在并能安全跟进。",
+      "early": "亚索六级前该段大招接力未成立；按基础技能和下路安全安排短打。",
+      "economy": "中线给亚索，牛头负责辅助任务和视野。两人用当版同位置默认参考。"
     }
   ],
   "linkReviews": [
