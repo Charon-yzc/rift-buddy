@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.67",
+  "version": "2026.11.07.68",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -32370,6 +32370,244 @@
       "window": "两人大招均已学可用，魔偶可附着到位，双方能在有效距离内接同一处战斗。",
       "early": "大招未齐时，优先清野、处理兵线与安全换血，按实际技能命中决定接应。",
       "economy": "黛安娜使用打野营地，奥莉安娜保留中路兵线。双方引用当版同英雄同位置的默认构筑。"
+    },
+    {
+      "id": "jarvan-galio-jungle-mid-landing",
+      "name": "嘉文先手接加里奥落地",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "中野联动",
+        "范围接控"
+      ],
+      "why": "嘉文实际击飞目标或用地形约束走位后，加里奥可选范围内嘉文的当前位置为落点，延迟落地后按实际命中接控。",
+      "plan": "先核中路线、支援范围和嘉文能否撑到落地。嘉文接旗命中或用 R 约束走位，加里奥根据嘉文当前位置决定落点，落地后按实际距离和命中接 W 或 E。",
+      "risk": "加里奥落地有延迟，护盾吸收魔法伤害。敌人可以离开落区或越过嘉文地形。嘉文 Q 未接旗、突进路径未碰到目标就没有该段击飞。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 天降弹幕",
+          "url": "https://github.com/Legender134/rift-buddy/blob/e84d91dbc824342aeb78f94f24487d76f388c8d6/src/core/catalog-data.json#L35561",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 嘉文四世 jungle",
+          "url": "https://op.gg/lol/champions/jarvaniv/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 加里奥 mid",
+          "url": "https://op.gg/lol/champions/galio/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:JarvanIV": "c9d96bc727699c9b",
+        "champion:Galio": "62214853523131ad"
+      },
+      "reviewSourceAnchors": {
+        "JarvanIV": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c9d96bc727699c9b",
+          "observedAt": "2026-11-05T02:19:26.076Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "JarvanIV",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jarvaniv/jarvaniv.bin.json",
+              "sha256": "aa9591a707369ff6352cbb4f21e8fd8d10657e83bb690ba462cecdeb898e4ca0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "62ea4f1e9467d2b7"
+            }
+          }
+        },
+        "Galio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "62214853523131ad",
+          "observedAt": "2026-11-05T02:19:26.071Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Galio",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
+              "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e3a8cfa71c0b2970"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "JarvanIV",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先报 E 旗、Q 路径和预计落点。需要 R 时确认地形不会堵住加里奥或撤退，必要时重施拆除。"
+        },
+        {
+          "champion": "Galio",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理兵线，确认嘉文在 R 范围内并能撑到落地。确认实际命中，再决定 W/E 或撤退。"
+        }
+      ],
+      "steps": [
+        "核对支援范围、退路和双方技能。",
+        "嘉文先手后按实际击飞或地形报目标。",
+        "加里奥按嘉文当时位置选择 R 落点，按实际命中继续。"
+      ],
+      "window": "加里奥 R 已学且可用，嘉文在范围内并能承接延迟，目标仍在双方能接应的战区。",
+      "early": "六级前按嘉文 EQ 和加里奥 W/E 的实际距离接应。加里奥处理兵线后再离线。",
+      "economy": "嘉文保野区清野节奏，加里奥保中路补刀和经验。双方引用当版同英雄同位置的默认构筑。"
+    },
+    {
+      "id": "camille-vi-top-jungle-confinement",
+      "name": "卡蜜尔和蔚接力留人",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "上野联动",
+        "同目标接控"
+      ],
+      "why": "卡蜜尔 E 接地形后撞中英雄才晕眩，或用 R 围住共同目标。蔚按 Q 实际击退或 R 抵达目标时的击飞接续。",
+      "plan": "先看上路兵线、地形和退路。由能先安全命中的一人开手，另一人看真实命中后接同一目标。两人保留至少一段控制应对目标拉开。",
+      "risk": "卡蜜尔 E 未挂地形或没有撞到英雄就无该段晕眩。卡蜜尔 R 限制结束后按目标实际位置继续。蔚 R 落点过深或反包未明时提前撤。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 定点抓人",
+          "url": "https://github.com/Legender134/rift-buddy/blob/e84d91dbc824342aeb78f94f24487d76f388c8d6/src/core/catalog-data.json#L35721",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 卡蜜尔 top",
+          "url": "https://op.gg/lol/champions/camille/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 蔚 jungle",
+          "url": "https://op.gg/lol/champions/vi/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Camille": "d8925ce8a69d2250",
+        "champion:Vi": "ed4ccc20b476dc0e"
+      },
+      "reviewSourceAnchors": {
+        "Camille": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d8925ce8a69d2250",
+          "observedAt": "2026-11-05T02:19:26.063Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Camille",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/camille/camille.bin.json",
+              "sha256": "4a71a33c3849552befed54f0ae747ad470c25ac1a4921095d44c43ee3167df80"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "67751120f662608d"
+            }
+          }
+        },
+        "Vi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ed4ccc20b476dc0e",
+          "observedAt": "2026-11-05T02:19:26.180Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Vi",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vi/vi.bin.json",
+              "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "8c5f2d227a1d26cb"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Camille",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "先保上路兵线，核对附近地形与蔚的接近路线。E 实际碰撞或 R 建立限制后报目标，按退路决定后续 Q。"
+        },
+        {
+          "champion": "Vi",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "按实际可达距离选择 Q 或已学的 R。看卡蜜尔先手后接控，Q 必须命中目标英雄，R 须实际抵达。"
+        }
+      ],
+      "steps": [
+        "清理上路兵线并报实际地形和视野。",
+        "最能先安全命中的一人开手，另一人等真实命中。",
+        "按共同目标接续控制和伤害，反包或撤退路线丢失时退出。"
+      ],
+      "window": "上路兵线允许接应，双方有可用控制并能安全接触同一目标。",
+      "early": "六级前用 E 接地形与蔚 Q 的实际命中创造机会。大招仅在已学且实际可用时纳入。",
+      "economy": "卡蜜尔保留上路补刀和经验，蔚以野区经济为主。双方引用当版同英雄同位置的默认构筑。"
     }
   ],
   "linkReviews": [
