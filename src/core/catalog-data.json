@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.54",
+  "version": "2026.11.06.55",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -30197,6 +30197,113 @@
       "window": "嘉文旗枪可用且实际命中，悟空能安全接近；涉及任一 R 时需各自已学会、可用并满足目标或范围条件。",
       "early": "悟空以安全处理上路兵线和经验为主，嘉文以野区营地为主；沟通后按兵线、路径和血量选择是否联动。",
       "economy": "悟空以上路兵线为主，嘉文以野区营地为主；各自当前同位置默认参考为单英雄配置，不是历史作者的组合专配。"
+    },
+    {
+      "id": "elise-leona-jungle-support",
+      "name": "茧光同行",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "较高",
+      "tags": [
+        "野辅游走",
+        "控制接力"
+      ],
+      "why": "蕾欧娜控制实际命中后，伊莉丝可按位置寻找人形 E 命中窗口；友军实际伤害可以触发日光。",
+      "plan": "先确认下路队友能安全处理兵线，再商量野区路线与可见敌人位置。蕾欧娜 E 命中敌方英雄时冲向最后命中的英雄，Q 的眩晕需强化普攻实际命中；伊莉丝人形 E 仅晕眩命中的首个敌人，有遮挡或无法跟到就不追。",
+      "risk": "辅助离线会让下路队友单独承压；蛛茧可能被前方敌人挡住，日女深入后撤退困难。对方援军不明、兵线不安全或路径危险时取消。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "雷帅@YZZ · 打野辅助双游走战术",
+          "url": "https://lol.17173.com/content/2014-06-08/20140608154235418_4.shtml",
+          "kind": "2014 历史比赛分析，17173 转载；非 16.22 实测或组合统计",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前英雄技能独立复核；非作者当版录像",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Elise": "5429cb162ef90291",
+        "champion:Leona": "2b7d4e998553b365"
+      },
+      "reviewSourceAnchors": {
+        "Elise": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5429cb162ef90291",
+          "observedAt": "2026-11-05T02:19:26.068Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Elise",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/elise/elise.bin.json",
+              "sha256": "8a721ee2df45d859bc047662d4283847469f95ce62595a3a2e97f30390e52a55"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "000ddd3584c2cf29"
+            }
+          }
+        },
+        "Leona": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2b7d4e998553b365",
+          "observedAt": "2026-11-05T02:19:26.083Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Leona",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
+              "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7ff3b8a69842091d"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Elise",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先处理安全营地并与辅助会合；人形 E 命中首个敌人才晕眩，避开遮挡后再接输出。"
+        },
+        {
+          "champion": "Leona",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "游走前先确认下路队友和兵线安全；E 冲向最后命中的敌方英雄，Q 的眩晕需实际普攻命中。"
+        }
+      ],
+      "steps": [
+        "辅助先看下路兵线和队友安全，打野处理安全营地；双方商量会合路径和撤退方向。",
+        "日女 E 实际命中英雄后按落点接近，Q 强化普攻实际命中才眩晕；蜘蛛在可行射线上以人形 E 实际命中的首个敌人为控制目标。",
+        "队友实际伤害可触发日光；目标脱离、蛛茧被挡或对方增援时停止深入，辅助及时回到需要保护的队友附近。"
+      ],
+      "window": "双方技能实际可用、野辅能到达同一地点且下路队友可安全应对时；所有控制以实际命中为准。",
+      "early": "伊莉丝以安全营地和野区经验为主；蕾欧娜先保护下路，只有线况、队友安全及路径允许时才离线会合。",
+      "economy": "打野以野区资源为主，辅助按任务和队友安全安排资源；各自使用当前同位置默认参考，不冒称历史作者专属配置。"
     }
   ],
   "linkReviews": [
