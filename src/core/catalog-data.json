@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.58",
+  "version": "2026.11.06.59",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -30732,6 +30732,232 @@
       "window": "双方技能、弹药和接触位置可用，以实际命中为准。使用大招时需已学且可用。",
       "early": "丽桑卓以中路经验和兵线为主，格雷福斯以野区营地为主；六级前仅安排基础技能衔接。",
       "economy": "采用当前同英雄同分路默认参考，历史战报不提供当版组合专配。"
+    },
+    {
+      "id": "leesin-nautilus-jungle-support-counterengage",
+      "name": "深海反打",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "野辅配合",
+        "实际控制"
+      ],
+      "why": "诺提勒斯 R 实际击飞共同目标后，李青可按位置跟进；两人先确认落点和回撤方向。",
+      "plan": "李青先按安全营地安排路径，辅助先确认离开下路后的队友安全。诺提勒斯 R 实际到达并击飞目标后报落点。李青能安全到达才跟进；若再用 R，先确认踢人方向不会把目标送出友军范围。控制没有命中、落点超出接应范围或退路不安全时停止深入。",
+      "risk": "两人大招必须实际可用。泰坦锁定施放不等于控制已经命中；盲僧 R 击退主目标，后方敌人需要实际被撞到才击飞。敌方支援到场或落点不安全时先撤。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "以久石让之名 · SN 对 RW 战报",
+          "url": "https://wanplus.cn/article/402557.html",
+          "kind": "历史赛况；第二局20:40记载双大反打，未记踢人方向与详细顺序",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "RFT · 2021-07-14 第二局分路记录",
+          "url": "https://rft.gg/match/44521-anyone-s-legend-vs-suning-2021-07-14",
+          "kind": "历史赛事阵容与分路佐证，非当版强度或出装依据",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "独立复核当版技能与条件",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:LeeSin": "f9459e15e5d6deca",
+        "champion:Nautilus": "67da151a84906467"
+      },
+      "reviewSourceAnchors": {
+        "LeeSin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f9459e15e5d6deca",
+          "observedAt": "2026-11-05T02:19:26.083Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "LeeSin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leesin/leesin.bin.json",
+              "sha256": "80d40c52770b5741edfb5d7ee192ef43fa17126f2afe8bcfcd557754eaed081a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "ff3d80024e24db09"
+            }
+          }
+        },
+        "Nautilus": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "67da151a84906467",
+          "observedAt": "2026-11-05T02:19:26.159Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nautilus",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
+              "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "21ceeeee51e3b384"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "LeeSin",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "处理安全营地并报接应距离。确定泰坦控制真实命中才跟进，R 用前先判断踢人方向和友军覆盖。"
+        },
+        {
+          "champion": "Nautilus",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "先确认下路队友安全。R 实际到达并击飞再报落点，沿途实际被击中的敌人也可能受控，保留安全退路。"
+        }
+      ],
+      "steps": [
+        "各自处理安全资源，辅助确认下路队友能够应对，再商量共同目标与退路。",
+        "诺提勒斯 R 实际到达并击飞目标后报落点。李青能安全到达才跟进；若再用 R，先确认踢人方向不会把目标送出友军范围。",
+        "控制落空、敌方支援改变人数或退出路线被切断时停止深入。"
+      ],
+      "window": "两个 R 已学且可用、双方能到同一目标附近；按实际命中和移动方向判断是否追加。",
+      "early": "先分别处理下路兵线和野区营地，六级前按基础技能实际命中短打。",
+      "economy": "李青以野区营地为主，辅助按任务、视野及下路队友安全安排游走。各用当版同英雄同位置默认参考。"
+    },
+    {
+      "id": "leesin-rakan-jungle-support-cover",
+      "name": "洛起盲僧接",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "较高",
+      "tags": [
+        "野辅配合",
+        "实际控制"
+      ],
+      "why": "洛 W 实际击飞后，李青可找安全的标记跟进角度；双方保留可达队友和退出方向。",
+      "plan": "李青先按安全营地安排路径，辅助先确认离开下路后的队友安全。洛 W 实际击飞同一敌方英雄后，李青按可命中路径使用 Q；只有首段实际命中、二段落点安全才跟。洛可在距离与目标允许时用 E 向友方英雄接应。控制没有命中、落点超出接应范围或退路不安全时停止深入。",
+      "risk": "洛 W 可以落空，盲僧 Q 可先命中其他单位，二段也可能进入集火。洛没有可达友军或两人退路断开时停止追击。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "信信信信信 · NIP 对 WBG 战报",
+          "url": "https://www.wanplus.cn/article/503892.html",
+          "kind": "历史赛况；第二局20:33记载野辅共同控制并接应",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "直播吧 · 2023-07-23 第二局赛况",
+          "url": "https://news.zhibo8.com/game/2023-07-23/64bcf99dd00cdnative.htm",
+          "kind": "历史赛况；6:24记载洛击飞后盲僧跟进，非当版实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "独立复核当版技能与条件",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:LeeSin": "f9459e15e5d6deca",
+        "champion:Rakan": "69d7edc48cac55e5"
+      },
+      "reviewSourceAnchors": {
+        "LeeSin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f9459e15e5d6deca",
+          "observedAt": "2026-11-05T02:19:26.083Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "LeeSin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leesin/leesin.bin.json",
+              "sha256": "80d40c52770b5741edfb5d7ee192ef43fa17126f2afe8bcfcd557754eaed081a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "ff3d80024e24db09"
+            }
+          }
+        },
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-11-05T02:19:26.163Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "LeeSin",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先处理安全营地，确认 Q 路径和真实首段命中；二段只跟安全落点，需要时留 W 接应撤退。"
+        },
+        {
+          "champion": "Rakan",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "先确认下路队友能安全处理兵线；W 命中才约后续，E 要确认友方英雄和距离，留接应或退出位置。"
+        }
+      ],
+      "steps": [
+        "各自处理安全资源，辅助确认下路队友能够应对，再商量共同目标与退路。",
+        "洛 W 实际击飞同一敌方英雄后，李青按可命中路径使用 Q；只有首段实际命中、二段落点安全才跟。洛可在距离与目标允许时用 E 向友方英雄接应。",
+        "控制落空、敌方支援改变人数或退出路线被切断时停止深入。"
+      ],
+      "window": "洛 W 实际击飞、李青有无遮挡且可安全跟进的路径；洛要用 E 时，须有真实可达的友方英雄。",
+      "early": "两人先处理各自资源与兵线；双方基础技能已学、队友安全且能会合时，才约野区或河道接应。",
+      "economy": "李青以野区营地为主，辅助按任务、视野及下路队友安全安排游走。各用当版同英雄同位置默认参考。"
     }
   ],
   "linkReviews": [
