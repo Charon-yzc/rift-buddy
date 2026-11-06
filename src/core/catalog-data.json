@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.60",
+  "version": "2026.11.06.61",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -65390,21 +65390,21 @@
       "role": "top",
       "loadoutId": "default",
       "order": "WQEQQRQEQEREEWWRWW",
-      "reason": "W/Q/E 开局：W 外圈命中英雄才有对应额外伤害与回复，Q 第二次施放需等待强化窗口；E 要先有可攀墙面并实际撞到英雄才控制。主 Q 副 E，会推迟 W 成长。R 锁住一名目标且推开其他敌人，施放前确认队友能覆盖锁定区和自己后续退路，不把单独锁人当作团队已到场。",
-      "patch": "16.20",
-      "reviewedAt": "2026-10-11",
+      "reason": "当版同位置来源覆盖前 15 点，16 至 18 级沿原方案补齐 R/W/W。主 Q 副 E，W 外圈命中英雄才按实际额外伤害回复。Q 二段等强化窗口。E 先附着地形，再以实际二段命中和落点判断控制；R 锁定目标并震开其他敌人，确认队友能覆盖该区域且仍有退路。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "reference": {
         "order": "WQEQQRQEQEREEWW",
-        "patch": "16.20",
-        "url": "https://op.gg/lol/champions/camille/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.20",
-        "fetchedAt": "2026-10-07T21:26:22.369Z"
+        "patch": "16.22",
+        "url": "https://op.gg/lol/champions/camille/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+        "fetchedAt": "2026-11-06T02:23:55.096Z"
       },
       "sources": [
         {
-          "name": "Riot Camille 16.20.1 技能",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Camille.json",
-          "kind": "技能依据",
-          "checkedAt": "2026-10-11"
+          "name": "Riot Data Dragon · 卡蜜尔 16.22.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "复核当前技能与按级补齐条件",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -65413,24 +65413,24 @@
       "reviewSourceAnchors": {
         "Camille": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d8925ce8a69d2250",
-          "observedAt": "2026-10-18T23:14:26.848Z",
+          "observedAt": "2026-11-05T02:19:26.063Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Camille",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/camille/camille.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/camille/camille.bin.json",
               "sha256": "4a71a33c3849552befed54f0ae747ad470c25ac1a4921095d44c43ee3167df80"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "67751120f662608d"
             }
           }
