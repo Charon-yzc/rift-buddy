@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.55",
+  "version": "2026.11.06.56",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -30304,6 +30304,113 @@
       "window": "双方技能实际可用、野辅能到达同一地点且下路队友可安全应对时；所有控制以实际命中为准。",
       "early": "伊莉丝以安全营地和野区经验为主；蕾欧娜先保护下路，只有线况、队友安全及路径允许时才离线会合。",
       "economy": "打野以野区资源为主，辅助按任务和队友安全安排资源；各自使用当前同位置默认参考，不冒称历史作者专属配置。"
+    },
+    {
+      "id": "malphite-rengar-top-jungle",
+      "name": "山崩接跃",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "上野配合",
+        "击飞接爆发"
+      ],
+      "why": "墨菲特大招实际击飞后，雷恩加尔可从可用草丛或已生效的伪装接近同一目标，在落点安全时跟进爆发。",
+      "plan": "墨菲特先处理上路兵线，雷恩加尔安排安全营地与接近路线。墨菲特 R 实际覆盖敌人才击飞；雷恩加尔确认实际草丛或已进入 R 伪装，且目标处于跳跃距离内，再从能撤离的位置接近。按实际残暴值选择后续技能；E 命中首个敌人，强化 E 才可禁锢。",
+      "risk": "墨菲特空大、狮子狗超距或两人无法接应时停止。伪装需要准备，目标不在可跳范围时不能把已按 R 当作已经能跟；提防目标周围的敌方保护和反打。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "potato0124（MIXII）· 石头人上单攻略",
+          "url": "https://lol.17173.com/news/03052016/124433342_all.shtml",
+          "kind": "2016 年历史攻略，17173 转载；明确上野成员，非现版强度或出装依据",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能条件复核",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Malphite": "1cef2e2fdec84d8d",
+        "champion:Rengar": "37409a7c0d60e8e8"
+      },
+      "reviewSourceAnchors": {
+        "Malphite": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1cef2e2fdec84d8d",
+          "observedAt": "2026-11-05T02:19:26.155Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Malphite",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/malphite/malphite.bin.json",
+              "sha256": "5a179a096f00299a2fbe60453c0b2b14aec2fbb1f93d0a6da3f1f43515c44d34"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "998655a1cdd4352a"
+            }
+          }
+        },
+        "Rengar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "37409a7c0d60e8e8",
+          "observedAt": "2026-11-05T02:19:26.165Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rengar",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rengar/rengar.bin.json",
+              "sha256": "e2e97e8e3cb202d4aaa9481df841c8040e1b8c7356d870a84760fabd5ede9f6b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "a340ab4d1d71dccd"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Malphite",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "先处理上路兵线，再约共同目标与退出方向；R 命中目标后报实际落点，队友到不了就保留退路。"
+        },
+        {
+          "champion": "Rengar",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先清理安全营地，找可用草丛或等待 R 伪装生效；目标够得着且落点安全才跳，强化技能按实际残暴值选择。"
+        }
+      ],
+      "steps": [
+        "先看上路兵线、附近公开敌人与安全路线，确认墨菲特 R 可用以及雷恩加尔能否接近。",
+        "墨菲特 R 实际击飞后，雷恩加尔按当前草丛、伪装和跳跃距离判断能否跟同一目标；E 要避开前方敌人。",
+        "两人不能同时接触目标、落点进入集火或后续支援不足时停止深入。"
+      ],
+      "window": "墨菲特 R 已学会且可用，雷恩加尔实际满足草丛或伪装跳跃条件，两人都能安全覆盖同一位置。",
+      "early": "墨菲特以上路线和经验为主，雷恩加尔先保安全营地；六级前有草丛和安全路线才看基础技能机会，不预设大招联动。",
+      "economy": "石头人以上路兵线为主，狮子狗以野区营地为主；各用当版同英雄同分路默认参考。"
     }
   ],
   "linkReviews": [
