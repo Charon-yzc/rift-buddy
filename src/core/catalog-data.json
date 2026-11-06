@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.74",
+  "version": "2026.11.07.75",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -36172,6 +36172,609 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Veigar",
+        "Zilean"
+      ],
+      "comboId": "veigar-zilean",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "40655edc3a858c1b",
+      "baseline": {
+        "Veigar": "b0c876605f73d7f8",
+        "Zilean": "60f40731a1259a4a"
+      },
+      "anchors": {
+        "Veigar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b0c876605f73d7f8",
+          "observedAt": "2026-11-05T02:19:26.179Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Veigar",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "0d5181fbdf1760ef"
+            }
+          }
+        },
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-11-05T02:19:26.254Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Veigar",
+        "Soraka"
+      ],
+      "comboId": "veigar-soraka",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "a2d96914a136b651",
+      "baseline": {
+        "Veigar": "b0c876605f73d7f8",
+        "Soraka": "46ec394f508ebcc0"
+      },
+      "anchors": {
+        "Veigar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b0c876605f73d7f8",
+          "observedAt": "2026-11-05T02:19:26.179Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Veigar",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "0d5181fbdf1760ef"
+            }
+          }
+        },
+        "Soraka": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "46ec394f508ebcc0",
+          "observedAt": "2026-11-05T02:19:26.173Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Soraka",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/soraka/soraka.bin.json",
+              "sha256": "efdf1cfccf0fbb6bb3de9f8e2e7e5641eb0e628955c602dbe93be699b2ce8e83"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "43b0fc1302f2816c"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Seraphine",
+        "Sona"
+      ],
+      "comboId": "double-song",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "47edae5d13ccc24b",
+      "baseline": {
+        "Seraphine": "18e4440868d92eb5",
+        "Sona": "2313d851c59e6f93"
+      },
+      "anchors": {
+        "Seraphine": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "18e4440868d92eb5",
+          "observedAt": "2026-11-05T02:19:26.168Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Seraphine",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
+              "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b29132146d6ad36b"
+            }
+          }
+        },
+        "Sona": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2313d851c59e6f93",
+          "observedAt": "2026-11-05T02:19:26.173Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sona",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sona/sona.bin.json",
+              "sha256": "8ad8fdcf17aff949bc7a9f8b6e0c7235f396346f7cba27f7bff26528975560a1"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "8146f69f6cdef897"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Seraphine",
+        "Nami"
+      ],
+      "comboId": "seraphine-nami",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "e578fe6df3deea69",
+      "baseline": {
+        "Seraphine": "18e4440868d92eb5",
+        "Nami": "b10366f1187813b9"
+      },
+      "anchors": {
+        "Seraphine": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "18e4440868d92eb5",
+          "observedAt": "2026-11-05T02:19:26.168Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Seraphine",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
+              "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b29132146d6ad36b"
+            }
+          }
+        },
+        "Nami": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b10366f1187813b9",
+          "observedAt": "2026-11-05T02:19:26.158Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nami",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nami/nami.bin.json",
+              "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "d41e55e60af3c37e"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Chogath",
+        "Pantheon"
+      ],
+      "comboId": "chogath-pantheon",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "66b8a27d12c09482",
+      "baseline": {
+        "Chogath": "1d4374b6281eb0e1",
+        "Pantheon": "ade6cc95e4c6b966"
+      },
+      "anchors": {
+        "Chogath": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d4374b6281eb0e1",
+          "observedAt": "2026-11-05T02:19:26.066Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Chogath",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/chogath/chogath.bin.json",
+              "sha256": "b30a18292e6b5e093bcb556dcef07ef1e45015830678d4ddff41de95cbca70de"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "1a863670bec3f963"
+            }
+          }
+        },
+        "Pantheon": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ade6cc95e4c6b966",
+          "observedAt": "2026-11-05T02:19:26.162Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Pantheon",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/pantheon/pantheon.bin.json",
+              "sha256": "0acb5fa598525639a78e444a98a3e50cc46533843446d17657921c3639dd23df"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "0ab565075cf8e870"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Jhin",
+        "Lux"
+      ],
+      "comboId": "jhin-lux",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "c0581a13e5e7ff3b",
+      "baseline": {
+        "Jhin": "226e6c11b8a992f5",
+        "Lux": "50314ad04c92f1a6"
+      },
+      "anchors": {
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        },
+        "Lux": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "50314ad04c92f1a6",
+          "observedAt": "2026-11-05T02:19:26.155Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lux",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lux/lux.bin.json",
+              "sha256": "bcb1ca7a7e82072b504985d84dc1fa905471f3c249fbafb3ab72658a50f7595b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "cc7818802b8d5fc7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Jhin",
+        "Xerath"
+      ],
+      "comboId": "jhin-xerath",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "8e289dc3a6c2fe47",
+      "baseline": {
+        "Jhin": "226e6c11b8a992f5",
+        "Xerath": "c6bf3b1c613437cd"
+      },
+      "anchors": {
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        },
+        "Xerath": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c6bf3b1c613437cd",
+          "observedAt": "2026-11-05T02:19:26.182Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Xerath",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/xerath/xerath.bin.json",
+              "sha256": "aef22fe15a5dfae05f3871bfc36bb3090fee429753500f2d2a04a638cac76d08"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "fe85c3d422f63fd0"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Jhin",
+        "Velkoz"
+      ],
+      "comboId": "jhin-velkoz",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "2786b47849e869ff",
+      "baseline": {
+        "Jhin": "226e6c11b8a992f5",
+        "Velkoz": "4fc6f59617324dce"
+      },
+      "anchors": {
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        },
+        "Velkoz": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "4fc6f59617324dce",
+          "observedAt": "2026-11-05T02:19:26.179Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Velkoz",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/velkoz/velkoz.bin.json",
+              "sha256": "d97af687f9a5022448d28e44de1913ddab8dd29b551323f9bf8ad4d56e794621"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "83d561abb744eab5"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Jhin",
+        "Nami"
+      ],
+      "comboId": "jhin-nami",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "59b547a0fb93945f",
+      "baseline": {
+        "Jhin": "226e6c11b8a992f5",
+        "Nami": "b10366f1187813b9"
+      },
+      "anchors": {
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        },
+        "Nami": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b10366f1187813b9",
+          "observedAt": "2026-11-05T02:19:26.158Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nami",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nami/nami.bin.json",
+              "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "d41e55e60af3c37e"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -36788,12 +37391,12 @@
     [
       "Veigar",
       "Zilean",
-      "维迦限制活动区域，基兰衔接炸弹并保护法师走位。"
+      "维迦 E 成形后实际触边晕眩，可争取放炸弹的时间。基兰第二颗 Q 须附着同一个已带第一颗炸弹的单位，才立即引爆并晕眩爆炸范围内敌人。"
     ],
     [
       "Veigar",
       "Soraka",
-      "索拉卡支持维迦续航，沉默与笼子交错限制区域。"
+      "维迦 E 实际触边晕眩时，索拉卡可用 E 覆盖该位置。敌方英雄在领域消失时仍处于其中才被禁锢，仅受沉默或身处笼内不算。"
     ],
     [
       "Veigar",
@@ -36824,6 +37427,41 @@
       "Jhin",
       "Zyra",
       "婕拉 Q 或 E 本体实际伤害目标；烬 W 须在友方伤害标记有效时命中同一目标，且目标是弹道首个敌方英雄。植物单独伤害暂未核实。"
+    ],
+    [
+      "Seraphine",
+      "Sona",
+      "娑娜 E 对应的能量和弦普攻须实际减速同一目标。萨勒芬妮用独立一次 E 命中仍被减速的目标才禁锢，目标已定身则晕眩。"
+    ],
+    [
+      "Seraphine",
+      "Nami",
+      "娜美 E 强化友军后，先用一次有效命中实际减速同一目标。萨勒芬妮后续另一次 E 命中时减速仍在才禁锢，目标已定身则晕眩。"
+    ],
+    [
+      "Chogath",
+      "Pantheon",
+      "潘森 W 对共同目标实际施加晕眩，科加斯可据此铺 Q。只有 Q 的实际破裂范围命中才击飞，目标提前移开时放弃接力。"
+    ],
+    [
+      "Jhin",
+      "Lux",
+      "拉克丝 Q 或 E 爆炸实际造成伤害后，烬 W 须在友方伤害标记仍有效时命中同一目标，且目标为弹道首个敌方英雄。E 仅放置时的减速不算这段伤害。"
+    ],
+    [
+      "Jhin",
+      "Xerath",
+      "泽拉斯 Q 释放后的光束或 W 实际伤害共同目标后，烬 W 须在友方伤害标记仍有效时命中同一目标，且目标为弹道首个敌方英雄。"
+    ],
+    [
+      "Jhin",
+      "Velkoz",
+      "维克兹 Q 的主束或分裂束实际伤害共同目标后，烬 W 须在友方伤害标记仍有效时命中同一目标，且目标为弹道首个敌方英雄。"
+    ],
+    [
+      "Jhin",
+      "Nami",
+      "娜美 Q 或 W 敌方一跳实际伤害共同目标后，烬 W 须在友方伤害标记仍有效时命中同一目标，且目标为弹道首个敌方英雄。W 仅治疗队友时不产生这段伤害。"
     ]
   ],
   "trios": [
