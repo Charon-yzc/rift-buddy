@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.48",
+  "version": "2026.11.06.49",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -29259,6 +29259,126 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "60b5273e0f23a85d"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "teemo-top-ivern-jungle-vision-cover",
+      "name": "提莫 × 艾翁 · 视野与接应",
+      "tempo": "protect",
+      "style": "balanced",
+      "difficulty": "较高",
+      "tags": [
+        "上野配合",
+        "视野与保护"
+      ],
+      "why": "提莫处理上路线，艾翁按野区节奏提供可到场的护盾与草丛接应；资源争夺前确认实际视野与陷阱。",
+      "plan": "提莫先处理上路兵线，艾翁按自身野区与惩戒节奏规划安全路线；双方报告能够确认的视野和敌方公开动向，不假定野区安全。 艾翁支援到位且 E 可用时可给提莫护盾；护盾延迟爆发后，只有敌人实际处于范围内才受到伤害和减速，提莫从安全距离用普攻接伤害。 艾翁 W 生成草丛时会短暂显形该区域；草丛的存续和进出都以实际情况为准，不把它当作持续覆盖周边或自动排眼。 提莫 R 已学且有蘑菇储备时，可在安全路径布置陷阱；只有敌人实际踩中才产生对应减速和伤害，注意对手排眼、远程消耗和绕路。",
+      "risk": "草丛只短暂显形施放区域，不等于自动控视野；陷阱可能被发现、排除或绕过，远程消耗和反打会阻止安全普攻，也不保证支援必然到场。",
+      "early": "提莫按兵线与对手位置决定前压或收线；艾翁先处理安全营地，再视路线和公开信息决定是否接应。",
+      "window": "艾翁已安全到场且对应技能可用；提莫能在有效距离内安全行动。蘑菇方案另需 R 已学、有储备和实际触发。",
+      "economy": "各自使用当版提莫上路与艾翁打野的单英雄默认参考；旧作者路线及当时的装备不视为当前配装，组合没有胜率承诺。",
+      "steps": [
+        "提莫先处理上路兵线，艾翁按自身野区与惩戒节奏规划安全路线；双方报告能够确认的视野和敌方公开动向，不假定野区安全。",
+        "艾翁支援到位且 E 可用时可给提莫护盾；护盾延迟爆发后，只有敌人实际处于范围内才受到伤害和减速，提莫从安全距离用普攻接伤害。",
+        "艾翁 W 生成草丛时会短暂显形该区域；草丛的存续和进出都以实际情况为准，不把它当作持续覆盖周边或自动排眼。",
+        "提莫 R 已学且有蘑菇储备时，可在安全路径布置陷阱；只有敌人实际踩中才产生对应减速和伤害，注意对手排眼、远程消耗和绕路。"
+      ],
+      "members": [
+        {
+          "champion": "Teemo",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "处理上路线，安全普攻触发 E；R 已学且有储备时按可安全到达的位置布陷阱。"
+        },
+        {
+          "champion": "Ivern",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "按野区和公开视野决定是否接应；E 给需要护盾的友方英雄，W 草丛与短暂显形按实际位置确认。"
+        }
+      ],
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "인생은 무임승차 · OP.GG Talk 艾翁心得（2017-03-16）",
+          "url": "https://talk.op.gg/s/lol/user-news/34772/%EC%95%84%EC%9D%B4%EB%B2%88%EC%9C%BC%EB%A1%9C%20%ED%94%8C%EB%9E%98%ED%8B%B0%EB%84%98%20%EC%98%AC%EB%9D%BC%EA%B0%80%EB%A9%B4%EC%84%9C,%20%EC%A3%BC%EC%A0%88%EC%A3%BC%EC%A0%88%20%EC%A0%81%EA%B3%A0%ED%94%88%20%EC%96%98%EA%B8%B0%EB%93%A4?tl=zh-CN",
+          "kind": "历史作者的艾翁野＋提莫上路线意见；非当前版本实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能依据，非组合胜率",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Teemo top 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/teemo/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版单英雄同位置参考，非作者原配或组合统计",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Ivern jungle 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/ivern/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版单英雄同位置参考，非作者原配或组合统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Ivern": "f4b498c5991475d6",
+        "champion:Teemo": "b29454e3375baf8c"
+      },
+      "reviewSourceAnchors": {
+        "Ivern": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f4b498c5991475d6",
+          "observedAt": "2026-11-05T02:19:26.075Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ivern",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ivern/ivern.bin.json",
+              "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "a8c07de58a4e8f6d"
+            }
+          }
+        },
+        "Teemo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b29454e3375baf8c",
+          "observedAt": "2026-11-05T02:19:26.176Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Teemo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/teemo/teemo.bin.json",
+              "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "0795d6a5dc4ba5bb"
             }
           }
         }
