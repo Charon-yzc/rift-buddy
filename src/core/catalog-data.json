@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.62",
+  "version": "2026.11.06.63",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -31065,6 +31065,232 @@
       "window": "洛 W 实际击飞且妖姬 E 有可命中角度，双方能在安全距离内接应。洛 E 需要真实可达友军。",
       "early": "双方学到所需基础技能后，根据中下兵线和到场时间选择会合。辅助离线前先确认下路队友能安全处理。",
       "economy": "中路兵线优先给妖姬，洛安排辅助任务和安全视野。两人使用当版同英雄同位置默认参考。"
+    },
+    {
+      "id": "vi-orianna-jungle-mid-carried-ball",
+      "name": "锁定进场接冲击波",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "中野配合",
+        "共同落点"
+      ],
+      "why": "发条 E 确认魔偶已附着蔚，蔚 R 实际接触目标后，发条按魔偶当前所在位置决定是否接冲击波。",
+      "plan": "先确认双方能接应同一目标。奥莉安娜用 E 把魔偶送到蔚身上并确认已经到位。蔚 R 选择可安全接应的敌方英雄，按实际抵达位置报告目标。奥莉安娜先看魔偶仍附着或仍在合适位置，再根据 R 的短延迟和敌人的走位决定是否释放。敌方目标走出范围或魔偶已返回时保留 R。",
+      "risk": "蔚锁定施放不能代替实际接触。冲得太远、魔偶尚未到达或已返回、敌人走出冲击波范围，都可能使原配合落空。附近有敌方支援或无安全退路时放弃深入。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，项目条件配合方案",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 蔚打野",
+          "url": "https://op.gg/lol/champions/vi/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 奥莉安娜中路",
+          "url": "https://op.gg/lol/champions/orianna/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Vi": "ed4ccc20b476dc0e",
+        "champion:Orianna": "6897daa00a80bf73"
+      },
+      "reviewSourceAnchors": {
+        "Vi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ed4ccc20b476dc0e",
+          "observedAt": "2026-11-05T02:19:26.180Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Vi",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vi/vi.bin.json",
+              "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "8c5f2d227a1d26cb"
+            }
+          }
+        },
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "c4c8d45a2747f2c75e09e82185fd862a7424198fd34da2037389a4ab8409abc7"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b761493a33a91024"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Vi",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先按营地和中线情况决定到场。确认魔偶已经到位和友军距离，R 真正接触后报告落点，留安全退路。"
+        },
+        {
+          "champion": "Orianna",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理能安全处理的中线。E 送球后确认附着，R 只按魔偶实际所在位置、敌方走位和延迟决定。"
+        }
+      ],
+      "steps": [
+        "先沟通目标和退路，双方大招可用，奥莉安娜 E 给蔚并确认魔偶已到位。",
+        "蔚实际接触目标后报告位置，奥莉安娜检查魔偶和敌人的距离，再决定是否接 R。",
+        "目标走开、魔偶返回、己方跟不上或敌方增援到场时停止追击。"
+      ],
+      "window": "蔚 R 与发条 E、R 已学且可用，魔偶实际到位，双方的距离和落点允许配合。",
+      "early": "六级前分别处理营地和中线。只有安全到场时才按基础技能命中短打。",
+      "economy": "野区营地优先给蔚，中路线给发条。两人各用同英雄同位置默认参考，核心联动由技能完成。"
+    },
+    {
+      "id": "yasuo-rakan-mid-support-airborne",
+      "name": "洛抬起接亚索大招",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "中辅配合",
+        "实际浮空"
+      ],
+      "why": "洛 W 落地实际击飞目标后，亚索可以对范围内仍浮空的敌方英雄接 R。",
+      "plan": "亚索先处理安全的中路兵线，洛先确认下路队友有安全退路。会合后约好共同目标，洛 W 实际覆盖并击飞后报落点。亚索 R 已学可用、目标仍在范围内浮空、落点可安全接应时再接。洛需要撤出时先确认 E 可达友方英雄。",
+      "risk": "洛 W 起手或位移过程不能代替实际击飞。目标未被覆盖、已经落地、超出范围或落点太深时取消 R。注意敌方支援与后续反打。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，项目中辅分路适配",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 亚索中路",
+          "url": "https://op.gg/lol/champions/yasuo/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 洛辅助",
+          "url": "https://op.gg/lol/champions/rakan/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Yasuo": "d36ebea001e3d1cb",
+        "champion:Rakan": "69d7edc48cac55e5"
+      },
+      "reviewSourceAnchors": {
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-11-05T02:19:26.182Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        },
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-11-05T02:19:26.163Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Yasuo",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "处理中线后确认能到场。只对仍浮空且可安全接应的敌方英雄使用 R。"
+        },
+        {
+          "champion": "Rakan",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "先确认下路队友能安全处理。W 实际击飞才报落点；回撤时先确认 E 有可达友方英雄。"
+        }
+      ],
+      "steps": [
+        "分别处理安全资源和视野，确认下路队友能应对再会合。",
+        "洛 W 实际击飞共同目标后报落点，亚索确认 R 可用、范围和浮空状态再接。",
+        "控制落空、目标落地或敌方增援使落点不安全时，取消原计划。"
+      ],
+      "window": "洛 W 已学可用，亚索 R 已学可用，目标实际处于浮空且在可接应范围内。",
+      "early": "亚索六级前这段接力尚未成立。先稳住各自分路，按实际基础技能命中换血。",
+      "economy": "中线归亚索，洛负责辅助任务和安全视野。各用同英雄同位置默认参考。"
     }
   ],
   "linkReviews": [
