@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.53",
+  "version": "2026.11.06.54",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -29863,6 +29863,340 @@
           }
         }
       }
+    },
+    {
+      "id": "zac-yasuo-mid-jungle",
+      "name": "弹弓接疾风",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "中野配合",
+        "击飞接大"
+      ],
+      "why": "扎克 E 实际击飞敌方英雄后，亚索可在目标仍浮空、距离与 R 条件满足时接大。",
+      "plan": "中路处理兵线并报对手位置，扎克先确认营地、路径与落点；E 实际命中敌方英雄后，亚索在目标仍浮空且 R 已学会、可用并处于距离内时再接。若未击飞、距离不足或敌方援手到达，放弃追击并回撤。",
+      "risk": "扎克 E 蓄力与落点可被对方预判；亚索需要安全跟进距离，击飞结束后不能再以该次浮空接 R。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "又一@15W · 中野双排组合",
+          "url": "https://lol.17173.com/news/07092017/133247657.shtml",
+          "kind": "2017 年历史作者推荐，非 16.22 实测或组合统计",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，非作者新作或对局统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Zac": "79df9b9e7571e89c",
+        "champion:Yasuo": "d36ebea001e3d1cb"
+      },
+      "reviewSourceAnchors": {
+        "Zac": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "79df9b9e7571e89c",
+          "observedAt": "2026-11-05T02:19:26.252Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zac",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zac/zac.bin.json",
+              "sha256": "40df6abd439891c7e6733966c1ec367a15392cb8b52754a7df145b6b854f0ff5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "cf22bab2f64d09f2"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-11-05T02:19:26.182Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Yasuo",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "处理中线并保留安全跟进距离；目标实际浮空且 R 已学会可用、距离满足时再接。"
+        },
+        {
+          "champion": "Zac",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先处理野区资源与入场路径，E 视落点蓄力；命中并击飞后报队友接应。"
+        }
+      ],
+      "steps": [
+        "中路按实际对线处理兵线，打野先确认营地、路径与撤退方向。",
+        "扎克 E 实际命中敌方英雄并击飞时，亚索确认该目标仍浮空、距离满足且 R 已学会可用后再接。",
+        "未命中、距离不足或敌方增援时放弃追击，按实际局面撤退。"
+      ],
+      "window": "扎克 E 可用且实际命中敌方英雄；亚索 R 已学会可用、目标仍浮空并在实际范围内。",
+      "early": "亚索以中线补刀经验为主，扎克先清理安全野区；双方按实际血量、敌方位置与兵线决定是否联动。",
+      "economy": "亚索以中路兵线为主，扎克以野区营地为主；各自使用当前同位置默认参考，非历史作者专属配装。"
+    },
+    {
+      "id": "lucian-yuumi-shield-followup",
+      "name": "卢锡安 × 悠米 · 护盾接短轮次",
+      "tempo": "protect",
+      "style": "balanced",
+      "difficulty": "较高",
+      "tags": [
+        "下路配合",
+        "护盾与接应"
+      ],
+      "why": "悠米附身后可用 E 保护队友，卢锡安实际获得友方护盾时可利用被动接安全普攻。",
+      "plan": "卢锡安先处理兵线和安全补刀；悠米确认可附身的友方英雄和自身状态，双方留意对手控制、视野与退路。 悠米实际附身卢锡安且 E 已学并可用时，可用 E 为他提供护盾和攻速；移动速度加成以护盾实际存留为条件。 卢锡安实际获得队友护盾后，可按被动的后续普攻额外伤害安排短轮次；其他友军治疗或护盾，以及附近敌方英雄实际被定身，也可触发该被动。 卢锡安施放技能后的连射实际命中敌人，才会按技能说明缩短 E 冷却；若目标离开攻击距离、护盾结束或宿主处境危险，优先撤退。",
+      "risk": "悠米 E 是护盾与增益，不是直接治疗；被控制、未附身预期队友或技能未就绪都会影响配合。宿主遭集火、对方控制或卢锡安追出安全位置时应退出。",
+      "early": "卢锡安以安全补刀和距离为先；悠米确认附身目标、敌方控制与技能状态，避免为换血失去撤退路线。",
+      "window": "悠米实际附身卢锡安且 E 已学会可用；护盾实际给予后，卢锡安在安全距离内使用被动普攻。若使用其他触发来源，应按其实际治疗、护盾或敌方英雄定身状态判断。",
+      "economy": "各自使用当版卢锡安下路与悠米辅助的单英雄默认位置参考；历史作者 2025 年装备、符文和强度判断不视为当版配置或组合统计。",
+      "steps": [
+        "卢锡安先处理兵线和安全补刀；悠米确认可附身的友方英雄和自身状态，双方留意对手控制、视野与退路。",
+        "悠米实际附身卢锡安且 E 已学并可用时，可用 E 为他提供护盾和攻速；移动速度加成以护盾实际存留为条件。",
+        "卢锡安实际获得队友护盾后，可按被动的后续普攻额外伤害安排短轮次；其他友军治疗或护盾，以及附近敌方英雄实际被定身，也可触发该被动。",
+        "卢锡安施放技能后的连射实际命中敌人，才会按技能说明缩短 E 冷却；若目标离开攻击距离、护盾结束或宿主处境危险，优先撤退。"
+      ],
+      "members": [
+        {
+          "champion": "Lucian",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "安全补刀并确认实际获得友方护盾或其他被动触发；连射命中后再按真实 E 冷却判断位移。"
+        },
+        {
+          "champion": "Yuumi",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "确认实际附身的友方英雄；E 在附身时影响该友军，按护盾存续与宿主位置决定跟进或撤退。"
+        }
+      ],
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Pathetic · 悠米心得（2025-05-08）",
+          "url": "https://talk.op.gg/s/lol/tip/6774160/%EC%9C%A0%EB%AF%B8%20%EB%84%88%ED%94%84%20%EC%A0%84%20%EC%98%AC%EB%A6%AC%EB%8A%94%20%EC%9C%A0%EB%AF%B8%20%EB%B9%8C%EB%93%9C?tl=en",
+          "kind": "历史作者正文列卢锡安为搭档；非当版实测或配置",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能依据及项目条件推导，非作者当版实测或组合胜率",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Lucian bottom 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/lucian/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版单英雄同位置参考，非历史原配或组合统计",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Yuumi support 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/yuumi/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版单英雄同位置参考，非历史原配或组合统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Lucian": "cd773946a58860de",
+        "champion:Yuumi": "74372983c2c1dbfe"
+      },
+      "reviewSourceAnchors": {
+        "Lucian": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "cd773946a58860de",
+          "observedAt": "2026-11-05T02:19:26.154Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lucian",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lucian/lucian.bin.json",
+              "sha256": "76201808561600d1885fff990afa57b4723ac669b546a745c6b30e90be13e443"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "ddbca92e2885ac11"
+            }
+          }
+        },
+        "Yuumi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "74372983c2c1dbfe",
+          "observedAt": "2026-11-05T02:19:26.184Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yuumi",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yuumi/yuumi.bin.json",
+              "sha256": "b65fd4e92df3a120fe88ee2ebd588f55a7f1a642f249c22d0668eae860f9c3aa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "2bfcd21ddb05bd3f"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "monkeyking-jarvan-top-jungle",
+      "name": "天宫旗阵",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "上野配合",
+        "接力进场"
+      ],
+      "why": "嘉文旗枪实际命中后击飞，为悟空跟进创造机会；双方需分别确认范围与退路。",
+      "plan": "悟空处理兵线，嘉文安排安全野区路线。嘉文 E 旗与 Q 相接、沿途实际击飞目标后，悟空在目标可选且距离合适时 E 接近；R 已学会可用且附近有敌人时再旋转。双方保留撤退方向，不把进场当必杀。",
+      "risk": "双人近身易被反制；嘉文 R 生成的地形可能挡住友军，敌方也可能凭位移脱离。团队跟不上或落点不安全时取消进场。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Lemony3 · 悟空与嘉文上野组合",
+          "url": "https://lol.17173.com/news/09042016/104454120.shtml",
+          "kind": "2016 年历史作者原文；不代表 16.22 实测、胜率或现版配装",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前英雄技能独立复核，非历史作者当版实测",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:MonkeyKing": "d8e1f17e61bc6c8d",
+        "champion:JarvanIV": "c9d96bc727699c9b"
+      },
+      "reviewSourceAnchors": {
+        "MonkeyKing": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d8e1f17e61bc6c8d",
+          "observedAt": "2026-11-05T02:19:26.157Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "MonkeyKing",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/monkeyking/monkeyking.bin.json",
+              "sha256": "d09c7a65a77eb30b36113b707aecc05e71046b4048c22b444b25e90821afb5ed"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "bda828b502e12757"
+            }
+          }
+        },
+        "JarvanIV": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c9d96bc727699c9b",
+          "observedAt": "2026-11-05T02:19:26.076Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "JarvanIV",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jarvaniv/jarvaniv.bin.json",
+              "sha256": "aa9591a707369ff6352cbb4f21e8fd8d10657e83bb690ba462cecdeb898e4ca0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "62ea4f1e9467d2b7"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "MonkeyKing",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "先处理安全兵线并约好入场角度；E 需要可选中的敌方目标，R 学会可用且附近有敌人时接控。"
+        },
+        {
+          "champion": "JarvanIV",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先清理安全营地并沟通路径；E 旗与 Q 相接，实际碰到敌人才击飞。R 使用前确认队友落位与地形退路。"
+        }
+      ],
+      "steps": [
+        "悟空处理上路线并报告对手公开动向；嘉文确认营地、路径与双方血量。",
+        "嘉文 E 旗与 Q 相接并实际击飞对方后，悟空按可选目标和距离决定 E 跟进；R 学会可用时可接旋转。",
+        "嘉文 R 已学会可用且确定队友能进退时再布地形；地形妨碍队友时可重施解除，敌方支援到场则撤退。"
+      ],
+      "window": "嘉文旗枪可用且实际命中，悟空能安全接近；涉及任一 R 时需各自已学会、可用并满足目标或范围条件。",
+      "early": "悟空以安全处理上路兵线和经验为主，嘉文以野区营地为主；沟通后按兵线、路径和血量选择是否联动。",
+      "economy": "悟空以上路兵线为主，嘉文以野区营地为主；各自当前同位置默认参考为单英雄配置，不是历史作者的组合专配。"
     }
   ],
   "linkReviews": [
