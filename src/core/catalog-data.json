@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.49",
+  "version": "2026.11.06.50",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -29379,6 +29379,126 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0795d6a5dc4ba5bb"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "nilah-milio-sustain-range",
+      "name": "尼菈 × 米利欧 · 治疗与射程",
+      "tempo": "protect",
+      "style": "balanced",
+      "difficulty": "较高",
+      "tags": [
+        "下路配合",
+        "治疗与保护"
+      ],
+      "why": "米利欧提供治疗、护盾与范围射程增益，尼菈在实际受益条件成立时接应，并根据安全距离决定是否持续攻击。",
+      "plan": "尼菈先处理兵线与补刀，米利欧保持可接应距离；先看对方远程消耗、控制技能和自己的安全退路。 米利欧 W 可用时，按双方位置选择篝火跟随目标；尼菈实际留在范围内才得到持续治疗与额外攻击距离。 需要承接反击或调整位置时，米利欧 E 可给友方英雄护盾和短暂加速；尼菈被动可增强与分享附近来自友方的治疗和护盾。 尼菈 Q 实际命中敌方单位或建筑后才获得临时攻击距离与攻击速度，选择安全目标接普攻；若距离、状态或护盾不足则收线撤退。",
+      "risk": "尼菈需安全接近补刀与输出；米利欧 W 范围、E 充能及双方位置可能不允许继续进场。对方远程消耗、控制或集火时先撤，不预设治疗护盾或技能免除所有伤害。",
+      "early": "尼菈处理兵线和安全补刀，米利欧保持能够接应的位置；对方消耗强或视野不足时先保血量。",
+      "window": "米利欧 W 或 E 已学且可用、队友在实际有效范围内；尼菈 Q 只有实际命中敌方单位或建筑后才安排临时强化普攻。",
+      "economy": "各自使用当版尼菈下路和米利欧辅助的单英雄默认位置参考；原作者 2023 年符文、装备和触发次数不视作当版配置或组合统计。",
+      "steps": [
+        "尼菈先处理兵线与补刀，米利欧保持可接应距离；先看对方远程消耗、控制技能和自己的安全退路。",
+        "米利欧 W 可用时，按双方位置选择篝火跟随目标；尼菈实际留在范围内才得到持续治疗与额外攻击距离。",
+        "需要承接反击或调整位置时，米利欧 E 可给友方英雄护盾和短暂加速；尼菈被动可增强与分享附近来自友方的治疗和护盾。",
+        "尼菈 Q 实际命中敌方单位或建筑后才获得临时攻击距离与攻击速度，选择安全目标接普攻；若距离、状态或护盾不足则收线撤退。"
+      ],
+      "members": [
+        {
+          "champion": "Nilah",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "安全补刀并与米利欧保持可接应距离；Q 实际命中后再按临时距离与攻速决定普攻。"
+        },
+        {
+          "champion": "Milio",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "根据双方实际位置用 W 治疗和增加射程，E 留给需要护盾与移动的友方英雄。"
+        }
+      ],
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Puddlng · 米利欧心得（2023-11-06）",
+          "url": "https://talk.op.gg/s/lol/tip/6099028/%EB%B0%80%EB%A6%AC%EC%98%A4%20%EA%B3%B5%EB%9E%B5%20%EC%97%86%EA%B8%B8%EB%9E%98%20%EC%B2%AB%20%EA%B2%8C%EC%8B%9C%EA%B8%80%20%EB%A7%8C%EB%93%A4%EC%96%B4%EB%B4%90%EC%97%AC?tl=en",
+          "kind": "历史作者原文：尼菈被动与米利欧治疗护盾；非当版实测或配装",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能依据，非组合胜率",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Nilah bottom 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/nilah/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版单英雄同位置参考，非作者原配或组合统计",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Milio support 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/milio/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版单英雄同位置参考，非作者原配或组合统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Nilah": "30e5ef1b4f79390e",
+        "champion:Milio": "9176ff8b22c1f1c9"
+      },
+      "reviewSourceAnchors": {
+        "Nilah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "30e5ef1b4f79390e",
+          "observedAt": "2026-11-05T02:19:26.160Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nilah",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
+              "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "2f18ee1a98588cd1"
+            }
+          }
+        },
+        "Milio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9176ff8b22c1f1c9",
+          "observedAt": "2026-11-05T02:19:26.156Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Milio",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/milio/milio.bin.json",
+              "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "32194f4e3319e474"
             }
           }
         }
