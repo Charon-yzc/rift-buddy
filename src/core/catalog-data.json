@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.61",
+  "version": "2026.11.06.62",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -65012,21 +65012,21 @@
       "role": "jungle",
       "loadoutId": "default",
       "order": "QEWEEREQEQRQQWWRWW",
-      "reason": "Q/E/W 开局沿同位置来源，主 E 副 Q，围绕实际友军护盾、延时爆炸与已确认 Q 命中接应；会推迟 W 成长。营地被动不用于史诗野怪，W 造草不代表草内安全，先自行确认视野和接应范围。",
-      "patch": "16.20",
-      "reviewedAt": "2026-10-11",
+      "reason": "当版同位置来源覆盖前 15 点，16 至 18 级沿原方案补齐 R/W/W。主 E 副 Q。Q 须先命中同一目标，队友攻击仍被禁锢的目标才可冲至攻击距离。E 给友方英雄或小菊，爆炸命中才减速。护盾存续至引爆且未命中敌方英雄时才刷新。W 造草用于接应，先确认视野和退路。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "reference": {
         "order": "QEWEEREQEQRQQWW",
-        "patch": "16.20",
-        "url": "https://op.gg/lol/champions/ivern/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.20",
-        "fetchedAt": "2026-10-07T21:27:07.829Z"
+        "patch": "16.22",
+        "url": "https://op.gg/lol/champions/ivern/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+        "fetchedAt": "2026-11-06T02:24:59.555Z"
       },
       "sources": [
         {
-          "name": "Riot Ivern16.20.1技能",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ivern.json",
-          "kind": "技能依据",
-          "checkedAt": "2026-10-11"
+          "name": "Riot Data Dragon · 艾翁 16.22.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前技能与按级补齐条件",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -65035,24 +65035,24 @@
       "reviewSourceAnchors": {
         "Ivern": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f4b498c5991475d6",
-          "observedAt": "2026-10-18T23:14:46.591Z",
+          "observedAt": "2026-11-05T02:19:26.075Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ivern",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/ivern/ivern.bin.json",
-              "sha256": "6317473eaa270f8826d65611048e987fe060d4cb335db16d78901217773e068f"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ivern/ivern.bin.json",
+              "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a8c07de58a4e8f6d"
             }
           }
@@ -65066,21 +65066,27 @@
       "role": "bottom",
       "loadoutId": "default",
       "order": "WQEWWRWQWQRQQEEREE",
-      "reason": "W/Q/E 开局沿同位置普攻路线，主 W 副 Q；W 实际可用且有持续普攻空间时输出，未学 E 或 E 不可用不承诺自身减速留人。R 节点只示升级，不承诺命中/蓝量/追击收益。",
-      "patch": "16.20",
-      "reviewedAt": "2026-10-11",
+      "reason": "当版同位置来源覆盖前 15 点，16 至 18 级沿原方案补齐 R/E/E。主 W 副 Q，在 W 可用且有安全普攻空间时输出。Q 须命中目标才削减双抗。E 软泥只按实际覆盖减速。R 连续施放会增加法力消耗。26.22 已修复飞行中的普攻触发 W 伤害防御塔，推塔不计该伤害。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "reference": {
         "order": "WQEWWRWQWQRQQEE",
-        "patch": "16.20",
-        "url": "https://op.gg/lol/champions/kogmaw/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.20",
-        "fetchedAt": "2026-10-07T21:27:37.093Z"
+        "patch": "16.22",
+        "url": "https://op.gg/lol/champions/kogmaw/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+        "fetchedAt": "2026-11-06T02:25:37.107Z"
       },
       "sources": [
         {
-          "name": "Riot KogMaw16.20.1技能",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/KogMaw.json",
-          "kind": "技能依据",
-          "checkedAt": "2026-10-11"
+          "name": "Riot Data Dragon · 克格莫 16.22.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前技能与按级补齐条件",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 26.22 更新说明",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "核对 W 与防御塔交互修复",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -65089,24 +65095,24 @@
       "reviewSourceAnchors": {
         "KogMaw": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ba006aa34e05e235",
-          "observedAt": "2026-10-18T23:14:59.475Z",
+          "observedAt": "2026-11-05T02:19:26.082Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "KogMaw",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/kogmaw/kogmaw.bin.json",
-              "sha256": "4442bff79aa49b328d44ea85ab7d2eb095d4028b94b97351a79bc9a11ff09a6a"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kogmaw/kogmaw.bin.json",
+              "sha256": "2b7676bd783ef9d58380c1f10aefff5546e71946ba21c91bd44980befeb0376c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ad3707a256c213e5"
             }
           }
