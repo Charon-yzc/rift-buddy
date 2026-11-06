@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.69",
+  "version": "2026.11.07.70",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -32971,6 +32971,126 @@
       "window": "两个大招已学可用，承伤者可以留在领域内，并处于塔里克本人或有效联结的保护覆盖。",
       "early": "六级前用实际 W/E 覆盖协助千珏进退。进野区前先确认辅助离线和双方退路。",
       "economy": "千珏保野区资源，塔里克按辅助职责行动。默认构筑若走眼泪线，先购女神之泪并合成凛冬之临，叠满后转成末日寒冬。"
+    },
+    {
+      "id": "malphite-orianna-top-mid-ball-engage",
+      "name": "墨菲特带球进场",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "上中联动",
+        "带球进场",
+        "范围接控"
+      ],
+      "why": "奥莉安娜 E 让魔偶实际附着墨菲特，墨菲特 R 进场后，奥莉安娜可按魔偶实际位置接范围控制。",
+      "plan": "确认两人大招、球位和撤退方向。先让魔偶附着墨菲特；他从安全角度 R 落地并实际击飞目标后，奥莉安娜确认球仍在有效落点、敌人仍在范围，再决定交 R 或保留控制。",
+      "risk": "魔偶尚未到达、墨菲特冲到有效接应距离之外、目标离开覆盖或退路断开时取消追击。双人伤害偏法术，需要结合实际其他位置。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 送球接力",
+          "url": "https://github.com/Legender134/rift-buddy/blob/aca198c05aeae058a44f5dcaade51a6be95badf4/src/core/catalog-data.json#L35828",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 墨菲特 top",
+          "url": "https://op.gg/lol/champions/malphite/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 奥莉安娜 mid",
+          "url": "https://op.gg/lol/champions/orianna/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Malphite": "1cef2e2fdec84d8d",
+        "champion:Orianna": "6897daa00a80bf73"
+      },
+      "reviewSourceAnchors": {
+        "Malphite": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1cef2e2fdec84d8d",
+          "observedAt": "2026-11-05T02:19:26.155Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Malphite",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/malphite/malphite.bin.json",
+              "sha256": "5a179a096f00299a2fbe60453c0b2b14aec2fbb1f93d0a6da3f1f43515c44d34"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "998655a1cdd4352a"
+            }
+          }
+        },
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "c4c8d45a2747f2c75e09e82185fd862a7424198fd34da2037389a4ab8409abc7"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b761493a33a91024"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Malphite",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "上路稳线承伤，先确认魔偶已附着和队友可接应。R 落地实际覆盖目标才击飞，给队友留出可撤的落点。"
+        },
+        {
+          "champion": "Orianna",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "中路处理兵线，E 后确认魔偶实际附着，按当前球位和目标站位决定 R，不追着离开范围的目标交大。"
+        }
+      ],
+      "steps": [
+        "先确认大招可用、侧翼视野、魔偶位置及两人退路。",
+        "奥莉安娜 E 让魔偶实际附着墨菲特；墨菲特按队友能接应的落点交 R，实际命中才有击飞。",
+        "奥莉安娜按魔偶当前覆盖和敌人实际站位交 R；球位脱离、第一段未命中或侧翼危险时停手。"
+      ],
+      "window": "双方 R 已学且可用、E 已让魔偶实际附着后可尝试；落点需在队友可接应的范围。",
+      "early": "上中各自处理兵线和补刀，一级至五级不按双大招联动规划；避免为抢一个带球落点丢线。",
+      "economy": "墨菲特使用当版上单个人构筑，承担承伤与开团；奥莉安娜使用当版中单个人构筑，保法力和输出。"
     }
   ],
   "linkReviews": [
