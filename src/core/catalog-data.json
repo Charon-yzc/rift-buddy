@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.75",
+  "version": "2026.11.07.76",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -36775,6 +36775,676 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Chogath",
+        "Senna"
+      ],
+      "comboId": "cho-senna",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "3afcc737bd63b96e",
+      "baseline": {
+        "Chogath": "1d4374b6281eb0e1",
+        "Senna": "5e547c9cf10f2a05"
+      },
+      "anchors": {
+        "Chogath": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d4374b6281eb0e1",
+          "observedAt": "2026-11-05T02:19:26.066Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Chogath",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/chogath/chogath.bin.json",
+              "sha256": "b30a18292e6b5e093bcb556dcef07ef1e45015830678d4ddff41de95cbca70de"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "1a863670bec3f963"
+            }
+          }
+        },
+        "Senna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5e547c9cf10f2a05",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Senna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/senna/senna.bin.json",
+              "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "58582c22f3d6346b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "TahmKench",
+        "Senna"
+      ],
+      "comboId": "frog-senna",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "fbecafd8d6642a22",
+      "baseline": {
+        "TahmKench": "9635271a9add58c5",
+        "Senna": "5e547c9cf10f2a05"
+      },
+      "anchors": {
+        "TahmKench": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9635271a9add58c5",
+          "observedAt": "2026-11-05T02:19:26.174Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "TahmKench",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/tahmkench/tahmkench.bin.json",
+              "sha256": "2c4d245e198a57458a95879789133f011276421c3cbc2f5a5293507a8ba34073"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "324a3700d293797b"
+            }
+          }
+        },
+        "Senna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5e547c9cf10f2a05",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Senna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/senna/senna.bin.json",
+              "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "58582c22f3d6346b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Taliyah",
+        "Senna"
+      ],
+      "comboId": "taliyah-senna",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "806788305f372624",
+      "baseline": {
+        "Taliyah": "164392e23c74360e",
+        "Senna": "5e547c9cf10f2a05"
+      },
+      "anchors": {
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-11-05T02:19:26.175Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        },
+        "Senna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5e547c9cf10f2a05",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Senna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/senna/senna.bin.json",
+              "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "58582c22f3d6346b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Senna",
+        "Seraphine"
+      ],
+      "comboId": "senna-seraphine",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "b6b8b45695950bb5",
+      "baseline": {
+        "Senna": "5e547c9cf10f2a05",
+        "Seraphine": "18e4440868d92eb5"
+      },
+      "anchors": {
+        "Senna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5e547c9cf10f2a05",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Senna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/senna/senna.bin.json",
+              "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "58582c22f3d6346b"
+            }
+          }
+        },
+        "Seraphine": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "18e4440868d92eb5",
+          "observedAt": "2026-11-05T02:19:26.168Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Seraphine",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
+              "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b29132146d6ad36b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Syndra",
+        "Zilean"
+      ],
+      "comboId": "syndra-zilean",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "c75b587cc19f1f8a",
+      "baseline": {
+        "Syndra": "6fd0f8bd70c981dd",
+        "Zilean": "60f40731a1259a4a"
+      },
+      "anchors": {
+        "Syndra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6fd0f8bd70c981dd",
+          "observedAt": "2026-11-05T02:19:26.174Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Syndra",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/syndra/syndra.bin.json",
+              "sha256": "f42d81319186b2116372a631911fcbbe5128937923c801c39dac0c872226e724"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "5426d3509eaceba8"
+            }
+          }
+        },
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-11-05T02:19:26.254Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Ziggs",
+        "Zilean"
+      ],
+      "comboId": "ziggs-zilean-bombs",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "df430ce473b155b5",
+      "baseline": {
+        "Ziggs": "301986c8fed3e8fb",
+        "Zilean": "60f40731a1259a4a"
+      },
+      "anchors": {
+        "Ziggs": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "301986c8fed3e8fb",
+          "observedAt": "2026-11-05T02:19:26.253Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ziggs",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ziggs/ziggs.bin.json",
+              "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "fdb99302b5ecb565"
+            }
+          }
+        },
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-11-05T02:19:26.254Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Jhin",
+        "Swain"
+      ],
+      "comboId": "jin-swain",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "94b1926bb7fbddd1",
+      "baseline": {
+        "Jhin": "226e6c11b8a992f5",
+        "Swain": "2df9ea554c5ac91d"
+      },
+      "anchors": {
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        },
+        "Swain": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2df9ea554c5ac91d",
+          "observedAt": "2026-11-05T02:19:26.173Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Swain",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/swain/swain.bin.json",
+              "sha256": "7e99c46dd1723f49ddf39db87846550e287276dcf4366ed39240b68b634c11c6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f08241c738bc1369"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Jhin",
+        "Taliyah"
+      ],
+      "comboId": "jhin-taliyah",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "71b23a6491fb80fe",
+      "baseline": {
+        "Jhin": "226e6c11b8a992f5",
+        "Taliyah": "164392e23c74360e"
+      },
+      "anchors": {
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "b7ccf25b3929cfff4413d8ac6c87d22c29e47f849ddadd2618332c5948e949ee"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        },
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-11-05T02:19:26.175Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "MissFortune",
+        "Braum"
+      ],
+      "comboId": "missfortune-braum",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "f4c58357026b1852",
+      "baseline": {
+        "MissFortune": "10b496d2ce7c344d",
+        "Braum": "ae3aa48403ffcbe5"
+      },
+      "anchors": {
+        "MissFortune": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "10b496d2ce7c344d",
+          "observedAt": "2026-11-05T02:19:26.157Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "MissFortune",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
+              "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "45c6c8d43f1a5c2f"
+            }
+          }
+        },
+        "Braum": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ae3aa48403ffcbe5",
+          "observedAt": "2026-11-05T02:19:26.062Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Braum",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/braum/braum.bin.json",
+              "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e136059064aa1034"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "MissFortune",
+        "Seraphine"
+      ],
+      "comboId": "missfortune-seraphine",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "ff111d1d97a937cb",
+      "baseline": {
+        "MissFortune": "10b496d2ce7c344d",
+        "Seraphine": "18e4440868d92eb5"
+      },
+      "anchors": {
+        "MissFortune": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "10b496d2ce7c344d",
+          "observedAt": "2026-11-05T02:19:26.157Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "MissFortune",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
+              "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "45c6c8d43f1a5c2f"
+            }
+          }
+        },
+        "Seraphine": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "18e4440868d92eb5",
+          "observedAt": "2026-11-05T02:19:26.168Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Seraphine",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
+              "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b29132146d6ad36b"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -37231,7 +37901,7 @@
     [
       "Taliyah",
       "Senna",
-      "赛娜减速或禁锢后，塔莉垭更容易接岩突。"
+      "赛娜 Q 实际减速或 W 延迟禁锢生效后，塔莉垭按位置先铺 E 再用 W。目标实际被推过仍在的碎石才触发爆炸与晕眩。"
     ],
     [
       "Taliyah",
@@ -37246,7 +37916,7 @@
     [
       "Jhin",
       "Taliyah",
-      "烬的 W 禁锢窗口可以帮助塔莉垭衔接岩突。"
+      "塔莉垭 Q 石块或 E 初段先实际伤害共同目标。烬 W 命中时友方伤害标记仍须有效，且同一目标须是弹道首个敌方英雄。W 仅位移时不算这段伤害。"
     ],
     [
       "Nilah",
@@ -37346,7 +38016,7 @@
     [
       "Syndra",
       "Zilean",
-      "辛德拉控制给基兰双炸弹更清晰的落点。"
+      "辛德拉 E 推出的法球实际命中才晕眩，为基兰铺弹争取时间。第二枚 Q 须附着到同一仍有首枚炸弹的载体，才引爆并晕眩爆炸范围内敌人。"
     ],
     [
       "DrMundo",
@@ -37462,6 +38132,41 @@
       "Jhin",
       "Nami",
       "娜美 Q 或 W 敌方一跳实际伤害共同目标后，烬 W 须在友方伤害标记仍有效时命中同一目标，且目标为弹道首个敌方英雄。W 仅治疗队友时不产生这段伤害。"
+    ],
+    [
+      "Chogath",
+      "Senna",
+      "赛娜 W 命中后须等同一目标实际被延迟禁锢，再按其位置铺科加斯 Q。Q 破裂区域实际命中才击飞，目标先离开就放弃。"
+    ],
+    [
+      "TahmKench",
+      "Senna",
+      "塔姆 W 落点实际命中并击飞共同目标，可为赛娜 W 争取机会。赛娜仍须让 W 命中同一目标且没有前方单位拦截，等实际禁锢生效。"
+    ],
+    [
+      "Senna",
+      "Seraphine",
+      "赛娜 Q 先实际减速，或 W 延迟禁锢已生效。萨勒芬妮用另一次 E 命中同一目标时，减速仍在才禁锢，定身仍在才晕眩。"
+    ],
+    [
+      "Ziggs",
+      "Zilean",
+      "基兰第二枚 Q 附着到同一仍有首枚炸弹的载体，实际引爆并晕眩共同目标后，吉格斯按位置接 Q 或 E。Q 须命中，E 须实际踩中地雷才触发。"
+    ],
+    [
+      "Jhin",
+      "Swain",
+      "斯维因 Q 或 E 回程爆炸先实际伤害共同目标。烬 W 命中时友方伤害标记仍须有效，且同一目标须是弹道首个敌方英雄。"
+    ],
+    [
+      "MissFortune",
+      "Braum",
+      "布隆 R 实际击飞共同目标后，厄运小姐从安全位置让 R 锥形覆盖该目标。只有裂隙减速、目标已退出锥形或引导会被打断时，不能按整段命中。"
+    ],
+    [
+      "MissFortune",
+      "Seraphine",
+      "萨勒芬妮 R 实际魅惑共同目标后，厄运小姐确认目标仍在 R 锥形覆盖和可安全引导的位置，再开弹幕。魅惑未命中或引导被打断时，按实际命中处理。"
     ]
   ],
   "trios": [
