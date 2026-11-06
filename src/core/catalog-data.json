@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.51",
+  "version": "2026.11.06.52",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -29619,6 +29619,126 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ef84e7c599b03475"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "twitch-milio-range-cover",
+      "name": "图奇 × 米利欧 · 射程与接应",
+      "tempo": "protect",
+      "style": "balanced",
+      "difficulty": "较高",
+      "tags": [
+        "下路配合",
+        "射程与保护"
+      ],
+      "why": "米利欧炉火可为范围内的图奇提供治疗和额外攻击距离；图奇依据伪装状态、射线与队友位置寻找安全输出窗口。",
+      "plan": "图奇安全处理兵线与补刀，米利欧保持能接应的位置；视野不足或敌方威胁靠近时先保血量与退路。 米利欧 W 可用时选择炉火跟随目标；图奇实际处于炉火范围时才获得持续治疗和额外攻击距离，E 按反击需要给友方英雄护盾与加速。 图奇 Q 可用时结合敌人位置决定是否伪装调整；伪装可能被发现，离开伪装后才按当次攻速增益判断是否输出。 图奇 R 已学会且可用时，再依据位置选择是否开启：额外射程与穿刺弩箭只持续技能期间，沿路径实际命中的敌人才受伤；范围脱节或敌方进场时停止追击。",
+      "risk": "图奇较脆，伪装可能被发现；米利欧护盾和炉火不能阻止所有控制或伤害。图奇离开炉火范围、R 未可用或输出路径不安全时，不按完整增距持续输出。",
+      "early": "图奇优先安全补刀与保血量；米利欧围绕实际队友位置留保护，视野不足或对方强开时收线。",
+      "window": "米利欧 W 已学且可用、图奇实际留在炉火范围内才按射程与治疗行动；图奇 R 另需已学且可用，弩箭沿途实际命中目标才造成伤害。",
+      "economy": "各自使用当版图奇下路和米利欧辅助的单英雄默认位置参考；历史作者 2025 年装备与强度意见不视为当版配置或组合统计。",
+      "steps": [
+        "图奇安全处理兵线与补刀，米利欧保持能接应的位置；视野不足或敌方威胁靠近时先保血量与退路。",
+        "米利欧 W 可用时选择炉火跟随目标；图奇实际处于炉火范围时才获得持续治疗和额外攻击距离，E 按反击需要给友方英雄护盾与加速。",
+        "图奇 Q 可用时结合敌人位置决定是否伪装调整；伪装可能被发现，离开伪装后才按当次攻速增益判断是否输出。",
+        "图奇 R 已学会且可用时，再依据位置选择是否开启：额外射程与穿刺弩箭只持续技能期间，沿路径实际命中的敌人才受伤；范围脱节或敌方进场时停止追击。"
+      ],
+      "members": [
+        {
+          "champion": "Twitch",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "先安全补刀，再按 Q 伪装状态及 R 实际可用性选择输出位置；不追出队友可接应范围。"
+        },
+        {
+          "champion": "Milio",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "确认图奇实际在 W 炉火范围内再提供射程与治疗，E 依危险与队友位置提供护盾。"
+        }
+      ],
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "독뎀6스택펑 · 图奇玩家心得（2025-08-13）",
+          "url": "https://talk.op.gg/s/lol/user-news/6889585/%EC%9D%98%EB%AC%B8%EC%9D%98%20%EC%B4%88%EB%A1%9D%EC%83%89%20%EC%A5%90%EC%97%90%20%EB%8C%80%ED%95%B4?tl=en",
+          "kind": "历史作者原文：图奇搭配米利欧及射程增益；非当版实测或配装",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版英雄技能依据，非组合胜率",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Twitch bottom 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/twitch/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版单英雄同位置参考，非历史作者原配或组合统计",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Milio support 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/milio/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版单英雄同位置参考，非历史作者原配或组合统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Milio": "9176ff8b22c1f1c9",
+        "champion:Twitch": "ab3e76d629cf2787"
+      },
+      "reviewSourceAnchors": {
+        "Milio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9176ff8b22c1f1c9",
+          "observedAt": "2026-11-05T02:19:26.156Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Milio",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/milio/milio.bin.json",
+              "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "32194f4e3319e474"
+            }
+          }
+        },
+        "Twitch": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ab3e76d629cf2787",
+          "observedAt": "2026-11-05T02:19:26.177Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Twitch",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twitch/twitch.bin.json",
+              "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "461e810ef4e30853"
             }
           }
         }
