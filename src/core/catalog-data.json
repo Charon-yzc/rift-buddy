@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.43",
+  "version": "2026.11.06.44",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -14278,15 +14278,15 @@
         "非常规下路"
       ],
       "why": "艾翁 W 可造草丛，雷恩加尔被动可在草丛中普攻跳向目标；两段同版技能文字支持配合推断，未经对局验证。",
-      "plan": "雷恩加尔下路补刀，艾翁辅助；先确认 W 已学可用、草丛存在、目标可接近且落点有退路，再由艾翁护盾接应。雷恩加尔配置为人工机制参考，非同位置统计或作者原配。",
+      "plan": "雷恩加尔下路补刀，艾翁辅助；先确认 W 已学可用、草丛存在、目标可接近且落点有退路，再由艾翁护盾接应。雷恩加尔配置为人工机制参考，非同位置统计或作者原配。 艾翁辅助配置参考当版同位置小样本并人工补齐，保持辅助经济。",
       "risk": "雷恩加尔近战补刀易受远程消耗；草丛、护盾或安全退路不成立时停跳。普通 E 命中首个敌人后减速，只有强化 E 才禁锢；草丛不保证安全或反复跳跃。",
       "partners": [
         "Tristana",
         "Graves"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Reddit · 非常规下路联动",
@@ -14300,19 +14300,36 @@
           "kind": "技能依据"
         },
         {
-          "name": "Berke Gursoy · 艾翁/狮子狗下路（2023-03-01）",
+          "name": "Berke Gursoy · 艾翁与雷恩加尔下路（2023-03-01）",
           "url": "https://gamelevate.com/ivern-rengar-bot-lane-guide-tilt-your-enemies/",
-          "kind": "原作者文字攻略，历史玩法参考，非本版配装",
-          "checkedAt": "2026-11-04"
+          "kind": "历史双人玩法原文，现版配置为项目复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制依据，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 全区更新公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "正式补丁核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 艾翁辅助位置参考",
+          "url": "https://op.gg/lol/champions/ivern/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "部分同位置数据，所见三件样本8场，项目人工补全",
+          "checkedAt": "2026-11-06"
         }
       ],
       "loadouts": {
         "bottom": "rengar-ivern-manual-bottom",
-        "support": "default"
+        "support": "manual-ivern-support-canopy-2622"
       },
       "reviewBaseline": {
         "champion:Rengar": "37409a7c0d60e8e8",
-        "champion:Ivern": "f4b498c5991475d6",
         "item:3074": "6700c33eea0226cf",
         "item:6692": "bec6d540fde1d4ec",
         "item:3814": "f9788442be1f2810",
@@ -14325,7 +14342,19 @@
         "rune:9105": "8f6975f18cf3ff8d",
         "rune:8299": "d7db081cd64d0bc2",
         "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998"
+        "rune:8451": "9e4f8837510e3998",
+        "champion:Ivern": "f4b498c5991475d6",
+        "item:6617": "6dccd52cee1f2c6e",
+        "item:3107": "53bdbba0a53ca5c6",
+        "item:6621": "b5f3cf223530db82",
+        "item:3504": "f6eed220149ca076",
+        "item:3109": "97c25fae90d4a8a4",
+        "rune:8214": "6d3b2bf192d500da",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8236": "a1bb7cfc15c3d089",
+        "rune:8463": "3296414353df0e65",
+        "rune:8453": "f9a0180e7f2f0432"
       },
       "tempo": "teamfight",
       "reviewSourceAnchors": {
@@ -14334,21 +14363,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "37409a7c0d60e8e8",
-          "observedAt": "2026-10-26T13:38:40.516Z",
+          "observedAt": "2026-11-05T02:19:26.165Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rengar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rengar/rengar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rengar/rengar.bin.json",
               "sha256": "e2e97e8e3cb202d4aaa9481df841c8040e1b8c7356d870a84760fabd5ede9f6b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a340ab4d1d71dccd"
             }
           }
@@ -14358,21 +14387,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f4b498c5991475d6",
-          "observedAt": "2026-10-26T13:38:40.398Z",
+          "observedAt": "2026-11-05T02:19:26.075Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ivern",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ivern/ivern.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ivern/ivern.bin.json",
               "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a8c07de58a4e8f6d"
             }
           }
@@ -14387,9 +14416,9 @@
         "毒素互动",
         "近战辅助"
       ],
-      "why": "历史社区原帖描述炼金毒雾可供蛇女 E 利用；结合 16.21 技能文本推断，尚非当版实战验证。",
-      "plan": "蛇女补刀，炼金辅助照看视野与退路；炼金学会并开启 Q 后，敌人实际进入毒雾且仍中毒时，蛇女可在安全射程内用 E 跟进。",
-      "risk": "近战炼金接近远程对手困难，盲目追人容易被集火；蛇女持续施法消耗法力。毒雾未覆盖、毒消失或蛇女无法安全出手时停止追击。",
+      "why": "炼金可用实际减速、缚地和位移帮助蛇女寻找自身施毒与 E 的安全窗口；队友毒能否触发毒牙的历史说法留待当版验证。",
+      "plan": "蛇女补刀并保法力，炼金辅助先看视野、兵线和退路，不为施毒盲目接近。 炼金 W 实际覆盖目标时减速缚地；E 实际将目标扔入 W 才禁锢，未命中或角度不安全就撤。 蛇女 Q 或 W 实际对同一目标施加自身中毒，E 命中时该状态仍在才按毒牙额外效果判断。 历史来源提出炼金毒可供蛇女利用，但当前跨英雄触发未验证，不能以此替代蛇女自身施毒。",
+      "risk": "两人可能受远程消耗；技能落空、法力不足或进退距离不安全时停止追击。跨英雄毒互动为历史推断、当版待证。",
       "partners": [
         "Kindred",
         "Graves"
@@ -14419,50 +14448,64 @@
           "url": "https://mobalytics.gg/lol/champions/singed/build/support",
           "kind": "单英雄资料",
           "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "历史社区观点与当版技能文本推断 · 非当版对局验证",
-      "reviewedAt": "2026-11-03",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "tempo": "teamfight",
       "members": [
         {
           "champion": "Cassiopeia",
           "role": "bottom",
-          "loadoutId": "default",
-          "job": "负责补刀和输出；确认目标仍中毒、法力与安全射程后用 E 跟进。"
+          "loadoutId": "manual-cass-bottom-control-2622",
+          "job": "负责补刀、法力与退路；Q/W 实际施加自身中毒后再看 E 命中和目标状态。"
         },
         {
           "champion": "Singed",
           "role": "support",
-          "loadoutId": "singed-support-poison-2621",
-          "job": "辅助保视野和退路；Q 已学并开启，敌人实际接触毒雾才有施毒机会。"
+          "loadoutId": "manual-singed-support-control-2622",
+          "job": "辅助看视野与退路；W 需实际覆盖，E 将目标扔入 W 才禁锢。"
         }
       ],
       "steps": [
-        "先确认兵线、视野和退路，蛇女补刀，炼金辅助不为施毒盲目接近。",
-        "炼金学会并开启 Q，敌人实际进入毒雾；蛇女有法力、处于安全射程时用 E 跟进，E 命中时目标仍中毒才有额外伤害和治疗。",
-        "炼金 W 可减速与缚地区域内敌人；E 已学且能安全接近时可摔回，只有目标落入 W 才会禁锢。",
-        "毒雾未覆盖、对手离开、技能不可用或遭到反打时撤退；不假定目标必然进入毒雾。"
+        "蛇女补刀并保法力，炼金辅助先看视野、兵线和退路，不为施毒盲目接近。",
+        "炼金 W 实际覆盖目标时减速缚地；E 实际将目标扔入 W 才禁锢，未命中或角度不安全就撤。",
+        "蛇女 Q 或 W 实际对同一目标施加自身中毒，E 命中时该状态仍在才按毒牙额外效果判断。",
+        "历史来源提出炼金毒可供蛇女利用，但当前跨英雄触发未验证，不能以此替代蛇女自身施毒。"
       ],
-      "early": "六级前的联动只依赖炼金 Q 已学、开启且实际覆盖目标，蛇女 E 命中时目标仍中毒；不假设强行接近安全。",
-      "window": "炼金 Q 毒雾实际覆盖同一目标，蛇女 E 可用、法力与距离允许，且 E 命中时目标仍中毒。",
-      "economy": "蛇女以下路补刀为主，炼金承担辅助视野；其单英雄人工辅助配置可替换，具体装备与符文不是施毒联动必要条件。",
+      "early": "先保补刀、辅助任务和视野；蛇女自己的 Q/W 需要实际命中或覆盖。",
+      "window": "技能已学可用、同一目标位置与退路成立；蛇女毒牙增效按自身中毒和实际命中判断。",
+      "economy": "蛇女补刀，辅助按任务经济和视野行动；双方人工配置不代表同位置统计或作者配装。",
       "reviewBaseline": {
         "champion:Cassiopeia": "74ace7fa9d54e0e4",
         "champion:Singed": "65d32cdacd60176e",
+        "item:6657": "a64a1d7699648e7b",
+        "item:3003": "88afa631f4faea9e",
         "item:3116": "1ca09887b440d0f6",
+        "item:3009": "f95ed3b88b918eed",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998",
         "item:6653": "dae566be4a35ad25",
         "item:3742": "781ae5e1d4c0324a",
-        "item:3009": "f95ed3b88b918eed",
         "item:2065": "a30335c7d456f5fd",
         "item:2504": "ead2f4757e3e6c8c",
         "rune:8992": "40814cf22b170c27",
         "rune:8275": "66861392f27bc6f9",
         "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:9111": "6667591beed15f1b",
-        "rune:8299": "d7db081cd64d0bc2"
+        "rune:8237": "141d0a7c16b98b91"
       },
       "reviewSourceAnchors": {
         "Cassiopeia": {
@@ -14470,21 +14513,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "74ace7fa9d54e0e4",
-          "observedAt": "2026-10-26T13:38:40.312Z",
+          "observedAt": "2026-11-05T02:19:26.064Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Cassiopeia",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/cassiopeia/cassiopeia.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/cassiopeia/cassiopeia.bin.json",
               "sha256": "57e4216d0882399f0a68f8087cab824c7ae331040c9a6e74cf7ab6379e69c737"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "328eb9f058249ee8"
             }
           }
@@ -14494,21 +14537,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "65d32cdacd60176e",
-          "observedAt": "2026-10-26T13:38:40.521Z",
+          "observedAt": "2026-11-05T02:19:26.171Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Singed",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/singed/singed.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/singed/singed.bin.json",
               "sha256": "1c22b7efd0ffea9631ee518e7f5ebbee0dd5618b6603bb49bbd5531024d5a848"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "56d7c605cce7a1a7"
             }
           }
@@ -16170,14 +16213,44 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制依据，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 全区更新公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "正式补丁核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 艾翁辅助位置参考",
+          "url": "https://op.gg/lol/champions/ivern/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "部分同位置数据，所见三件样本8场，项目人工补全",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Nilah": "30e5ef1b4f79390e",
-        "champion:Ivern": "f4b498c5991475d6"
+        "champion:Ivern": "f4b498c5991475d6",
+        "item:6617": "6dccd52cee1f2c6e",
+        "item:3107": "53bdbba0a53ca5c6",
+        "item:6621": "b5f3cf223530db82",
+        "item:3158": "72ca672b9221f063",
+        "item:3504": "f6eed220149ca076",
+        "item:3109": "97c25fae90d4a8a4",
+        "rune:8214": "6d3b2bf192d500da",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8236": "a1bb7cfc15c3d089",
+        "rune:8463": "3296414353df0e65",
+        "rune:8453": "f9a0180e7f2f0432"
       },
       "tempo": "protect",
       "members": [
@@ -16191,7 +16264,7 @@
           "champion": "Ivern",
           "role": "support",
           "job": "艾翁辅助，E 按距离给尼菈，护盾爆开时附近敌人才受减速；Q 命中后队友可选择靠近。",
-          "loadoutId": "default"
+          "loadoutId": "manual-ivern-support-canopy-2622"
         }
       ],
       "steps": [
@@ -16200,28 +16273,28 @@
       ],
       "window": "不把护盾当免伤或把 Q 命中写成队友自动突进。",
       "early": "尼菈先在安全位置补刀，艾翁有 E 时按距离给予护盾；护盾爆开时敌人靠近才受减速。",
-      "economy": "下路成员负责补刀，辅助按辅助经济与视野任务行动，提前沟通资源。",
+      "economy": "尼菈负责补刀，艾翁负责辅助任务与视野，使用项目补齐的辅助配置。",
       "reviewSourceAnchors": {
         "Nilah": {
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-26T13:38:40.507Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -16231,21 +16304,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f4b498c5991475d6",
-          "observedAt": "2026-10-26T13:38:40.398Z",
+          "observedAt": "2026-11-05T02:19:26.075Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ivern",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ivern/ivern.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ivern/ivern.bin.json",
               "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a8c07de58a4e8f6d"
             }
           }
@@ -18287,7 +18360,7 @@
         "远程消耗"
       ],
       "why": "拉克丝实际限制目标后，维克兹按位置跟进技能。",
-      "plan": "拉克丝 Q 实际命中时束缚路径上的前两个敌方单位；维克兹按目标当前位置跟进。 维克兹技能命中叠加被动，达到三层时造成爆发真实伤害；R 射线对近期受到该被动伤害的敌人改为真实伤害，不把队友伤害当自己的被动层。 控制落空、对手贴近或引导受到威胁时撤离。",
+      "plan": "拉克丝 Q 实际命中时束缚路径上的前两个敌方单位；维克兹按目标当前位置跟进。 维克兹技能命中叠加被动，达到三层时造成爆发真实伤害；R 射线对近期受到该被动伤害的敌方英雄改为真实伤害，不把队友伤害当自己的被动层。 控制落空、对手贴近或引导受到威胁时撤离。",
       "risk": "两人脆弱且缺前排；维克兹 R 引导时要留意打断。",
       "partners": [
         "Shen",
@@ -18306,14 +18379,30 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Lux": "50314ad04c92f1a6",
-        "champion:Velkoz": "4fc6f59617324dce"
+        "champion:Velkoz": "4fc6f59617324dce",
+        "item:3118": "2bf87c4847cde85f",
+        "item:4646": "a195092592feb18a",
+        "item:4645": "152f57227a713097",
+        "item:3020": "357a162d6a40286e",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8106": "bfb83fa22daf18de",
+        "rune:8126": "9e648d4b51a0c973"
       },
       "tempo": "poke",
       "members": [
@@ -18321,7 +18410,7 @@
           "champion": "Lux",
           "role": "bottom",
           "job": "拉克丝保补刀；Q 实际命中时最多束缚前两名敌人。",
-          "loadoutId": "default"
+          "loadoutId": "manual-lux-bottom-velkoz-2622"
         },
         {
           "champion": "Velkoz",
@@ -18332,7 +18421,7 @@
       ],
       "steps": [
         "拉克丝 Q 实际命中时束缚路径上的前两个敌方单位；维克兹按目标当前位置跟进。",
-        "维克兹技能命中叠加被动，达到三层时造成爆发真实伤害；R 射线对近期受到该被动伤害的敌人改为真实伤害，不把队友伤害当自己的被动层。",
+        "维克兹技能命中叠加被动，达到三层时造成爆发真实伤害；R 射线对近期受到该被动伤害的敌方英雄改为真实伤害，不把队友伤害当自己的被动层。",
         "控制落空、对手贴近或引导受到威胁时撤离。"
       ],
       "window": "目标实际受控、双方有安全射线和侧翼视野时。",
@@ -18344,21 +18433,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "50314ad04c92f1a6",
-          "observedAt": "2026-10-26T13:38:40.500Z",
+          "observedAt": "2026-11-05T02:19:26.155Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lux",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lux/lux.bin.json",
-              "sha256": "9223cdf0a3d94223309fc69eb0c3865444b2884004b443dbcd066e70ffe0b952"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lux/lux.bin.json",
+              "sha256": "bcb1ca7a7e82072b504985d84dc1fa905471f3c249fbafb3ab72658a50f7595b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "cc7818802b8d5fc7"
             }
           }
@@ -18368,21 +18457,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "4fc6f59617324dce",
-          "observedAt": "2026-10-26T13:38:40.598Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Velkoz",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/velkoz/velkoz.bin.json",
-              "sha256": "d7083b07c94482f1814bd603cd7831d0de5fd1ba1170dc9b5ff386793ab08ffb"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/velkoz/velkoz.bin.json",
+              "sha256": "d97af687f9a5022448d28e44de1913ddab8dd29b551323f9bf8ad4d56e794621"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "83d561abb744eab5"
             }
           }
@@ -18771,9 +18860,9 @@
         "中毒接输出",
         "远程辅助"
       ],
-      "why": "历史社区评论提出蛇女下路与图奇辅助；结合图奇毒液和蛇女 E 的技能文本，推断队友施毒可触发毒牙收益，尚非当版实战验证。",
-      "plan": "蛇女补刀，图奇辅助照看视野；图奇安全普攻或 W 已学且命中后施加毒液，蛇女在安全射程内对同一目标接 E。",
-      "risk": "图奇辅助经济有限且缺少稳定保护，双人容易被突进；蛇女法力紧张。毒液消失、目标离开射程或视野不足就停止追击。",
+      "why": "图奇 W 命中可减速，蛇女可据实际位置施放自身毒技能后跟进；队友毒触发毒牙的历史说法仍待当版验证。",
+      "plan": "蛇女补刀，图奇辅助先看视野、兵线与退路；不以游走代价牺牲守线。 图奇 W 实际命中或敌人留在范围内时才施毒减速，普攻与 E 按图奇自己的毒层和安全距离判断。 蛇女 Q 或 W 实际对目标施加自身中毒，E 命中时状态仍在才按毒牙额外效果判断。 历史来源提出图奇毒可供蛇女利用，但当前跨英雄触发未验证，不能以此替代蛇女自身施毒。",
+      "risk": "缺少可靠保护；目标脱离、技能落空、法力或视野不足时撤退。跨英雄毒互动为历史推断、当版待证。",
       "partners": [
         "Shen",
         "Sejuani"
@@ -18803,44 +18892,60 @@
           "url": "https://mobalytics.gg/lol/champions/twitch/build/support",
           "kind": "单英雄资料",
           "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "历史社区观点与当版技能文本推断 · 非当版对局验证",
-      "reviewedAt": "2026-11-03",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "tempo": "poke",
       "members": [
         {
           "champion": "Cassiopeia",
           "role": "bottom",
-          "loadoutId": "default",
-          "job": "负责补刀和输出；确认目标仍中毒、法力与安全射程后用 E 跟进。"
+          "loadoutId": "manual-cass-bottom-control-2622",
+          "job": "负责补刀、法力与退路；Q/W 实际施加自身中毒后再看 E 命中和目标状态。"
         },
         {
           "champion": "Twitch",
           "role": "support",
-          "loadoutId": "twitch-support-poison-2621",
-          "job": "承担辅助视野，确保安全普攻命中同一目标施加被动毒液；W 已学且命中时也可施毒减速。"
+          "loadoutId": "manual-twitch-support-control-2622",
+          "job": "辅助看视野；W 实际命中或目标留在范围内才施毒减速，普攻及 E 按自身毒层判断。"
         }
       ],
       "steps": [
-        "蛇女补刀，图奇安排视野；先观察兵线和敌方突进，不假定双远程必定获得线权。",
-        "图奇安全普攻同一目标施加被动毒液；蛇女有法力且距离安全时接 E，E 命中时目标仍中毒才有额外伤害和治疗。",
-        "图奇 W 已学且命中时施加毒液并减速，敌人在范围中才继续承受效果；不要假定技能必定命中。",
-        "敌人脱离、毒消失或遭到反打时及时撤退，图奇伪装与 E 均需自行确认可用。"
+        "蛇女补刀，图奇辅助先看视野、兵线与退路；不以游走代价牺牲守线。",
+        "图奇 W 实际命中或敌人留在范围内时才施毒减速，普攻与 E 按图奇自己的毒层和安全距离判断。",
+        "蛇女 Q 或 W 实际对目标施加自身中毒，E 命中时状态仍在才按毒牙额外效果判断。",
+        "历史来源提出图奇毒可供蛇女利用，但当前跨英雄触发未验证，不能以此替代蛇女自身施毒。"
       ],
-      "early": "图奇被动随普攻命中施毒，W 需先学习且命中；蛇女注意法力和安全射程。",
-      "window": "图奇普攻或已学 W 实际命中同一目标，蛇女 E 可用、法力与距离允许，且 E 命中时目标仍中毒。",
-      "economy": "蛇女以下路补刀为主，图奇承担辅助视野；其单英雄人工辅助配置可替换，具体装备与符文不是施毒联动必要条件。",
+      "early": "先保补刀、辅助任务和视野；蛇女自己的 Q/W 需要实际命中或覆盖。",
+      "window": "技能已学可用、同一目标位置与退路成立；蛇女毒牙增效按自身中毒和实际命中判断。",
+      "economy": "蛇女补刀，辅助按任务经济和视野行动；双方人工配置不代表同位置统计或作者配装。",
       "reviewBaseline": {
         "champion:Cassiopeia": "74ace7fa9d54e0e4",
         "champion:Twitch": "ab3e76d629cf2787",
+        "item:6657": "a64a1d7699648e7b",
+        "item:3003": "88afa631f4faea9e",
+        "item:3116": "1ca09887b440d0f6",
+        "item:3009": "f95ed3b88b918eed",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998",
         "item:3115": "627135c117eaf20a",
         "item:4645": "152f57227a713097",
         "item:3089": "a8a9b060b253391c",
         "item:3006": "d8d9fde1f7908326",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3135": "9eb1465e02c69db0",
         "rune:9923": "89bc1d7f8c9bcddc",
         "rune:8143": "c3f9de836bc96957",
         "rune:8140": "93302565a400fc06",
@@ -18854,21 +18959,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "74ace7fa9d54e0e4",
-          "observedAt": "2026-10-26T13:38:40.312Z",
+          "observedAt": "2026-11-05T02:19:26.064Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Cassiopeia",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/cassiopeia/cassiopeia.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/cassiopeia/cassiopeia.bin.json",
               "sha256": "57e4216d0882399f0a68f8087cab824c7ae331040c9a6e74cf7ab6379e69c737"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "328eb9f058249ee8"
             }
           }
@@ -18878,21 +18983,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ab3e76d629cf2787",
-          "observedAt": "2026-10-26T13:38:40.596Z",
+          "observedAt": "2026-11-05T02:19:26.177Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Twitch",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twitch/twitch.bin.json",
               "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "461e810ef4e30853"
             }
           }
@@ -18907,9 +19012,9 @@
         "中毒接输出",
         "区域控制"
       ],
-      "why": "提莫学会 E 后，普攻命中可施毒；蛇女可在目标仍中毒且处于施法范围时接 E，争取额外伤害和回复。历史社区描述也指出蘑菇毒可配合毒牙；这是技能资料与历史描述的推断，并非 16.21 对局实测。",
-      "plan": "蛇女负责下路补刀，提莫辅助照看视野和血量。确认提莫已学 E、能安全普攻并命中同一目标后，蛇女观察中毒状态，在安全射程内接 E；毒消失或对手反打时不要追击。提莫 R 学会且有充能后可在安全路线放陷阱，敌人踩中才触发；蛇女 W 的毒云可减速和缚地，均不能保证敌人进入或命中。",
-      "risk": "全法术且缺可靠先手，双方容易被突进；蛇女频繁施法消耗法力，提莫为普攻上毒而靠近也有风险。陷阱需要敌人踩中才生效；敌人离开射程、毒消失、技能不可用或视野不足就停止追击。该组合没有已验证的当版胜率。",
+      "why": "提莫 Q 命中可致盲，蛇女按目标位置施放自身毒技能；队友毒触发毒牙的历史说法仍待当版验证。",
+      "plan": "蛇女补刀，提莫辅助照看视野和退路；Q 实际命中才致盲。 蛇女 Q 或 W 实际对目标施加自身中毒，E 命中时状态仍在才按毒牙额外效果判断。 提莫 R 已学且有充能时可布置蘑菇，敌人实际踩中才触发；不为陷阱或普攻贸然追击。 历史来源提出提莫毒可供蛇女利用，但当前跨英雄触发未验证，不能以此替代蛇女自身施毒。",
+      "risk": "容易被突进，目标脱离、技能落空或视野不足时撤退。跨英雄毒互动为历史推断、当版待证。",
       "partners": [
         "Graves",
         "Shen"
@@ -18939,60 +19044,87 @@
           "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "official",
           "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "技能文本与历史社区描述推断 · 非当版实战验证",
-      "reviewedAt": "2026-11-03",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Cassiopeia": "74ace7fa9d54e0e4",
-        "champion:Teemo": "b29454e3375baf8c"
+        "champion:Teemo": "b29454e3375baf8c",
+        "item:6657": "a64a1d7699648e7b",
+        "item:3003": "88afa631f4faea9e",
+        "item:3116": "1ca09887b440d0f6",
+        "item:3009": "f95ed3b88b918eed",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998",
+        "item:3115": "627135c117eaf20a",
+        "item:6653": "dae566be4a35ad25",
+        "item:3020": "357a162d6a40286e",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
       },
       "tempo": "teamfight",
       "members": [
         {
           "champion": "Cassiopeia",
           "role": "bottom",
-          "loadoutId": "default",
-          "job": "负责补刀和输出；观察目标中毒状态、法力和安全射程，条件满足时用 E 跟进，W 留意缚地与撤退时机。"
+          "loadoutId": "manual-cass-bottom-control-2622",
+          "job": "负责补刀、法力与退路；Q/W 实际施加自身中毒后再看 E 命中和目标状态。"
         },
         {
           "champion": "Teemo",
           "role": "support",
-          "loadoutId": "default",
-          "job": "负责辅助视野；学会 E 后在安全距离普攻同一目标施毒，R 学会且有充能后可布置陷阱，不能假定敌人一定踩中。"
+          "loadoutId": "manual-teemo-support-control-2622",
+          "job": "辅助看视野；Q 实际命中才致盲，R 已学有充能且敌人踩中才触发。"
         }
       ],
       "steps": [
-        "蛇女补刀，提莫负责视野与消耗；先确认兵线、敌人突进和退路。",
-        "提莫已学 E 且能安全普攻时命中目标施毒；蛇女有法力且目标在安全射程内可接 E，只有 E 命中时目标仍中毒才有额外伤害和回复。",
-        "提莫 R 已学会且有充能时，可在安全路线上预置蘑菇；敌人实际踩中才触发减速和持续伤害，再观察是否有安全输出机会。",
-        "蛇女 W 已学可用时释放毒云，敌人处于毒云内才受中毒、减速和缚地；R 已学可用且命中前方敌人时，面向她的敌人受眩晕，未面向者受减速。任何技能落空或敌人脱离时及时撤退。"
+        "蛇女补刀，提莫辅助照看视野和退路；Q 实际命中才致盲。",
+        "蛇女 Q 或 W 实际对目标施加自身中毒，E 命中时状态仍在才按毒牙额外效果判断。",
+        "提莫 R 已学且有充能时可布置蘑菇，敌人实际踩中才触发；不为陷阱或普攻贸然追击。",
+        "历史来源提出提莫毒可供蛇女利用，但当前跨英雄触发未验证，不能以此替代蛇女自身施毒。"
       ],
-      "early": "六级前不依赖蘑菇；提莫 E 已学且普攻实际命中后才有施毒机会，蛇女注意法力与安全距离。",
-      "window": "提莫 E 已学且普攻命中，蛇女 E 可用且目标在安全施法范围内；只有 E 命中时目标仍中毒才有额外伤害和回复。蘑菇路线另需 R 已学、有充能并由敌人踩中。",
-      "economy": "蛇女以下路补刀和经验为主，提莫以辅助任务和视野为主；使用各自同位置普通参考，具体装备和符文不是毒素联动的必要条件。",
+      "early": "先保补刀、辅助任务和视野；蛇女自己的 Q/W 需要实际命中或覆盖。",
+      "window": "技能已学可用、同一目标位置与退路成立；蛇女毒牙增效按自身中毒和实际命中判断。",
+      "economy": "蛇女补刀，辅助按任务经济和视野行动；双方人工配置不代表同位置统计或作者配装。",
       "reviewSourceAnchors": {
         "Cassiopeia": {
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "74ace7fa9d54e0e4",
-          "observedAt": "2026-10-26T13:38:40.312Z",
+          "observedAt": "2026-11-05T02:19:26.064Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Cassiopeia",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/cassiopeia/cassiopeia.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/cassiopeia/cassiopeia.bin.json",
               "sha256": "57e4216d0882399f0a68f8087cab824c7ae331040c9a6e74cf7ab6379e69c737"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "328eb9f058249ee8"
             }
           }
@@ -19002,21 +19134,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b29454e3375baf8c",
-          "observedAt": "2026-10-26T13:38:40.593Z",
+          "observedAt": "2026-11-05T02:19:26.176Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Teemo",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/teemo/teemo.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/teemo/teemo.bin.json",
               "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0795d6a5dc4ba5bb"
             }
           }
@@ -26365,10 +26497,16 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Twitch.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "reviewBaseline": {
         "champion:Morgana": "e0588c7ab7dba463",
         "champion:Twitch": "ab3e76d629cf2787",
@@ -26400,21 +26538,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e0588c7ab7dba463",
-          "observedAt": "2026-10-23T02:03:51.543Z",
+          "observedAt": "2026-11-05T02:19:26.158Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Morgana",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/morgana/morgana.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/morgana/morgana.bin.json",
               "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "57d5f698304a1f45"
             }
           }
@@ -26424,21 +26562,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ab3e76d629cf2787",
-          "observedAt": "2026-10-23T02:03:51.636Z",
+          "observedAt": "2026-11-05T02:19:26.177Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Twitch",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twitch/twitch.bin.json",
               "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "461e810ef4e30853"
             }
           }
@@ -26448,13 +26586,13 @@
         {
           "role": "bottom",
           "champion": "Morgana",
-          "loadoutId": "manual-morgana-bottom-reference",
+          "loadoutId": "manual-morgana-bottom-roam-2622",
           "job": "下路补刀并报告兵线与越塔风险；Q 实际命中后禁锢，E 按来袭威胁给护盾。"
         },
         {
           "role": "support",
           "champion": "Twitch",
-          "loadoutId": "twitch-support-poison-2621",
+          "loadoutId": "manual-twitch-support-control-2622",
           "job": "承担辅助任务与安全视野；约定离线和返回时间，Q 伪装，W 加毒，按实际毒层与范围使用 E。"
         }
       ],
@@ -33094,8 +33232,8 @@
       "why": "艾翁提供草丛和护盾，璐璐保护下路补刀雷恩加尔的进退；造草后草中跳跃是同版技能文字的配合推断，未经对局验证。",
       "plan": "雷恩加尔与璐璐先保下路补刀经验；艾翁完成必要野区循环并学会 W 后报到，先确认草丛形成再 E 接应；雷恩加尔按残暴和保护距离选择进退，璐璐 W 选友方增益或敌方变形，R 已学且友方英雄在范围内时再考虑接应。",
       "risk": "近战下路容易被消耗，队伍缺持续远程火力；草丛不提供无条件安全，雷恩加尔普通 E 只有减速、普通 W 不解控。璐璐 E 可给实际承伤的友方英雄提供护盾，对敌施放不提供友方护盾；W 不能同时给友方增益和敌方变形；保护交光或线野代价太大就停止重复跳入。",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot Ivern 16.20.1 技能",
@@ -33119,6 +33257,18 @@
           "name": "Riot 16.21.1 艾翁、雷恩加尔与璐璐技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制依据，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 全区更新公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "正式补丁核对",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -33148,10 +33298,10 @@
       ],
       "window": "艾翁 W 已学且草丛实际形成、雷恩加尔处于草中且目标在可跳范围；两人护盾与璐璐可用技能和保护距离由玩家确认。人造草丛触发跳跃是技能文字推断，未经对局验证；不能把草丛视为安全视野。",
       "early": "狮子狗1–3级Q/W/E先补刀与短换血，近期受伤再用W，不为抢跳丢兵线；璐璐按E护盾与Q减速保下路状态；翠神依自己的被动营地成熟节奏获得金币经验，W学到且能到场才布草，不按普通打野攻击非史诗营地的逻辑分配任务。",
-      "economy": "狮子狗承担下路补刀，璐璐走辅助任务与视野经济，翠神保留自己的野区收入；三人到下路前先报兵线、营地和补给，成功换血也不长期三人分一条线。资源前先决定狮子狗接线还是到场，无法安全接近入口就放弃跳入，守线或换另一侧已确认收益。",
+      "economy": "艾翁保留打野经济，雷恩加尔下路补刀并采用人工机制配置，璐璐负责辅助任务和视野。",
       "reviewBaseline": {
-        "champion:Rengar": "37409a7c0d60e8e8",
         "champion:Ivern": "f4b498c5991475d6",
+        "champion:Rengar": "37409a7c0d60e8e8",
         "item:3074": "6700c33eea0226cf",
         "item:6692": "bec6d540fde1d4ec",
         "item:3814": "f9788442be1f2810",
@@ -33173,21 +33323,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f4b498c5991475d6",
-          "observedAt": "2026-10-26T13:38:40.398Z",
+          "observedAt": "2026-11-05T02:19:26.075Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ivern",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ivern/ivern.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ivern/ivern.bin.json",
               "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a8c07de58a4e8f6d"
             }
           }
@@ -33197,21 +33347,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "37409a7c0d60e8e8",
-          "observedAt": "2026-10-26T13:38:40.516Z",
+          "observedAt": "2026-11-05T02:19:26.165Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rengar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rengar/rengar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rengar/rengar.bin.json",
               "sha256": "e2e97e8e3cb202d4aaa9481df841c8040e1b8c7356d870a84760fabd5ede9f6b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a340ab4d1d71dccd"
             }
           }
@@ -33221,21 +33371,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f5091380ca45272",
-          "observedAt": "2026-10-26T13:38:40.500Z",
+          "observedAt": "2026-11-05T02:19:26.154Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lulu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lulu/lulu.bin.json",
               "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "33e697bcb063b28b"
             }
           }
@@ -35996,7 +36146,7 @@
       "risk": "保护技能用尽、阵型分散或侧翼受压时回撤；不要把护盾当强开保证。",
       "early": "卡尔玛处理中线，金克丝补刀，璐璐负责辅助经济和视野。",
       "window": "队友可接应且保护技能可用时；金克丝被动须实际参与相应击杀或摧毁后才触发。",
-      "economy": "中路卡尔玛保留中路兵线、补刀和经验；下路金克丝负责补刀和经验，辅助璐璐承担辅助任务和视野。",
+      "economy": "卡尔玛保留中线经济并使用人工中路配置；金克丝下路补刀，璐璐承担辅助任务和视野，二者配置按当前所选来源。",
       "steps": [
         "确认卡尔玛能支援、金克丝枪型和敌方方向。",
         "卡尔玛按需要施放 E 或强化 E；璐璐择机保护，金克丝普攻安全目标。",
@@ -36007,7 +36157,7 @@
           "champion": "Karma",
           "role": "mid",
           "job": "处理中线；E 为友方英雄提供盾与移速，R 强化 E 才能同时作用于目标附近友军；W 灵链维持至结束才禁锢。",
-          "loadoutId": "default"
+          "loadoutId": "manual-karma-mid-rocket-protect"
         },
         {
           "champion": "Jinx",
@@ -36022,8 +36172,8 @@
           "loadoutId": "default"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 卡尔玛技能资料",
@@ -36046,12 +36196,36 @@
         {
           "name": "Riot · 16.21.1 全英雄技能原文",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-          "kind": "当前单英雄技能依据，不代表组合实测",
+          "kind": "历史单英雄技能依据，不代表组合实测",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制依据，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 全区更新公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "正式补丁核对",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Karma": "36385f1555005577",
+        "item:6655": "e593f4433de96e4b",
+        "item:6620": "cfb94d4a02cc64c8",
+        "item:3107": "53bdbba0a53ca5c6",
+        "item:3158": "72ca672b9221f063",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8214": "6d3b2bf192d500da",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8236": "a1bb7cfc15c3d089",
+        "rune:8463": "3296414353df0e65",
+        "rune:8453": "f9a0180e7f2f0432",
         "champion:Jinx": "98d589f2c16be412",
         "champion:Lulu": "5f5091380ca45272"
       },
@@ -36061,21 +36235,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "36385f1555005577",
-          "observedAt": "2026-10-23T02:03:51.532Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Karma",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/karma/karma.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/karma/karma.bin.json",
               "sha256": "7b6328b43d94f80ea6eec0998d8f81d9e54f3f8c6bb7a37a12ebbd04d569bcf5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1f2620463bdb38d1"
             }
           }
@@ -36085,21 +36259,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "98d589f2c16be412",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Jinx",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jinx/jinx.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jinx/jinx.bin.json",
               "sha256": "5ca25fc97c2da4874b88de6faec7dcfd5ea991b8edd1773d9a2cb9ecd5b2091f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "18a489971bd9889a"
             }
           }
@@ -36109,21 +36283,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f5091380ca45272",
-          "observedAt": "2026-10-23T02:03:51.539Z",
+          "observedAt": "2026-11-05T02:19:26.154Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lulu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lulu/lulu.bin.json",
               "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "33e697bcb063b28b"
             }
           }
@@ -36144,7 +36318,7 @@
       "risk": "图奇伪装并非无敌；基兰 R 不可用、未及时施放或复活点被守时不能保证生存。",
       "early": "基兰保中线，图奇补刀，璐璐照看视野；不为集合放弃安全兵线。",
       "window": "图奇可安全现身且队友在施法距离内时；基兰 R 需提前施给友方并在持续期内触发。",
-      "economy": "中路基兰保留中路兵线、补刀和经验；下路图奇负责补刀和经验，辅助璐璐承担辅助任务和视野。",
+      "economy": "基兰保留中线经济并使用人工中路配置；图奇下路补刀，璐璐承担辅助任务和视野，二者配置按当前所选来源。",
       "steps": [
         "确认图奇计划出现的位置、队友接应距离和基兰 R 状态。",
         "图奇现身时按安全距离普攻；基兰和璐璐按实际承伤与威胁使用技能。",
@@ -36155,7 +36329,7 @@
           "champion": "Zilean",
           "role": "mid",
           "job": "处理中线；E 可给友方英雄移速。R 已学可用且在范围内时施给友方英雄，目标在符印持续期间将要阵亡才会先进入凝滞再复活。",
-          "loadoutId": "default"
+          "loadoutId": "manual-zilean-mid-side-cover"
         },
         {
           "champion": "Twitch",
@@ -36170,8 +36344,8 @@
           "loadoutId": "default"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 基兰技能资料",
@@ -36194,12 +36368,36 @@
         {
           "name": "Riot · 16.21.1 全英雄技能原文",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-          "kind": "当前单英雄技能依据，不代表组合实测",
+          "kind": "历史单英雄技能依据，不代表组合实测",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制依据，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 全区更新公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "正式补丁核对",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Zilean": "60f40731a1259a4a",
+        "item:2503": "1fa1a03a714d3aa7",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3107": "53bdbba0a53ca5c6",
+        "item:3158": "72ca672b9221f063",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3165": "ac6fa6771b1062c6",
+        "rune:8214": "6d3b2bf192d500da",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8236": "a1bb7cfc15c3d089",
+        "rune:8463": "3296414353df0e65",
+        "rune:8453": "f9a0180e7f2f0432",
         "champion:Twitch": "ab3e76d629cf2787",
         "champion:Lulu": "5f5091380ca45272"
       },
@@ -36209,21 +36407,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "60f40731a1259a4a",
-          "observedAt": "2026-10-23T02:03:51.644Z",
+          "observedAt": "2026-11-05T02:19:26.254Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zilean",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
               "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3e2480aa7362c964"
             }
           }
@@ -36233,21 +36431,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ab3e76d629cf2787",
-          "observedAt": "2026-10-23T02:03:51.636Z",
+          "observedAt": "2026-11-05T02:19:26.177Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Twitch",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twitch/twitch.bin.json",
               "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "461e810ef4e30853"
             }
           }
@@ -36257,21 +36455,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f5091380ca45272",
-          "observedAt": "2026-10-23T02:03:51.539Z",
+          "observedAt": "2026-11-05T02:19:26.154Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lulu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lulu/lulu.bin.json",
               "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "33e697bcb063b28b"
             }
           }
@@ -54926,7 +55124,7 @@
       "runes": [
         "rengar-ivern-manual-fleet"
       ],
-      "why": "人工按近战补刀与草丛接近机制调整，非同分路统计、非作者原配，未经对局验证。出门装备以应用实际显示为准；多兰盾加药水可由玩家局内自行考虑，不代表应用已选盾。提亚马特和九头蛇会推线，注意兵线与退路；星蚀须2秒内两次独立命中同一英雄。",
+      "why": "同位置签名数据缺失，保留雷恩加尔近战补刀人工参考。对远程消耗可用多兰盾和一瓶药开局；若应用当前显示别的出门装，按局势选择。首回城按预算选择提亚马特或长剑，九头蛇和提亚马特会推线，不能为清线丢退路。明朗鞋按技能与回线提前，星蚀要求两秒内两次独立命中同一英雄，夜之锋刃、死亡之舞、领主按敌方技能、物伤与护甲取舍。联动不依赖这三件触发。",
       "early": [
         3077
       ],
@@ -54938,8 +55136,8 @@
         "SummonerFlash",
         "SummonerBarrier"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot 16.21.1 雷恩加尔技能",
@@ -54955,6 +55153,30 @@
           "name": "Riot 16.21.1 符文",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
           "kind": "符文依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制依据，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备和购买路径",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Berke Gursoy · 艾翁与雷恩加尔下路（2023-03-01）",
+          "url": "https://gamelevate.com/ivern-rengar-bot-lane-guide-tilt-your-enemies/",
+          "kind": "历史双人玩法原文，现版配置为项目复核",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -54979,21 +55201,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "37409a7c0d60e8e8",
-          "observedAt": "2026-10-26T13:38:40.516Z",
+          "observedAt": "2026-11-05T02:19:26.165Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rengar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rengar/rengar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rengar/rengar.bin.json",
               "sha256": "e2e97e8e3cb202d4aaa9481df841c8040e1b8c7356d870a84760fabd5ede9f6b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a340ab4d1d71dccd"
             }
           }
@@ -59310,6 +59532,1009 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a42663f5aae5af9c"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-karma-mid-rocket-protect",
+      "name": "人工配置 · 中单卡尔玛保护",
+      "base": "mage",
+      "champions": [
+        "Karma"
+      ],
+      "roles": [
+        "mid"
+      ],
+      "items": [
+        6655,
+        6620,
+        3107
+      ],
+      "boots": 3158,
+      "late": [
+        3157,
+        3135
+      ],
+      "runes": [
+        "aery"
+      ],
+      "why": "当前签名资料无该英雄中路同位置构筑；项目人工配装。多兰戒和两瓶药出门。首回城按预算选遗失的章节或增幅典籍，卢登帮助处理中线。明朗鞋看移动和技能频率提前；海力亚须实际对英雄造成伤害积充能，再给友军护盾或治疗才消耗；救赎有延迟，按落点提前放。遇突进或魔抗再看中娅或虚空。配合只依赖技能条件。",
+      "priority": "QEW",
+      "first": "QEW",
+      "skillOrder": "QEWQQRQEQEREEWWRWW",
+      "skillReason": "一级自带R，18点按Q清线、E保护，6/11/16级强化R。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerTeleport"
+      ],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制依据，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备和购买路径",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 全区更新公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "正式补丁核对",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Karma": "36385f1555005577",
+        "item:6655": "e593f4433de96e4b",
+        "item:6620": "cfb94d4a02cc64c8",
+        "item:3107": "53bdbba0a53ca5c6",
+        "item:3158": "72ca672b9221f063",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8214": "6d3b2bf192d500da",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8236": "a1bb7cfc15c3d089",
+        "rune:8463": "3296414353df0e65",
+        "rune:8453": "f9a0180e7f2f0432"
+      },
+      "reviewSourceAnchors": {
+        "Karma": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "36385f1555005577",
+          "observedAt": "2026-11-05T02:19:26.078Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Karma",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/karma/karma.bin.json",
+              "sha256": "7b6328b43d94f80ea6eec0998d8f81d9e54f3f8c6bb7a37a12ebbd04d569bcf5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "1f2620463bdb38d1"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-zilean-mid-side-cover",
+      "name": "人工配置 · 中单基兰侧翼保护",
+      "base": "mage",
+      "champions": [
+        "Zilean"
+      ],
+      "roles": [
+        "mid"
+      ],
+      "items": [
+        2503,
+        3157,
+        3107
+      ],
+      "boots": 3158,
+      "late": [
+        3135,
+        3165
+      ],
+      "runes": [
+        "aery"
+      ],
+      "why": "当前签名资料无该英雄中路同位置构筑；项目人工配装。多兰戒和两瓶药出门。首回城按预算选遗失的章节或增幅典籍；火炬给炸弹清线，明朗鞋按回线和支援节奏提前。被突进时考虑先中娅，救赎提前放在实际可能交战的位置；魔抗高看虚空、治疗高看莫雷洛。中娅靠自己施放，与对友军的复活是两种独立技能。",
+      "priority": "QEW",
+      "first": "QEW",
+      "skillOrder": "QEWQQRQEQEREEWWRWW",
+      "skillReason": "Q清线、E用于移速，W从2级可学，6/11/16级强化R。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerTeleport"
+      ],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制依据，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备和购买路径",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 全区更新公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "正式补丁核对",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Zilean": "60f40731a1259a4a",
+        "item:2503": "1fa1a03a714d3aa7",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3107": "53bdbba0a53ca5c6",
+        "item:3158": "72ca672b9221f063",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3165": "ac6fa6771b1062c6",
+        "rune:8214": "6d3b2bf192d500da",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8236": "a1bb7cfc15c3d089",
+        "rune:8463": "3296414353df0e65",
+        "rune:8453": "f9a0180e7f2f0432"
+      },
+      "reviewSourceAnchors": {
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-11-05T02:19:26.254Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-cass-bottom-control-2622",
+      "name": "卡西奥佩娅 · 人工下路参考",
+      "champions": [
+        "Cassiopeia"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "mage",
+      "damage": "ap",
+      "items": [
+        6657,
+        3003,
+        3116
+      ],
+      "boots": 3009,
+      "late": [
+        3157,
+        3135
+      ],
+      "runes": [
+        "conqueror"
+      ],
+      "first": "EQW",
+      "priority": "EQW",
+      "skillOrder": "EQWEEREQEQRQQWWRWW",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "why": "当版签名资料无蛇女下路同位置统计，此为人工参考。多兰戒与两瓶药出门；首回城依金币补蓝水晶或催化石。时光、可购买的大天使和冰杖参考同英雄中路核心；大天使完成条件后才转化炽天使。符文和召唤师为人工选择。先用自身 Q 或 W 实际施毒，再看 E 的射程与法力。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "skillReason": "18点为人工安排；此前不同位置资料仅供比较，非本位置统计。",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 Cassiopeia 不同位置参考",
+          "url": "https://op.gg/lol/champions/cassiopeia/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同英雄跨位置资料，不是本位置统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Cassiopeia": "74ace7fa9d54e0e4",
+        "item:6657": "a64a1d7699648e7b",
+        "item:3003": "88afa631f4faea9e",
+        "item:3116": "1ca09887b440d0f6",
+        "item:3009": "f95ed3b88b918eed",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998"
+      },
+      "reviewSourceAnchors": {
+        "Cassiopeia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "74ace7fa9d54e0e4",
+          "observedAt": "2026-11-05T02:19:26.064Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Cassiopeia",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/cassiopeia/cassiopeia.bin.json",
+              "sha256": "57e4216d0882399f0a68f8087cab824c7ae331040c9a6e74cf7ab6379e69c737"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "328eb9f058249ee8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-singed-support-control-2622",
+      "name": "辛吉德 · 人工辅助参考",
+      "champions": [
+        "Singed"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "burn",
+      "damage": "ap",
+      "items": [
+        3116,
+        6653,
+        3742
+      ],
+      "boots": 3009,
+      "late": [
+        2065,
+        2504
+      ],
+      "runes": [
+        "singed-support-poison-2621"
+      ],
+      "first": "QEW",
+      "priority": "QEW",
+      "skillOrder": "QEWQQRQEQEREEWWRWW",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerDot"
+      ],
+      "why": "当版签名资料无辛吉德辅助同位置统计，此为旧单英雄参考的人工整理，并非作者配装或辅助胜率。先做辅助任务和视野；首回城按资金比较鞋与增幅典籍。装备按局势替换；Q 毒雾需实际覆盖，W 地面区域内减速缚地，E 将目标扔进 W 才禁锢。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "skillReason": "18点为人工安排；此前不同位置资料仅供比较，非本位置统计。",
+      "sources": [
+        {
+          "name": "Mobalytics · 16.21 炼金辅助单英雄参考",
+          "url": "https://mobalytics.gg/lol/champions/singed/build/support",
+          "kind": "单英雄资料",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 26.21 更新说明",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 炼金 16.21.1 技能（加点机制依据）",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/en_US/champion/Singed.json",
+          "kind": "技能机制依据，非官方推荐加点",
+          "checkedAt": "2026-11-04"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 Singed 不同位置参考",
+          "url": "https://op.gg/lol/champions/singed/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同英雄跨位置资料，不是本位置统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Singed": "65d32cdacd60176e",
+        "item:3116": "1ca09887b440d0f6",
+        "item:6653": "dae566be4a35ad25",
+        "item:3742": "781ae5e1d4c0324a",
+        "item:3009": "f95ed3b88b918eed",
+        "item:2065": "a30335c7d456f5fd",
+        "item:2504": "ead2f4757e3e6c8c",
+        "rune:8992": "40814cf22b170c27",
+        "rune:8275": "66861392f27bc6f9",
+        "rune:8234": "018bc04903dfba25",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:9111": "6667591beed15f1b",
+        "rune:8299": "d7db081cd64d0bc2"
+      },
+      "reviewSourceAnchors": {
+        "Singed": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "65d32cdacd60176e",
+          "observedAt": "2026-11-05T02:19:26.171Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Singed",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/singed/singed.bin.json",
+              "sha256": "1c22b7efd0ffea9631ee518e7f5ebbee0dd5618b6603bb49bbd5531024d5a848"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "56d7c605cce7a1a7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-twitch-support-control-2622",
+      "name": "图奇 · 人工辅助参考",
+      "champions": [
+        "Twitch"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "mage",
+      "damage": "ap",
+      "items": [
+        3115,
+        4645,
+        3089
+      ],
+      "boots": 3006,
+      "late": [
+        3157,
+        3135
+      ],
+      "runes": [
+        "twitch-support-poison-2621"
+      ],
+      "first": "EQW",
+      "priority": "EQW",
+      "skillOrder": "EQWEEREQEQRQQWWRWW",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerDot"
+      ],
+      "why": "当版签名资料无图奇辅助同位置统计，此为旧单英雄参考的人工整理，并非作者配装或辅助胜率。先做辅助任务和视野；首回城按金币比较短剑与增幅典籍。普攻与 W 实际施加图奇自己的毒液，E 依据实际毒层和范围；伪装不能保证游走或回线安全。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "skillReason": "18点为人工安排；此前不同位置资料仅供比较，非本位置统计。",
+      "sources": [
+        {
+          "name": "Mobalytics · 16.21 图奇辅助单英雄参考",
+          "url": "https://mobalytics.gg/lol/champions/twitch/build/support",
+          "kind": "单英雄资料",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 26.21 更新说明",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 Twitch 不同位置参考",
+          "url": "https://op.gg/lol/champions/twitch/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同英雄跨位置资料，不是本位置统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Twitch": "ab3e76d629cf2787",
+        "item:3115": "627135c117eaf20a",
+        "item:4645": "152f57227a713097",
+        "item:3089": "a8a9b060b253391c",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:9923": "89bc1d7f8c9bcddc",
+        "rune:8143": "c3f9de836bc96957",
+        "rune:8140": "93302565a400fc06",
+        "rune:8135": "d7b9ee19a520bf84",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8014": "04092c4f9754532b"
+      },
+      "reviewSourceAnchors": {
+        "Twitch": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ab3e76d629cf2787",
+          "observedAt": "2026-11-05T02:19:26.177Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Twitch",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twitch/twitch.bin.json",
+              "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "461e810ef4e30853"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-teemo-support-control-2622",
+      "name": "提莫 · 人工辅助参考",
+      "champions": [
+        "Teemo"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "mage",
+      "damage": "ap",
+      "items": [
+        3115,
+        6653,
+        3116
+      ],
+      "boots": 3020,
+      "late": [
+        3157,
+        3135
+      ],
+      "runes": [
+        "comet"
+      ],
+      "first": "EQW",
+      "priority": "EQW",
+      "skillOrder": "EQWEEREQEQRQQWWRWW",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerDot"
+      ],
+      "why": "当版签名资料无提莫辅助同位置统计，此为项目人工参考，并非作者配装或辅助胜率。先做辅助任务和视野；首回城按金币比较短剑与增幅典籍。Q 目标实际命中才致盲，E 已学且普攻命中才施加毒液；R 已学有充能、敌人踩中才触发蘑菇。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "skillReason": "18点为人工安排；此前不同位置资料仅供比较，非本位置统计。",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 Teemo 不同位置参考",
+          "url": "https://op.gg/lol/champions/teemo/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同英雄跨位置资料，不是本位置统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Teemo": "b29454e3375baf8c",
+        "item:3115": "627135c117eaf20a",
+        "item:6653": "dae566be4a35ad25",
+        "item:3116": "1ca09887b440d0f6",
+        "item:3020": "357a162d6a40286e",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Teemo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b29454e3375baf8c",
+          "observedAt": "2026-11-05T02:19:26.176Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Teemo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/teemo/teemo.bin.json",
+              "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "0795d6a5dc4ba5bb"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-morgana-bottom-roam-2622",
+      "name": "莫甘娜 · 人工下路参考",
+      "champions": [
+        "Morgana"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "mage",
+      "damage": "ap",
+      "items": [
+        2503,
+        6653,
+        3157
+      ],
+      "boots": 3020,
+      "late": [
+        3135,
+        3089
+      ],
+      "runes": [
+        "comet"
+      ],
+      "first": "WQE",
+      "priority": "WQE",
+      "skillOrder": "WQEWWRWQWQRQQEEREE",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "why": "当版签名资料无莫甘娜下路同位置统计，此为沿旧人工参考整理的配置，并非作者配装或下路胜率。多兰戒与两瓶药出门；首回城按金币考虑增幅典籍或遗失的章节。W 伤害取决于目标实际停留，Q 命中才禁锢；E 护盾不能吸收物理伤害或保证解除已有控制。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "skillReason": "18点为人工安排；此前不同位置资料仅供比较，非本位置统计。",
+      "sources": [
+        {
+          "name": "OP.GG · Morgana mid 来源，仅为人工配置素材",
+          "url": "https://op.gg/lol/champions/morgana/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "不同位置单英雄资料，不是下路或组合统计",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄与装备快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备资料依据",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 Morgana 不同位置参考",
+          "url": "https://op.gg/lol/champions/morgana/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同英雄跨位置资料，不是本位置统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Morgana": "e0588c7ab7dba463",
+        "item:2503": "1fa1a03a714d3aa7",
+        "item:6653": "dae566be4a35ad25",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3020": "357a162d6a40286e",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3089": "a8a9b060b253391c",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Morgana": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e0588c7ab7dba463",
+          "observedAt": "2026-11-05T02:19:26.158Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Morgana",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/morgana/morgana.bin.json",
+              "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "57d5f698304a1f45"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-lux-bottom-velkoz-2622",
+      "name": "拉克丝 · 人工下路参考",
+      "champions": [
+        "Lux"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "mage",
+      "damage": "ap",
+      "items": [
+        3118,
+        4646,
+        4645
+      ],
+      "boots": 3020,
+      "late": [],
+      "runes": [
+        "lux-bottom-reference-2621"
+      ],
+      "first": "EQW",
+      "priority": "EQW",
+      "skillOrder": "EQWEEREQEQRQQWWRWW",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerTeleport"
+      ],
+      "why": "当版签名资料无拉克丝下路同位置统计；沿旧下路单英雄配置作人工参考，不是本组合或作者配装。多兰戒与两瓶药出门；首回城按金币考虑增幅典籍或遗失的章节。Q 实际命中才为队友创造接控机会；技能落空或视野不足时后撤。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "skillReason": "18点为人工安排；此前不同位置资料仅供比较，非本位置统计。",
+      "sources": [
+        {
+          "name": "OP.GG · 拉克丝 · 下路法术参考 16.21（全球翡翠+）",
+          "url": "https://op.gg/lol/champions/lux/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "装备、符文等独立位置统计，非视频玩家配置",
+          "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 拉克丝 · 下路法术参考 16.21 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Lux.json",
+          "kind": "历史版本机制复核",
+          "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文核对",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 Lux 不同位置参考",
+          "url": "https://op.gg/lol/champions/lux/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同英雄跨位置资料，不是本位置统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Lux": "50314ad04c92f1a6",
+        "item:3118": "2bf87c4847cde85f",
+        "item:4646": "a195092592feb18a",
+        "item:4645": "152f57227a713097",
+        "item:3020": "357a162d6a40286e",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8106": "bfb83fa22daf18de",
+        "rune:8126": "9e648d4b51a0c973"
+      },
+      "reviewSourceAnchors": {
+        "Lux": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "50314ad04c92f1a6",
+          "observedAt": "2026-11-05T02:19:26.155Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lux",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lux/lux.bin.json",
+              "sha256": "bcb1ca7a7e82072b504985d84dc1fa905471f3c249fbafb3ab72658a50f7595b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "cc7818802b8d5fc7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-ivern-support-canopy-2622",
+      "name": "人工配置 · 艾翁辅助护盾",
+      "base": "enchanter",
+      "champions": [
+        "Ivern"
+      ],
+      "roles": [
+        "support"
+      ],
+      "items": [
+        6617,
+        3107,
+        6621
+      ],
+      "boots": 3158,
+      "late": [
+        3504,
+        3109
+      ],
+      "runes": [
+        "aery"
+      ],
+      "priority": "EQW",
+      "first": "QEW",
+      "skillOrder": "QEWEEREQEQRQQWWRWW",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerHeal"
+      ],
+      "skillReason": "辅助位来源只读到前15级；后三点由项目按E优先、R第16级、W补满整理。",
+      "why": "当前签名默认没有艾翁辅助。项目人工参考当版同位置小样本，月石、救赎、黎明核心的三件样本仅8场。建议云游图鉴和两瓶药开局；首回城预算不同可选班德尔玻璃镜或仙女护符。明朗鞋按回线和技能频率提前；救赎有延迟，黎明核心看基础法力回复配装。普攻核心可比较香炉，目标需要分担伤害时看骑士之誓。建议的出门、召唤师、符文页及末三级为项目人工补全。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制依据，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备和购买路径",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 艾翁辅助位置参考",
+          "url": "https://op.gg/lol/champions/ivern/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "部分同位置数据，所见三件样本8场，项目人工补全",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Ivern": "f4b498c5991475d6",
+        "item:6617": "6dccd52cee1f2c6e",
+        "item:3107": "53bdbba0a53ca5c6",
+        "item:6621": "b5f3cf223530db82",
+        "item:3158": "72ca672b9221f063",
+        "item:3504": "f6eed220149ca076",
+        "item:3109": "97c25fae90d4a8a4",
+        "rune:8214": "6d3b2bf192d500da",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8236": "a1bb7cfc15c3d089",
+        "rune:8463": "3296414353df0e65",
+        "rune:8453": "f9a0180e7f2f0432"
+      },
+      "reviewSourceAnchors": {
+        "Ivern": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f4b498c5991475d6",
+          "observedAt": "2026-11-05T02:19:26.075Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ivern",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ivern/ivern.bin.json",
+              "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "a8c07de58a4e8f6d"
             }
           }
         }
