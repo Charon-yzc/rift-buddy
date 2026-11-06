@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.65",
+  "version": "2026.11.06.66",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -32011,6 +32011,126 @@
       "window": "卡蜜尔有可用切入方式，瑟庄妮 E 已学且能接应实际四层目标。",
       "early": "卡蜜尔六级前可看墙体和 E 的实际命中尝试短打，双方不用等 R 才能按四层接 E。",
       "economy": "上路兵线给卡蜜尔，营地给瑟庄妮。两人均引用同英雄同位置的当版默认配置。"
+    },
+    {
+      "id": "zac-jinx-jungle-bottom-landing",
+      "name": "扎克落点接金克丝输出",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "下路支援",
+        "实际落点",
+        "夹子封路"
+      ],
+      "why": "扎克 E 实际命中后可为金克丝提供短暂的安全输出窗口。夹子适合预先封退路，只有敌方英雄踩中就绪的夹子才禁锢。",
+      "plan": "先确认下路兵线、河道视野和金克丝的攻击距离。扎克从可撤的角度蓄 E，按实际落点判断是否接近同一目标。金克丝从安全位置输出，有准备时间再把夹子放到敌方退路。",
+      "risk": "击飞后才放夹子，可能赶不上目标移动。扎克 E 落空、敌方反蹲先到或金克丝接不到时，保留退路并取消跟进。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "既有组合 · 弹跳夹线灯笼",
+          "url": "https://github.com/Legender134/rift-buddy/blob/9f08a70c0b504aad5647c9222e97121b59f6594f/src/core/catalog-data.json#L48051",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 扎克 jungle",
+          "url": "https://op.gg/lol/champions/zac/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 金克丝 bottom",
+          "url": "https://op.gg/lol/champions/jinx/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Zac": "79df9b9e7571e89c",
+        "champion:Jinx": "98d589f2c16be412"
+      },
+      "reviewSourceAnchors": {
+        "Zac": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "79df9b9e7571e89c",
+          "observedAt": "2026-11-05T02:19:26.252Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zac",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zac/zac.bin.json",
+              "sha256": "40df6abd439891c7e6733966c1ec367a15392cb8b52754a7df145b6b854f0ff5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "cf22bab2f64d09f2"
+            }
+          }
+        },
+        "Jinx": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "98d589f2c16be412",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jinx",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jinx/jinx.bin.json",
+              "sha256": "5ca25fc97c2da4874b88de6faec7dcfd5ea991b8edd1773d9a2cb9ecd5b2091f"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "18a489971bd9889a"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Zac",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "清安全营地，按下路线和视野决定到场。蓄 E 后核对实际落点，落空不追。"
+        },
+        {
+          "champion": "Jinx",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "维持下路兵线，从安全距离跟同一目标。夹子用于预先封路，实际触发后再算禁锢。"
+        }
+      ],
+      "steps": [
+        "先核兵线、双方技能距离与退路。",
+        "扎克 E 按所需距离蓄力，实际命中才算击飞，金克丝从可接应位置输出。",
+        "有余裕就提前用夹子封退路。未触发、落点过深或出现反蹲时结束追击。"
+      ],
+      "window": "扎克 E 可用、目标处于实际落区，且金克丝能从安全位置输出。夹子接控另看就绪与触发。",
+      "early": "前期等扎克清野到下路且兵线可接应时再尝试，配合不以双方大招为前提。",
+      "economy": "扎克使用打野营地，金克丝保留下路兵线。装备、符文与加点使用当版同英雄同分路的默认参考。"
     }
   ],
   "linkReviews": [
