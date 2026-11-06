@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.52",
+  "version": "2026.11.06.53",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -29739,6 +29739,126 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "461e810ef4e30853"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "kaisa-thresh-plasma-lantern",
+      "name": "卡莎 × 锤石 · 定身与接应",
+      "tempo": "early",
+      "style": "balanced",
+      "difficulty": "较高",
+      "tags": [
+        "下路配合",
+        "定身与接应"
+      ],
+      "why": "锤石实际定身敌方英雄可帮助卡莎叠加电浆；灯笼为能到达并实际点击的队友提供接应选择。",
+      "plan": "卡莎先安全处理兵线与补刀，锤石保持可接应距离；看清小兵遮挡、敌方位置与撤退路线再决定是否尝试控制。 锤石 Q 命中的是路径上的第一个敌方单位；只有实际命中敌方英雄并使其受到定身时，卡莎才可利用友军定身为该目标叠加电浆。 卡莎根据实际电浆和距离决定普攻与技能；锤石 W 放在队友可到达的位置，友军实际点击灯笼才会冲向锤石。 卡莎 R 已学且可用、目标敌方英雄身上实际有电浆时，才可选择其附近落点；落点不安全、钩到小兵或队友跟不上时停止追击。",
+      "risk": "钩子可能被其他单位挡住，队友不在灯笼范围或没有点击就不能位移；卡莎 R 需要已学可用及实际电浆英雄，落点危险或敌方反打时不强追。",
+      "early": "卡莎以安全补刀和技能距离为先，锤石先观察兵线遮挡与对方控制，留灯笼或走位接应。",
+      "window": "锤石 Q 已学可用且实际先命中敌方英雄并使其受到定身；卡莎能够接近同一目标。若用 R，还需其已学可用、敌方英雄实际带电浆且落点可接受。",
+      "economy": "各自使用当版卡莎下路和锤石辅助的单英雄默认位置参考；历史作者仅列搭配，未解释这段机制，旧作者装备及个人强度判断不作当前配置或组合统计。",
+      "steps": [
+        "卡莎先安全处理兵线与补刀，锤石保持可接应距离；看清小兵遮挡、敌方位置与撤退路线再决定是否尝试控制。",
+        "锤石 Q 命中的是路径上的第一个敌方单位；只有实际命中敌方英雄并使其受到定身时，卡莎才可利用友军定身为该目标叠加电浆。",
+        "卡莎根据实际电浆和距离决定普攻与技能；锤石 W 放在队友可到达的位置，友军实际点击灯笼才会冲向锤石。",
+        "卡莎 R 已学且可用、目标敌方英雄身上实际有电浆时，才可选择其附近落点；落点不安全、钩到小兵或队友跟不上时停止追击。"
+      ],
+      "members": [
+        {
+          "champion": "Kaisa",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "跟进实际定身的目标，按已有电浆和安全距离输出；R 仅对可选的电浆敌方英雄附近安全落点使用。"
+        },
+        {
+          "champion": "Thresh",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "确认 Q 实际首个命中目标及定身，W 灯笼放在队友可到达位置，等待队友实际点击。"
+        }
+      ],
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "밀리테크 · 锤石心得（2026-06-08）",
+          "url": "https://talk.op.gg/s/lol/tip/7168320/1%ED%8B%B0%EC%96%B4%20%EC%93%B0%EB%A0%88%EC%89%AC%20%EC%9A%B4%EC%98%81%EB%B2%95%20%28%EC%96%B8%EB%9E%AD%EC%9D%B4%20%EC%93%B0%EB%8A%94%29?tl=en",
+          "kind": "历史作者将卡莎列为锤石搭档；未逐项解释配合，非当版实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能依据及项目条件推导，非作者当前实测或组合胜率",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Kaisa bottom 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/kaisa/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同英雄同位置参考，非历史作者配装或组合统计",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · Thresh support 单英雄位置参考",
+          "url": "https://op.gg/lol/champions/thresh/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同英雄同位置参考，非历史作者配装或组合统计",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Kaisa": "792e7d85c3acdc09",
+        "champion:Thresh": "0cb41a1702121127"
+      },
+      "reviewSourceAnchors": {
+        "Kaisa": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "792e7d85c3acdc09",
+          "observedAt": "2026-11-05T02:19:26.077Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kaisa",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kaisa/kaisa.bin.json",
+              "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e793368118ed867a"
+            }
+          }
+        },
+        "Thresh": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "0cb41a1702121127",
+          "observedAt": "2026-11-05T02:19:26.176Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Thresh",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/thresh/thresh.bin.json",
+              "sha256": "f8e7ade21711df241e89a0874308d13a5d69d5d71786201d4c9595c4ea1b4bf7"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "c15f51aff1dfbd5e"
             }
           }
         }
