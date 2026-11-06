@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.57",
+  "version": "2026.11.06.58",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -30625,6 +30625,113 @@
       "window": "古拉加斯 E 实际击飞共同目标，亚索 R 已学会且可用，目标仍浮空且队友可覆盖落点。",
       "early": "亚索 R 未学会时可以打 E 命中后的普通跟进，不预设接大。",
       "economy": "亚索以中线经验和兵线为主，打野以营地为主；分别采用当版同英雄同分路默认参考。"
+    },
+    {
+      "id": "lissandra-graves-mid-jungle-root-followup",
+      "name": "冰环接霰弹",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "中野配合",
+        "定身接输出"
+      ],
+      "why": "丽桑卓 W 实际禁锢目标后，格雷福斯可从没有前方单位遮挡的位置接普攻，并看地形和目标走向安排 Q。",
+      "plan": "丽桑卓处理安全中线，格雷福斯先保营地并报告会合路线。丽桑卓 W 实际禁锢后，格雷福斯先核弹药与弹丸通路，再接普攻或 Q；Q 回爆需要实际延迟或碰地形。R 已学会且可用时，丽桑卓对敌 R 是眩晕，自 R 是凝滞，后者不算把敌人定住。",
+      "risk": "W 禁锢不阻止敌方施放所有技能，弹丸不能穿透单位。对方支援赶到、落点危险、弹药不足或丽桑卓必须自保时停止深入。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
+      "sources": [
+        {
+          "name": "景祐 · 2021 世界赛 LNG 对 INF 战报",
+          "url": "https://wanplus.cn/article/406499.html",
+          "kind": "历史赛况出处；08:45 记载中野 2v2，未记具体技能顺序",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核；具体衔接按当前机制整理",
+          "checkedAt": "2026-11-06"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Lissandra": "599da97edcf817b9",
+        "champion:Graves": "ea75172ee2199edb"
+      },
+      "reviewSourceAnchors": {
+        "Lissandra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "599da97edcf817b9",
+          "observedAt": "2026-11-05T02:19:26.153Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lissandra",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lissandra/lissandra.bin.json",
+              "sha256": "a6ec51003dc0dd7956bc6f5aad1e6e6d61cd0d506eb59e91e651b7866cb4cbfe"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f6bc405fcfcae9d6"
+            }
+          }
+        },
+        "Graves": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ea75172ee2199edb",
+          "observedAt": "2026-11-05T02:19:26.072Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Graves",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/graves/graves.bin.json",
+              "sha256": "9b4618aabfaf278a604ee9a59972ea4650d42aa659039f3314a110a748351e2a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "177b5090af77b3cf"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Lissandra",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理中线，确认 W 可实际覆盖目标再靠近。E 二段的落点由冰爪实际位置决定，R 对敌或自保先报清楚。"
+        },
+        {
+          "champion": "Graves",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先清理安全营地，确认弹药与没有前方单位挡住的角度。Q 回爆以实际延迟或碰地形为准，保留撤退方向。"
+        }
+      ],
+      "steps": [
+        "先处理兵线和营地，确认两人可以覆盖同一位置并约退路。",
+        "丽桑卓 W 实际禁锢后报目标；格雷福斯确认前方单位与弹药，再从安全侧接普攻或 Q。",
+        "W 落空、格雷福斯弹丸路径被挡、敌方援军出现或丽桑卓转入自保时，保留撤退路线。"
+      ],
+      "window": "双方技能、弹药和接触位置可用，以实际命中为准。使用大招时需已学且可用。",
+      "early": "丽桑卓以中路经验和兵线为主，格雷福斯以野区营地为主；六级前仅安排基础技能衔接。",
+      "economy": "采用当前同英雄同分路默认参考，历史战报不提供当版组合专配。"
     }
   ],
   "linkReviews": [
