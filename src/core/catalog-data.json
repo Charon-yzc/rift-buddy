@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.66",
+  "version": "2026.11.07.67",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -32131,6 +32131,245 @@
       "window": "扎克 E 可用、目标处于实际落区，且金克丝能从安全位置输出。夹子接控另看就绪与触发。",
       "early": "前期等扎克清野到下路且兵线可接应时再尝试，配合不以双方大招为前提。",
       "economy": "扎克使用打野营地，金克丝保留下路兵线。装备、符文与加点使用当版同英雄同分路的默认参考。"
+    },
+    {
+      "id": "vi-ahri-jungle-mid-confirmed-catch",
+      "name": "蔚先手接阿狸魅惑",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "中野联动",
+        "同目标接控"
+      ],
+      "why": "蔚 Q 实际命中敌方英雄会击退，已学 R 到达目标时会击飞。阿狸可从安全位置接 E，魅惑取决于 E 命中的第一个敌人。",
+      "plan": "先核中路兵线、蔚的接近路线、阿狸的施法距离和路径。蔚按命中结果报同一目标，阿狸确认路径没有其他敌人挡住，再判断 E 和后续输出。",
+      "risk": "蔚 Q 未命中、R 落点过深、阿狸 E 被挡或退路断开时，停止追加。确认第一段实际命中后再接控，避免两段控制重叠。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 逐个留客",
+          "url": "https://github.com/Legender134/rift-buddy/blob/32d6b56f46004059062f87b4302b69b494f69aa2/src/core/catalog-data.json#L37563",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 蔚 jungle",
+          "url": "https://op.gg/lol/champions/vi/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 阿狸 mid",
+          "url": "https://op.gg/lol/champions/ahri/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Vi": "ed4ccc20b476dc0e",
+        "champion:Ahri": "bde1d83c334a89af"
+      },
+      "reviewSourceAnchors": {
+        "Vi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ed4ccc20b476dc0e",
+          "observedAt": "2026-11-05T02:19:26.180Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Vi",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vi/vi.bin.json",
+              "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "8c5f2d227a1d26cb"
+            }
+          }
+        },
+        "Ahri": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "bde1d83c334a89af",
+          "observedAt": "2026-11-05T02:19:26.056Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ahri",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ahri/ahri.bin.json",
+              "sha256": "7c53539d053f4bc18d564247c1bf33cd969637e151b5409fd23476a5a5c3598c"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e4656df5a2cc81d8"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Vi",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "清安全营地并核对中路视野。按 Q 实际碰撞或 R 到达目标确认先手，落点危险就放弃。"
+        },
+        {
+          "champion": "Ahri",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理兵线并保持接应距离。E 瞄准同一目标，按首个实际命中单位判断魅惑。"
+        }
+      ],
+      "steps": [
+        "核中路线、对手遮挡和双方退路。",
+        "蔚 Q 击退或 R 击飞实际生效后报目标。",
+        "阿狸从可接应的位置判断 E，首个命中为共同目标才按魅惑继续。"
+      ],
+      "window": "蔚具备可用的先手技能，阿狸 E 已学可用，能安全触达同一目标。",
+      "early": "六级前看 Q 的实际命中和中路兵线。R 只在已学可用、目标可选且落点能接应时纳入。",
+      "economy": "蔚使用打野营地，阿狸保留中路兵线。双方引用当版同英雄同位置的默认构筑。"
+    },
+    {
+      "id": "diana-orianna-jungle-mid-ball-entry",
+      "name": "黛安娜带球进场",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "中野联动",
+        "魔偶落点",
+        "双法术"
+      ],
+      "why": "奥莉安娜 E 的魔偶实际到达黛安娜身上后，可以随她接近目标。黛安娜 R 实际拉到敌方英雄才触发延迟伤害，奥莉安娜 R 仍须看释放时的球位和目标。",
+      "plan": "进场前确认魔偶已附着且双方可保持接应距离。黛安娜按能否安全到达和撤出选择切入，奥莉安娜核对实际球位及敌方位置再决定 R。",
+      "risk": "球未到、已返回、敌方走出落区或黛安娜落点过深时取消接续。双方主要提供法术伤害，敌方堆魔抗时要结合全队物理输出。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 聚拢接力",
+          "url": "https://github.com/Legender134/rift-buddy/blob/32d6b56f46004059062f87b4302b69b494f69aa2/src/core/catalog-data.json#L37385",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 黛安娜 jungle",
+          "url": "https://op.gg/lol/champions/diana/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 奥莉安娜 mid",
+          "url": "https://op.gg/lol/champions/orianna/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Diana": "0c1ee1b395e630d3",
+        "champion:Orianna": "6897daa00a80bf73"
+      },
+      "reviewSourceAnchors": {
+        "Diana": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "0c1ee1b395e630d3",
+          "observedAt": "2026-11-05T02:19:26.067Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Diana",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/diana/diana.bin.json",
+              "sha256": "fb9d9bc84621daf0df393c08c655f8798c75baecc7bd6f871867126813e4925f"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "d9313d8c48c88394"
+            }
+          }
+        },
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "c4c8d45a2747f2c75e09e82185fd862a7424198fd34da2037389a4ab8409abc7"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b761493a33a91024"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Diana",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "清营地并核对进场路径。E 只有到达有月光的目标才刷新，R 按附近目标实际被拉拽判断。"
+        },
+        {
+          "champion": "Orianna",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "维持中路线和支援距离。E 的魔偶实际到位后报球，R 依据球当前所在位置和目标实际覆盖。"
+        }
+      ],
+      "steps": [
+        "先用 E 送球给黛安娜，确认魔偶已到且有安全进场与退出路线。",
+        "黛安娜切入后核对 R 实际拉拽的目标，至少拉到一名敌方英雄才触发延迟伤害。",
+        "奥莉安娜确认球仍在有效位置、敌人仍可被覆盖后再决定接 R。"
+      ],
+      "window": "两人大招均已学可用，魔偶可附着到位，双方能在有效距离内接同一处战斗。",
+      "early": "大招未齐时，优先清野、处理兵线与安全换血，按实际技能命中决定接应。",
+      "economy": "黛安娜使用打野营地，奥莉安娜保留中路兵线。双方引用当版同英雄同位置的默认构筑。"
     }
   ],
   "linkReviews": [
