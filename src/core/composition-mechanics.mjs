@@ -38,6 +38,8 @@ const PROOFS={
  Leblanc:['4b02fbdb42c5987e','889d0275962fac17c4c8ce0536d4930548acabccfe0a122f7fe979a6e1f9d357'],
  Kennen:['8217ba3a90c36528','1f304430b94732440506d967be3a786532dbcfb840ef8e08c76200f74f6f8553'],
  Viktor:['ef737928ffc1b9ac','78e4afed5555bd1f9d0416c472b3693b5da0efdcca03b950acdcf6f910bdb731'],
+ Zyra:['e6ad7484cbc1effe','18f1cd91897b66a60a6c5c3b7205668e4c2ceb6305ce5e1e4e86d0cf649f89d3'],
+ Xerath:['fe85c3d422f63fd0','aef22fe15a5dfae05f3871bfc36bb3090fee429753500f2d2a04a638cac76d08'],
 };
 // The bundled 16.21 snapshot has different source hashes for these heroes.
 // Its relevant skill conditions were independently checked against its text.
@@ -175,6 +177,14 @@ const CHANNELS={
  ],
  Viktor:[
   ['W','ViktorW','zone-stun','预铺或跟铺 W 覆盖共同目标；目标在力场内驻留 1.25 秒才晕眩。','目标提前离开或只吃到减速时，不能按接上晕眩处理。','residence'],
+ ],
+ Zyra:[
+  ['Q','ZyraQ','ally-damage','Q 本体尖刺实际对共同敌方英雄造成伤害。','Q 未伤及该英雄或只有植物攻击时，这条直接技能伤害路径未确认。'],
+  ['E','ZyraE','ally-damage','E 本体藤蔓实际对共同敌方英雄造成伤害。','E 未伤及该英雄或只有植物攻击时，这条直接技能伤害路径未确认。'],
+  ['E','ZyraE','immobilize','E 本体藤蔓实际命中并禁锢共同敌方英雄。','目标没有实际被禁锢，或只受到植物减速时，不能按这段定身接力。'],
+ ],
+ Xerath:[
+  ['Q','XerathArcanopulseChargeUp','ally-damage','Q 蓄力后释放的光束实际对共同敌方英雄造成伤害。','仅蓄力、释放落空或只伤到其他目标时，这条直接技能伤害路径未确认。'],
  ],
 };
 
