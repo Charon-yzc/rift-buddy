@@ -181,7 +181,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const hexRoutes=[...authored,...synergies].sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered'));
  const paired=hexPairedMicroRoutes({data,hero:s.id,owned:s.ownedAugmentIds,options:s.compareIds,routes:hexRoutes,limit:30});
  const remaining=paired.some(r=>r.kind==='item-synergy')&&paired.length<3?hexMicroFallback({data,hero:s.id,items:preparedRoute.filter(i=>!paired.some(r=>r.items.some(p=>String(p.id)===String(i.id)))),augments:ownedAugments.filter(a=>!paired.some(r=>r.augments.some(p=>p.id===a.id))).map(a=>({...a,owned:true}))}):[];
- const actualAugments=[...ownedAugments.map(a=>({...a,owned:true})),...s.compareIds.map(augmentRecord).filter(Boolean).map(a=>({...a,offered:true}))];
+ const actualAugments=[...ownedAugments.map(a=>({...a,owned:true})),...(s.compareIds||[]).map(augmentRecord).filter(Boolean).map(a=>({...a,offered:true}))];
  const microRoutes=(paired.length?[...paired,...remaining].slice(0,30):hexReady?hexMicroFallback({data,hero:s.id,items:preparedRoute,augments:[...ownedAugments.map(a=>({...a,owned:true})),...augments]}):hexReadable?hexMicroFallback({data,hero:s.id,items:preparedRoute,augments:actualAugments,reference:build.reference}):[]).map(route=>({...route,card:hexRouteCard(route,build)}));
  const formalRole=current?.formalRole||(['top','jungle','mid','bottom','support'].includes(matched&&live?.position)?live.position:null);
  const bottomQuestEligible=live?.queueId!==480&&(!formalRole||formalRole==='bottom');

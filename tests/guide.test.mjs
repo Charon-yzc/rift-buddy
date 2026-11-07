@@ -75,3 +75,13 @@ test('duel picks validate, persist across selections and clear on a new game',as
  const cleared=reconcileGuide({...guide,match:{phase:'ChampSelect',gameId:'2'}},{phase:'InProgress',gameId:'1',now:Date.now()}).guide;
  assert.equal(cleared.duelPick,undefined);
 });
+test('a saved guide without compare options still builds a model at startup',()=>{
+ // validateGuideSelection omits empty compareIds/ownedAugmentIds, so a restored
+ // guide must not assume either list exists.
+ for(const mode of ['rift','hex']){
+  const guide=validateGuideState({selection:{...selection,mode}});
+  assert.equal(guide.selection.compareIds,undefined);
+  const model=createGuideModel(data,guide);
+  assert.equal(model.selection.mode,mode);
+ }
+});
