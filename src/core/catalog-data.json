@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.79",
+  "version": "2026.11.07.80",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -34291,6 +34291,246 @@
           }
         }
       }
+    },
+    {
+      "id": "nocturne-orianna-jungle-mid-ball-entry",
+      "name": "魔腾带魔偶进场",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "中野联动",
+        "带球切入",
+        "范围控制"
+      ],
+      "why": "奥莉安娜 E 的魔偶实际附在魔腾身上后，魔腾可选可达的敌方英雄施放 R 二段。奥莉安娜再按实际球位决定是否接 R。",
+      "plan": "先核对球的位置、魔腾可选目标与双方距离。魔腾二段抵达后报落点，奥莉安娜确认球仍附着并且敌人仍在覆盖范围内，再考虑接冲击波。",
+      "risk": "飞行距离过长可能让魔偶返回。球提前离开、敌人错开落点、输出无法接应或进场无退路时停止追加。",
+      "members": [
+        {
+          "champion": "Nocturne",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先保营地。一段 R 缩减敌方视野，二段需在可选距离内选敌方英雄并实际抵达，按真实落点报位。"
+        },
+        {
+          "champion": "Orianna",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理兵线。E 需确认魔偶已到达魔腾身上，R 按魔偶当前球位和敌人覆盖独立判断。"
+        }
+      ],
+      "steps": [
+        "确认双方技能已学且可用，球已附着，进场与退出路线明确。",
+        "魔腾选择可达的敌方英雄施放二段 R，抵达后确认位置。",
+        "奥莉安娜按球位和实际敌人覆盖判断冲击波。球已返回或无法接应时停止。"
+      ],
+      "early": "六级前按实际站位用 E 护盾接应附近短换血，进场配合以两人大招可用为条件。",
+      "window": "魔腾二段可抵达、魔偶实际仍附着、敌人在魔偶有效范围。",
+      "economy": "魔腾保打野经济和物理输出，奥莉安娜保中线与法术接应。两人使用同分路个人构筑。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 进场接力班",
+          "url": "https://github.com/Legender134/rift-buddy/blob/07e29e80ecb49c316edf6e48612cb6097a9388a6/src/core/catalog-data.json#L54742",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 魔腾 jungle",
+          "url": "https://op.gg/lol/champions/nocturne/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 奥莉安娜 mid",
+          "url": "https://op.gg/lol/champions/orianna/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Nocturne": "2759f235cb713880",
+        "champion:Orianna": "6897daa00a80bf73"
+      },
+      "reviewSourceAnchors": {
+        "Nocturne": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2759f235cb713880",
+          "observedAt": "2026-11-05T02:19:26.160Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nocturne",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nocturne/nocturne.bin.json",
+              "sha256": "8de4d928ce7dee799b759c87a7114069b297f9228ef8e51c21ba9f1da5b0ab49"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7e6432fe64cf372b"
+            }
+          }
+        },
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "c4c8d45a2747f2c75e09e82185fd862a7424198fd34da2037389a4ab8409abc7"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b761493a33a91024"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sejuani-braum-jungle-support-separate-stacks",
+      "name": "瑟庄妮与布隆分开叠层",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "野辅联动",
+        "同目标普攻",
+        "分段接控"
+      ],
+      "why": "布隆给敌方英雄挂上震荡猛击首层后，友方普攻可叠该被动；附近近战布隆的攻击又可协助瑟庄妮对同目标叠霜。两种层数独立判断。",
+      "plan": "先对好可接近的共同目标和真实输出接应。布隆以实际命中的 Q 或普攻挂首层，双方在安全距离内普攻，看各自层数与布隆免叠期。瑟庄妮仅在同目标四霜且 E 可用时接晕。",
+      "risk": "命中其他目标、进入布隆免叠期、脱离霜冻协作距离或缺少后续伤害时收手。双前排的控制窗口取决于实际层数和队友位置。",
+      "members": [
+        {
+          "champion": "Sejuani",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先保营地。E 已学后按同目标的实际四层霜冻和可用状态判断，普攻可帮助已有首层的布隆被动叠层。"
+        },
+        {
+          "champion": "Braum",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "先保视野和辅助任务。Q 首个命中单位为共同敌方英雄或自己普攻命中才按首层处理，附近近战普攻再看是否叠霜。"
+        }
+      ],
+      "steps": [
+        "确认同一目标、双方近身距离、实际输出与回撤路径。",
+        "布隆确认首层后，双方按安全普攻看两种独立层数与免叠期。",
+        "瑟庄妮只对实际满四霜的共同目标接 E，按双方控制触发时机再判断退出。"
+      ],
+      "early": "基础技能学会后可按野辅视野协作，优先保护可接应的输出，双大按已学和可用状态另行处理。",
+      "window": "共同敌方英雄可安全接近，至少一段控制的层数和实际命中成立，有可接应输出。",
+      "economy": "瑟庄妮保营地，布隆保辅助任务和视野。分别采用对应分路个人构筑。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，从已审三人方案整理的双人配合",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 三道防线",
+          "url": "https://github.com/Legender134/rift-buddy/blob/07e29e80ecb49c316edf6e48612cb6097a9388a6/src/core/catalog-data.json#L47365",
+          "kind": "已复核三人方案，作为双人条件整理的来源",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 瑟庄妮 jungle",
+          "url": "https://op.gg/lol/champions/sejuani/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 布隆 support",
+          "url": "https://op.gg/lol/champions/braum/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Braum": "ae3aa48403ffcbe5"
+      },
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Braum": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ae3aa48403ffcbe5",
+          "observedAt": "2026-11-05T02:19:26.062Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Braum",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/braum/braum.bin.json",
+              "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e136059064aa1034"
+            }
+          }
+        }
+      }
     }
   ],
   "linkReviews": [
@@ -39720,6 +39960,475 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Nocturne",
+        "Orianna"
+      ],
+      "comboId": "nocturne-orianna-jungle-mid-ball-entry",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "fe9f5cf2d3e4aaf9",
+      "baseline": {
+        "Nocturne": "2759f235cb713880",
+        "Orianna": "6897daa00a80bf73"
+      },
+      "anchors": {
+        "Nocturne": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2759f235cb713880",
+          "observedAt": "2026-11-05T02:19:26.160Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nocturne",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nocturne/nocturne.bin.json",
+              "sha256": "8de4d928ce7dee799b759c87a7114069b297f9228ef8e51c21ba9f1da5b0ab49"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7e6432fe64cf372b"
+            }
+          }
+        },
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "c4c8d45a2747f2c75e09e82185fd862a7424198fd34da2037389a4ab8409abc7"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b761493a33a91024"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Sejuani",
+        "Braum"
+      ],
+      "comboId": "sejuani-braum-jungle-support-separate-stacks",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "8b6602300af6b68b",
+      "baseline": {
+        "Sejuani": "1d8d94f1d8414573",
+        "Braum": "ae3aa48403ffcbe5"
+      },
+      "anchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Braum": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ae3aa48403ffcbe5",
+          "observedAt": "2026-11-05T02:19:26.062Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Braum",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/braum/braum.bin.json",
+              "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e136059064aa1034"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Poppy",
+        "Kindred"
+      ],
+      "comboId": "poppy-kindred-sanctuary-displace",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "a1f66b467fb7aefc",
+      "baseline": {
+        "Poppy": "af33a45e62ad30e5",
+        "Kindred": "b089b055eca4104f"
+      },
+      "anchors": {
+        "Poppy": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "af33a45e62ad30e5",
+          "observedAt": "2026-11-05T02:19:26.162Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Poppy",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "984283b0f66ff725"
+            }
+          }
+        },
+        "Kindred": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b089b055eca4104f",
+          "observedAt": "2026-11-05T02:19:26.081Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kindred",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kindred/kindred.bin.json",
+              "sha256": "c9ad94593cde53e26f5382a09be44bed274f4ec29a63fedd51500aecaa852c85"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "70b671b76c9f1fba"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Renekton",
+        "Sejuani"
+      ],
+      "comboId": "renekton-sejuani-top-jungle-frost",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "652aec6c68372c9e",
+      "baseline": {
+        "Renekton": "5a98c4b4b1f08e37",
+        "Sejuani": "1d8d94f1d8414573"
+      },
+      "anchors": {
+        "Renekton": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5a98c4b4b1f08e37",
+          "observedAt": "2026-11-05T02:19:26.165Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Renekton",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/renekton/renekton.bin.json",
+              "sha256": "20447bf1a1f2867c12442110f5430443a7dab367dea231831cb7d5092987004d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "1b5d01b58ae2dfac"
+            }
+          }
+        },
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Camille",
+        "Sejuani"
+      ],
+      "comboId": "camille-sejuani-top-jungle-frost",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "34accb461c8a1994",
+      "baseline": {
+        "Camille": "d8925ce8a69d2250",
+        "Sejuani": "1d8d94f1d8414573"
+      },
+      "anchors": {
+        "Camille": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d8925ce8a69d2250",
+          "observedAt": "2026-11-05T02:19:26.063Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Camille",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/camille/camille.bin.json",
+              "sha256": "4a71a33c3849552befed54f0ae747ad470c25ac1a4921095d44c43ee3167df80"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "67751120f662608d"
+            }
+          }
+        },
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Rumble",
+        "JarvanIV"
+      ],
+      "comboId": "rumble-jarvan-top-jungle-fireline-terrain",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "5b0b058541da06ed",
+      "baseline": {
+        "Rumble": "8a349d0b8197b1d4",
+        "JarvanIV": "c9d96bc727699c9b"
+      },
+      "anchors": {
+        "Rumble": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "8a349d0b8197b1d4",
+          "observedAt": "2026-11-05T02:19:26.166Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rumble",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rumble/rumble.bin.json",
+              "sha256": "c2bbedb15375a937ef3159f045a9291a11e6678ec86a4267c1cfff7ce9e142c8"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b24e1536e120ad82"
+            }
+          }
+        },
+        "JarvanIV": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c9d96bc727699c9b",
+          "observedAt": "2026-11-05T02:19:26.076Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "JarvanIV",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jarvaniv/jarvaniv.bin.json",
+              "sha256": "aa9591a707369ff6352cbb4f21e8fd8d10657e83bb690ba462cecdeb898e4ca0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "62ea4f1e9467d2b7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "JarvanIV",
+        "Galio"
+      ],
+      "comboId": "jarvan-galio-jungle-mid-landing",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "af3745c923743606",
+      "baseline": {
+        "JarvanIV": "c9d96bc727699c9b",
+        "Galio": "62214853523131ad"
+      },
+      "anchors": {
+        "JarvanIV": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c9d96bc727699c9b",
+          "observedAt": "2026-11-05T02:19:26.076Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "JarvanIV",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jarvaniv/jarvaniv.bin.json",
+              "sha256": "aa9591a707369ff6352cbb4f21e8fd8d10657e83bb690ba462cecdeb898e4ca0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "62ea4f1e9467d2b7"
+            }
+          }
+        },
+        "Galio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "62214853523131ad",
+          "observedAt": "2026-11-05T02:19:26.071Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Galio",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
+              "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e3a8cfa71c0b2970"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -39756,7 +40465,7 @@
     [
       "JarvanIV",
       "Galio",
-      "皇子先手，加里奥后续跟进"
+      "嘉文旗枪突进路径实际命中才击飞，R 形成的地形按实际走位判断。加里奥选择施法时范围内嘉文所在位置为落点，完成引导后只有实际覆盖敌人时才击飞；嘉文后移、敌人离区或退路被封时停止追加。"
     ],
     [
       "Amumu",
@@ -39886,7 +40595,7 @@
     [
       "Nocturne",
       "Orianna",
-      "梦魇可带球进场，但长距离飞行要确认魔偶没有回身"
+      "奥莉安娜 E 的魔偶须实际附着魔腾；魔腾 R 二段抵达可选敌方英雄后，按魔偶当时所在位置判断冲击波覆盖。球因距离返回、落点错开或无法安全接应时停止。"
     ],
     [
       "Vi",
@@ -39994,9 +40703,9 @@
       "近战永恩协助瑟庄妮叠 E 控制，保持共同集火"
     ],
     [
-      "Sejuani",
       "Renekton",
-      "鳄鱼近战普攻协助瑟庄妮叠 E，先约好控制顺序"
+      "Sejuani",
+      "瑟庄妮 E 已学后，附近近战雷克顿普攻实际命中可协助叠霜冻。雷克顿 W 强化普攻命中才晕，按同一目标实际层数判断，四层且 E 可用才接，不按打击次数自动加层。"
     ],
     [
       "Sejuani",
@@ -40049,9 +40758,9 @@
       "阿木木控制聚集目标，布兰德接范围技能"
     ],
     [
-      "JarvanIV",
       "Rumble",
-      "皇子限制区域，兰博大招封锁退路；敌方位移仍可脱出"
+      "JarvanIV",
+      "嘉文 R 着陆后实际形成环形地形，兰博按共同目标的移动方向布置 R 燃烧小径。只有敌人实际处在火线内才受减速和伤害；对手位移脱出、墙倒塌或己方退路被挡时重判。"
     ],
     [
       "Amumu",
@@ -40512,6 +41221,21 @@
       "Elise",
       "Leona",
       "蕾欧娜 Q 强化普攻实际命中共同目标才晕。伊莉丝在人形时可从无遮挡角度接 E，结茧须首个命中该目标；日光须友军实际造成伤害才触发。"
+    ],
+    [
+      "Sejuani",
+      "Braum",
+      "布隆 Q 首个命中单位为共同敌方英雄或布隆普攻实际命中才挂首层，免叠期外的友军普攻可叠震荡猛击。附近近战布隆普攻可另叠霜冻；两者分开计算，瑟庄妮 E 只在同目标四霜且可用时接晕。"
+    ],
+    [
+      "Poppy",
+      "Kindred",
+      "千珏 R 保护领域内各方单位。波比蓄力 R 仅在冲击波实际命中敌方英雄、朝对方枢纽击退并将该目标移出领域时，才创造领域外的后续窗口。飞行中不可被选取，按落地位置重新判断。"
+    ],
+    [
+      "Camille",
+      "Sejuani",
+      "瑟庄妮 E 已学后，附近卡蜜尔的近战普攻实际打到同一目标可协助叠霜。仅在目标满四层且 E 可用时接晕；钩索控制或大招围住目标提供接近窗口，仍须按实际攻击与层数判断。"
     ]
   ],
   "trios": [
