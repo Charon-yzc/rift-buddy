@@ -2,13 +2,13 @@ import {escape as e} from './ui.mjs';
 import {hexEconomyView,hexMicroRoutesView,hexMicroLineView} from './hex-micro-view.mjs';
 const api=window.hexMicro,root=document.getElementById('hex-micro-root');let state=null,hoverKey='';
 function image(kind,id,name){return `<img src="${e(state.images?.[kind+'/'+id]||'../data/images/'+kind+'/'+id+'.png')}" alt="${e(name)}">`;}
-function render(value){const sameSession=state?.session===value?.session;hoverKey='';api.hover(null);state=value;document.documentElement.style.setProperty('--hex-scale',String(value?.scale||1));
+function render(value){const sameSession=state?.session===value?.session,sameLayout=state?.layout===value?.layout;hoverKey='';api.hover(null);state=value;document.documentElement.style.setProperty('--hex-scale',String(value?.scale||1));
  if(!value?.active){root.innerHTML='';return;}
  document.documentElement.dataset.layout=value.layout||'full';document.documentElement.dataset.kind=value.kind;
  const line=document.querySelector('[data-action="line"]'),collapsed=value.layout==='line';line.textContent=collapsed?'▣':'▁';line.title=value.kind==='routes'?(collapsed?'展开配置':'只显示首套配置'):(collapsed?'恢复完整小窗':'收成一行');line.setAttribute('aria-label',line.title);line.setAttribute('aria-pressed',String(collapsed));
- const scroll=sameSession?root.querySelector('.hex-micro-route-list')?.scrollTop||0:0;
+ const previous=sameSession&&sameLayout?root.querySelector('.hex-micro-route-list,.hex-micro-line:not(.hex-economy-line)'):null,scroll={top:previous?.scrollTop||0,left:previous?.scrollLeft||0};
  root.innerHTML=collapsed?hexMicroLineView(value,image):value.kind==='economy'?hexEconomyView(value.equipment,image):value.routes?.length?hexMicroRoutesView(value.routes,image,{expanded:value.expanded}):`<div class="hex-micro-pending" data-micro-pending="true" aria-label="${e(value.pending)}">${image('champion',value.hero?.id,value.hero?.name)}<span aria-hidden="true">—</span></div>`;
- const list=root.querySelector('.hex-micro-route-list');if(list)list.scrollTop=scroll;requestAnimationFrame(reportRegions);
+ const list=root.querySelector('.hex-micro-route-list,.hex-micro-line:not(.hex-economy-line)');if(list){list.scrollTop=scroll.top;list.scrollLeft=scroll.left;}requestAnimationFrame(reportRegions);
 }
 function reportRegions(){
  if(!state?.active)return;
@@ -24,7 +24,7 @@ function reportRegions(){
 }
 document.addEventListener('scroll',reportRegions,true);root.addEventListener('wheel',event=>{const line=event.target.closest('.hex-micro-line:not(.hex-economy-line)');if(line&&line.scrollWidth>line.clientWidth&&event.deltaY){line.scrollLeft+=event.deltaY;event.preventDefault();}else{const list=event.target.closest('.hex-micro-route-list');if(list&&list.scrollHeight<=list.clientHeight&&list.scrollWidth>list.clientWidth&&event.deltaY){list.scrollLeft+=event.deltaY;event.preventDefault();}}},{passive:false});new ResizeObserver(()=>requestAnimationFrame(reportRegions)).observe(root);
 api.onMeasure(()=>requestAnimationFrame(reportRegions));
-document.addEventListener('click',event=>{const control=event.target.closest('[data-action]');if(control){if(control.dataset.action==='pin'){const list=root.querySelector('.hex-micro-route-list');if(list)list.scrollTop=0;}api.control(control.dataset.action,{context:state?.context,view:state?.view,id:control.dataset.id}).catch(()=>{});}});
+document.addEventListener('click',event=>{const control=event.target.closest('[data-action]');if(control){if(control.dataset.action==='pin'){const list=root.querySelector('.hex-micro-route-list');if(list){list.scrollTop=0;list.scrollLeft=0;}}api.control(control.dataset.action,{context:state?.context,view:state?.view,id:control.dataset.id}).catch(()=>{});}});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')api.control('tooltip-hide').catch(()=>{});});
 api.onPointer(point=>{const target=point?document.elementFromPoint(point.x,point.y)?.closest('[data-micro-id],[data-micro-hint],[data-micro-pending]'):null;let input=null;
  if(target&&state?.active){const r=target.getBoundingClientRect();if(state.kind==='economy'){const row=target.closest('.ally,.enemy'),side=row?.classList.contains('ally')?'ally':'enemy',index=[...target.parentElement.children].indexOf(target),player=state.equipment?.[side]?.players?.[index];if(player)input={side,id:player.id};}else input=target.dataset.microPending?{kind:'status'}:{kind:target.dataset.microKind,id:target.dataset.microId,route:target.closest('[data-micro-route]')?.dataset.microRoute};if(input)input={...input,context:state.context,rect:{x:r.x,y:r.y,width:r.width,height:r.height}};}

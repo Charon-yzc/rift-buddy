@@ -265,8 +265,9 @@ async function boot(){
  };
  const publishHexRound=()=>publishWindows('hex-round',hexRounds.snapshot());
  const {creativeComboContext}=await import('../src/core/creative-plan.mjs');
- const {mergeConfiguration,storedPreparation,upsertPreparation,preparationIdentity,CONFIGURATION_FIELDS}=await import('../src/core/preparation.mjs');let guideRevision=0;
- const {isFreshBuildReference,rankedClientRoles}=await import('../src/core/builds.mjs');
+ const {mergeConfiguration,storedPreparation,upsertPreparation,preparationIdentity,preparationSnapshotCurrent,CONFIGURATION_FIELDS}=await import('../src/core/preparation.mjs');let guideRevision=0;
+ const {getBuild,isFreshBuildReference,rankedClientRoles}=await import('../src/core/builds.mjs');
+ const {clientPreparationPlan}=await import('../src/client-preparation-view.mjs');
  const {createCurrentGameTracker}=await import('../src/core/game-context.mjs');const currentGame=createCurrentGameTracker({flashId:Number(data.spells.SummonerFlash.key)});
  const {createOpponentFocusTracker}=await import('../src/core/opponent-focus.mjs');const opponentFocus=createOpponentFocusTracker({newToken:require('node:crypto').randomUUID});
  let appliedGuideSelection=null,manualGuideReference=null,detachedGuideSelection=false;
@@ -1228,9 +1229,10 @@ async function boot(){
    if(helperReady&&expectedPreparation)throw Error('连接助手暂不能安全校验收藏预览的并发变化，尚未操作，请在客户端手动配置');
    if(helperReady&&!value.preselectOnly&&derived.required)throw Error('连接助手暂不能安全同步组合变更，请在客户端手动配置');
    const remembered=selection?storedPreparation(state.preparations,selection):null;
+   const preparationFingerprint=choice=>clientPreparationPlan(buildData,{selection:choice,build:getBuild(buildData.champions.find(hero=>hero.id===choice.id),choice.role,buildData,choice)})?.fingerprint;
    if(expectedPreparation&&!isDeepStrictEqual(expectedPreparation.value,remembered))throw Error('准备已在其他窗口变化，尚未操作；请重新核对');
    const selectionWriteAtDispatch=selectionWriteRevision,dispatchStamp=selectionReviewStamp(stampedSelection,state,requestSource);
-   const stillCurrent=()=>sourceBindingCurrent(sourceBinding)&&buildData.flashSlot===state.preferences.flashSlot&&(!derived.required||selectionWriteAtDispatch===selectionWriteRevision)&&dispatchStamp===selectionReviewStamp(stampedSelection,state,requestSource)&&(!selection||isDeepStrictEqual(remembered,storedPreparation(state.preparations,selection)))&&(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id,latestClient.session,sourceData())?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection,latestClient.session,sourceData()).current);
+   const stillCurrent=()=>sourceBindingCurrent(sourceBinding)&&buildData.flashSlot===state.preferences.flashSlot&&(!derived.required||selectionWriteAtDispatch===selectionWriteRevision)&&dispatchStamp===selectionReviewStamp(stampedSelection,state,requestSource)&&(!selection||preparationSnapshotCurrent(remembered,storedPreparation(state.preparations,selection),selection,preparationFingerprint))&&(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id,latestClient.session,sourceData())?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection,latestClient.session,sourceData()).current);
    const guideCurrent=()=>selectionWriteAtDispatch===selectionWriteRevision&&stillCurrent();
    operation=beginPreparation('selection',{value,selection,context:value.context,...(expectedPreparation?{snapshotPreview:true}:{})});
    let written;if(helperReady)setHelperSourceLock(sourceBinding,true,requestSource);try{written=helperReady?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId},{isCurrent:stillCurrent,isCurrentSession:session=>sourceBindingCurrent(sourceBinding)&&(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id,session,sourceData())?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection,session,sourceData()).current)});}finally{if(helperReady)setHelperSourceLock(sourceBinding,false);}

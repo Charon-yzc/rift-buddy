@@ -79,6 +79,7 @@ async function run(){
  await selectSurface(true);
  await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar missing');
  resumeSource();
+ Object.assign(data,(await js('window.buddy.bootstrap()')).data);
  const capture=async name=>{await main.webContents.executeJavaScript('[...document.images].forEach(image=>image.loading="eager")');await fs.writeFile(path.join(root,name+'.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  const state=()=>js('window.buddy.bootstrap().then(value=>value.state)');
  const payload=()=>js('JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0]');
@@ -133,6 +134,7 @@ async function run(){
  await click(wholeButton);await until(()=>writes.length===mainBrowseWrites+1,'Main lane configuration was not applied');
  await until(()=>js('!document.querySelector(".configuration-current [data-action=configuration-switch]").disabled'),'Main lane switch stayed busy');
  assert.deepEqual(page.selectedPerkIds,mainLanePayload.page.selectedPerkIds);assert.deepEqual(await payload(),mainLanePayload);
+ assert.equal(await js('document.querySelectorAll(".client-preparation-result [data-step-status=done]").length'),4,'The same clicked configuration must also finish the item-set write');
  assert.equal(picked,'Volibear');assert.equal(hoverWrites,mainBrowseHovers,'Applying a different lane replaced a locked hero');
  assert.equal((await state()).draft.slots.filter(value=>value.party).length,mainBrowseDraft.partyCount);
  await capture('main-configuration-jungle');await click('[data-action=close]');await js('window.buddy.companionMode(true)');
