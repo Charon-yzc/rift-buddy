@@ -1,0 +1,36 @@
+const {app,BrowserWindow,ipcMain}=require('electron');
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
+const root=process.env.RIFT_BUDDY_USER_DATA;
+app.setPath('userData',root);
+const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function run(){
+ await app.whenReady();
+ const release=process.env.RIFT_BUDDY_SOURCE==='1'?null:JSON.parse(await fs.readFile('release/latest.json'));
+ const base=release?path.join(release.directory,'resources/app.asar'):process.cwd();
+ const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));
+ const route={id:'isolated-route',title:'Isolated route',augments:data.augments.slice(0,12).map(a=>({id:a.id,name:a.name})),items:Object.values(data.items).filter(i=>i.maps?.['12']&&i.gold?.purchasable).slice(0,6).map(i=>({id:i.id,name:i.name})),card:{title:'Isolated route',source:'Fixture'}};
+ let payload={active:true,session:'isolated-session',context:'isolated-context',kind:'routes',layout:'line',scale:1,view:1,hero:{id:'Ashe',name:'Ashe'},routes:[route]};
+ const preload=path.join(root,'preload.cjs');
+ await fs.writeFile(preload,"const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('hexMicro',{bootstrap:()=>ipcRenderer.invoke('fixture-bootstrap'),regions:()=>Promise.resolve(),hover:()=>Promise.resolve(),control:()=>Promise.resolve(),onMeasure:()=>{},onPointer:()=>{},onUpdate:fn=>ipcRenderer.on('fixture-update',(_e,value)=>fn(value))});");
+ ipcMain.handle('fixture-bootstrap',()=>payload);
+ const window=new BrowserWindow({show:false,width:300,height:180,webPreferences:{preload,contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
+ const js=code=>window.webContents.executeJavaScript(code,true);
+ await window.loadFile(path.join(base,'src/hex-micro.html'));
+ for(let n=0;n<100&&!await js('!!document.querySelector(".hex-micro-line")');n++)await delay(30);
+ const scroll=await js('(()=>{const e=document.querySelector(".hex-micro-line");e.scrollLeft=90;return {left:e.scrollLeft,overflow:e.scrollWidth>e.clientWidth};})()');
+ assert(scroll.overflow&&scroll.left>0,'Line must really overflow before testing retention');
+ payload={...payload,view:2};window.webContents.send('fixture-update',payload);await delay(100);
+ assert.equal(await js('document.querySelector(".hex-micro-line").scrollLeft'),scroll.left,'A live update reset the horizontal position');
+ payload={...payload,layout:'full',expanded:true,view:3,routes:Array.from({length:20},(_,i)=>({...route,id:'fixture-'+i}))};
+ window.webContents.send('fixture-update',payload);await delay(100);
+ const top=await js('(()=>{const e=document.querySelector(".hex-micro-route-list");e.scrollTop=170;return e.scrollTop;})()');
+ assert(top>0,'Expanded list must really scroll');
+ payload={...payload,view:4};window.webContents.send('fixture-update',payload);await delay(100);
+ assert.equal(await js('document.querySelector(".hex-micro-route-list").scrollTop'),top,'A live update reset the expanded list');
+ payload={...payload,session:'new-isolated-session',view:5};window.webContents.send('fixture-update',payload);await delay(100);
+ assert.equal(await js('document.querySelector(".hex-micro-route-list").scrollTop'),0,'A new match must reset the viewport');
+ const proof={passed:true,source:!release,archiveSha256:release?.archiveSha256,horizontalRetained:scroll.left,verticalRetained:top,newSessionReset:true};
+ await fs.writeFile(path.join(root,'proof.json'),JSON.stringify(proof,null,2));
+ console.log(JSON.stringify(proof));window.destroy();app.quit();
+}
+run().catch(error=>{console.error(error);app.exit(1);});

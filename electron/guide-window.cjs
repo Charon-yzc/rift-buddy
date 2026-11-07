@@ -24,7 +24,7 @@ function cursorInBounds(cursor,bounds,margin=2){
 module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,showHexSource=()=>{},getReference=()=>null,referenceRevision=()=>0,diagnostic,resetHexRound=()=>undefined,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
- let gameBounds=null,displayEpoch=0,activeFamily=null,passiveDisplay=false,autoShowGame=null,equipmentRequested=false,hexWasInGame=false;
+ let gameBounds=null,displayEpoch=0,activeFamily=null,passiveDisplay=false,autoShowGame=null,equipmentRequested=false,hexWasInGame=false,publishedModel=null;
  const isHex=()=>getState()?.selection?.mode==='hex';
  const inGame=value=>['GameStart','InProgress','Reconnect'].includes(value);
  // Every Hex display uses the same compact route cards, also outside a game.
@@ -40,10 +40,10 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const isBall=()=>false,isStrip=()=>false,isCompact=()=>true;
  const stripScale=()=>[1,1.1,1.25].includes(getPreferences().presentation?.textScale)?getPreferences().presentation.textScale:1;
  const needsAutoShow=()=>autoShowUntil>Date.now()&&getPreferences().guideAutoShow!==false;
-const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&getModel()?.live.matched)&&interactionHotkeyAvailable);
+const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&publishedModel?.live?.matched)&&interactionHotkeyAvailable);
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
 const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough(),focusable=!pass&&!passiveDisplay;win.setIgnoreMouseEvents(ignore,{forward:true});if(win.isFocusable?.()!==focusable)win.setFocusable(focusable);if(ignore&&win.isFocused())win.blur();}};
-const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,referenceRevision:referenceRevision(),phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
+const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}publishedModel=model;return {model,referenceRevision:referenceRevision(),phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
 const skill=createSkillWindow({isActive:()=>getState()?.selection?.mode==='rift'&&!usesHexMicro()&&getPreferences().guideSkills!==false,root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish()});
 const jungle=createJungleWindow({isActive:()=>getState()?.selection?.mode==='rift'&&!usesHexMicro()&&getPreferences().guideJungle!==false,root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish()});
 const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,getPreferences,isActive:()=>visibilityRequested&&(usesHexMicro()||usesEconomy()),isQuitting,diagnostic,onChange:()=>publish(),onHide:()=>{displayEpoch++;autoShowUntil=0;if(!micro.requested())visibilityRequested=false;}});

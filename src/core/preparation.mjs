@@ -36,6 +36,15 @@ export function storedPreparation(values,context){
  const s=values?.findLast(value=>preparationIdentity(value)===preparationIdentity(context));
  return s?structuredClone(s):null;
 }
+// Persisting the exact choice already being applied is idempotent. A distinct
+// choice from another window still invalidates the remaining client writes.
+export function preparationSnapshotCurrent(before,current,intended,resolve){
+ const key=value=>value?configurationKey(validatePreparation(value)):null;
+ const latest=key(current);
+ if(latest===key(before)||!!intended&&latest===key(intended))return true;
+ if(!current||!intended||!resolve)return false;
+ try{const expected=resolve(intended);return typeof expected==='string'&&!!expected&&resolve(current)===expected;}catch{return false;}
+}
 export function upsertPreparation(values,value){
  const s=validatePreparation(value),key=preparationIdentity(s);
  return [...(values||[]).filter(entry=>preparationIdentity(entry)!==key),s].slice(-PREPARATION_LIMIT);
