@@ -20,8 +20,12 @@ const offensive=m=>!isTank(m.p)&&m.p.build!=='enchanter';
 const canFollow=m=>offensive(m)||m.p.engage||m.p.peel||m.p.frontline;
 const ranged=m=>(m.c?.stats?.attackrange??0)>250;
 const carry=m=>!!m.p.sustain&&offensive(m);
+// A short damage window is not sustained DPS. A generic protector cannot
+// give a melee partner an entry: it needs range, poke or its own initiation.
+// These describe conditional jobs, never observed spell/target availability.
+const coveredWindow=m=>offensive(m)&&!carry(m)&&(ranged(m)||m.p.poke||m.p.engage);
 const name=m=>m.c?.name||m.champion;
-const relationshipKey=m=>memberKey(m)+':'+((m.p.peel?1:0)|(m.p.engage?2:0)|(m.p.frontline?4:0)|(m.p.poke?8:0)|(m.p.aoe?16:0)|(carry(m)?32:0)|(offensive(m)?64:0));
+const relationshipKey=m=>memberKey(m)+':'+((m.p.peel?1:0)|(m.p.engage?2:0)|(m.p.frontline?4:0)|(m.p.poke?8:0)|(m.p.aoe?16:0)|(carry(m)?32:0)|(offensive(m)?64:0)|(coveredWindow(m)?128:0));
 
 // Return the strongest supported relationship, never the sum of synonymous
 // tags. Protection and setup must come from a different member than output.
@@ -32,8 +36,10 @@ function relationship(a,b,graph,details,key=null){
  const offer=(value,label)=>{if(value>quality){quality=value;kind=label;}};
  for(const [lead,follow] of [[a,b],[b,a]]){
   if(lead.p.peel&&carry(follow))offer(.65,'保护接持续输出');
+  if(lead.p.peel&&coveredWindow(follow))offer(.6,'短轮输出与接应');
   if(lead.p.engage&&offensive(follow))offer(follow.p.aoe?.68:follow.p.sustain?.64:.59,'先手接伤害');
   if(lead.p.frontline&&carry(follow))offer(.48,'承伤接持续输出');
+  if(lead.p.frontline&&coveredWindow(follow))offer(.45,'承接一轮伤害');
   if(lead.p.peel&&follow.p.poke&&offensive(follow))offer(.56,'消耗与接应');
  }
  if(a.p.poke&&b.p.poke)offer(.73,'共同远程消耗');
@@ -137,6 +143,15 @@ function tacticalQuality(members,connections){
   const participation=members.reduce((sum,m)=>sum+(carry(m)||m.p.peel||m.p.frontline?1:m.p.engage?.75:m.p.poke?.65:offensive(m)?.45:0),0)/members.length;
   offer((.8+.14*Math.min(1,protect.length/sustained.length))*participation,'sustained','承接压力，持续输出安全目标');
  }
+ // This fills an unrepresented job, not a new shortcut over actual skill
+ // relays, initiation, poke or side-lane plans already identified above.
+ if(!best.quality)for(const lead of members.filter(m=>m.p.peel||m.p.frontline))for(const output of members.filter(m=>m!==lead&&coveredWindow(m))){
+  // The two actual partners supply this window. Additional members earn
+  // participation only for their own job; extra damage dealers do not all
+  // inherit full protection from the same guard.
+  const participation=members.reduce((sum,m)=>sum+(m===lead||m===output?1:m.p.peel||m.p.frontline?.85:m.p.engage&&offensive(m)?.75:offensive(m)?.45:.25),0)/members.length;
+  offer((lead.p.peel?.6:.5)*participation,'covered-window','技能与接触距离允许时打一轮，队友接应；技能空档退出');
+ }
  return best;
 }
 
@@ -175,7 +190,10 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
   if(carry(m))sustained++;if(m.p.frontline)frontline++;if(m.p.peel)peel++;if(offensive(m))damageDealers++;
  }
  const minority=ad+ap?Math.min(ad,ap)/(ad+ap):0;
- const damage=clamp(minority/({2:.14,3:.2,4:.23,5:.25}[size]));
+ // A duo need not supply a full team's AD/AP mix. In particular, incidental
+ // magic damage from an enchanter must not give AD+guard ten points while
+ // AP+guard gets none. Larger groups still account for damage concentration.
+ const damage=size===2?Number(damageDealers>0):clamp(minority/({3:.2,4:.23,5:.25}[size]));
  const lanes=laneCount/known;
  const components={connections:connections.quality,lanes,tactics:tactics.quality,damage,readiness:readinessQuality(members)};
  const gaps=[];let deduction=0;
