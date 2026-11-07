@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.86",
+  "version": "2026.11.07.87",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -35611,6 +35611,976 @@
           }
         }
       }
+    },
+    {
+      "id": "sejuani-yone-jungle-mid-frost-setup",
+      "name": "瑟庄妮与永恩叠霜接应",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "中野联动",
+        "条件控制",
+        "近战协作"
+      ],
+      "why": "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。",
+      "plan": "两人先核对兵线、野区与同一目标的可接近路线，按实际命中叠层；看见四层再决定 E，并按各自位置接续。永恩 Q 命中叠两层后，下一次 Q 实际命中才击飞；E 结束返回身体，先确认回身点和退路。",
+      "risk": "若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。 目标脱离、控制落空或反蹲时撤，不按预期层数强追。",
+      "members": [
+        {
+          "champion": "Sejuani",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "保持野区经济，按实际 W 命中与目标层数决定 E。"
+        },
+        {
+          "champion": "Yone",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "保留中线经济与退路，按可接近距离普攻同一目标。永恩 Q 命中叠两层后，下一次 Q 实际命中才击飞；E 结束返回身体，先确认回身点和退路。"
+        }
+      ],
+      "steps": [
+        "核对兵线、野区、目标与接近路线。",
+        "按实际普攻与 W 命中观察霜冻，四层且 E 可用才接。",
+        "永恩 Q 命中叠两层后，下一次 Q 实际命中才击飞；E 结束返回身体，先确认回身点和退路。 接不上或退路危险就撤。"
+      ],
+      "early": "六级前先按实际可用基础技能配合，不把大招当已学。",
+      "window": "附近近战队友能安全接触同一目标，实际四层且 E 可用时。",
+      "economy": "瑟庄妮保野区；永恩保中线补刀和经验。配置取各自当前分路默认个人参考，并非作者的联合构筑。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能条件复核；项目按分路和经济职责推导，不是组合对局统计",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有三人方案 · 近身接力队",
+          "url": "https://github.com/Legender134/rift-buddy/blob/eb971e96f8c6c08422b2802deeefea37f336ac12/src/core/catalog-data.json#L49607",
+          "kind": "双人项目适配参考，保留原方案的技能与会合前提",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "Insightful · 瑟庄妮协作指南",
+          "url": "https://www.mobafire.com/league-of-legends/build/16-11-challenger-na-amp-euw-in-depth-sejuani-guide-tank-and-utility-597926",
+          "kind": "标题16.11的近战协作思路；未声称作者验证每个分路，旧装备不沿用",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 瑟庄妮 jungle",
+          "url": "https://op.gg/lol/champions/sejuani/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 永恩 mid",
+          "url": "https://op.gg/lol/champions/yone/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Yone": "9f3493c27921664f"
+      },
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Yone": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9f3493c27921664f",
+          "observedAt": "2026-11-05T02:19:26.183Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yone",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yone/yone.bin.json",
+              "sha256": "686924ad8cd0bf22941513230c18e6acdc5f9ac2d02755e8d369a51155d70112"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "165686224e19c3fc"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sejuani-yasuo-jungle-mid-frost-knockup",
+      "name": "瑟庄妮与亚索叠霜接应",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "中野联动",
+        "条件控制",
+        "近战协作"
+      ],
+      "why": "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。",
+      "plan": "两人先核对兵线、野区与同一目标的可接近路线，按实际命中叠层；看见四层再决定 E，并按各自位置接续。亚索 R 需要范围内实际浮空的敌方英雄；瑟庄妮 Q 命中击飞才可提供窗口，E 的晕眩本身不是浮空。亚索 Q 两层后的旋风命中也可提供浮空。",
+      "risk": "若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。 目标脱离、控制落空或反蹲时撤，不按预期层数强追。",
+      "members": [
+        {
+          "champion": "Sejuani",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "保持野区经济，按实际 W 命中与目标层数决定 E。"
+        },
+        {
+          "champion": "Yasuo",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "保留中线经济与退路，按可接近距离普攻同一目标。亚索 R 需要范围内实际浮空的敌方英雄；瑟庄妮 Q 命中击飞才可提供窗口，E 的晕眩本身不是浮空。亚索 Q 两层后的旋风命中也可提供浮空。"
+        }
+      ],
+      "steps": [
+        "核对兵线、野区、目标与接近路线。",
+        "按实际普攻与 W 命中观察霜冻，四层且 E 可用才接。",
+        "亚索 R 需要范围内实际浮空的敌方英雄；瑟庄妮 Q 命中击飞才可提供窗口，E 的晕眩本身不是浮空。亚索 Q 两层后的旋风命中也可提供浮空。 接不上或退路危险就撤。"
+      ],
+      "early": "六级前先按实际可用基础技能配合，不把大招当已学。",
+      "window": "附近近战队友能安全接触同一目标，实际四层且 E 可用时。",
+      "economy": "瑟庄妮保野区；亚索保中线补刀和经验。配置取各自当前分路默认个人参考，并非作者的联合构筑。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能条件复核；项目按分路和经济职责推导，不是组合对局统计",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有三人方案 · 深海疾风接力",
+          "url": "https://github.com/Legender134/rift-buddy/blob/eb971e96f8c6c08422b2802deeefea37f336ac12/src/core/catalog-data.json#L57249",
+          "kind": "技能机制参考；项目另按Yasuo mid及当版同位置配置适配，未沿用原分路",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "Insightful · 瑟庄妮协作指南",
+          "url": "https://www.mobafire.com/league-of-legends/build/16-11-challenger-na-amp-euw-in-depth-sejuani-guide-tank-and-utility-597926",
+          "kind": "标题16.11的近战协作思路；未声称作者验证每个分路，旧装备不沿用",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 瑟庄妮 jungle",
+          "url": "https://op.gg/lol/champions/sejuani/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 亚索 mid",
+          "url": "https://op.gg/lol/champions/yasuo/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Yasuo": "d36ebea001e3d1cb"
+      },
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-11-05T02:19:26.182Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sejuani-jax-jungle-top-frost-setup",
+      "name": "瑟庄妮与贾克斯叠霜接应",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "上野联动",
+        "条件控制",
+        "近战协作"
+      ],
+      "why": "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。",
+      "plan": "两人先核对兵线、野区与同一目标的可接近路线，按实际命中叠层；看见四层再决定 E，并按各自位置接续。贾克斯 E 躲避普攻后，只有反击范围内实际命中才眩晕；Q 跳向目标前确认落点和退路。",
+      "risk": "若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。 目标脱离、控制落空或反蹲时撤，不按预期层数强追。",
+      "members": [
+        {
+          "champion": "Sejuani",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "保持野区经济，按实际 W 命中与目标层数决定 E。"
+        },
+        {
+          "champion": "Jax",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "保留上线经济与退路，按可接近距离普攻同一目标。贾克斯 E 躲避普攻后，只有反击范围内实际命中才眩晕；Q 跳向目标前确认落点和退路。"
+        }
+      ],
+      "steps": [
+        "核对兵线、野区、目标与接近路线。",
+        "按实际普攻与 W 命中观察霜冻，四层且 E 可用才接。",
+        "贾克斯 E 躲避普攻后，只有反击范围内实际命中才眩晕；Q 跳向目标前确认落点和退路。 接不上或退路危险就撤。"
+      ],
+      "early": "六级前先按实际可用基础技能配合，不把大招当已学。",
+      "window": "附近近战队友能安全接触同一目标，实际四层且 E 可用时。",
+      "economy": "瑟庄妮保野区；贾克斯保上线补刀和经验。配置取各自当前分路默认个人参考，并非作者的联合构筑。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能条件复核；项目按分路和经济职责推导，不是组合对局统计",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "Insightful · 瑟庄妮协作指南",
+          "url": "https://www.mobafire.com/league-of-legends/build/16-11-challenger-na-amp-euw-in-depth-sejuani-guide-tank-and-utility-597926",
+          "kind": "标题16.11的近战协作思路；未声称作者验证每个分路，旧装备不沿用",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 瑟庄妮 jungle",
+          "url": "https://op.gg/lol/champions/sejuani/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 贾克斯 top",
+          "url": "https://op.gg/lol/champions/jax/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Jax": "1776e83d7e3a24c7"
+      },
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Jax": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1776e83d7e3a24c7",
+          "observedAt": "2026-11-05T02:19:26.076Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jax",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jax/jax.bin.json",
+              "sha256": "ef33ab080cbdbb35cabda5172f687bcba9d7e2c49c62cf9c7e4cfe8903d27f28"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "bfaaae4c0ee698a4"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sejuani-irelia-jungle-top-frost-setup",
+      "name": "瑟庄妮与艾瑞莉娅叠霜接应",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "上野联动",
+        "条件控制",
+        "近战协作"
+      ],
+      "why": "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。",
+      "plan": "两人先核对兵线、野区与同一目标的可接近路线，按实际命中叠层；看见四层再决定 E，并按各自位置接续。艾瑞莉娅 E 两刃之间的区域实际命中目标才晕并标记；Q 只有目标已标记或被 Q 击杀才刷新，不预设连续突进。",
+      "risk": "若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。 目标脱离、控制落空或反蹲时撤，不按预期层数强追。",
+      "members": [
+        {
+          "champion": "Sejuani",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "保持野区经济，按实际 W 命中与目标层数决定 E。"
+        },
+        {
+          "champion": "Irelia",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "保留上线经济与退路，按可接近距离普攻同一目标。艾瑞莉娅 E 两刃之间的区域实际命中目标才晕并标记；Q 只有目标已标记或被 Q 击杀才刷新，不预设连续突进。"
+        }
+      ],
+      "steps": [
+        "核对兵线、野区、目标与接近路线。",
+        "按实际普攻与 W 命中观察霜冻，四层且 E 可用才接。",
+        "艾瑞莉娅 E 两刃之间的区域实际命中目标才晕并标记；Q 只有目标已标记或被 Q 击杀才刷新，不预设连续突进。 接不上或退路危险就撤。"
+      ],
+      "early": "六级前先按实际可用基础技能配合，不把大招当已学。",
+      "window": "附近近战队友能安全接触同一目标，实际四层且 E 可用时。",
+      "economy": "瑟庄妮保野区；艾瑞莉娅保上线补刀和经验。配置取各自当前分路默认个人参考，并非作者的联合构筑。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能条件复核；项目按分路和经济职责推导，不是组合对局统计",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "Insightful · 瑟庄妮协作指南",
+          "url": "https://www.mobafire.com/league-of-legends/build/16-11-challenger-na-amp-euw-in-depth-sejuani-guide-tank-and-utility-597926",
+          "kind": "标题16.11的近战协作思路；未声称作者验证每个分路，旧装备不沿用",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 瑟庄妮 jungle",
+          "url": "https://op.gg/lol/champions/sejuani/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 艾瑞莉娅 top",
+          "url": "https://op.gg/lol/champions/irelia/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Irelia": "1a72d78b2846711a"
+      },
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Irelia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1a72d78b2846711a",
+          "observedAt": "2026-11-05T02:19:26.075Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Irelia",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/irelia/irelia.bin.json",
+              "sha256": "7b55cefdb6738c5eca5e2b6fd076f4eba3d4f0c97ef11a99eed4e1c7102f3f51"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "44842f520e22c165"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sejuani-sett-jungle-top-frost-setup",
+      "name": "瑟庄妮与瑟提叠霜接应",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "上野联动",
+        "条件控制",
+        "近战协作"
+      ],
+      "why": "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。",
+      "plan": "两人先核对兵线、野区与同一目标的可接近路线，按实际命中叠层；看见四层再决定 E，并按各自位置接续。瑟提 E 两侧都拉到敌人才晕；只有一侧时按减速处理。W 中心才是真实伤害，先看实际豪意与位置。",
+      "risk": "若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。 目标脱离、控制落空或反蹲时撤，不按预期层数强追。",
+      "members": [
+        {
+          "champion": "Sejuani",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "保持野区经济，按实际 W 命中与目标层数决定 E。"
+        },
+        {
+          "champion": "Sett",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "保留上线经济与退路，按可接近距离普攻同一目标。瑟提 E 两侧都拉到敌人才晕；只有一侧时按减速处理。W 中心才是真实伤害，先看实际豪意与位置。"
+        }
+      ],
+      "steps": [
+        "核对兵线、野区、目标与接近路线。",
+        "按实际普攻与 W 命中观察霜冻，四层且 E 可用才接。",
+        "瑟提 E 两侧都拉到敌人才晕；只有一侧时按减速处理。W 中心才是真实伤害，先看实际豪意与位置。 接不上或退路危险就撤。"
+      ],
+      "early": "六级前先按实际可用基础技能配合，不把大招当已学。",
+      "window": "附近近战队友能安全接触同一目标，实际四层且 E 可用时。",
+      "economy": "瑟庄妮保野区；瑟提保上线补刀和经验。配置取各自当前分路默认个人参考，并非作者的联合构筑。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能条件复核；项目按分路和经济职责推导，不是组合对局统计",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "Insightful · 瑟庄妮协作指南",
+          "url": "https://www.mobafire.com/league-of-legends/build/16-11-challenger-na-amp-euw-in-depth-sejuani-guide-tank-and-utility-597926",
+          "kind": "标题16.11的近战协作思路；未声称作者验证每个分路，旧装备不沿用",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 瑟庄妮 jungle",
+          "url": "https://op.gg/lol/champions/sejuani/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 瑟提 top",
+          "url": "https://op.gg/lol/champions/sett/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Sett": "76c5b480536d4f6c"
+      },
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Sett": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "76c5b480536d4f6c",
+          "observedAt": "2026-11-05T02:19:26.168Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sett",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sett/sett.bin.json",
+              "sha256": "432de9e0a6a3d5fe63d551f27a3f491e42e775cd1b25747664228f53343ea9f4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "d105f0a4b5c99060"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sejuani-gwen-jungle-top-frost-setup",
+      "name": "瑟庄妮与格温叠霜接应",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "上野联动",
+        "条件控制",
+        "近战协作"
+      ],
+      "why": "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。",
+      "plan": "两人先核对兵线、野区与同一目标的可接近路线，按实际命中叠层；看见四层再决定 E，并按各自位置接续。格温 E 后在安全范围内实际普攻；圣霭内格温对霭外敌人不可选取（防御塔除外），并获得护甲和魔抗；不会给队友同样保护。",
+      "risk": "若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。 目标脱离、控制落空或反蹲时撤，不按预期层数强追。",
+      "members": [
+        {
+          "champion": "Sejuani",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "保持野区经济，按实际 W 命中与目标层数决定 E。"
+        },
+        {
+          "champion": "Gwen",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "保留上线经济与退路，按可接近距离普攻同一目标。格温 E 后在安全范围内实际普攻；圣霭内格温对霭外敌人不可选取（防御塔除外），并获得护甲和魔抗；不会给队友同样保护。"
+        }
+      ],
+      "steps": [
+        "核对兵线、野区、目标与接近路线。",
+        "按实际普攻与 W 命中观察霜冻，四层且 E 可用才接。",
+        "格温 E 后在安全范围内实际普攻；圣霭内格温对霭外敌人不可选取（防御塔除外），并获得护甲和魔抗；不会给队友同样保护。 接不上或退路危险就撤。"
+      ],
+      "early": "六级前先按实际可用基础技能配合，不把大招当已学。",
+      "window": "附近近战队友能安全接触同一目标，实际四层且 E 可用时。",
+      "economy": "瑟庄妮保野区；格温保上线补刀和经验。配置取各自当前分路默认个人参考，并非作者的联合构筑。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能条件复核；项目按分路和经济职责推导，不是组合对局统计",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "Insightful · 瑟庄妮协作指南",
+          "url": "https://www.mobafire.com/league-of-legends/build/16-11-challenger-na-amp-euw-in-depth-sejuani-guide-tank-and-utility-597926",
+          "kind": "标题16.11的近战协作思路；未声称作者验证每个分路，旧装备不沿用",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 瑟庄妮 jungle",
+          "url": "https://op.gg/lol/champions/sejuani/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 格温 top",
+          "url": "https://op.gg/lol/champions/gwen/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Gwen": "94ed9252d63745ca"
+      },
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Gwen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "94ed9252d63745ca",
+          "observedAt": "2026-11-05T02:19:26.073Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Gwen",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/gwen/gwen.bin.json",
+              "sha256": "fde56c4e7aef9c24c89959e4a94e35d9456ced213d8589f6dbb12e0fc26ecb04"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f5954f9fcb6d02f3"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "twistedfate-leona-mid-support-card-control",
+      "name": "日女留人接卡牌",
+      "style": "balanced",
+      "tempo": "early",
+      "difficulty": "适中",
+      "tags": [
+        "中辅联动",
+        "错开控制"
+      ],
+      "why": "蕾欧娜实际命中后创造接应机会；崔斯特确认落点后用金牌普攻接同一目标。",
+      "plan": "先处理兵线和辅助视野，核对敌人位置、支援范围及退路。蕾欧娜按 E 最后一名实际命中英雄接近；崔斯特确认 R 已学可用与安全落点，锁金牌后实际普攻命中才晕。",
+      "risk": "日女 E 最后命中不是共同目标、Q 未打出、卡牌引导中断或落点有反蹲时取消；R 边缘减速不能当眩晕。",
+      "members": [
+        {
+          "champion": "TwistedFate",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "处理中线并确认 R 范围和落点；选定金牌且普攻实际命中才晕。"
+        },
+        {
+          "champion": "Leona",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "保辅助经济与视野；E 最后命中敌方英雄才突进，Q 普攻实际命中才晕。"
+        }
+      ],
+      "steps": [
+        "核对兵线、视野、支援范围及退路。",
+        "蕾欧娜实际命中目标后报告。",
+        "崔斯特确认安全落点，金牌普攻实际命中再接续；无法接近即撤。"
+      ],
+      "early": "六级前先利用实际可用的基础技能，不预设跨图支援。",
+      "window": "蕾欧娜能接触共同目标且崔斯特可安全赶到，所需技能已学可用。",
+      "economy": "崔斯特保中线，蕾欧娜保辅助经济与视野；使用各自当前同分路默认参考。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能条件复核；项目按分路和经济职责推导，不是组合对局统计",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有三人方案 · 边路集合",
+          "url": "https://github.com/Legender134/rift-buddy/blob/eb971e96f8c6c08422b2802deeefea37f336ac12/src/core/catalog-data.json#L49268",
+          "kind": "双人项目适配参考，保留原方案的技能与会合前提",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "Halfhand · 卡牌与蕾欧娜协作",
+          "url": "https://www.mobafire.com/league-of-legends/build/25-21-twisted-fate-guide-grandmaster-halfhand-584499",
+          "kind": "标题25.21的支援接控思路；当版技能和各自分路配置由项目另行复核",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 崔斯特 mid",
+          "url": "https://op.gg/lol/champions/twistedfate/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 蕾欧娜 support",
+          "url": "https://op.gg/lol/champions/leona/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:TwistedFate": "4b3a9807b94dcc47",
+        "champion:Leona": "2b7d4e998553b365"
+      },
+      "reviewSourceAnchors": {
+        "TwistedFate": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "4b3a9807b94dcc47",
+          "observedAt": "2026-11-05T02:19:26.177Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "TwistedFate",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twistedfate/twistedfate.bin.json",
+              "sha256": "ec60137c806e0ca6e86bad8bcf6a216b8295761503dbb7a61eddc6b7e82bf4f4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f83bddbc2f7bb85b"
+            }
+          }
+        },
+        "Leona": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2b7d4e998553b365",
+          "observedAt": "2026-11-05T02:19:26.083Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Leona",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
+              "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7ff3b8a69842091d"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "shen-hecarim-top-jungle-shield-arrival",
+      "name": "慎护盾接人马进场",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "上野联动",
+        "护盾接应"
+      ],
+      "why": "慎 R 可先给人马护盾，完成引导后才到友军实际位置；人马按路线和落点争取接应。",
+      "plan": "人马报可达路线和退路；慎在可完成引导的位置对人马施 R。护盾与慎到场分开确认，人马 E 强化普攻实际命中才击退，R 终点冲击波命中才恐惧。",
+      "risk": "慎引导中断、人马落点无输出接应或目标离开冲击范围时停止追击；护盾不保证到场或安全撤回。",
+      "members": [
+        {
+          "champion": "Shen",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "保上路线，在安全位置引导 R；实际到场再看 E 能否嘲讽。"
+        },
+        {
+          "champion": "Hecarim",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "保野区并先确认进场路线；E 后普攻命中才击退，R 终点按实际覆盖判断恐惧。"
+        }
+      ],
+      "steps": [
+        "慎确认安全引导，人马报路线和退路。",
+        "护盾实际到位后按场景决定进场。",
+        "慎完成引导才到场；按实际 E/R 命中和队友接应继续。"
+      ],
+      "early": "六级前分别处理兵线与野区，不预设慎已能跨图支援。",
+      "window": "慎 R 已学可用且能完成引导，人马有安全路线和可接应落点。",
+      "economy": "慎保上路补刀与经验，人马以野区经济为主；两人使用各自当前分路默认个人参考。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能条件复核；项目按分路和经济职责推导，不是组合对局统计",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 慎 top",
+          "url": "https://op.gg/lol/champions/shen/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 赫卡里姆 jungle",
+          "url": "https://op.gg/lol/champions/hecarim/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考，非原作者联合专配",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Shen": "e59438000b98dd56",
+        "champion:Hecarim": "f9c4c9b8aea59e68"
+      },
+      "reviewSourceAnchors": {
+        "Shen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e59438000b98dd56",
+          "observedAt": "2026-11-05T02:19:26.169Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Shen",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/shen/shen.bin.json",
+              "sha256": "74cb0c892cd17455b5b0cc635c3d396fbba9f6ef3663145ed701cfc6c895b142"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "56dbf98c4bc9628e"
+            }
+          }
+        },
+        "Hecarim": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f9c4c9b8aea59e68",
+          "observedAt": "2026-11-05T02:19:26.073Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Hecarim",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/hecarim/hecarim.bin.json",
+              "sha256": "8107a10cc214af38a79ff9f0551fd3a8c77231a1998aeda6f8b5a6c0bf8a4dc1"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "2a4e6af555abb6c6"
+            }
+          }
+        }
+      }
     }
   ],
   "linkReviews": [
@@ -45462,6 +46432,542 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Sejuani",
+        "Yone"
+      ],
+      "comboId": "sejuani-yone-jungle-mid-frost-setup",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "1d57e0ab96bf3234",
+      "baseline": {
+        "Sejuani": "1d8d94f1d8414573",
+        "Yone": "9f3493c27921664f"
+      },
+      "anchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Yone": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9f3493c27921664f",
+          "observedAt": "2026-11-05T02:19:26.183Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yone",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yone/yone.bin.json",
+              "sha256": "686924ad8cd0bf22941513230c18e6acdc5f9ac2d02755e8d369a51155d70112"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "165686224e19c3fc"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Sejuani",
+        "Yasuo"
+      ],
+      "comboId": "sejuani-yasuo-jungle-mid-frost-knockup",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "76378fd1782db495",
+      "baseline": {
+        "Sejuani": "1d8d94f1d8414573",
+        "Yasuo": "d36ebea001e3d1cb"
+      },
+      "anchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-11-05T02:19:26.182Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Sejuani",
+        "Jax"
+      ],
+      "comboId": "sejuani-jax-jungle-top-frost-setup",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "a35dbd22c870f0bc",
+      "baseline": {
+        "Sejuani": "1d8d94f1d8414573",
+        "Jax": "1776e83d7e3a24c7"
+      },
+      "anchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Jax": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1776e83d7e3a24c7",
+          "observedAt": "2026-11-05T02:19:26.076Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jax",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jax/jax.bin.json",
+              "sha256": "ef33ab080cbdbb35cabda5172f687bcba9d7e2c49c62cf9c7e4cfe8903d27f28"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "bfaaae4c0ee698a4"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Sejuani",
+        "Irelia"
+      ],
+      "comboId": "sejuani-irelia-jungle-top-frost-setup",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "b4b1aa8be264b149",
+      "baseline": {
+        "Sejuani": "1d8d94f1d8414573",
+        "Irelia": "1a72d78b2846711a"
+      },
+      "anchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Irelia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1a72d78b2846711a",
+          "observedAt": "2026-11-05T02:19:26.075Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Irelia",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/irelia/irelia.bin.json",
+              "sha256": "7b55cefdb6738c5eca5e2b6fd076f4eba3d4f0c97ef11a99eed4e1c7102f3f51"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "44842f520e22c165"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Sejuani",
+        "Sett"
+      ],
+      "comboId": "sejuani-sett-jungle-top-frost-setup",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "19e89cc651daecd4",
+      "baseline": {
+        "Sejuani": "1d8d94f1d8414573",
+        "Sett": "76c5b480536d4f6c"
+      },
+      "anchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Sett": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "76c5b480536d4f6c",
+          "observedAt": "2026-11-05T02:19:26.168Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sett",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sett/sett.bin.json",
+              "sha256": "432de9e0a6a3d5fe63d551f27a3f491e42e775cd1b25747664228f53343ea9f4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "d105f0a4b5c99060"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Sejuani",
+        "Gwen"
+      ],
+      "comboId": "sejuani-gwen-jungle-top-frost-setup",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "46d5ecdc138fc560",
+      "baseline": {
+        "Sejuani": "1d8d94f1d8414573",
+        "Gwen": "94ed9252d63745ca"
+      },
+      "anchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-11-05T02:19:26.167Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Gwen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "94ed9252d63745ca",
+          "observedAt": "2026-11-05T02:19:26.073Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Gwen",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/gwen/gwen.bin.json",
+              "sha256": "fde56c4e7aef9c24c89959e4a94e35d9456ced213d8589f6dbb12e0fc26ecb04"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f5954f9fcb6d02f3"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "TwistedFate",
+        "Leona"
+      ],
+      "comboId": "twistedfate-leona-mid-support-card-control",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "5d5bbbad8b9209fb",
+      "baseline": {
+        "TwistedFate": "4b3a9807b94dcc47",
+        "Leona": "2b7d4e998553b365"
+      },
+      "anchors": {
+        "TwistedFate": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "4b3a9807b94dcc47",
+          "observedAt": "2026-11-05T02:19:26.177Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "TwistedFate",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twistedfate/twistedfate.bin.json",
+              "sha256": "ec60137c806e0ca6e86bad8bcf6a216b8295761503dbb7a61eddc6b7e82bf4f4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f83bddbc2f7bb85b"
+            }
+          }
+        },
+        "Leona": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2b7d4e998553b365",
+          "observedAt": "2026-11-05T02:19:26.083Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Leona",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
+              "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7ff3b8a69842091d"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Shen",
+        "Hecarim"
+      ],
+      "comboId": "shen-hecarim-top-jungle-shield-arrival",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "bfe93518a9b2a045",
+      "baseline": {
+        "Shen": "e59438000b98dd56",
+        "Hecarim": "f9c4c9b8aea59e68"
+      },
+      "anchors": {
+        "Shen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e59438000b98dd56",
+          "observedAt": "2026-11-05T02:19:26.169Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Shen",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/shen/shen.bin.json",
+              "sha256": "74cb0c892cd17455b5b0cc635c3d396fbba9f6ef3663145ed701cfc6c895b142"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "56dbf98c4bc9628e"
+            }
+          }
+        },
+        "Hecarim": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f9c4c9b8aea59e68",
+          "observedAt": "2026-11-05T02:19:26.073Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Hecarim",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/hecarim/hecarim.bin.json",
+              "sha256": "8107a10cc214af38a79ff9f0551fd3a8c77231a1998aeda6f8b5a6c0bf8a4dc1"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "2a4e6af555abb6c6"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -45518,7 +47024,7 @@
     [
       "Sejuani",
       "Yasuo",
-      "近战队友帮助瑟庄妮衔接控制"
+      "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。 亚索 R 需要范围内实际浮空的敌方英雄；瑟庄妮 Q 命中击飞才可提供窗口，E 的晕眩本身不是浮空。亚索 Q 两层后的旋风命中也可提供浮空。 若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。"
     ],
     [
       "Lissandra",
@@ -45673,7 +47179,7 @@
     [
       "Shen",
       "Hecarim",
-      "慎大招保护人马进场，为后续接团争取时间"
+      "慎 R 先为人马提供护盾，引导完成才传送至人马当时位置。人马 E 后的普攻实际命中才击退；R 按冲锋终点冲击波实际覆盖判断恐惧。引导中断、落点无接应或目标离开时停止追击。"
     ],
     [
       "Shen",
@@ -45733,7 +47239,7 @@
     [
       "Sejuani",
       "Yone",
-      "近战永恩协助瑟庄妮叠 E 控制，保持共同集火"
+      "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。 永恩 Q 命中叠两层后，下一次 Q 实际命中才击飞；E 结束返回身体，先确认回身点和退路。 若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。"
     ],
     [
       "Renekton",
@@ -45743,22 +47249,22 @@
     [
       "Sejuani",
       "Jax",
-      "贾克斯近战普攻帮助瑟庄妮叠 E，留一轮控制防撤退"
+      "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。 贾克斯 E 躲避普攻后，只有反击范围内实际命中才眩晕；Q 跳向目标前确认落点和退路。 若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。"
     ],
     [
       "Sejuani",
       "Irelia",
-      "艾瑞莉娅近战普攻协助瑟庄妮叠 E，别过度深入"
+      "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。 艾瑞莉娅 E 两刃之间的区域实际命中目标才晕并标记；Q 只有目标已标记或被 Q 击杀才刷新，不预设连续突进。 若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。"
     ],
     [
       "Sejuani",
       "Sett",
-      "瑟提近战普攻协助瑟庄妮叠 E，控制错开"
+      "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。 瑟提 E 两侧都拉到敌人才晕；只有一侧时按减速处理。W 中心才是真实伤害，先看实际豪意与位置。 若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。"
     ],
     [
       "Sejuani",
       "Gwen",
-      "格温近战普攻协助瑟庄妮叠 E，为持续输出争取时间"
+      "瑟庄妮 W 两段各需实际命中；附近近战友军普攻同一敌方英雄可叠永冻。目标实际有四层且 E 已学可用时才晕，不预设普攻总能触及。 格温 E 后在安全范围内实际普攻；圣霭内格温对霭外敌人不可选取（防御塔除外），并获得护甲和魔抗；不会给队友同样保护。 若目标仍不能接受新的霜冻层数，先等状态恢复；当版简略技能文本未列免叠时长，不预设具体秒数。"
     ],
     [
       "JarvanIV",
@@ -46514,6 +48020,11 @@
       "Bard",
       "Jhin",
       "巴德 Q 实际伤害目标后，烬仍须在友伤标记有效时以 W 命中射线第一个敌方英雄。巴德 Q 的晕眩还需要后续碰到第二个敌人或墙，单中第一目标只按实际减速判断。"
+    ],
+    [
+      "TwistedFate",
+      "Leona",
+      "蕾欧娜 E 最后实际命中敌方英雄才突进并短暂禁锢；Q 强化普攻命中才眩晕。崔斯特确认 R 已学可用、范围和安全引导落点，金牌锁定后须普攻命中同一目标；蕾欧娜 R 中心才眩晕、边缘减速。"
     ]
   ],
   "trios": [
