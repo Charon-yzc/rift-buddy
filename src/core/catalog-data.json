@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.07.81",
+  "version": "2026.11.07.82",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -34771,6 +34771,126 @@
           }
         }
       }
+    },
+    {
+      "id": "rell-orianna-support-mid-ball-entry",
+      "name": "芮尔带球接冲击波",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "中辅联动",
+        "带球切入",
+        "分段接控"
+      ],
+      "why": "奥莉安娜 E 的魔偶已经附着芮尔时，骑乘芮尔可在 W 实际落点命中后创造接应窗口。发条 R 按实际球位、延迟和敌人覆盖决定。",
+      "plan": "中辅先保线权、视野和退出路线。把魔偶实际附到芮尔身上，骑乘芮尔用 W 轰落并按真实命中报位置。发条确认球仍在有效位置后判断冲击波。芮尔 R 的初次拉拽与后续拖曳分开观察。",
+      "risk": "离球过远、芮尔落空、敌人离区或没有伤害接应时收手。芮尔的持续拖曳不视为持续晕眩，不预设发条技能命中。",
+      "members": [
+        {
+          "champion": "Orianna",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "保中线，E 先核对魔偶是否抵达芮尔。R 按球的实际位置和敌方覆盖独立判断。"
+        },
+        {
+          "champion": "Rell",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "保辅助任务和视野。骑乘形态 W 要实际命中才击飞，报落点并保留撤离路线。"
+        }
+      ],
+      "steps": [
+        "按视野和敌人站位确认进场与撤离路线，等待魔偶实际附着。",
+        "骑乘芮尔 W 落地命中后报位置，按实际敌人覆盖判断是否接 R。",
+        "发条按冲击波的球位与延迟判断。球已返回、敌人已撤出或无接应就停止。"
+      ],
+      "early": "六级前可用 E 护盾和骑乘 W 接应短换血，按实际命中判断。",
+      "window": "魔偶未返回，目标仍在球和芮尔的有效落区，双方有接应和退出条件。",
+      "economy": "发条保中线与输出，芮尔保辅助任务和视野。两人使用各自位置的个人配置。",
+      "partners": [],
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "sources": [
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核，改变原持球者的双人适配",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "既有组合 · 聚拢接力",
+          "url": "https://github.com/Legender134/rift-buddy/blob/b799fb4fbc29f400daf217a0cb08a06b3c2c997a/src/core/catalog-data.json#L44503",
+          "kind": "原方案由黛安娜持球，此处改为芮尔持球的双人适配",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 奥莉安娜 mid",
+          "url": "https://op.gg/lol/champions/orianna/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        },
+        {
+          "name": "OP.GG · 芮尔 support",
+          "url": "https://op.gg/lol/champions/rell/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置个人配置参考",
+          "checkedAt": "2026-11-07"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Orianna": "6897daa00a80bf73",
+        "champion:Rell": "bec49be1ddcf29c0"
+      },
+      "reviewSourceAnchors": {
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "c4c8d45a2747f2c75e09e82185fd862a7424198fd34da2037389a4ab8409abc7"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b761493a33a91024"
+            }
+          }
+        },
+        "Rell": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "bec49be1ddcf29c0",
+          "observedAt": "2026-11-05T02:19:26.164Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rell",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rell/rell.bin.json",
+              "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f5469dea7fbc0dcb"
+            }
+          }
+        }
+      }
     }
   ],
   "linkReviews": [
@@ -41272,6 +41392,609 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Rell",
+        "Orianna"
+      ],
+      "comboId": "rell-orianna-support-mid-ball-entry",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "9193115d13e08187",
+      "baseline": {
+        "Rell": "bec49be1ddcf29c0",
+        "Orianna": "6897daa00a80bf73"
+      },
+      "anchors": {
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "c4c8d45a2747f2c75e09e82185fd862a7424198fd34da2037389a4ab8409abc7"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b761493a33a91024"
+            }
+          }
+        },
+        "Rell": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "bec49be1ddcf29c0",
+          "observedAt": "2026-11-05T02:19:26.164Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rell",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rell/rell.bin.json",
+              "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f5469dea7fbc0dcb"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "LeeSin",
+        "Nautilus"
+      ],
+      "comboId": "leesin-nautilus-jungle-support-counterengage",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "1347bb311d53b579",
+      "baseline": {
+        "LeeSin": "f9459e15e5d6deca",
+        "Nautilus": "67da151a84906467"
+      },
+      "anchors": {
+        "LeeSin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f9459e15e5d6deca",
+          "observedAt": "2026-11-05T02:19:26.083Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "LeeSin",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leesin/leesin.bin.json",
+              "sha256": "80d40c52770b5741edfb5d7ee192ef43fa17126f2afe8bcfcd557754eaed081a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "ff3d80024e24db09"
+            }
+          }
+        },
+        "Nautilus": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "67da151a84906467",
+          "observedAt": "2026-11-05T02:19:26.159Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nautilus",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
+              "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "21ceeeee51e3b384"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Leblanc",
+        "Rakan"
+      ],
+      "comboId": "leblanc-rakan-mid-support-airborne-chain",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "514fd05e4523e07a",
+      "baseline": {
+        "Leblanc": "7c6be3d94aa080db",
+        "Rakan": "69d7edc48cac55e5"
+      },
+      "anchors": {
+        "Leblanc": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "7c6be3d94aa080db",
+          "observedAt": "2026-11-05T02:19:26.082Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Leblanc",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leblanc/leblanc.bin.json",
+              "sha256": "889d0275962fac17c4c8ce0536d4930548acabccfe0a122f7fe979a6e1f9d357"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "4b02fbdb42c5987e"
+            }
+          }
+        },
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-11-05T02:19:26.163Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Diana",
+        "Orianna"
+      ],
+      "comboId": "diana-orianna-jungle-mid-ball-entry",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "9f1562b6627978bb",
+      "baseline": {
+        "Diana": "0c1ee1b395e630d3",
+        "Orianna": "6897daa00a80bf73"
+      },
+      "anchors": {
+        "Diana": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "0c1ee1b395e630d3",
+          "observedAt": "2026-11-05T02:19:26.067Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Diana",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/diana/diana.bin.json",
+              "sha256": "fb9d9bc84621daf0df393c08c655f8798c75baecc7bd6f871867126813e4925f"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "d9313d8c48c88394"
+            }
+          }
+        },
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-11-05T02:19:26.161Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "c4c8d45a2747f2c75e09e82185fd862a7424198fd34da2037389a4ab8409abc7"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "b761493a33a91024"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Nocturne",
+        "Galio"
+      ],
+      "comboId": "nocturne-galio-jungle-mid-landing",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "1f1a1ea0b8c6c08a",
+      "baseline": {
+        "Nocturne": "2759f235cb713880",
+        "Galio": "62214853523131ad"
+      },
+      "anchors": {
+        "Nocturne": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2759f235cb713880",
+          "observedAt": "2026-11-05T02:19:26.160Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nocturne",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nocturne/nocturne.bin.json",
+              "sha256": "8de4d928ce7dee799b759c87a7114069b297f9228ef8e51c21ba9f1da5b0ab49"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "7e6432fe64cf372b"
+            }
+          }
+        },
+        "Galio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "62214853523131ad",
+          "observedAt": "2026-11-05T02:19:26.071Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Galio",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
+              "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e3a8cfa71c0b2970"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Lissandra",
+        "Nidalee"
+      ],
+      "comboId": "lissandra-mid-nidalee-jungle-root-spear",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "16c0fcf0253179c5",
+      "baseline": {
+        "Lissandra": "599da97edcf817b9",
+        "Nidalee": "e54aff9035f36827"
+      },
+      "anchors": {
+        "Lissandra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "599da97edcf817b9",
+          "observedAt": "2026-11-05T02:19:26.153Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lissandra",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lissandra/lissandra.bin.json",
+              "sha256": "a6ec51003dc0dd7956bc6f5aad1e6e6d61cd0d506eb59e91e651b7866cb4cbfe"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f6bc405fcfcae9d6"
+            }
+          }
+        },
+        "Nidalee": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e54aff9035f36827",
+          "observedAt": "2026-11-05T02:19:26.159Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nidalee",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nidalee/nidalee.bin.json",
+              "sha256": "f5c3a3abf2db4ddfe9a86ad3f27f03b36b2bcd063b64900ab5d55108ecd43180"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "60b5273e0f23a85d"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Lissandra",
+        "Graves"
+      ],
+      "comboId": "lissandra-graves-mid-jungle-root-followup",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "6f93eccbcef37ebb",
+      "baseline": {
+        "Lissandra": "599da97edcf817b9",
+        "Graves": "ea75172ee2199edb"
+      },
+      "anchors": {
+        "Lissandra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "599da97edcf817b9",
+          "observedAt": "2026-11-05T02:19:26.153Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lissandra",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lissandra/lissandra.bin.json",
+              "sha256": "a6ec51003dc0dd7956bc6f5aad1e6e6d61cd0d506eb59e91e651b7866cb4cbfe"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f6bc405fcfcae9d6"
+            }
+          }
+        },
+        "Graves": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ea75172ee2199edb",
+          "observedAt": "2026-11-05T02:19:26.072Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Graves",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/graves/graves.bin.json",
+              "sha256": "9b4618aabfaf278a604ee9a59972ea4650d42aa659039f3314a110a748351e2a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "177b5090af77b3cf"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Renekton",
+        "Lissandra"
+      ],
+      "comboId": "renekton-lissandra-top-mid-control",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "a81f6b4ec4acfe15",
+      "baseline": {
+        "Renekton": "5a98c4b4b1f08e37",
+        "Lissandra": "599da97edcf817b9"
+      },
+      "anchors": {
+        "Renekton": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5a98c4b4b1f08e37",
+          "observedAt": "2026-11-05T02:19:26.165Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Renekton",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/renekton/renekton.bin.json",
+              "sha256": "20447bf1a1f2867c12442110f5430443a7dab367dea231831cb7d5092987004d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "1b5d01b58ae2dfac"
+            }
+          }
+        },
+        "Lissandra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "599da97edcf817b9",
+          "observedAt": "2026-11-05T02:19:26.153Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lissandra",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lissandra/lissandra.bin.json",
+              "sha256": "a6ec51003dc0dd7956bc6f5aad1e6e6d61cd0d506eb59e91e651b7866cb4cbfe"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "f6bc405fcfcae9d6"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Camille",
+        "Vi"
+      ],
+      "comboId": "camille-vi-top-jungle-confinement",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-07",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "ed24a0e353dcc9f1",
+      "baseline": {
+        "Camille": "d8925ce8a69d2250",
+        "Vi": "ed4ccc20b476dc0e"
+      },
+      "anchors": {
+        "Camille": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d8925ce8a69d2250",
+          "observedAt": "2026-11-05T02:19:26.063Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Camille",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/camille/camille.bin.json",
+              "sha256": "4a71a33c3849552befed54f0ae747ad470c25ac1a4921095d44c43ee3167df80"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "67751120f662608d"
+            }
+          }
+        },
+        "Vi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ed4ccc20b476dc0e",
+          "observedAt": "2026-11-05T02:19:26.180Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Vi",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vi/vi.bin.json",
+              "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "8c5f2d227a1d26cb"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -41398,7 +42121,7 @@
     [
       "Diana",
       "Orianna",
-      "皎月进场携带魔偶，聚拢后发条接大；注意魔偶距离"
+      "奥莉安娜 E 魔偶须已实际附着黛安娜。黛安娜 R 实际拉到至少一名敌方英雄才产生延迟区域伤害。发条按球位和实际覆盖决定是否接 R；球已返回或敌人离区时重新判断。"
     ],
     [
       "Orianna",
@@ -41428,7 +42151,7 @@
     [
       "Rell",
       "Orianna",
-      "芮尔聚拢后发条接范围大招，先约好持球者"
+      "奥莉安娜 E 的魔偶须实际附在芮尔身上且未因距离返回。骑乘芮尔 W 实际命中才击飞，R 后续拖曳不是持续晕眩；发条按施放时球位、延迟和敌人覆盖决定是否接冲击波。"
     ],
     [
       "Amumu",
@@ -41448,7 +42171,7 @@
     [
       "Nocturne",
       "Galio",
-      "梦魇进场时加里奥准备支援，先确认技能范围"
+      "魔腾 R 一段压缩视野，二段须选中可达的敌方英雄并实际抵达。加里奥 R 选施法时魔腾的位置作固定落点，延迟后实际覆盖才击飞。魔腾之后位移不带动落点。"
     ],
     [
       "Diana",
@@ -42099,6 +42822,36 @@
       "Vi",
       "Nautilus",
       "诺提勒斯 Q 实际钩到共同目标才拉拽短晕，或 R 已学可用且实际命中才击飞。蔚 R 要实际接触同一目标，按双方真实命中、剩余控制和距离错开。钩地形不能当成控住目标。"
+    ],
+    [
+      "LeeSin",
+      "Nautilus",
+      "诺提勒斯 R 追到目标并实际控制后，李青按距离和角度跟进。李青 Q 先命中首个敌人才可在时限内二段；R 踢退主目标，只有实际被主目标撞及的其他敌人才击飞。"
+    ],
+    [
+      "Leblanc",
+      "Rakan",
+      "洛 W 实际命中才击飞。乐芙兰 E 需从无遮挡角度命中同一目标，链维持 1.5 秒才禁锢。乐芙兰 W 回点须安全，洛 E 需有范围内可选友军且可用。"
+    ],
+    [
+      "Lissandra",
+      "Nidalee",
+      "丽桑卓 W 实际命中才禁锢，或 R 实际施加于敌人才晕。奈德丽用人形 Q 对同一目标出手，标枪只认真实命中；其他单位挡枪、角度变化或目标脱控时停止追击。"
+    ],
+    [
+      "Lissandra",
+      "Graves",
+      "丽桑卓 W 实际命中或对敌 R 成功后，格雷福斯按 Q 的路径和爆炸覆盖接伤害。只有 Q 实际遇到地形才按提前爆炸处理，丽桑卓的禁锢或眩晕不会生成墙。"
+    ],
+    [
+      "Renekton",
+      "Lissandra",
+      "雷克顿 W 的强化普攻实际命中同一敌人后才晕。丽桑卓按剩余控制和距离接 W，或用 R 晕同一敌人；对自己施放 R 不会晕住敌人。"
+    ],
+    [
+      "Camille",
+      "Vi",
+      "卡蜜尔 E 要先钩到地形，二段实际命中才按控制处理；R 实际成圈才限制选中目标。蔚 Q 实际撞敌方英雄才击退，R 真正接触锁定英雄才击飞。成圈与击退不保证伤害或后续命中。"
     ]
   ],
   "trios": [
