@@ -7,6 +7,7 @@ import {tacticalCooperationPlan,tacticalCooperationMode} from './tactical-cooper
 import {partyCooperationPlan} from './party-cooperation.mjs';
 import {resourceCoordination} from './cooperation-resources.mjs';
 import {mechanicReview} from './mechanic-review.mjs';
+import {createCompositionMechanics} from './composition-mechanics.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -82,8 +83,8 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
   if(cachedPairs>=cacheLimit){cache.clear();cachedPairs=0;}
   if(!cache.has(ak))cache.set(ak,new Map());if(!cache.has(bk))cache.set(bk,new Map());cache.get(ak).set(bk,found);cache.get(bk).set(ak,found);cachedPairs++;return found;
  };
- const skills=createSkillCooperation(byId,{isCurrent,cacheLimit}),fitCache=new Map();
- return {edge,profile:prof,byId,currentPatch,skills,fitCache,clearCaches(){cache.clear();cachedPairs=0;profiles.clear();reviews.clear();skills.clearCache();fitCache.clear();}};
+ const skills=createSkillCooperation(byId,{isCurrent,cacheLimit}),fitCache=new Map(),mechanics=createCompositionMechanics(byId,currentPatch);
+ return {edge,profile:prof,byId,currentPatch,skills,mechanics,fitCache,clearCaches(){cache.clear();cachedPairs=0;profiles.clear();reviews.clear();skills.clearCache();mechanics.clear();fitCache.clear();}};
 }
 
 function connectedEdges(members,graph,pairs=null){

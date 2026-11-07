@@ -105,12 +105,15 @@ export function lineupFit(lineup,current,champions,options={}){
  }
  const analysis=analyzeTeam(analyzed,champions,context,true);
  // analyzeTeam omits unknown IDs; retain their planned place in expectedSize.
- const fit=compositionFit(analysis,context.cooperationGraph,{expectedSize:range.expectedSize+references.filter(ref=>!range.slots.some(row=>row.champion===ref.champion)).length});
+ const fit=compositionFit(analysis,context.cooperationGraph,{expectedSize:range.expectedSize+references.filter(ref=>!range.slots.some(row=>row.champion===ref.champion)).length,details:options.details});
  const cap=compatible&&!referenceConflict?(exact?100:45):20,score=fit.score===null?null:Math.min(cap,fit.score),rawScore=fit.score===null?0:Math.min(cap,fit.rawScore);
+ const result={...fit,score,rawScore,compatible:compatible&&!referenceConflict,exact:exact&&!referenceConflict,scope:range.scope,referenceCount:references.length};
+ if(score===null&&cap<100)result.scoreCeiling=cap;
+ if(options.details===false)return result;
  const constraint=!unique?'同一英雄或位置重复，方案存在冲突。':!compatible?'与已固定英雄冲突。':!exact?'已选英雄保留，但固定位置冲突。':'';
  const breakdown=[...fit.breakdown];if(Number.isFinite(score)&&score!==fit.score)breakdown.push({key:'constraint',label:'选人冲突限制',points:score-fit.score,max:0});
  const referenceNote=references.length?`含 ${references.length} 位未确认的公开已选英雄，仅作阵容参考。`:'';
- return {...fit,score,rawScore,breakdown,compatible:compatible&&!referenceConflict,exact:exact&&!referenceConflict,scope:range.scope,referenceCount:references.length,
+ return {...result,breakdown,
   gaps:[...(referenceConflict?['与未确认的公开已选英雄或位置冲突。']:[]),...(constraint?[constraint]:[]),...fit.gaps],
   reason:`${referenceNote}${constraint}${fit.reason}${constraint&&fit.score!==null?` 冲突方案最高计 ${cap} 分。`:''}`};
 }

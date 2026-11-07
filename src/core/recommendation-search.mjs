@@ -1,5 +1,63 @@
+import {seededFraction} from './recommendation-diversity.mjs';
+import {compareRecommendationFit,recommendationOpponentScore} from './recommendation-policy.mjs';
+
 const roleOrder=['top','jungle','mid','bottom','support'];
 const keyOf=slots=>roleOrder.map(role=>role+':'+(slots.find(slot=>slot.role===role)?.champion||'')).join('|');
+
+function interleaveRoleGroups(values,rolesOf,orderGroups){
+ const groups=new Map();
+ for(const value of values){
+  const roles=rolesOf(value),key=roleOrder.filter(role=>roles.includes(role)).join('|');
+  if(!groups.has(key))groups.set(key,[]);
+  groups.get(key).push(value);
+ }
+ const ordered=[];
+ let activeGroups=[...groups.entries()];
+ if(orderGroups)activeGroups=orderGroups(activeGroups);
+ for(let index=0;activeGroups.length;index++){
+  for(const [,group] of activeGroups)ordered.push(group[index]);
+  activeGroups=activeGroups.filter(([,group])=>index+1<group.length);
+ }
+ return ordered;
+}
+
+function balanceCommunityGroups(groups,{missing,randomSeed,opportunities}){
+ const remaining=groups.map(([key,records])=>({key,records,roles:key?key.split('|'):[],tie:seededFraction(randomSeed,'community-role:'+key)}));
+ const visits=new Map(),ordered=[];
+ // Prefer positions with fewer ways into the search, then account for each
+ // previous visit. Counts use distinct role groups, independent of library size.
+ const exposure=group=>group.roles.reduce((total,role)=>total+(1+(visits.get(role)||0))*opportunities.get(role)-1,0);
+ while(remaining.length){
+  remaining.sort((a,b)=>exposure(a)-exposure(b)||missing(a.records[0])-missing(b.records[0])||a.tie-b.tie||a.key.localeCompare(b.key));
+  const next=remaining.shift();
+  for(const role of next.roles)visits.set(role,(visits.get(role)||0)+1);
+  ordered.push([next.key,next.records]);
+ }
+ return ordered;
+}
+
+function orderCommunityRecords(records,{focusRole,missing,randomSeed}){
+ const opportunities=new Map(),seen=new Set();
+ for(const record of records){
+  const roles=roleOrder.filter(role=>record.roles?.includes(role)),key=roles.join('|');
+  if(seen.has(key))continue;
+  seen.add(key);
+  for(const role of roles)opportunities.set(role,(opportunities.get(role)||0)+1);
+ }
+ const byRoles=values=>interleaveRoleGroups(values,record=>record.roles||[],groups=>balanceCommunityGroups(groups,{missing,randomSeed,opportunities}));
+ if(!focusRole)return byRoles(records);
+ const focused=[],other=[];
+ for(const record of records)(record.roles?.includes(focusRole)?focused:other).push(record);
+ const local=byRoles(focused),coverage=byRoles(other),ordered=[];
+ // Keep returning to the player's position as the search continues. Other
+ // role groups still advance, even when the player's position has many recipes.
+ for(let i=0,j=0;i<local.length||j<coverage.length;i+=2,j++){
+  if(i<local.length)ordered.push(local[i]);
+  if(i+1<local.length)ordered.push(local[i+1]);
+  if(j<coverage.length)ordered.push(coverage[j]);
+ }
+ return ordered;
+}
 
 // Convert finite positive IEEE weights to exact integer ratios. Independent
 // Web Crypto draws retain support for every positive weight, including tails
@@ -55,6 +113,29 @@ function prepareSource(seed,targets,candidates,weights,group=null,available=null
  return canComplete(pools,used)?{slots,open,pools}:null;
 }
 
+function takeCompletion({slots,open,pools},positions){
+ const picks=new Map(),taken=new Set();
+ let suffix=0;
+ // Rotate earlier open positions as the fastest digit advances. The offset
+ // depends only on later digits. Skip their heroes at the front of each pool
+ // so overlapping pools don't spend their entire first pass on duplicates.
+ for(let i=open.length-1;i>=0;i--){
+  const role=open[i],pool=pools[role];
+  let start=suffix%pool.length;
+  for(let skipped=0;skipped<pool.length&&taken.has(pool[start]);skipped++)start=(start+1)%pool.length;
+  const champion=pool[(positions[i]+start)%pool.length];
+  picks.set(role,champion);taken.add(champion);
+  suffix+=positions[i];
+ }
+ let digit=open.length-1;
+ while(digit>=0){
+  positions[digit]++;
+  if(positions[digit]<pools[open[digit]].length)break;
+  positions[digit--]=0;
+ }
+ return {slots:slots.map(slot=>picks.has(slot.role)?{...slot,champion:picks.get(slot.role)}:{...slot}),exhausted:digit<0};
+}
+
 // Every source coordinate is eventually visited if this stream keeps advancing.
 // The bounded queue applies backpressure; it never evicts an unseen valid row.
 function createGroupStream({seeds,targets,candidates,weights,group,evaluate,previouslyExhausted=false}){
@@ -86,11 +167,8 @@ function createGroupStream({seeds,targets,candidates,weights,group,evaluate,prev
  function advance(){
   if(!remaining||queue.length>=6||prepareTurn&&prepared<seeds.length)return false;
   while(sources[next].done)next=(next+1)%sources.length;
-  const index=next,source=sources[index],picks=new Map(source.open.map((role,i)=>[role,source.pools[role][source.positions[i]]]));
-  const slots=source.slots.map(slot=>picks.has(slot.role)?{...slot,champion:picks.get(slot.role)}:{...slot});
-  let digit=source.positions.length-1;
-  while(digit>=0){const role=source.open[digit];source.positions[digit]++;if(source.positions[digit]<source.pools[role].length)break;source.positions[digit]=0;digit--;}
-  if(digit<0){source.done=true;remaining--;}
+  const index=next,source=sources[index],{slots,exhausted}=takeCompletion(source,source.positions);
+  if(exhausted){source.done=true;remaining--;}
   next=(next+1)%sources.length;
   prepareTurn=prepared<seeds.length;
   const ids=slots.map(slot=>slot.champion).filter(Boolean);if(new Set(ids).size!==ids.length)return true;
@@ -107,16 +185,16 @@ function createGroupStream({seeds,targets,candidates,weights,group,evaluate,prev
 }
 
 function createCommunityScheduler({records,after,targets,candidates,weights,evaluate,format,priority,preferred}){
- const ordered=[...records].sort((a,b)=>targets.filter(role=>!a.seed.find(slot=>slot.role===role).champion).length-targets.filter(role=>!b.seed.find(slot=>slot.role===role).champion).length||a.id.localeCompare(b.id));
- const entries=ordered.map(record=>({...record,source:null,positions:null,exhausted:false,done:false,best:null,hot:null,shown:false,shownQuality:null,ready:false,turnSteps:0}));
+ const waitingLimit=8;
+ const entries=records.map(record=>({...record,source:null,positions:null,exhausted:false,done:false,best:null,hot:null,shown:false,shownQuality:null,ready:false,turnSteps:0}));
  const byId=new Map(entries.map(entry=>[entry.id,entry])),waiting=[],presentations=new Map(),available=Object.fromEntries(targets.map(role=>[role,candidates[role].filter(hero=>!weights[role]||weights[role][hero.id]>0).map(hero=>hero.id)]));
  let cursor=Math.max(0,entries.findIndex(entry=>entry.id===after)+1)%Math.max(1,entries.length),active=null,turn=0,misses=0,unseen=true,age=0,selection=0,last=after||'',fallback=false;
  const rank=row=>Number.isFinite(row?.recommendationFit?.score)?row.recommendationFit.score:-Infinity;
- const quality=row=>({score:rank(row),style:priority(row),familiarity:targets.reduce((sum,role)=>sum+(weights[role]?Math.log(weights[role][row.slots.find(slot=>slot.role===role).champion]||Number.MIN_VALUE):0),0),key:keyOf(row.slots)});
- const better=(a,b)=>!b||a.score>b.score||a.score===b.score&&(a.style>b.style||a.style===b.style&&(a.familiarity>b.familiarity||a.familiarity===b.familiarity&&a.key<b.key));
+ const quality=row=>({score:rank(row),opponent:recommendationOpponentScore(row),style:priority(row),familiarity:targets.reduce((sum,role)=>sum+(weights[role]?Math.log(weights[role][row.slots.find(slot=>slot.role===role).champion]||Number.MIN_VALUE):0),0),key:keyOf(row.slots)});
+ const better=(a,b)=>!b||a.score>b.score||a.score===b.score&&(a.opponent>b.opponent||a.opponent===b.opponent&&(a.style>b.style||a.style===b.style&&(a.familiarity>b.familiarity||a.familiarity===b.familiarity&&a.key<b.key)));
  function confirmBoundPresentation(entry,candidate){
   entry.shown=true;
-  if(better(candidate,entry.shownQuality)){const {score,style,familiarity,key}=candidate;entry.shownQuality={score,style,familiarity,key};}
+  if(better(candidate,entry.shownQuality)){const {score,opponent,style,familiarity,key}=candidate;entry.shownQuality={score,opponent,style,familiarity,key};}
   if(entry.ready&&!better(entry.best,entry.shownQuality)){const index=waiting.findIndex(item=>item.entry===entry);if(index>=0)waiting.splice(index,1);entry.ready=false;}
   if(entry.exhausted&&entry.best&&!better(entry.best,entry.shownQuality))entry.done=true;
  }
@@ -129,7 +207,7 @@ function createCommunityScheduler({records,after,targets,candidates,weights,eval
  }
  function finishTurn(entry){active=null;entry.turnSteps=0;entry.hot=null;unseen=++turn%4!==3;misses=0;}
  function work(canPrepare,canScore){
-  if(!entries.length||waiting.length>=8)return null;
+  if(!entries.length||waiting.length>=waitingLimit)return null;
   if(active?.done){if(!canPrepare)return null;finishTurn(active);return 'prepare';}
   if(!active&&!entries.some(entry=>!entry.done&&!entry.ready))return null;
   if(!active){
@@ -155,11 +233,8 @@ function createCommunityScheduler({records,after,targets,candidates,weights,eval
    if(entry.exhausted)entry.done=true;finishTurn(entry);return 'prepare';
   }
   if(!canScore)return null;
-  const {source}=entry,picks=new Map(source.open.map((role,i)=>[role,source.pools[role][entry.positions[i]]]));
-  const slots=source.slots.map(slot=>picks.has(slot.role)?{...slot,champion:picks.get(slot.role)}:{...slot});
-  let digit=entry.positions.length-1;
-  while(digit>=0){const role=source.open[digit];entry.positions[digit]++;if(entry.positions[digit]<source.pools[role].length)break;entry.positions[digit]=0;digit--;}
-  if(digit<0)entry.exhausted=true;entry.turnSteps++;
+  const {slots,exhausted}=takeCompletion(entry.source,entry.positions);
+  entry.exhausted=exhausted;entry.turnSteps++;
   const ids=slots.map(slot=>slot.champion).filter(Boolean);
   if(new Set(ids).size===ids.length){const row=evaluate(slots,entry.id);if(row&&(!preferred||fallback||preferred(row)))remember(entry,row,true);}
   return 'score';
@@ -177,10 +252,9 @@ function createCommunityScheduler({records,after,targets,candidates,weights,eval
   else if(entry.best?.key===key)confirmBoundPresentation(entry,entry.best);
  }
  function take(existing){
-  for(const row of existing)observe(row);
   const signatures=new Set(existing.map(row=>keyOf(row.slots)));
   // Keep a bounded fairness reservation without ever changing a fit score.
-  const ordered=waiting.map(item=>({...item,score:rank(item.row)})).sort((a,b)=>selection%4===3?a.age-b.age:b.score-a.score||a.age-b.age);
+  const ordered=[...waiting].sort((a,b)=>selection%4===3?a.age-b.age:compareRecommendationFit(a.row,b.row)||a.age-b.age);
   for(const item of ordered){
    const index=waiting.findIndex(value=>value.entry===item.entry);if(index<0)continue;
    if(signatures.has(keyOf(item.row.slots)))continue;
@@ -188,19 +262,36 @@ function createCommunityScheduler({records,after,targets,candidates,weights,eval
    waiting.splice(index,1);item.entry.ready=false;
    const row={...item.row,communityRecommendation:true,communityCombinationId:item.entry.id,communityTitle:item.entry.name,communityWhy:item.entry.why};
    selection++;observe(row);
-   return row;
+   return {row,blocked:false};
   }
-  return null;
+  // All waiting recipes collide with a visible lineup on this page. If
+  // none can be added, release this reservation but keep every recipe for
+  // the next page, where those visible lineups no longer occupy their slots.
+  const blocked=waiting.length>0&&(waiting.length>=waitingLimit||!active&&entries.every(entry=>entry.done||entry.ready));
+  return {row:null,blocked};
  }
  return {work,take,observe,format,get cursor(){return last;},get enabled(){return entries.length>0;},get hasRows(){return waiting.length>0;},get exhausted(){return entries.every(entry=>entry.done)&&!waiting.length;},resetTempo(){fallback=true;waiting.length=0;presentations.clear();active=null;for(const entry of entries)Object.assign(entry,{source:null,positions:null,exhausted:false,done:false,best:null,hot:null,shown:false,shownQuality:null,ready:false,turnSteps:0});}};
 }
 
-export function createRecommendationLane({fixed,targets,candidates,seeds,weights,evaluate,format,priority=()=>0,preferred=null,maxGroups=4096,communityRecords=[],communityAfter=''}){
+export function createRecommendationLane({fixed,targets,candidates,seeds,weights,evaluate,format,priority=()=>0,preferred=null,maxGroups=4096,communityRecords=[],communityAfter='',focusRole='',randomSeed=''}){
  const weighted=targets.filter(role=>weights[role]),distributions=Object.fromEntries(weighted.map(role=>{
   const entries=Object.entries(weights[role]).filter(([,weight])=>Number.isFinite(weight)&&weight>0).sort(([a],[b])=>a.localeCompare(b));
   return [role,integerDistribution(entries)];
  }));
- const allSeeds=[...new Map([...seeds,fixed].map(seed=>[keyOf(seed),seed])).values()];
+ const distinctSeeds=[...new Map([...seeds,fixed].map(seed=>[keyOf(seed),seed])).values()];
+ const fixedIndex=distinctSeeds.indexOf(fixed);
+ distinctSeeds.splice(fixedIndex,1);
+ const allSeeds=interleaveRoleGroups(distinctSeeds,seed=>seed.filter(slot=>slot.champion&&targets.includes(slot.role)).map(slot=>slot.role));
+ // The first source capable of producing a lineup owns it. Keep the generic
+ // source at its original position while rotating the focused sources.
+ allSeeds.splice(fixedIndex,0,fixed);
+ const missingById=new Map(communityRecords.map(record=>[record.id,targets.filter(role=>!record.seed.find(slot=>slot.role===role).champion).length]));
+ const missing=record=>missingById.get(record.id);
+ const byCompletion=[...communityRecords].sort((a,b)=>missing(a)-missing(b)||a.id.localeCompare(b.id));
+ const selectableRecords=byCompletion.filter(record=>record.seed.every(slot=>!slot.champion||!weighted.includes(slot.role)||weights[slot.role][slot.champion]>0));
+ // Keep records excluded by member weights out of the visible role counts.
+ // The separate tempo audit still considers them when diagnosing conflicts.
+ const orderedRecords=orderCommunityRecords(selectableRecords,{focusRole,missing,randomSeed});
  let feasible=[],initial=0,witness=0n,probe=null,onlyPreferred=!!preferred,foundPreferred=false,foundAny=false,fullPreferred=false,fullAny=false,backgroundTurn=0;
  const groups=new Map(),size=weighted.reduce((count,role)=>count*BigInt(distributions[role].units.length),1n);
  const rankOf=group=>weighted.reduce((rank,role)=>rank*BigInt(distributions[role].units.length)+BigInt(distributions[role].index.get(group[role])),0n);
@@ -215,7 +306,7 @@ export function createRecommendationLane({fixed,targets,candidates,seeds,weights
  // Different authored recipes for the same heroes can have different tempo
  // and loadouts. Audit those identities as well, including zero-weight heroes,
  // without confusing a default trio's tempo with the selected duo's tempo.
- const sourceAudits=preferred?communityRecords.map(record=>({record,source:null,positions:null,done:false})):[];
+ const sourceAudits=preferred?byCompletion.map(record=>({record,source:null,positions:null,done:false})):[];
  const auditPools=preferred?Object.fromEntries(targets.map(role=>[role,candidates[role].map(hero=>hero.id)])):null;
  let sourceAuditIndex=0,sourceAudit=null,auditTurn=0;
  const auditsExhausted=()=>!preferred||tempoAudit.exhausted&&sourceAudits.every(entry=>entry.done);
@@ -234,11 +325,8 @@ export function createRecommendationLane({fixed,targets,candidates,seeds,weights
    return 'prepare';
   }
   if(!canScore)return null;
-  const picks=new Map(entry.source.open.map((role,i)=>[role,entry.source.pools[role][entry.positions[i]]]));
-  const slots=entry.source.slots.map(slot=>picks.has(slot.role)?{...slot,champion:picks.get(slot.role)}:{...slot});
-  let digit=entry.positions.length-1;
-  while(digit>=0){const role=entry.source.open[digit];entry.positions[digit]++;if(entry.positions[digit]<entry.source.pools[role].length)break;entry.positions[digit]=0;digit--;}
-  if(digit<0)entry.done=true;sourceAudit=null;
+  const {slots,exhausted}=takeCompletion(entry.source,entry.positions);
+  entry.done=exhausted;sourceAudit=null;
   const ids=slots.map(slot=>slot.champion).filter(Boolean);
   if(new Set(ids).size===ids.length){const row=evaluate(slots,entry.record.id);if(row){fullAny=true;if(preferred(row))fullPreferred=true;}}
   return 'score';
@@ -309,11 +397,8 @@ export function createRecommendationLane({fixed,targets,candidates,seeds,weights
   for(const next of work){const result=next(canPrepare,canScore);if(result)return result;}
   return null;
  }
- const compare=(a,b)=>{
-  const left=Number.isFinite(a.recommendationFit?.score)?a.recommendationFit.score:-Infinity,right=Number.isFinite(b.recommendationFit?.score)?b.recommendationFit.score:-Infinity;
-  return (left===right?0:right-left)||priority(b)-priority(a)||keyOf(a.slots).localeCompare(keyOf(b.slots));
- };
- const community=createCommunityScheduler({records:communityRecords,after:communityAfter,targets,candidates,weights,evaluate:(slots,id)=>{const row=evaluate(slots,id);if(row){foundAny=true;if(!preferred||preferred(row))foundPreferred=true;}return row;},format,priority,preferred});
+ const compare=(a,b)=>compareRecommendationFit(a,b)||priority(b)-priority(a)||keyOf(a.slots).localeCompare(keyOf(b.slots));
+ const community=createCommunityScheduler({records:orderedRecords,after:communityAfter,targets,candidates,weights,evaluate:(slots,id)=>{const row=evaluate(slots,id);if(row){foundAny=true;if(!preferred||preferred(row))foundPreferred=true;}return row;},format,priority,preferred});
  return {draw,prepare,background,community,format,compare,hasTempo:!!preferred,get hasCandidates(){return foundAny||fullAny;},get hasPreferred(){return foundPreferred||fullPreferred;},get hasSelectablePreferred(){return foundPreferred;},get preferenceResolved(){return !preferred||foundPreferred||fullPreferred||auditsExhausted();},get ready(){return initial>=allSeeds.length;},get exhausted(){return initial>=allSeeds.length&&(!feasible.length||witness>=size||onlyPreferred&&auditsExhausted());},fallback(){onlyPreferred=false;witness=0n;probe=null;groups.clear();community.resetTempo();},releaseInvalid(pick){if(pick.rank>=witness)groups.delete(String(pick.rank));}};
 }
 
@@ -330,6 +415,12 @@ export function createRecommendationSearchSession(lanes){
  function backgroundWork(prepare,score){
   for(let i=0;i<tasks.length;i++){const result=tasks[backgroundIndex++%tasks.length](prepare,score);if(result)return result;}
   return null;
+ }
+ function fillCommunity(normalRows){
+  if(!page.community||page.communityDone)return;
+  const community=page.community.community,{row,blocked}=community.take(normalRows);
+  if(row)page.communityRow=row;
+  page.communityDone=!!row||blocked||community.exhausted;
  }
  const communityAfter=()=>communities.reduce((value,lane)=>lane.community.cursor||value,'');
  function advance({limit=6,budget=limit,newPage=false}={}){
@@ -400,16 +491,13 @@ export function createRecommendationSearchSession(lanes){
   }
   const normalRows=page.draws.filter(draw=>draw.row).map(draw=>draw.formatted||(draw.formatted=draw.lane.format(draw.row)));
   for(const row of normalRows)for(const lane of communities)lane.community.observe(row);
-  if(page.community&&!page.communityDone){
-   const row=page.community.community.take(normalRows);if(row){page.communityRow=row;page.communityDone=true;}
-   else if(page.community.community.exhausted)page.communityDone=true;
-  }
+  fillCommunity(normalRows);
   idle=0;
   while(idle<lanes.length&&(preparationSteps<preparationBudget||steps<budget)){
    const work=backgroundWork(preparationSteps<preparationBudget,steps<budget);
    if(work){if(work==='score')steps++;else preparationSteps++;idle=0;}else idle++;
   }
-  if(page.community&&!page.communityDone){const row=page.community.community.take(normalRows);if(row){page.communityRow=row;page.communityDone=true;}else if(page.community.community.exhausted)page.communityDone=true;}
+  fillCommunity(normalRows);
   const rows=[...normalRows];
   if(page.communityRow)rows.push(page.communityFormatted||(page.communityFormatted=page.community.format(page.communityRow)));
   const positiveExhausted=lanes.every(lane=>lane.exhausted),preferenceResolved=lanes.some(lane=>lane.hasPreferred)||lanes.every(lane=>lane.preferenceResolved),exhausted=positiveExhausted&&preferenceResolved&&communities.every(lane=>lane.community.exhausted);

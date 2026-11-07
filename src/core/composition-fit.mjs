@@ -17,22 +17,23 @@ const roleSort={bottom:0,jungle:1,mid:2,support:3,top:4};
 const memberOrder=(a,b)=>a.role!==b.role&&a.role in roleSort&&b.role in roleSort?roleSort[a.role]-roleSort[b.role]:memberKey(a).localeCompare(memberKey(b));
 const isTank=p=>['tank','supportTank'].includes(p.build);
 const offensive=m=>!isTank(m.p)&&m.p.build!=='enchanter';
+const canFollow=m=>offensive(m)||m.p.engage||m.p.peel||m.p.frontline;
 const ranged=m=>(m.c?.stats?.attackrange??0)>250;
 const carry=m=>!!m.p.sustain&&offensive(m);
 const name=m=>m.c?.name||m.champion;
-const relationshipKey=m=>memberKey(m)+':'+((m.p.peel?1:0)|(m.p.engage?2:0)|(m.p.frontline?4:0)|(m.p.poke?8:0)|(m.p.aoe?16:0)|(carry(m)?32:0)|(offensive(m)?64:0)|(ranged(m)?128:0));
+const relationshipKey=m=>memberKey(m)+':'+((m.p.peel?1:0)|(m.p.engage?2:0)|(m.p.frontline?4:0)|(m.p.poke?8:0)|(m.p.aoe?16:0)|(carry(m)?32:0)|(offensive(m)?64:0));
 
 // Return the strongest supported relationship, never the sum of synonymous
 // tags. Protection and setup must come from a different member than output.
 function relationship(a,b,graph,details,key=null){
  const cache=details?null:graph?.fitCache;
  if(cache?.has(key))return cache.get(key);
- let quality=0,kind='',edge=null,control=0;
+ let quality=0,kind='',edge=null,control=0,mechanic=null,tacticEvidence=null,mechanicTactic=0;
  const offer=(value,label)=>{if(value>quality){quality=value;kind=label;}};
  for(const [lead,follow] of [[a,b],[b,a]]){
-  if(lead.p.peel&&carry(follow))offer(ranged(follow)?.73:.65,'保护接持续输出');
+  if(lead.p.peel&&carry(follow))offer(.65,'保护接持续输出');
   if(lead.p.engage&&offensive(follow))offer(follow.p.aoe?.68:follow.p.sustain?.64:.59,'先手接伤害');
-  if(lead.p.frontline&&carry(follow))offer(ranged(follow)?.57:.48,'承伤接持续输出');
+  if(lead.p.frontline&&carry(follow))offer(.48,'承伤接持续输出');
   if(lead.p.peel&&follow.p.poke&&offensive(follow))offer(.56,'消耗与接应');
  }
  if(a.p.poke&&b.p.poke)offer(.73,'共同远程消耗');
@@ -51,23 +52,38 @@ function relationship(a,b,graph,details,key=null){
     if(details&&!edge)edge=skill;
    }
   }
+  const verified=graph.mechanics?.match(a,b,details);
+  if(verified){
+   mechanicTactic=verified.tactic.tactic;tacticEvidence=verified.tactic.evidence;
+   if(verified.relation.quality>quality){
+    offer(verified.relation.quality,verified.relation.label);
+    edge=null;mechanic=verified.relation.evidence;
+   }
+  }
  }
- const result={quality,kind,control,...(details?{edge}:{}),a:a.champion,b:b.champion};
+ const result={quality,kind,control,mechanicTactic,...(details?{edge,mechanic,tacticEvidence}:{}),a:a.champion,b:b.champion};
  // Search repeatedly grades the same pairs in many different whole teams.
  // The cache belongs to this graph/input only and retains scalar relations,
- // with all profile/range bits used above in the key; displayed details are
+ // with all profile bits used above in the key; displayed details are
  // always recomputed. Bound it instead of retaining every searched lineup.
  if(cache&&cache.size<16384)cache.set(key,result);
  return result;
 }
 
 function connectionQuality(members,graph,details){
- const best=members.map(()=>0),pairs=[],matrix=members.map(()=>members.map(()=>0));let control=0;
+ const best=members.map(()=>0),pairs=[],matrix=members.map(()=>members.map(()=>0));
+ let control=0,mechanicQuality=0,mechanicPair=null,participation;
  const keys=!details&&graph?.fitCache?members.map(relationshipKey):null;
  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){
   const link=relationship(members[i],members[j],graph,details,keys?keys[i]+'|'+keys[j]:null);
   matrix[i][j]=matrix[j][i]=link.quality;best[i]=Math.max(best[i],link.quality);best[j]=Math.max(best[j],link.quality);
   control=Math.max(control,link.control);
+  if(link.mechanicTactic){
+   participation??=members.reduce((sum,m)=>sum+(canFollow(m)?1:.4),0);
+   const coverage=(participation+(canFollow(members[i])?0:.6)+(canFollow(members[j])?0:.6))/members.length;
+   const quality=link.mechanicTactic*coverage;
+   if(quality>mechanicQuality){mechanicQuality=quality;mechanicPair=link;}
+  }
   if(details&&link.quality)pairs.push(link);
  }
  // A maximum spanning tree asks whether everyone can join the partnership.
@@ -78,7 +94,7 @@ function connectionQuality(members,graph,details){
   for(const i of joined)for(let j=0;j<members.length;j++)if(!joined.has(j)&&matrix[i][j]>value){value=matrix[i][j];next=j;}
   joined.add(next);tree+=value;
  }
- return {quality:.65*best.reduce((sum,v)=>sum+v,0)/members.length+.35*tree/(members.length-1),pairs,control};
+ return {quality:.65*best.reduce((sum,v)=>sum+v,0)/members.length+.35*tree/(members.length-1),pairs,control,mechanicQuality,mechanicPair};
 }
 
 function tacticalQuality(members,connections){
@@ -100,9 +116,10 @@ function tacticalQuality(members,connections){
   }
  }
  if(connections.control&&members.some(offensive)){
-  const participation=members.reduce((sum,m)=>sum+(offensive(m)||m.p.engage||m.p.peel||m.p.frontline?1:.4),0)/members.length;
+  const participation=members.reduce((sum,m)=>sum+(canFollow(m)?1:.4),0)/members.length;
   offer(connections.control*participation,'catch','实际控制命中后，集中同一目标');
  }
+ if(connections.mechanicQuality)offer(connections.mechanicQuality,'conditional-mechanics','确认命中和落点后，按技能条件衔接');
  const pokers=members.filter(m=>m.p.poke&&offensive(m));
  if(pokers.length>=2){
   const cover=members.some(m=>m.p.peel||m.p.frontline),participation=members.reduce((sum,m)=>sum+(m.p.poke||m.p.peel||m.p.frontline?1:.35),0)/members.length;
@@ -112,8 +129,14 @@ function tacticalQuality(members,connections){
   const holding=members.filter(m=>m.p.poke||m.p.peel||m.p.frontline).length;
   offer(members.length===2?.9:.78+.16*Math.min(1,holding/2),'side-pressure','边线施压，队友接应或守线');
  }
- const sustained=members.filter(carry),protect=members.filter(m=>m.p.peel||m.p.frontline);
- if(sustained.length&&protect.length)offer(.8+.14*Math.min(1,protect.length/Math.max(1,sustained.length)),'sustained','承接压力，持续输出安全目标');
+ const sustained=members.filter(carry);
+ const protect=members.filter(m=>(m.p.peel||m.p.frontline)&&sustained.some(ally=>ally!==m));
+ if(protect.length){
+  // One protected damage dealer can anchor a duo. In a larger team it
+  // cannot give the other members full credit for the same partnership.
+  const participation=members.reduce((sum,m)=>sum+(carry(m)||m.p.peel||m.p.frontline?1:m.p.engage?.75:m.p.poke?.65:offensive(m)?.45:0),0)/members.length;
+  offer((.8+.14*Math.min(1,protect.length/sustained.length))*participation,'sustained','承接压力，持续输出安全目标');
+ }
  return best;
 }
 
@@ -178,8 +201,13 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  if(!details)return {score,rawScore,known,size:requested,confidence};
  const strengths=[];
  const strongest=[...connections.pairs].sort((a,b)=>b.quality-a.quality||`${a.a}:${a.b}`.localeCompare(`${b.a}:${b.b}`)).slice(0,2);
- for(const link of strongest)if(link.quality>=.56){const pair=members.filter(m=>[link.a,link.b].includes(m.champion)).map(name).join('与');strengths.push(`${pair}：${link.kind}${link.edge?.current?'（已核对技能条件）':''}`);}
- if(tactics.quality>=.65)strengths.push(tactics.name);
+ if(tactics.id==='conditional-mechanics'){
+  const pair=connections.mechanicPair;
+  if(!strongest.includes(pair))strongest[1]=pair;
+  strengths.push(`${pair.tacticEvidence.mechanicLabel}：${pair.tacticEvidence.step}`);
+ }
+ for(const link of strongest)if(link.quality>=.56){const pair=members.filter(m=>[link.a,link.b].includes(m.champion)).map(name).join('与');strengths.push(`${pair}：${link.kind}${link.mechanic||link.edge?.current?'（已核对技能条件）':''}`);}
+ if(tactics.id!=='conditional-mechanics'&&tactics.quality>=.65)strengths.push(tactics.name);
  if(damage>=.8&&size>=3)strengths.push('物理与法术伤害均有实际来源');
  if(!connections.pairs.some(p=>p.quality>=.56))gaps.push('暂无已核对的专属联动，主要按共同职责或有条件接控估算，需约定共同目标。');
  if(laneCount<positioned.length)gaps.push('存在非常规分路，需另外确认对线与经济分配。');
@@ -191,6 +219,7 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  const correction=round(score-breakdown.reduce((sum,row)=>sum+row.points,0));
  if(correction)breakdown.push({key:'confidence',label:'完整度与取整',points:correction,max:0});
  return {score,rawScore,known,size:requested,confidence,breakdown,strengths,gaps,tactic:tactics,
-  relationships:strongest.map(({edge,...link})=>({...link,...(edge?.current?{condition:edge.condition,sourceUrls:edge.sourceUrls}:{} )})),
+  ...(tactics.id==='conditional-mechanics'?{tacticEvidence:connections.mechanicPair.tacticEvidence}:{}),
+  relationships:strongest.map(({edge,mechanic,mechanicTactic,tacticEvidence,...link})=>({...link,...(edge?.current?{condition:edge.condition,sourceUrls:edge.sourceUrls}:{}),...mechanic,...(tacticEvidence?{tacticEvidence}:{})})),
   reason:`${known} 人配合：${breakdown.map(row=>`${row.label} ${row.points}${row.max?'/'+row.max:''}`).join(' · ')}。${known<requested?'资料不全已降低分数。':''}规则分，不是胜率。`};
 }

@@ -3,12 +3,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
-import {createSlots,recommend,replaceMember} from '../src/core/recommend.mjs';
+import {createSlots,recommend,replaceMember,createRecommendationSearch,createRecommendationResources} from '../src/core/recommend.mjs';
 import {configureCatalog,BUNDLED_CATALOG} from '../src/core/catalog.mjs';
 import {lineupFit} from '../src/core/room-ballot.mjs';
 import {orderRecommendationPage,recommendationStyleTier,meetsRecommendationFit} from '../src/core/recommendation-policy.mjs';
 import {clientRecommendationDraft,recommendationDraft} from '../src/core/draft-intents.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
+import {recommendationConditionsKey,splitRecommendationInput} from '../src/core/recommendation-input.mjs';
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
 import {defaultState} from '../services/storage.mjs';
@@ -17,7 +18,34 @@ import {familiarityWinner} from '../src/core/recommendation-familiarity.mjs';
 const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
 const {champions,patch}=data,key=id=>champions.find(c=>c.id===id).key;
 const workerSource=(await fs.readFile(new URL('../src/recommend-worker.mjs',import.meta.url),'utf8')).replace(/^import .*;\r?\n/gm,'');
-function worker(input){let response;const context=vm.createContext({self:{postMessage:value=>response=value},recommend,replaceMember,configureCatalog,BUNDLED_CATALOG,orderRecommendationPage});vm.runInContext(workerSource,context);context.self.onmessage({data:{requestId:1,input,initialize:true}});assert.equal(response.error,undefined);return response.results;}
+function workerPages(input,{order=orderRecommendationPage}={}){
+ let response,requestId=0;
+ let state=Array.from(input.randomSeed||'fixture').reduce((seed,char)=>Math.imul(seed,31)+char.charCodeAt(0)|0,1);
+ const crypto={randomUUID:()=> 'test-draft',getRandomValues(bytes){
+  for(let i=0;i<bytes.length;i++){state^=state<<13;state^=state>>>17;state^=state<<5;bytes[i]=state>>>24;}return bytes;
+ }};
+ const context=vm.createContext({self:{postMessage:value=>response=value},crypto,replaceMember,configureCatalog,BUNDLED_CATALOG,orderRecommendationPage:order,createRecommendationSearch,createRecommendationResources,recommendationConditionsKey});
+ vm.runInContext(workerSource,context);
+ const {factory,conditions}=splitRecommendationInput(input);
+ const send=data=>{
+  const native=Object.getOwnPropertyDescriptor(globalThis,'crypto');
+  Object.defineProperty(globalThis,'crypto',{value:crypto,configurable:true});
+  try{context.self.onmessage({data:{requestId:++requestId,...data}});}
+  finally{Object.defineProperty(globalThis,'crypto',native);}
+  assert.equal(response.error,undefined);
+  const page=response;
+  if(page.search)context.self.onmessage({data:{commit:{handle:page.search.handle,step:page.search.step}}});
+  return page;
+ };
+ let page;
+ return ()=>{
+  page=page?.search?send({resume:{handle:page.search.handle,step:page.search.step,newPage:true}}):send({factory,factoryToken:1,initialize:true,input:conditions});
+  for(let i=0;i<400&&page.search&&!page.search.complete&&!page.search.capacity;i++)page=send({resume:{handle:page.search.handle,step:page.search.step,newPage:false}});
+  assert.ok(!page.search||page.search.complete,'Worker did not finish the bounded fixture page');
+  return page.results;
+ };
+}
+const worker=input=>workerPages(input)();
 const scores=html=>[...html.matchAll(/class="lineup-fit-number"[^>]*>契合 (\d+)/g)].map(m=>Number(m[1]));
 const rawRoster=(ids,local=4)=>({localPlayerCellId:local,myTeam:ids.map((id,cellId)=>({cellId,assignedPosition:['TOP','JUNGLE','MIDDLE','BOTTOM','UTILITY'][cellId],championId:id?key(id):0})),actions:[],bans:[]});
 const visibleRoster=(ids,controlled=['support'])=>createSlots().map((s,i)=>({...s,champion:ids[i],party:controlled.includes(s.role),clientCellId:i}));
@@ -75,9 +103,15 @@ test('style selects different actual trio candidates, without adding points to t
  assert.equal(new Set(sets).size,3,'All styles must make an observable selection difference on the same hero pools');
 });
 
-test('sorting a page never changes the sampled stream or returns duplicate offset candidates',()=>{
- const input={slots:createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role)})),champions,patch,scope:'party',style:'fun',minimumFitScore:60,stylePolicy:true,randomSeed:'pages',rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx','Lucian','Kalista']},support:{mode:'only',heroes:['Braum','Nami','Alistar','Malphite']}}};
- const all=recommend({...input,limit:12}),left=worker({...input,limit:6}),right=worker({...input,limit:6,offset:6});assert.deepEqual(new Set([...left,...right].map(r=>r.id)),new Set(all.map(r=>r.id)));assert.equal(new Set([...left,...right].map(r=>r.id)).size,left.length+right.length);
+test('sorting a page preserves the worker stream and successive pages have no duplicates',()=>{
+ const input={slots:createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role)})),champions,patch,scope:'party',style:'fun',randomSeed:'pages',limit:6,rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx','Lucian','Kalista']},support:{mode:'only',heroes:['Braum','Nami','Alistar','Malphite']}}};
+ const sorted=workerPages(input),unsorted=workerPages(input,{order:rows=>rows});
+ const ids=rows=>rows.map(row=>row.id);
+ const left=ids(sorted()),right=ids(sorted());
+ assert.ok(left.length&&right.length);
+ assert.deepEqual(new Set(left),new Set(ids(unsorted())));
+ assert.deepEqual(new Set(right),new Set(ids(unsorted())));
+ assert.equal(new Set([...left,...right]).size,left.length+right.length);
 });
 
 test('style picks teammate variants after the familiar draw without changing the member hero probabilities',()=>{
@@ -91,20 +125,21 @@ test('style picks teammate variants after the familiar draw without changing the
  assert.ok(familiar>=235&&familiar<=275,String(familiar));
 });
 
-test('actual worker keeps a fixed familiar population across all six draws and offset pages',()=>{
+test('actual worker keeps a fixed familiar population across successive cursor pages',()=>{
  const slots=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),...(s.role==='support'?{champion:'Nami',locked:true}:{})})),base={slots,champions,patch,scope:'bot',style:'wild',limit:6,rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx','Vayne','Jhin','Ezreal','MissFortune','Lucian','KogMaw']}}};
  let unfamiliar=0;
  for(let seed=0;seed<24;seed++){
-  const input={...base,randomSeed:'fixed-mass:'+seed,familiarityByRole:{bottom:{member:'own',mass:.85,usage:{sampled:100,counts:{Ashe:100}}}}},rows=worker(input);
+  const input={...base,randomSeed:'fixed-mass:'+seed,familiarityByRole:{bottom:{member:'own',mass:.85,usage:{sampled:100,counts:{Ashe:100}}}}},pages=workerPages(input),rows=pages();
   unfamiliar+=rows.filter(row=>row.slots.find(s=>s.role==='bottom').champion!=='Ashe').length;
   const strict=worker({...input,familiarityByRole:{bottom:{member:'own',mass:1,usage:{sampled:100,counts:{Ashe:100}}}}});assert.equal(strict.length,1);assert.equal(strict[0].slots.find(s=>s.role==='bottom').champion,'Ashe');
-  assert.deepEqual(new Set([...worker({...input,limit:3}),...worker({...input,limit:3,offset:3})].map(r=>r.id)),new Set(rows.map(r=>r.id)));
+  const next=pages();
+  assert.equal(new Set([...rows,...next].map(r=>r.id)).size,rows.length+next.length);
  }
  assert.ok(unfamiliar<35,`Repeated familiar draws must be skipped, never donated to strangers: ${unfamiliar}`);
 });
 
 test('production styles preserve explicit tempo and each bound member hero preference',()=>{
- const slots=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),...(s.role==='support'?{champion:'Nami',locked:true}:{})})),base={slots,champions,patch,scope:'bot',randomSeed:'tempo',limit:30,play:{tempo:'growth'},rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx','Vayne','Jhin','Ezreal','MissFortune','Lucian','KogMaw']}}};
+ const slots=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),...(s.role==='support'?{champion:'Nami',locked:true}:{})})),base={slots,champions,patch,scope:'bot',randomSeed:'tempo',limit:24,play:{tempo:'growth'},rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx','Vayne','Jhin','Ezreal','MissFortune','Lucian','KogMaw']}}};
  for(const style of ['balanced','fun','wild'])assert.deepEqual(worker({...base,style,familiarityByRole:{bottom:{member:'own',mass:1,usage:{sampled:10,counts:{Ashe:10}}}}}),[]);
  const familiar={mid:'Annie',bottom:'Ashe',support:'Braum'},familiarityByRole=Object.fromEntries(Object.entries(familiar).map(([role,id])=>[role,{member:role,mass:1,usage:{sampled:100,counts:{[id]:100}}}]));
  for(const style of ['balanced','fun','wild']){const rows=worker({slots:createSlots(),champions,patch,scope:'party',style,limit:6,randomSeed:'all-members',familiarityByRole});assert.equal(rows.length,1);for(const [role,id]of Object.entries(familiar))assert.equal(rows[0].slots.find(s=>s.role===role).champion,id,'Style cannot replace a member who explicitly chose 100% familiar heroes');}

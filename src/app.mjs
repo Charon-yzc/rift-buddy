@@ -353,7 +353,7 @@ async function refreshPairData(){
 let catalogPreview=null,catalogBusy=false,catalogRequest=0,catalogEditorKind="trio",resultDraftSignature="";
 let comboView=null,dragPick=null,draggedAt=0,pendingDragRender=false,activeRecommendation=null,generating=false,recommendationRun=0,recommendationSearchActive=false,recommendationRunner=null,recommendationFactoryGeneration=0,communityAfter='';
 let cancelRecommendationReveal=()=>{};
-function cancelRecommendation({releaseFactory=false}={}){cancelRecommendationReveal();recommendationRun++;autoRecommendationKey='';recommendationSearchActive=false;if(activeRecommendation){activeRecommendation.cancel();activeRecommendation=null;}if(releaseFactory){recommendationRunner?.dispose();communityAfter='';}else recommendationRunner?.invalidate();generating=false;}
+function cancelRecommendation({releaseFactory=false}={}){cancelRecommendationReveal();recommendationRun++;autoRecommendationKey='';recommendationSearchActive=false;communityAfter='';if(activeRecommendation){activeRecommendation.cancel();activeRecommendation=null;}if(releaseFactory)recommendationRunner?.dispose();else recommendationRunner?.invalidate();generating=false;}
 let client={connected:false,phase:'Offline',message:'正在检查客户端…'},syncing=false,unassigned=[],enemy=[],clientBans=[];
 let picker=null,buildView=null,detailResult=null,updating=false,pinned=false;
 let libraryQuery='',libraryRole='all',hexQuery='',hexRarity='all',hexHero=null,hexSelected=[],hexSelectedOnly=false,hexForHero=false;
@@ -1632,20 +1632,22 @@ function currentRoleEvidence(){
 function recommendationInput(refreshFamiliarity=false,operation=null){
  // A recommendation keeps the last range for this exact public draft. Its
  // display freshness and every client write still require a fresh read.
+ const ownRole=taskOwnRole();
  const at=Date.parse(client.eligibility?.receivedAt),now=Date.now(),referenceTime=Number.isFinite(at)?Math.min(now,at+15000):now;
  const eligibility=localPickEligibility(client,slots,data.champions,{scope,soloRole,playerPosition:saved.draft?.playerPosition,now:referenceTime});
- const includePreselected=includePublicPreselection(),confirmed=clientRecommendationDraft(slots,client.connected?client.session:null,data.champions,{includePreselected,ownRole:taskOwnRole()}),session=confirmed.session,claiming=activeRoleClaim(positionClaim,client),singleParty=['party','context'].includes(scope)&&slots.filter(s=>s.party).length===1&&slots.find(s=>s.party)?.role===taskOwnRole();
+ const includePreselected=includePublicPreselection(),confirmed=clientRecommendationDraft(slots,client.connected?client.session:null,data.champions,{includePreselected,ownRole}),session=confirmed.session,claiming=activeRoleClaim(positionClaim,client),singleParty=['party','context'].includes(scope)&&slots.filter(s=>s.party).length===1&&slots.find(s=>s.party)?.role===ownRole;
  let contextSession=!includePreselected&&(scope==='solo'||draftComparing)&&session?{...session,myTeam:session.myTeam.map(p=>p.cellId===session.localPlayerCellId?{...p,championPickIntent:0}:p)}:session;
  const currentPlan=automaticCreativePlan(activeCreativePlan,data.catalogInfo?.status,data.patch);
  let base=draftComparing||scope==='solo'||singleParty?comparisonDraft(confirmed.slots,currentPlan,session,data.champions):confirmed.slots;
- if(!includePreselected&&(claiming||singleParty||scope==='solo'))({slots:base,session:contextSession}=editableLocalDraft(base,session,data.champions,taskOwnRole()));
- const contextSlots=recommendationDraft(base,contextSession,data.champions,{ownRole:taskOwnRole(),party:currentParty(),confirmedOnly:true,includePreselected,bans:clientBans,disabled:client.eligibility?.disabled||[],eligibleByRole:eligibility.eligibleByRole});
+ if(!includePreselected&&(claiming||singleParty||scope==='solo'))({slots:base,session:contextSession}=editableLocalDraft(base,session,data.champions,ownRole));
+ const contextSlots=recommendationDraft(base,contextSession,data.champions,{ownRole,party:currentParty(),confirmedOnly:true,includePreselected,bans:clientBans,disabled:client.eligibility?.disabled||[],eligibleByRole:eligibility.eligibleByRole});
  const own=currentPlayerSelection(contextSession,data.champions,base);
  const knownPicks=new Set((contextSession?.myTeam||[]).map(player=>data.champions.find(champion=>Number(champion.key)===Number(player.championId))?.id).filter(Boolean));
  const publicPicks=[...new Set([...unassigned.map(p=>p.champion),...unassignedPublicPicks(base,contextSession,data.champions).map(p=>p.champion)])].filter(id=>!contextSession||knownPicks.has(id));
- const liveFamiliarity=roomFamiliarityContext({client,room,slots:contextSlots,scope,ownRole:taskOwnRole(),summary:championUsage,mass:saved.preferences.familiarityMass});
+ const liveFamiliarity=roomFamiliarityContext({client,room,slots:contextSlots,scope,ownRole,summary:championUsage,mass:saved.preferences.familiarityMass});
  const input={includePreselected,rankedDraft:resolvedRankedDraft(client,data,saved.draft?.enemyRoles),randomSeed:String(publicClientGameId(client)||recommendationSessionSeed)+(recommendationBatch?":batch:"+recommendationBatch:""),clientSession:contextSession,party:currentParty(),soloRole,soloChampion:scope==='solo'?(own?.id||base.find(s=>s.role===soloRole&&s.locked)?.champion||null):null,slots:contextSlots,champions:data.champions,builds:data.builds,pairStatistics:data.pairStatistics,buildSource:data.buildSource,patch:data.patch,sourceRoles:currentRoleEvidence(),style,scope,pool:saved.preferences.pool,poolMode:saved.preferences.poolMode,play:saved.preferences.play,rolePools:saved.preferences.rolePools,catalog:data.catalog,catalogStatus:data.catalogInfo?.status,linkReviewContext:{baseKind:data.catalogInfo?.baseKind,combinationOrigins:data.catalogInfo?.combinationOrigins,publicIds:data.catalogInfo?.linkOrigins,status:data.catalogInfo?.linkStatus},excluded:[...saved.excluded],publicBans:clientBans,eligibleByRole:eligibility.eligibleByRole,confirmedPick:localPickLocked(session)?eligibility.confirmedPick:null,publicPicks,enemy:client.session?.allowDuplicatePicks===false?publicMatchupIds():[],visibleEnemies:publicMatchupIds(),creativePlan:draftComparing?null:currentPlan,catalogChoice:draftComparing?null:saved.draft?.catalogChoice,version:data.version,catalogVersion:data.catalog.version,limit:6,offset};
- input.fitSlots=recommendationDraft(slots,client.connected?client.session:null,data.champions,{ownRole:taskOwnRole(),party:currentParty()});input.fitSession=client.connected?client.session:null;
+ input.ownRole=ownRole;
+ input.fitSlots=recommendationDraft(slots,client.connected?client.session:null,data.champions,{ownRole,party:currentParty()});input.fitSession=client.connected?client.session:null;
  const captured=operation?.captured===true;
  if(operation){
   const identity=recommendationConditionsKey(input),refs=RECOMMENDATION_FACTORY_FIELDS.map(field=>input[field]);
@@ -1692,7 +1694,9 @@ async function generate(next=false,automatic=false){
   let emptyPages=page.search?.complete&&!page.rows.length?1:0;
   // Each worker slice shares one page-size scoring budget across all lanes.
   // Pending draws retain their original heroes; a slow draw is never rerolled.
-  while(page.search&&(!page.search.complete||!page.rows.length&&!page.search.exhausted)&&(!page.rows.length||page.search.communityPending)&&(!page.search.prepared||!page.rows.length)&&!page.search.capacity&&emptyPages<3&&slices<192&&performance.now()<deadline){
+  // A ready recipe should not end the first slice before ordinary candidates get a chance.
+  const needsNormalCandidate=()=>slices===1&&page.rows.length===1&&page.rows[0].communityRecommendation===true;
+  while(page.search&&(!page.search.complete||!page.rows.length&&!page.search.exhausted)&&(!page.rows.length||needsNormalCandidate()||page.search.communityPending&&!page.search.prepared)&&!page.search.capacity&&emptyPages<3&&slices<192&&performance.now()<deadline){
    // Yield between slices so client sync, picks and cancellation can run.
    await new Promise(resolve=>setTimeout(resolve,0));if(!current())throw Object.assign(Error('条件已变化'),{cancelled:true});
    page=await calculateRecommendation({...input,continueSearch:true},accept,true);slices++;
@@ -1714,7 +1718,7 @@ async function generate(next=false,automatic=false){
   results=result;showAllCandidates=false;resultsSignature=signature;
   if(page.search?.fallback)recommendationError='暂无所选玩法，显示其他匹配';
   if(!result.length)recommendationError=page.search?.preferenceConflict?'英雄偏好与所选玩法无匹配':page.search?.exhausted?'当前范围已搜索完，可调整选人条件':'本批暂无达标候选，可继续查找';if(!results.length)toast(recommendationError,true);else reveal=true;
- }catch(err){if(run===recommendationRun){if(err.cancelled){autoRecommendationKey='';recommendationSearchActive=false;markResultStale();results=[];resultsSignature='';retry=true;}else{recommendationError=err.message;toast(err.message,true);}}}finally{if(run===recommendationRun){generating=false;render();if(retry)queueCompanionRecommendation();else if(recommendationSearchActive&&prepareNextGuard())recommendationRunner.prepareNext();}}
+ }catch(err){if(run===recommendationRun){if(err.cancelled){autoRecommendationKey='';recommendationSearchActive=false;communityAfter='';markResultStale();results=[];resultsSignature='';retry=true;}else{recommendationError=err.message;toast(err.message,true);}}}finally{if(run===recommendationRun){generating=false;render();if(retry)queueCompanionRecommendation();else if(recommendationSearchActive&&prepareNextGuard())recommendationRunner.prepareNext();}}
 }
 const sync=createClientSync(performSync);
 const recommendationSessionSeed=crypto.randomUUID();

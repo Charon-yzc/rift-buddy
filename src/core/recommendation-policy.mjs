@@ -3,10 +3,14 @@ import {conventionalRole} from './rules.mjs';
 
 // Use the very same public-roster projection as the visible score, including
 // incomplete evidence and fixed-position conflict caps. Never use grade.score.
-export function recommendationFit(entry,{slots,champions,scope,soloRole,clientSession,party,includePreselected,patch,catalogStatus,context}={}){
- return lineupFit(entry.slots,slots,champions,{scope:scope||entry.scope,soloRole:soloRole||entry.soloRole||entry.targets?.[0],clientSession,party,includePreselected,editableRoles:entry.targets,patch,catalogStatus,catalogSelectionId:entry.communityCombinationId,context});
+export function recommendationFit(entry,{slots,champions,scope,soloRole,clientSession,party,includePreselected,patch,catalogStatus,context,details}={}){
+ return lineupFit(entry.slots,slots,champions,{scope:scope||entry.scope,soloRole:soloRole||entry.soloRole||entry.targets?.[0],clientSession,party,includePreselected,editableRoles:entry.targets,patch,catalogStatus,catalogSelectionId:entry.communityCombinationId,context,details});
 }
-export const meetsRecommendationFit=(fit,minimum=60)=>!Number.isFinite(fit.score)||fit.score>=minimum;
+export function meetsRecommendationFit(fit,minimum=60){
+ if(fit.compatible===false)return false;
+ const upperBound=Number.isFinite(fit.score)?fit.score:(fit.scoreCeiling??Infinity);
+ return upperBound>=minimum;
+}
 
 // Styles select an execution category; they never add points to mechanism fit.
 export function recommendationStyleTier(entry,style){
@@ -20,6 +24,15 @@ export function recommendationStyleTier(entry,style){
 }
 
 // Order only the selected batch, preserving its sampling and pagination.
+export function recommendationOpponentScore(row){
+ const fit=row.opponentFit;
+ return [fit?.adjustment,fit?.ranked?.adjustment].reduce((sum,value)=>sum+(Number.isFinite(value)?value:0),0);
+}
+export function compareRecommendationFit(a,b){
+ const fit=row=>Number.isFinite(row.recommendationFit?.score)?row.recommendationFit.score:-1;
+ const focus=row=>fit(row)>=0?(row.recommendationFocus||0):0;
+ return fit(b)-fit(a)||recommendationOpponentScore(b)-recommendationOpponentScore(a)||focus(b)-focus(a);
+}
 export function orderRecommendationPage(rows){
- return rows.map((row,index)=>({row,index})).sort((a,b)=>(Number.isFinite(b.row.recommendationFit?.score)?b.row.recommendationFit.score:-1)-(Number.isFinite(a.row.recommendationFit?.score)?a.row.recommendationFit.score:-1)||a.index-b.index).map(({row})=>row);
+ return [...rows].sort(compareRecommendationFit);
 }
