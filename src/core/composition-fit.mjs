@@ -143,14 +143,17 @@ function tacticalQuality(members,connections){
   const participation=members.reduce((sum,m)=>sum+(carry(m)||m.p.peel||m.p.frontline?1:m.p.engage?.75:m.p.poke?.65:offensive(m)?.45:0),0)/members.length;
   offer((.8+.14*Math.min(1,protect.length/sustained.length))*participation,'sustained','承接压力，持续输出安全目标');
  }
- // This fills an unrepresented job, not a new shortcut over actual skill
- // relays, initiation, poke or side-lane plans already identified above.
- if(!best.quality)for(const lead of members.filter(m=>m.p.peel||m.p.frontline))for(const output of members.filter(m=>m!==lead&&coveredWindow(m))){
+ // A shared execution plan is distinct from its damage duration. Compare
+ // the same protection plan with or without specific skill evidence; hiding
+ // a verified relay must never unlock a higher generic fallback score.
+ // Keep that relay's conditions in the displayed evidence independently of
+ // which plan wins this budget. Sustained damage remains a separate gap.
+ for(const lead of members.filter(m=>m.p.peel||m.p.frontline))for(const output of members.filter(m=>m!==lead&&coveredWindow(m))){
   // The two actual partners supply this window. Additional members earn
   // participation only for their own job; extra damage dealers do not all
   // inherit full protection from the same guard.
   const participation=members.reduce((sum,m)=>sum+(m===lead||m===output?1:m.p.peel||m.p.frontline?.85:m.p.engage&&offensive(m)?.75:offensive(m)?.45:.25),0)/members.length;
-  offer((lead.p.peel?.6:.5)*participation,'covered-window','技能与接触距离允许时打一轮，队友接应；技能空档退出');
+  offer((lead.p.peel?.95:.5)*participation,'covered-window','技能与接触距离允许时打一轮，队友接应；技能空档退出');
  }
  return best;
 }
@@ -219,13 +222,15 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  if(!details)return {score,rawScore,known,size:requested,confidence};
  const strengths=[];
  const strongest=[...connections.pairs].sort((a,b)=>b.quality-a.quality||`${a.a}:${a.b}`.localeCompare(`${b.a}:${b.b}`)).slice(0,2);
- if(tactics.id==='conditional-mechanics'){
+ // The compact view keeps two strengths. Show the plan that earned the
+ // tactic budget before its separate, conditional skill evidence.
+ if(tactics.id!=='conditional-mechanics'&&tactics.quality>=.65)strengths.push(tactics.name);
+ if(connections.mechanicPair){
   const pair=connections.mechanicPair;
   if(!strongest.includes(pair))strongest[1]=pair;
   strengths.push(`${pair.tacticEvidence.mechanicLabel}：${pair.tacticEvidence.step}`);
  }
  for(const link of strongest)if(link.quality>=.56){const pair=members.filter(m=>[link.a,link.b].includes(m.champion)).map(name).join('与');strengths.push(`${pair}：${link.kind}${link.mechanic||link.edge?.current?'（已核对技能条件）':''}`);}
- if(tactics.id!=='conditional-mechanics'&&tactics.quality>=.65)strengths.push(tactics.name);
  if(damage>=.8&&size>=3)strengths.push('物理与法术伤害均有实际来源');
  if(!connections.pairs.some(p=>p.quality>=.56))gaps.push('暂无已核对的专属联动，主要按共同职责或有条件接控估算，需约定共同目标。');
  if(laneCount<positioned.length)gaps.push('存在非常规分路，需另外确认对线与经济分配。');
@@ -237,7 +242,7 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  const correction=round(score-breakdown.reduce((sum,row)=>sum+row.points,0));
  if(correction)breakdown.push({key:'confidence',label:'完整度与取整',points:correction,max:0});
  return {score,rawScore,known,size:requested,confidence,breakdown,strengths,gaps,tactic:tactics,
-  ...(tactics.id==='conditional-mechanics'?{tacticEvidence:connections.mechanicPair.tacticEvidence}:{}),
+  ...(connections.mechanicPair?{tacticEvidence:connections.mechanicPair.tacticEvidence}:{}),
   relationships:strongest.map(({edge,mechanic,mechanicTactic,tacticEvidence,...link})=>({...link,...(edge?.current?{condition:edge.condition,sourceUrls:edge.sourceUrls}:{}),...mechanic,...(tacticEvidence?{tacticEvidence}:{})})),
   reason:`${known} 人配合：${breakdown.map(row=>`${row.label} ${row.points}${row.max?'/'+row.max:''}`).join(' · ')}。${known<requested?'资料不全已降低分数。':''}规则分，不是胜率。`};
 }
