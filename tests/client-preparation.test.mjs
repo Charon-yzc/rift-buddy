@@ -54,6 +54,15 @@ test('explicit lane claim only preselects a representative, leaves runes/spells/
  assert.deepEqual(f.calls.filter(c=>c.method!=='GET').map(c=>c.route),['/lol-champ-select/v1/session/actions/4']);
 });
 
+test('a queued hero-only click can replace an earlier hover while full configuration remains bound to its exact target',async()=>{
+ const quick=fixture();quick.value.preselectOnly=true;quick.own.championPickIntent=1;quick.action.championId=1;
+ const result=await quick.run();assert.equal(result.steps.hover.status,'done');assert.equal(quick.own.championPickIntent,22);assert.equal(quick.items,0);
+ const full=fixture();full.own.championPickIntent=1;full.action.championId=1;
+ await assert.rejects(full.run(),/选人对象已变化/);assert.equal(full.items,0);
+ const locked=fixture({locked:true});locked.value.preselectOnly=true;locked.own.championId=1;
+ await assert.rejects(locked.run(),/已锁定其他英雄/);
+});
+
 test('reference lane differs from the actual client lane without preventing a complete explicit preparation',async()=>{
  const f=fixture();f.own.assignedPosition='MIDDLE';f.value.context=runeWriteContext({connected:true,phase:'ChampSelect',session:f.session,game:{gameId:777}});
  const result=await f.run();assert.equal(result.complete,true);assert.equal(f.own.championPickIntent,22);assert.equal(f.own.assignedPosition,'MIDDLE');assert.equal(f.action.completed,false);assert.equal(f.items,1);

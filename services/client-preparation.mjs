@@ -45,9 +45,9 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
   return {context,session,own,action:selected.mode==='hex'?null:actions[0],timer:raw.timer?.phase};
  };
  const initial=await read();
- // A bench click binds the game and local cell, not the hero being replaced.
- // A previous explicit queued swap may have changed that hero in this game.
- const sameContext=(actual,expected)=>selected.mode==='hex'?actual.phase===expected.phase&&actual.gameId===expected.gameId&&actual.cellId===expected.cellId&&actual.assignedPosition===expected.assignedPosition:sameRuneWriteContext(actual,expected);
+ // A hero-only click binds this game/cell/position, not the hero replaced by
+ // an earlier queued click. Full configuration writes keep the exact target.
+ const sameContext=(actual,expected)=>selected.preselectOnly?actual.phase===expected.phase&&actual.gameId===expected.gameId&&actual.cellId===expected.cellId&&actual.assignedPosition===expected.assignedPosition:sameRuneWriteContext(actual,expected);
  if(!sameContext(initial.context,selected.context))throw Error('选人对象已变化，尚未操作；请核对后重新点击');
  const locked=selected.mode==='hex'||initial.action.completed===true;
  if(selected.mode!=='hex'&&locked&&initial.own.championId!==selected.championId)throw Error('客户端已锁定其他英雄不能预选这位英雄');
