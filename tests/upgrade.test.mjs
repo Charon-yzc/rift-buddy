@@ -9,9 +9,10 @@ import {sanitizeLive,liveSnapshot,liveRequest} from '../services/live-client.mjs
 import {recommend,createSlots} from '../src/core/recommend.mjs';
 import {defaultState,validateState,readState,mergeState} from '../services/storage.mjs';
 import {compareAugments,augmentCategories} from '../src/core/hex-compare.mjs';
+import {projectBuildSources,DEFAULT_BUILD_SOURCE} from '../src/core/build-source.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+data.buildSources=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;data.builds=projectBuildSources(data.buildSources,DEFAULT_BUILD_SOURCE,data.patch);
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const selection={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,conditions:[]};
 
@@ -135,10 +136,10 @@ test('strict hero pools constrain only recommended heroes and do not replace two
  for(const row of result){assert.equal(row.slots[0].champion,'Garen');assert.equal(row.slots[1].champion,'LeeSin');assert.ok(row.slots.filter(s=>row.targets.includes(s.role)).every(s=>pool.includes(s.champion)));assert.equal(row.contributions.length,3);}
  assert.throws(()=>recommend({slots,champions:data.champions,pool:[],poolMode:'only'}),/英雄池/);
 });
-test('Hex comparison explains mechanics and partial values without synthetic rates',()=>{
- const rows=compareAugments({champion:data.champions.find(c=>c.id==='Ashe'),options:[1048,1002,1141],owned:[1047],augments:data.augments});
+test('historical 16.21 Hex comparison explains mechanics and partial values without synthetic rates',async()=>{
+ const historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),rows=compareAugments({champion:historical.champions.find(c=>c.id==='Ashe'),options:[1048,1002,1141],owned:[1047],augments:historical.augments});
  assert.equal(rows.length,3);assert.ok(rows[0].interactions.length);assert.match(rows[1].cautions.join(''),/装备急速/);assert.match(rows[2].reasons.join(''),/机制待复核/);assert.doesNotMatch(rows[2].reasons.join(''),/当前英雄.*治疗/);
- assert.ok(!('score'in rows[0]));assert.ok(augmentCategories(data.augments.find(a=>a.id===1048)).includes('crit'));
+ assert.ok(!('score'in rows[0]));assert.ok(augmentCategories(historical.augments.find(a=>a.id===1048)).includes('crit'));
 });
 test('old settings migrate and optional guide corruption preserves favorites; exported pool merges',async()=>{
  const old=defaultState(),migrated=validateState(old);assert.deepEqual(migrated.preferences.pool,[]);assert.equal(migrated.preferences.autoLive,true);

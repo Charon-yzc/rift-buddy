@@ -1,10 +1,11 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {hexItemSynergies} from '../src/core/hex-item-synergies.mjs';
 import {hexMechanismMicroRoutes,rankHexMicroRoutes} from '../src/core/hex-micro-routes.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {renderHexRoutes} from '../src/hex-routes-view.mjs';
 import {hexMicroRoutesView} from '../src/hex-micro-view.mjs';
-const base=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-item-synergies-16.21.json',import.meta.url)));
+const base=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-item-synergies-16.21.json',import.meta.url)));
 const data={...base,...fixture,champions:base.champions,items:{...base.items,...fixture.items}},image=(kind,id)=>`<img data-kind="${kind}" data-id="${id}">`;
 const run=(extra={})=>hexItemSynergies({data,hero:'Elise',owned:[1002],preparedItems:[3157,3152,3143],...extra});
 

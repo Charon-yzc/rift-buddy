@@ -14,7 +14,7 @@ import {stageServerData} from '../services/server-data-store.mjs';
 import {publishServerData} from '../services/server-data-publish.mjs';
 import {GENERATION_NAMES,validateGenerationGame,createGenerationRecipe,projectGenerationBundle,validateGenerationBundle,packGenerationBundle,generationRelease,validateGenerationManifest,verifyGenerationEnvelope,decodeGenerationAssets} from '../services/data-generation.mjs';
 
-const seed=await loadServerSeed('data'),recipe=createGenerationRecipe(seed,serverBuildJobs(seed)),bundle=projectGenerationBundle(seed,recipe),packed=packGenerationBundle(bundle,recipe);
+const seed=await loadServerSeed('tests/fixtures/snapshot-16.21'),recipe=createGenerationRecipe(seed,serverBuildJobs(seed)),bundle=projectGenerationBundle(seed,recipe),packed=packGenerationBundle(bundle,recipe);
 const pair=generateKeyPairSync('ed25519'),keys={test:pair.publicKey.export({type:'spki',format:'pem'})};
 const base={schema:2,version:seed.game.version,patch:seed.game.patch,sequence:1,publishedAt:'2026-10-19T00:00:00Z',checkedAt:'2026-10-18T22:00:00Z',files:packed.files,recipe};
 const manifest=value=>{const next=structuredClone(value);next.release=generationRelease(next);return next;};

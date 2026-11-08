@@ -1,10 +1,11 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {buildAugmentDescriptions} from '../services/augments.mjs';
 import {hexItemConversions} from '../src/core/hex-item-conversions.mjs';
 import {hexItemSynergies} from '../src/core/hex-item-synergies.mjs';
 import {hexMechanismMicroRoutes,rankHexMicroRoutes} from '../src/core/hex-micro-routes.mjs';
 import {renderHexRoutes} from '../src/hex-routes-view.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-item-conversions-16.21.json',import.meta.url)));
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-item-conversions-16.21.json',import.meta.url)));
 const run=extra=>hexItemConversions({data,hero:'Elise',owned:[1205],preparedItems:[1036],...extra}),item=row=>row.gear.flatMap(g=>g.items)[0];
 
 test('four source-bound conversions show a single item input and output, never duplicate the old stat or independent bonuses',()=>{

@@ -1,3 +1,4 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {hexEconomyCells,hexEconomyView,hexMicroRoutesView,hexMicroLineView} from '../src/hex-micro-view.mjs';
@@ -61,8 +62,8 @@ test('micro payloads ignore timers, wallets and unrelated combat changes so stab
  value.model.hexMicroRoutes=[{id:'old-hero'}];value.model.live={kind:'champion'};assert.deepEqual(hexMicroPayload(value,'routes').routes,[]);assert.match(hexMicroPayload(value,'routes').pending,/不符/);
 });
 
-const bundled=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
-bundled.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
+const bundled=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
+bundled.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url))).entries;
 test('withdrawn hero reviews retain the prepared configuration as distinct non-core references',()=>{
  const unreviewed=structuredClone(bundled);
  for(const hero of ['Ahri','Ashe','Garen'])unreviewed.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64);
@@ -80,11 +81,12 @@ test('reviewed hero mechanism routes reach the micro guide with conditions and p
   const state=selectGuide(null,{id:hero,role:'mid',mode:'hex',ownedAugmentIds:[core]}),before=JSON.stringify(state),model=createGuideModel(bundled,state),[micro]=model.hexMicroRoutes,[full]=model.hexRoutes;
   assert.equal(micro.kind,'mechanism',hero);assert.equal(micro.id,full.id);assert.equal(micro.augments.length,['Sona','Soraka'].includes(hero)?2:1);assert.equal(micro.augments[0].id,core);assert(micro.augments[0].owned&&micro.augments[0].core);
   assert.deepEqual(micro.sources,full.sources);assert.match(micro.basis,/不是胜率/);assert(micro.items.length>0);assert(micro.items.every(i=>!i.core));
-  for(const group of full.gear)for(const item of group.items)assert(micro.items.find(i=>i.id===item.id)?.brief.startsWith(group.when+'。'));
+  assert.deepEqual(micro.items,micro.gearGroups[0].items,'The compact row shows one conditional group rather than merging alternatives');assert.equal(micro.gearGroups.length,full.gear.length);
+  for(const [index,group]of full.gear.entries()){const projected=micro.gearGroups[index];assert.equal(projected.when,group.when);assert.equal(projected.why,group.why);assert.deepEqual(projected.items.map(i=>i.id),group.items.map(i=>i.id));for(const [itemIndex,item]of group.items.entries())assert.equal(projected.items[itemIndex].brief,(item.required?'玩法必需。':'')+group.when+'。'+group.why);}
   assert.equal(JSON.stringify(state),before,'References never change the prepared configuration');
  }
  const sona=createGuideModel(bundled,selectGuide(null,{id:'Sona',mode:'hex',role:'support',ownedAugmentIds:[1141]}));
- assert.match(sona.hexMicroRoutes[0].items.find(i=>i.id===3504).brief,/^队友靠普攻/);
+ assert.match(sona.hexMicroRoutes[0].gearGroups.flatMap(group=>group.items).find(i=>i.id===3504).brief,/^队友靠普攻/);
  const lux=createGuideModel(bundled,selectGuide(null,{id:'Lux',mode:'hex',role:'mid',ownedAugmentIds:[1048,1004]}));
  assert(lux.hexRoutes[0].ultimateUnavailable);assert.match(lux.hexMicroRoutes[0].augments[0].brief,/^终极技能不可使用/);assert.doesNotMatch(lux.hexMicroRoutes[0].augments[0].brief,/Q 命中后衔接 E、R/);
 });
@@ -97,7 +99,7 @@ test('micro pairing withdraws changed prerequisites as whole groups and never up
  const remaining=createGuideModel(changedAugment,selectGuide(null,{id:'Gwen',role:'top',mode:'hex',ownedAugmentIds:[1129]})).hexMicroRoutes;
  assert(remaining.every(r=>!r.augments.some(a=>a.id===1129)),'Changed augment withdraws its own dependencies, not unrelated valid routes');
  const changed=structuredClone(bundled);changed.items[3115].description+=' changed';const [micro]=createGuideModel(changed,selectGuide(null,{id:'Gwen',role:'top',mode:'hex',ownedAugmentIds:[1129]})).hexMicroRoutes;
- assert.equal(micro.kind,'mechanism');assert(!micro.items.some(i=>i.id===3115||i.id===3089));assert(!micro.items.some(i=>i.brief.includes('纳什')));assert.match(micro.augments[0].brief,/部分装备待核对/);
+ const remainingItems=micro.gearGroups.flatMap(group=>group.items);assert.equal(micro.kind,'mechanism');assert.equal(micro.pendingItems,1);assert(!remainingItems.some(i=>i.id===3115||i.id===3089));assert(!remainingItems.some(i=>i.brief.includes('纳什')));assert.equal(micro.augments[0].brief,'部分装备组待核对；请查看当前强化原文。');
 });
 
 test('current source route is prioritized only for its actual core and old recipes never fill missing choices',()=>{

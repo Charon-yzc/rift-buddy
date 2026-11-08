@@ -1,3 +1,4 @@
+// Frozen 16.21 acceptance contract; tests/hex-live-bundle.test.mjs covers the actual current bundle.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {hexChampionReview} from '../src/core/hex-review.mjs';
 import {mechanicReview} from '../src/core/mechanic-review.mjs';
@@ -8,7 +9,7 @@ import {hexEquipmentImpact,hexRecommendations} from '../src/core/hex-recommendat
 import {hexDecision} from '../src/core/hex-decisions.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-routes-16.21.json',import.meta.url))),data=fixture.game;
-const bundled=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
+const bundled=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
 const pairs=[['Gwen',1129],['Kayle',1129],['Teemo',1129],['Sona',1141],['Soraka',1141],['Jax',1058],['Volibear',1058],['Brand',1045],['Jinx',1328],['Caitlyn',1328],['Veigar',1048],['Lux',1048]];
 
 test('current Hex reviews retain omitted mechanism candidates alongside a narrow independent source list',()=>{
@@ -39,9 +40,9 @@ test('16.21 choice advice keeps actual card order and handles owned ultimate loc
 
 test('current Yasuo keeps the evidenced current source and excludes previous-patch micro recipes',()=>{
  assert.deepEqual(hexMicroRoutes({data,hero:'Yasuo'}),[]);
- const routes=hexPlayerRoutes({data:bundled,hero:'Yasuo'});assert.deepEqual(routes.map(r=>r.augment.id),[3078]);
- assert.equal(routes[0].communitySource.author,'一个老九');assert.equal(routes[0].patch,'16.21');assert.equal(routes[0].pendingItems,0);assert(routes[0].gear.length===3);assert.match(routes[0].basis,/未核实.*录制补丁/);
- const changed=structuredClone(bundled);changed.augments.find(a=>a.id===3078).key='Changed';assert.deepEqual(hexPlayerRoutes({data:changed,hero:'Yasuo'}),[]);
+ const routes=hexPlayerRoutes({data:bundled,hero:'Yasuo'});assert.deepEqual(routes.map(r=>r.augment.id),[3078,3049,1053]);const route=routes.find(r=>r.augment.id===3078);
+ assert.equal(route.communitySource.author,'驻韩研究员');assert.equal(route.communitySource.url,'https://www.bilibili.com/video/BV1sSnC6nE8h/');assert.equal(route.communitySource.publishedAt,'2026-10-22T01:42:42.000Z');assert.equal(route.communitySource.sourcePatch,null);assert.equal(route.patch,'16.21');assert.equal(route.pendingItems,0);assert.deepEqual(route.gear.map(group=>group.items.map(item=>item.id)),[[3006,3032,123430,6333,3031,3036],[3072,3153],[3091,3143]]);assert.match(route.basis,/录制补丁和服务器未知/);
+ const changed=structuredClone(bundled);changed.augments.find(a=>a.id===3078).key='Changed';assert.deepEqual(hexPlayerRoutes({data:changed,hero:'Yasuo'}),routes.filter(r=>r.augment.id!==3078),'A changed bass core does not withdraw independently reviewed armor or size routes');
 });
 
 test('unreviewed heroes, unknown patches and changed kit/effect inputs cannot inherit reviewed routes',()=>{
@@ -55,8 +56,8 @@ test('unreviewed heroes, unknown patches and changed kit/effect inputs cannot in
 test('changed gear withdraws the complete conditional group and equipment-advice shortcut',()=>{
  const changed=structuredClone(data);changed.items[3115].description+=' changed';const [route]=hexPlayerRoutes({data:changed,hero:'Gwen',owned:[1129]});assert.equal(route.pendingItems,1);assert(route.gear.every(g=>g.items.every(i=>![3115,3089].includes(i.id))));
  const impact=hexEquipmentImpact({data:changed,hero:'Gwen',owned:[1129,1002]});assert(impact.every(row=>row.patch==='16.21'));assert(!impact.some(row=>row.items.some(i=>i.id===3115)));assert(impact.some(row=>row.items.some(i=>i.id===3157)));
- const yasuo=structuredClone(bundled);yasuo.items[3031].description+=' changed';const remaining=hexPlayerRoutes({data:yasuo,hero:'Yasuo'});assert.equal(remaining.length,1);assert(remaining[0].gear.every(g=>g.items.every(i=>![3031,3072].includes(i.id))),'A changed optional item withdraws the entire combined group');
- yasuo.items[123430].stats.FlatMagicDamageMod=999;assert.deepEqual(hexPlayerRoutes({data:yasuo,hero:'Yasuo'}),[],'Changed required core withdraws the complete route');
+ const yasuo=structuredClone(bundled);yasuo.items[3072].description+=' changed';const remaining=hexPlayerRoutes({data:yasuo,hero:'Yasuo'}),bass=remaining.find(r=>r.augment.id===3078);assert(bass);assert.equal(bass.pendingItems,1);assert.deepEqual(bass.gear.map(g=>g.items.map(i=>i.id)),[[3006,3032,123430,6333,3031,3036],[3091,3143]],'A changed optional item withdraws its whole conditional group while retaining both other groups');
+ yasuo.items[123430].stats.FlatMagicDamageMod=999;assert.deepEqual(hexPlayerRoutes({data:yasuo,hero:'Yasuo'}),remaining.filter(r=>r.augment.id!==3078),'Changed required core withdraws the bass route while preserving the independent armor route');
 });
 
 test('a real owned disabled core is retained with its warning, while preview routes withdraw',()=>{
@@ -64,7 +65,7 @@ test('a real owned disabled core is retained with its warning, while preview rou
 });
 
 test('guide projects the same 16.21 routes, owned priority and original-source labels',async()=>{
- const offline=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),current={...offline,...data,items:{...offline.items,...data.items},champions:offline.champions.map(c=>data.champions.find(now=>now.id===c.id)||c)};
+ const offline=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),current={...offline,...data,items:{...offline.items,...data.items},champions:offline.champions.map(c=>data.champions.find(now=>now.id===c.id)||c)};
  for(const [hero,id] of pairs){const model=createGuideModel(current,selectGuide(null,{id:hero,role:'mid',mode:'hex',ownedAugmentIds:[id]}));assert.equal(model.hexRoutes[0].patch,'16.21');assert.equal(model.hexMicroRoutes[0].augments[0].owned,true);}
  const yasuo=createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex',ownedAugmentIds:[3078]}));assert.equal(yasuo.hexMicroRoutes[0].id,'Yasuo-3078');assert(yasuo.hexMicroRoutes[0].augments[0].owned);assert(yasuo.hexMicroRoutes.every(r=>r.patch==='16.21'));
 });

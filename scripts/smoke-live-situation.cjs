@@ -11,7 +11,7 @@ async function run(){
   const p=options.path;
   if(options.port===2999){requests++;
    if(p==='/liveclientdata/activeplayer')return {riotId:'isolated-player',currentGold:gold,level:7,abilities:Object.fromEntries(Object.entries(hero==='Ashe'?{Q:1,W:3,E:1,R:1}:{Q:1,W:1,E:3,R:1}).map(([key,abilityLevel])=>[key,{abilityLevel}]))};
-   if(p==='/liveclientdata/playerlist')return [{riotId:'isolated-player',team:'ORDER',rawChampionName:'game_character_displayname_'+hero,items:inventory.map(itemID=>({itemID,count:1})),scores:{kills:0,deaths:0,assists:0,creepScore:60}},...['Jhin','Jinx'].map((id,index)=>({riotId:'discard-this-'+id,team:'CHAOS',rawChampionName:'game_character_displayname_'+id,items:enemyItems[index]?[{itemID:enemyItems[index],count:1}]:[],scores:{kills:0,deaths:0,assists:0,creepScore:50}}))];
+   if(p==='/liveclientdata/playerlist')return [{riotId:'isolated-player',team:'ORDER',position:role,rawChampionName:'game_character_displayname_'+hero,items:inventory.map(itemID=>({itemID,count:1})),scores:{kills:0,deaths:0,assists:0,creepScore:60}},...['Jhin','Jinx'].map((id,index)=>({riotId:'discard-this-'+id,team:'CHAOS',rawChampionName:'game_character_displayname_'+id,items:enemyItems[index]?[{itemID:enemyItems[index],count:1}]:[],scores:{kills:0,deaths:0,assists:0,creepScore:50}}))];
    if(p==='/liveclientdata/gamestats')return {gameMode:'CLASSIC',mapNumber:11,gameTime:600};
    if(p==='/liveclientdata/eventdata')return {Events:[]};
   }
@@ -27,19 +27,26 @@ async function run(){
  require(path.join(base,'electron/main.cjs'));
  const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=c=>main.webContents.executeJavaScript(c,true);
  await until(()=>js('!!window.buddy&&!!document.querySelector("[data-action=guide-current]")'),'UI missing');
- await js('window.buddy.client(true)');await js('window.buddy.openGuide({id:"Ashe",role:"bottom",mode:"rift"})');
- const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'Guide missing'),gjs=c=>guide.webContents.executeJavaScript(c,true),model=()=>gjs('window.guide.bootstrap().then(b=>b.model)');
+ await js('window.buddy.client(true)');
+ // Retain the explicitly opened main window during the synthetic game; an
+ // automatically hidden renderer is otherwise released after its idle period.
+ main.show();await js('window.buddy.openGuide({id:"Ashe",role:"bottom",mode:"rift"})');
+ const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'Guide missing'),gjs=c=>guide.webContents.executeJavaScript(c,true).catch(error=>{throw Error('Guide expression: '+c,{cause:error});}),model=()=>gjs('window.guide.bootstrap().then(b=>b.model)');
  await until(async()=>(await model())?.live.matched,'Live data missing');assert.equal((await model()).automaticTarget,false,'Unfocused roster replaced the core');
  await gjs('window.guide.control("threatId","Jhin")');
  await until(async()=>{const m=await model();return m?.automaticTarget&&m.next.id==='1029';},'Dynamic armor advice missing');
  assert.match((await model()).nextReason,/烬/);
  await until(()=>gjs('!!document.querySelector(".compact-next")'),"Compact purchase missing");
  await until(async()=>{const m=await model();return (await gjs('document.querySelector(".compact-next").textContent')).includes(m.completeGear.next.name);},'Compact complete-gear target not synchronized');
- await fs.writeFile(path.join(root,"equipment-reference.png"),(await guide.webContents.capturePage()).toPNG());
+ await fs.writeFile(path.join(root,"equipment-reference.png"),(await guide.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  // The former details action is gone; retain its stored-state IPC regression.
  await gjs('window.guide.control("live-advice")');assert.equal((await model()).liveAdvice,false);assert.equal((await model()).automaticTarget,false);
  await gjs('window.guide.control("live-advice")');assert.equal((await model()).liveAdvice,true);
  const core=(await model()).route[0].id;await gjs(`window.guide.control("purchase-target",${JSON.stringify(core)})`);assert.equal((await model()).next.id,core);assert.equal((await model()).automaticTarget,false);
+ // A manual progress edit first records its game owner. Let the next real
+ // mocked live poll reconcile that owner before choosing a live-only target.
+ await until(async()=>(await model()).live.matched,'Manual target did not rebind to the same live game');
+ assert.ok((await model()).shoppingTargets.some(item=>item.id==='1029'&&!item.owned&&!item.blockedReason),'Armor target missing after same-game reconciliation');
  await gjs('window.guide.control("purchase-target","1029")');enemyItems=[0,0];await js('window.buddy.openGuide()');
  await until(async()=>(await model()).situation.signals.length===0,'Enemy signal remained');assert.equal((await model()).next.id,'1029','Manual situation target lost when the trigger disappeared');
  enemyItems=[3031,6672];
@@ -53,7 +60,7 @@ async function run(){
  await until(async()=>{const m=await model();return m.live.matched&&m.skillAdvice.next==='W'&&m.skillAdvice.changed;},'Protection skill adjustment missing');
  const skill=await until(()=>windows.find(w=>w.webContents.getURL().endsWith("/src/skill.html")),"Skill micro missing");
  assert.equal(await skill.webContents.executeJavaScript('!!document.querySelector("[data-action=details]")'),false);
- await fs.writeFile(path.join(root,"skill-reference.png"),(await skill.webContents.capturePage()).toPNG());
+ await fs.writeFile(path.join(root,"skill-reference.png"),(await skill.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  await gjs('window.guide.control("hide")');await js('window.buddy.openGuide()');assert.equal((await model()).skillAdvice.next,'W');
  const result={passed:true,archiveSha256:release.archiveSha256,productionMain:true,publicScoreboardSanitized:true,dynamicEquipmentReasons:true,persistedAdviceToggle:true,compactTargetVisible:true,manualTargetPreserved:true,boughtComponentStopsAdvice:true,enemySoldItemsRefresh:true,skillProtectionModel:true,independentSkillWindow:true,hideReopen:true,readOnlyRequests:requests,realGameInput:false,userSettingsIsolated:true,screenshots:root};
  await fs.writeFile(path.join(root,'live-situation-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();

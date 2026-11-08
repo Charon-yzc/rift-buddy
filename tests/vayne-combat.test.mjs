@@ -67,7 +67,7 @@ test('Hex damage remains unavailable while visible inventory and saved opponent 
  assert.ok(model.combatUnavailable.includes('平衡与强化效果尚未完整核对'));
  const html=renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
  assert.doesNotMatch(html,/duel-box|data-tab=|2 秒约|6 秒约|立即斩杀/);assert.match(html,/compact-guide-main/);
- assert.deepEqual(model.duelPick,{own:'Vayne',foe:'Ahri'});assert.equal(model.next,null);assert.ok(model.skillAdvice);
+ assert.deepEqual(model.duelPick,{own:'Vayne',foe:'Ahri'});assert.ok(model.next,'Visible inventory still supports the next item while Hex damage stays unavailable');assert.ok(model.skillAdvice);
 });
 
 test('levels nineteen and twenty never silently use level eighteen damage and custom allies obey the same boundary',()=>{

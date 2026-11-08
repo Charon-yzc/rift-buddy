@@ -3,7 +3,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createSlots} from '../src/core/recommend.mjs';
-import {BUNDLED_CATALOG,configureCatalog} from '../src/core/catalog.mjs';
+import {configureCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG,historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 import {creativeMemberCombo,creativeComboContext,captureCreativePlan} from '../src/core/creative-plan.mjs';
 import {createPreparationStore,recallPreparation} from '../src/core/preparation.mjs';
 import {captureRoomStrategy,captureRoomConfigurations,roomPreparation} from '../src/core/room-configuration.mjs';
@@ -11,12 +12,13 @@ import {roomConfigurationDialog} from '../src/room-view.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;data.catalog=BUNDLED_CATALOG;
+historicalData(data);
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 test('explicit mixed-catalog adoption stays in the current same-group configuration through restart and reshare',()=>{
  try{
-  const slots=setup({jungle:'Ivern',bottom:'KogMaw',support:'Lulu'}),old=structuredClone(BUNDLED_CATALOG);old.version='2026.10.10.1';configureCatalog(old);
-  const selected=(catalog)=>captureCreativePlan({slots,scope:'party',trio:catalog.trios.find(row=>row.id==='ivern-kog-lulu')},{...data,catalog});
-  const incoming=captureRoomStrategy(slots,{...data,catalog:old},selected(old));
+  const slots=setup({jungle:'Ivern',bottom:'Rengar',support:'Lulu'}),old=structuredClone(BUNDLED_CATALOG);old.version='2026.10.10.1';configureCatalog(old);
+  const selected=(catalog)=>captureCreativePlan({slots,scope:'party',trio:catalog.trios.find(row=>row.id==='ivern-rengar-lulu')},{...data,catalog});
+  const incoming=captureRoomStrategy(slots,{...data,catalog:old,catalogInfo:catalogIssues(old,data)},selected(old));
   configureCatalog(BUNDLED_CATALOG);const local=captureRoomStrategy(slots,data,selected(BUNDLED_CATALOG));assert.notEqual(incoming.id,local.id);
   const receiver=createPreparationStore(),context={id:'Lulu',role:'support',mode:'rift',...creativeComboContext(creativeMemberCombo(local,'Lulu','support'))};
   receiver.remember({...context,conditions:['ap'],bootsId:'boots-3111',loadoutId:'lulu-onhit',sourceOpponent:'Ashe'});
@@ -30,7 +32,7 @@ test('explicit mixed-catalog adoption stays in the current same-group configurat
   const reshared=captureRoomConfigurations(slots,data,restarted,{creativePlan:local}).find(c=>c.champion==='Lulu');assert.equal(reshared.skills,'EQW');assert.equal(reshared.priority,'EWQ');assert.deepEqual(reshared.spells,raw.spells);
   const html=roomConfigurationDialog(raw,data,'发送方',incoming,{localStrategy:local});assert.match(html,/当前本机方案/);assert.match(html,/保留本机分工/);assert.ok(html.includes('发送方组合 · '+incoming.name));assert.ok(html.includes(incoming.plan));assert.doesNotMatch(html,/>采用符文[^<]*及组合职责/);
   assert.equal(roomPreparation(raw,data,incoming).creativePlan.id,incoming.id,'legacy explicit snapshot remains available without a matching current group');
-  const other=captureRoomStrategy(setup({bottom:'KogMaw',support:'Lulu'}),data);assert.equal(roomPreparation(raw,data,incoming,{localStrategy:other}).creativePlan.id,incoming.id,'partial or different group never borrows current identity');
+  const other=captureRoomStrategy(setup({bottom:'Morgana',support:'Twitch'}),data);assert(other);assert.equal(roomPreparation(raw,data,incoming,{localStrategy:other}).creativePlan.id,incoming.id,'A different reviewed group never lends its current identity to the received trio');
   const same=roomConfigurationDialog(raw,data,'同库',local,{localStrategy:local});assert.match(same,/及组合职责/);assert.doesNotMatch(same,/保留本机分工/);
  }finally{configureCatalog(BUNDLED_CATALOG);}
 });

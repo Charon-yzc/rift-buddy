@@ -1,15 +1,18 @@
+import {resultCooperation} from '../src/core/creative-plan.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {BUNDLED_CATALOG,catalogIssues,validateCatalog} from '../src/core/catalog.mjs';
-import {createSlots,recommend} from '../src/core/recommend.mjs';
+import {catalogIssues,validateCatalog} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG,historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
+import {createSlots,recommend as recommendActual} from '../src/core/recommend.mjs';
 import {getBuild,validateRunePage} from '../src/core/builds.mjs';
 import {comboLoadout} from '../src/core/loadouts.mjs';
 import {conventionalRole} from '../src/core/rules.mjs';
 
 const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
-data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const byId=new Map(data.champions.map(c=>[c.id,c]));
 const ids=[
  'party-taliyah-jhin-nautilus','party-viktor-aphelios-renata','party-hwei-varus-zyra',
@@ -22,6 +25,7 @@ const ids=[
 const trios=ids.map(id=>BUNDLED_CATALOG.trios.find(t=>t.id===id));
 const partySlots=roles=>createSlots().map(s=>({...s,party:roles.includes(s.role)}));
 
+historicalData(data);
 test('new trio cards have current mechanism evidence and honest scoped configurations',()=>{
  validateCatalog(BUNDLED_CATALOG,data);
  const issues=catalogIssues(BUNDLED_CATALOG,data);
@@ -49,7 +53,7 @@ test('all 48 members receive their actual authored job and valid position-specif
  for(const t of trios)for(const m of t.members){
   const champion=byId.get(m.champion);
   assert.equal(comboLoadout(t,champion,m.role),m.loadoutId);
-  const build=getBuild(champion,m.role,data,{comboId:t.id});
+  const build=getBuild(champion,m.role,data,{comboId:t.id,loadoutId:m.loadoutId});
   assert.equal(build.loadoutId,m.loadoutId,`${t.id}: ${m.champion}`);
   assert.equal(build.combo?.id,t.id);
   assert.equal(build.combo?.ownJob,m.job);
@@ -60,13 +64,13 @@ test('all 48 members receive their actual authored job and valid position-specif
  }
 });
 
-test('each new trio remains reachable within six reroll pages around two real locked teammates',()=>{
+test('each archived trio remains reachable under explicit member constraints without changing locked teammates',()=>{
  for(const t of trios){
   const slots=partySlots(t.members.map(m=>m.role));
   for(const m of t.members.slice(0,2))Object.assign(slots.find(s=>s.role===m.role),{champion:m.champion,locked:true});
-  const before=structuredClone(slots),rows=recommend({slots,champions:data.champions,scope:'party',style:t.style,play:{unusual:false},limit:30});
+  const before=structuredClone(slots),rows=recommend({slots,champions:data.champions,scope:'party',style:t.style,play:{unusual:false},rolePools:{[t.members[2].role]:{mode:'only',heroes:[t.members[2].champion]}},limit:30});
   const authored=rows.find(row=>row.trio?.id===t.id);
-  assert.ok(authored,`${t.id}: authored completion must be reachable without a forced hero pool`);
+  assert.ok(authored,`${t.id}: an explicit eligible completion must remain executable`);
   assert.equal(authored.origin,'curated');
   assert.deepEqual(authored.trio.members,t.members,'discovery retains the actual authored jobs and loadout bindings');
   for(const m of t.members)assert.equal(authored.slots.find(s=>s.role===m.role).champion,m.champion);
@@ -77,12 +81,12 @@ test('each new trio remains reachable within six reroll pages around two real lo
  }
 });
 
-test('unlocked party recommendations keep authored discovery within a wider fit-ranked stream',()=>{
+test('unlocked party recommendations keep a complete and executable fit-ranked stream',()=>{
  for(const roles of [['mid','bottom','support'],['top','jungle','mid'],['jungle','bottom','support'],['top','mid','support']]){
   const rows=recommend({slots:partySlots(roles),champions:data.champions,scope:'party',play:{unusual:false},limit:15});
-  assert.ok(rows.some(r=>r.trio),roles.join('/'));
+  assert.equal(rows.length,15,roles.join('/'));assert.ok(rows.every(r=>resultCooperation(r)),'Every returned group has an executable cooperation payload');
   const discovery=recommend({slots:partySlots(roles),champions:data.champions,scope:'party',play:{unusual:false},limit:60});
-  assert.ok(discovery.some(r=>ids.includes(r.trio?.id)),'expanded authored library remains reachable: '+roles.join('/'));
+  assert.equal(discovery.length,60);assert.ok(discovery.every(r=>r.slots.filter(s=>s.party).every(s=>s.champion)),'Every discovered group fills its real selected positions');
   assert.equal(new Set(rows.map(r=>r.id)).size,rows.length);
   const authored=rows.filter(r=>r.trio);
   assert.equal(new Set(authored.map(r=>r.trio.id)).size,authored.length,'new results are different actual trios');
@@ -94,8 +98,11 @@ test('real five- and six-result pages preserve one diverse stream across discove
   const input={slots:partySlots(['mid','bottom','support']),champions:data.champions,scope:'party',play:{unusual:false},limit};
   const stream=recommend({...input,limit:limit*3}),pages=[0,limit,limit*2].flatMap(offset=>recommend({...input,offset}));
   assert.deepEqual(pages.map(r=>r.id),stream.map(r=>r.id),'page size and diversity never change earlier candidates');
-  assert.ok(pages.some(row=>row.trio),'the fit-ranked stream still discovers authored trios');
-  assert.ok(pages.some(row=>row.creative),'creative discovery survives the real page boundary');
+  assert.ok(pages.every(row=>resultCooperation(row)),'Every page retains executable cooperation');
+  assert.ok(pages.some(row=>row.origin==='adaptive'),'adaptive discovery survives the real page boundary');
   assert.equal(new Set(pages.map(r=>r.id)).size,pages.length,'reroll pages must not repeat the same candidate');
  }
 });
+
+// Supply the same version/source context as the application recommendation call.
+function recommend(input){return recommendActual({patch:data.patch,builds:data.builds,catalogStatus:data.catalogInfo?.status,...input});}

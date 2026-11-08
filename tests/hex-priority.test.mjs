@@ -3,7 +3,8 @@ import {rankAugmentOptions,recommendAugmentReroll,analyzeAugmentSet,hexDecision}
 import {renderHexComparison} from '../src/hex-view.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {renderGuide} from '../src/guide-view.mjs';
-const data=JSON.parse(fs.readFileSync('data/game.json','utf8'));data.hexBuilds=JSON.parse(fs.readFileSync('data/hex-builds.json','utf8')).entries;
+// Archived 16.21 decision contract; live bundle behavior is tested separately.
+const data=JSON.parse(fs.readFileSync('tests/fixtures/snapshot-16.21/game.json','utf8'));data.hexBuilds=JSON.parse(fs.readFileSync('tests/fixtures/snapshot-16.21/hex-builds.json','utf8')).entries;
 const args=(hero,options=[],owned=[],extra={})=>({data,hero,options,owned,...extra});
 
 test('reviewed AP attacks are preferred without moving the entered three-card order',()=>{

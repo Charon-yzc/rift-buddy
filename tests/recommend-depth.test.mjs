@@ -1,11 +1,13 @@
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
+import './fixtures/snapshot-16.20/catalog.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createSlots,recommend,analyzeTeam,describeComposition,buildReasonPoints} from '../src/core/recommend.mjs';
 import {describeCurve,describeForgiveness,controlChainLabel} from '../src/core/strategy.mjs';
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const hero=id=>data.champions.find(c=>c.id===id);
 const locked=(slots,pairs)=>{for(const [role,id] of pairs)Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});return slots;};
 
@@ -46,7 +48,7 @@ test('bot scope emphasizes the lane while party scope rewards trio completeness'
  const base=()=>locked(createSlots(),[['top','Garen'],['jungle','LeeSin'],['mid','Ahri']]);
  const botRows=recommend({slots:base(),champions:data.champions,scope:'bot',limit:3});
  assert.ok(botRows.length>0);
- assert.ok(botRows.some(r=>r.reasonPoints.some(t=>/对线|消耗|换血/.test(t)))||botRows.some(r=>r.duo));
+ for(const row of botRows){assert.deepEqual(row.targets,['bottom','support']);assert.ok(row.reasonPoints.every(text=>text.length>0));for(const role of ['top','jungle','mid'])assert.deepEqual(row.slots.find(s=>s.role===role),base().find(s=>s.role===role));}
  const partySlots=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role)}));
  locked(partySlots,[['top','Malphite'],['jungle','JarvanIV']]);
  const partyRows=recommend({slots:partySlots,champions:data.champions,limit:10});
@@ -54,13 +56,13 @@ test('bot scope emphasizes the lane while party scope rewards trio completeness'
  assert(!partyRows.some(r=>r.trio?.id==='ball-delivery'),'The older named catalog entry remains pending while its current mechanical interaction is available');
 });
 
-test('successive results diversify styles instead of repeating one combo',()=>{
+test('successive results contain distinct actual lineups without reserved catalog-style slots',()=>{
  const slots=locked(createSlots(),[['top','Garen'],['jungle','LeeSin']]);
  const rows=recommend({slots,champions:data.champions,scope:'bot',limit:6});
  assert.equal(rows.length,6);
  assert.equal(rows[0].id,rows.slice().sort((a,b)=>b.score-a.score)[0].id);
- const styles=new Set(rows.map(r=>(r.trio||r.duo)?.style||'balanced'));
- assert.ok(styles.size>=2,[...styles].join(','));
+ assert.equal(rows.filter(row=>row.origin==='curated').length,0,'An unauthorised historical catalog cannot consume a diversity slot');
+ assert.ok(new Set(rows.map(row=>row.slots.find(s=>s.role==='bottom').champion)).size>=2);
  const ids=rows.map(r=>r.id);
  assert.equal(new Set(ids).size,ids.length);
 });

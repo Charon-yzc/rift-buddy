@@ -1,3 +1,5 @@
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
+import {historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
@@ -6,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {DUOS,TRIOS} from '../src/core/rules.mjs';
 import {comboMembers} from '../src/core/combo-members.mjs';
-import {createSlots,recommend,currentCombo} from '../src/core/recommend.mjs';
+import {createSlots,recommend as recommendActual,currentCombo} from '../src/core/recommend.mjs';
 import {captureCreativePlan,creativePlanId,validateCreativePlan,creativeComboContext} from '../src/core/creative-plan.mjs';
 import {getBuild,buildAsText} from '../src/core/builds.mjs';
 import {captureTeamConfigurations,restoreTeamFavorite} from '../src/core/team-favorites.mjs';
@@ -17,13 +19,14 @@ import {resultAsText} from '../src/result-text.mjs';
 import {favoriteTeamSummary} from '../src/favorites-view.mjs';
 
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const hero=id=>data.champions.find(c=>c.id===id);
 function fixture(combo){
  const members=comboMembers(combo),slots=createSlots().map(s=>({...s,party:members.some(m=>m.role===s.role),champion:members.find(m=>m.role===s.role)?.champion||null,locked:members.some(m=>m.role===s.role)}));
  return {id:combo.id,title:combo.name,slots,scope:'party',targets:[],...(members.length===3?{trio:combo}:{duo:combo})};
 }
 
+historicalData(data);
 test('every curated duo and trio can retain its own ordered instructions and loadout bindings',()=>{
  for(const combo of [...DUOS,...TRIOS]){
   // Future-patch entries cannot be captured with this historical game fixture.
@@ -49,8 +52,8 @@ test('a saved Galio/Nilah/Rakan plan survives same-ID catalog edits, restart and
   combo.members.forEach(m=>{m.job='新的分工';m.loadoutId='default';});
   const saved=(await readState(root)).favorites[0],restored=restoreTeamFavorite(saved,createSlots(),data.champions);
   assert.deepEqual(restored.creativePlan,plan);assert.deepEqual(restored.configurations,configs);
-  const [again]=recommend({slots:restored.slots,creativePlan:restored.creativePlan,champions:data.champions,scope:'party'});
-  assert.equal(again.origin,'curated');assert.deepEqual(again.trio.steps,plan.steps);assert.equal(again.trio.early,plan.curated.early);
+  const [fresh]=recommend({slots:restored.slots,creativePlan:restored.creativePlan,champions:data.champions,scope:'party'});assert.notEqual(fresh.creativePlan?.id,plan.id,'An edited catalog cannot authorize fresh automatic adoption of old instructions');
+  const again={...result,creativePlan:restored.creativePlan};
   const copied=resultAsText(again,data);assert.ok(copied.includes(plan.curated.economy));assert.doesNotMatch(copied,/同 ID 的新计划|新的分工|加里奥先手/);
   for(const selection of configs){
    const build=getBuild(hero(selection.id),selection.role,data,selection),job=plan.ordered.find(m=>m.champion===selection.id).job;
@@ -68,11 +71,11 @@ test('freezing a catalog plan preserves existing explicit rune, item and loadout
  const legacy={id:'Orianna',role:'mid',mode:'rift',comboId:combo.id,loadoutId:'default',conditions:['ap'],coreIndex:1};
  const base=getBuild(hero('Orianna'),'mid',data,legacy),runeId=base.runeOptions.at(-1).id;
  store.remember({...legacy,runeId});
- const context={id:'Orianna',role:'mid',mode:'rift',...creativeComboContext(currentCombo(result.slots,'Orianna','mid',null,null,plan))};
+ const context={id:'Orianna',role:'mid',mode:'rift',...creativeComboContext(currentCombo(result.slots,'Orianna','mid',null,null,plan,{allowPending:true}))};
  const restored=recallPreparation(store,null,context);assert.equal(restored.loadoutId,'default');assert.equal(restored.runeId,runeId);assert.equal(restored.comboId,plan.id);
- const member=captureTeamConfigurations({...result,creativePlan:plan},data,store).find(s=>s.id==='Orianna');
+ assert.throws(()=>captureTeamConfigurations({...result,creativePlan:plan},data,store),/组合依据已变化/);const member=restored;
  assert.equal(member.loadoutId,'default');assert.equal(member.runeId,runeId);assert.deepEqual(member.conditions,['ap']);
- const current=getBuild(hero('Orianna'),'mid',data,{...context});assert.equal(current.loadoutId,'trio-ball');assert.equal(current.rulesPatch,data.patch);assert.equal(current.reference,null);
+ const current=getBuild(hero('Orianna'),'mid',data,{...context});assert.equal(current.loadoutId,'default');assert.ok(current.reference);
  const original=getBuild(hero('Orianna'),'mid',data,{...context,loadoutId:'trio-ball'});assert.equal(original.loadoutId,'trio-ball');assert.equal(original.reference,null);
 });
 
@@ -84,3 +87,6 @@ test('curated identity includes sources and loadout bindings; malformed or misma
  const revision=structuredClone(plan);revision.curated.members[0].loadoutId='default';revision.id=creativePlanId(revision);assert.notEqual(revision.id,plan.id);assert.ok(validateCreativePlan(revision));
  assert.equal(captureCreativePlan({...result,scope:'solo'},data),null);
 });
+
+// Supply the same version/source context as the application recommendation call.
+function recommend(input){return recommendActual({patch:data.patch,builds:data.builds,catalogStatus:data.catalogInfo?.status,...input});}

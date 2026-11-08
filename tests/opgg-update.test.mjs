@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {getBuild,validReference,validHexReference,featuredRuneOptions,previousPatch} from '../src/core/builds.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {loadBuilds,loadHexBuilds,createBuildCache} from '../services/build-cache.mjs';
 import {fetchChampionBuild,parseBuildJSON} from '../services/build-sources.mjs';
 import {RUNE_PLANS} from '../src/core/loadouts.mjs';
@@ -14,7 +15,7 @@ import {companionPlanView} from '../src/companion-view.mjs';
 import {renderHexSourceReference} from '../src/hex-view.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
 const snapshot=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url)));
-data.builds=snapshot.entries;
+data.builds=projectBuildSources(snapshot.entries,DEFAULT_BUILD_SOURCE,data.patch);
 const hero=id=>data.champions.find(c=>c.id===id);
 const leaf=(page,play)=>({primary_page_id:page.primaryStyleId,secondary_page_id:page.subStyleId,primary_rune_ids:page.selectedPerkIds.slice(0,4),secondary_rune_ids:page.selectedPerkIds.slice(4,6),stat_mod_ids:page.selectedPerkIds.slice(6),play,win:Math.floor(play/2),pick_rate:.5});
 const raw=(patch,pages)=>({meta:{version:patch},data:{summary:{id:22,positions:[{name:'ADC'}]},core_items:[{ids:[6672,3031,3046],play:1000,win:500}],boots:[],starter_items:[],last_items:[],rune_pages:[{builds:pages}],runes:[],skills:[],summoner_spells:[]}});
@@ -32,7 +33,9 @@ test('new base data retains older Cho jungle Hail pages across multiple patches 
   assert.equal(older.reference,saved);assert.equal(older.runePage.selectedPerkIds[0],9923);assert.equal(older.rulesPatch,patch);
   assert.match(companionPlanView(olderData,{build:older,selection:{id:'Chogath',role:'jungle',mode:'rift'}}),new RegExp(patch.replace('.','\\.')+' 旧版本参考'));
  }
- for(const patch of ['16.22','17.1','unknown','16.-1'])assert.equal(validReference({...ref,patch},hero('Chogath'),'jungle',fixture,{allowOlder:true}),false);
+ const [season,patchNumber]=data.patch.split('.').map(Number);
+ assert.equal(validReference({...ref,patch:data.patch},hero('Chogath'),'jungle',fixture,{allowOlder:true}),true);
+ for(const patch of [`${season}.${patchNumber+1}`,`${season+1}.1`,'unknown','16.-1'])assert.equal(validReference({...ref,patch},hero('Chogath'),'jungle',fixture,{allowOlder:true}),false);
 });
 
 test('current patch beats a newer previous-patch cache and illegal previous items cannot enter the build',async()=>{
@@ -89,11 +92,11 @@ test('older Hex source data cannot survive into current automatic builds, cache 
  const hexBuilds=await loadHexBuilds([root],data),build=getBuild(hero('Chogath'),'top',{...data,hexBuilds},{mode:'hex'});
  assert.equal(hexBuilds.Chogath,undefined);assert.equal(build.reference,null);assert.equal(build.referenceStale,false);assert.equal(build.unavailable,true);assert.deepEqual(build.items,[]);
  const html=renderHexSourceReference({data:{...data,hexBuilds},hero:'Chogath'});
- assert.match(html,/旧版参考已停用/);assert.doesNotMatch(html,/data-action="augment-detail"|15\.24/);
+ assert.match(html,/海克斯4\.0资料尚未就绪，旧版建议已停用/);assert.doesNotMatch(html,/data-action="augment-detail"|15\.24/);
  const partial=renderHexSourceReference({data:{...data,hexBuilds:{Chogath:{...ref,augmentIds:[ref.augmentIds[0],999999]}}},hero:'Chogath'});
- assert.match(partial,/旧版参考已停用/);assert.doesNotMatch(partial,/data-id="999999"/);
+ assert.match(partial,/海克斯4\.0资料尚未就绪，旧版建议已停用/);assert.doesNotMatch(partial,/data-id="999999"/);
  const invalid=renderHexSourceReference({data:{...data,hexBuilds:{Chogath:{...ref,patch:'99.1'}}},hero:'Chogath'});
- assert.match(invalid,/旧版参考已停用/);
+ assert.match(invalid,/海克斯4\.0资料尚未就绪，旧版建议已停用/);
 });
 
 test('minor variations cannot crowd another observed keystone out of the bounded source pages',()=>{

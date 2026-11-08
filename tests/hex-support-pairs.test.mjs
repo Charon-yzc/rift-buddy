@@ -1,6 +1,7 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';import {createGuideModel,selectGuide} from '../src/core/guide.mjs';import {renderHexRoutes} from '../src/hex-routes-view.mjs';import {hexEffectMatches} from '../src/core/hex-mechanics.mjs';
-const offline=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-routes-16.21.json',import.meta.url)));
+const offline=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-routes-16.21.json',import.meta.url)));
 const current={...offline,...fixture.game,items:{...offline.items,...fixture.game.items},champions:offline.champions.map(c=>fixture.game.champions.find(n=>n.id===c.id)||c)};
 
 test('owned or offered Critical Healing gives both healers a paired route on each reviewed patch',()=>{

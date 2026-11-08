@@ -10,7 +10,8 @@ import {defaultState,validateState,saveState,readState,mergeState} from '../serv
 import {buildSourceControls,cachedBuildAlternatives} from '../src/build-source-view.mjs';
 import {companionPlanView} from '../src/companion-view.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-const base=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries['Ashe:bottom'];
+const bundledSources=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const base=projectBuildSources(bundledSources,DEFAULT_BUILD_SOURCE,data.patch)['Ashe:bottom'];
 const champion=data.champions.find(c=>c.id==='Ashe'),kr={region:'kr',tier:'diamond_plus'};
 const makeRef=(source=DEFAULT_BUILD_SOURCE,extra={})=>({...structuredClone(base),...source,...extra});
 const raw=(patch=data.patch)=>{

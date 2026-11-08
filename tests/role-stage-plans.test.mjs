@@ -1,3 +1,4 @@
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {heroCoachView} from '../src/hero-coach-view.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
@@ -13,7 +14,7 @@ import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 
 test('all bundled source positions retain authored and distinct opening, meeting and later duties',()=>{
  for(const b of Object.values(data.builds)){
@@ -56,7 +57,7 @@ test('a public opponent never reintroduces the primary jungle opening into a sup
 test('secondary roles preserve actual mechanics, shared cooldown choices and economy responsibilities',()=>{
  assert.match(rolePlay('Hwei','support','key').action,/WE.*不能.*WW/);
  assert.match(rolePlay('TahmKench','support','key').action,/同一份层数.*吞敌/);
- assert.match(rolePlay('Mel','support','opening').action,/不能.*搭档.*护盾/);
+ assert.match(rolePlay('Mel','support','opening').action,/W 应对实际来袭弹体.*覆盖范围.*站位确认/);
  assert.match(rolePlay('Zoe','support','key').action,/一秒后必回起点/);
  assert.match(rolePlay('Camille','support','key').action,/低经济.*单人线/);
  assert.match(rolePlay('Yunara','bottom','opening').action,/普通 E.*不当作.*穿墙/);

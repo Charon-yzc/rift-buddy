@@ -1,3 +1,4 @@
+// Frozen 16.21 acceptance contract; tests/hex-live-bundle.test.mjs covers the actual current bundle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -6,7 +7,7 @@ import {hexAugmentStatistics,HEX_AUGMENT_STATISTICS_SOURCE,HEX_AUGMENT_STATISTIC
 import {hexAugmentRankingView} from '../src/hex-draft-view.mjs';
 import {safeSourceURL} from '../src/core/catalog.mjs';
 
-const game=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));
+const game=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
 const actual=()=>hexAugmentStatistics(game);
 test('fixed source aggregates wins and holdings and leaves uncovered augments absent',()=>{
  const ref=actual();assert(ref);assert.equal(ref.rows.length,229);assert.equal(ref.validMatches,5376732);assert.equal(ref.validPlayerAppearances,53767320);

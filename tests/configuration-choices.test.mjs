@@ -3,15 +3,16 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {configurationChoices} from '../src/core/configuration-choices.mjs';
 import {getBuild} from '../src/core/builds.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {clientPreparationPlan} from '../src/client-preparation-view.mjs';
 import {BUNDLED_CATALOG,configureCatalog} from '../src/core/catalog.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const build=selection=>getBuild(data.champions.find(hero=>hero.id===selection.id),selection.role,data,selection);
 test('whole configuration switches discard all overrides from the current row and materialize distinct valid payloads',()=>{
  const selection={id:'Volibear',role:'top',mode:'rift',conditions:['ap'],summonerIds:['SummonerFlash','SummonerExhaust'],coreIndex:1,laterIds:[],bottomQuestPlan:false};
  const current=build(selection),rows=configurationChoices(data,selection,current),standard=rows.find(row=>row.id==='default');
  assert.ok(rows.length>=3);assert.ok(standard);assert.deepEqual(rows[0].selection,selection);
- assert.deepEqual(standard.selection,{id:'Volibear',role:'top',mode:'rift',loadoutId:'default'});
+ assert.deepEqual(standard.selection,{id:'Volibear',role:'top',mode:'rift',loadoutId:'default',coreAuto:true});
  assert.deepEqual(standard.build.runePage,build(standard.selection).runePage);assert.notDeepEqual(standard.build.summoners,current.summoners);
  assert.equal(new Set(rows.map(row=>row.fingerprint)).size,rows.length);
  for(const row of rows){const prepared=clientPreparationPlan(data,row);assert.ok(prepared);assert.equal(prepared.value.page.selectedPerkIds.length,9);assert.equal(prepared.value.summoners.length,2);assert.ok(prepared.value.itemSet.blocks.length);}

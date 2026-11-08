@@ -1,3 +1,5 @@
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
+import {historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 import {duoPlayView} from '../src/duo-play-view.mjs';
 import {heroCoachView} from '../src/hero-coach-view.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
@@ -17,10 +19,11 @@ import {resultAsText} from '../src/result-text.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
-data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const graph=createCooperationGraph(data.champions),hero=id=>data.champions.find(c=>c.id===id);
 const slotsFor=members=>createSlots().map(s=>({...s,champion:members.find(m=>m.role===s.role)?.champion||null,party:members.some(m=>m.role===s.role),locked:members.some(m=>m.role===s.role)}));
 
+historicalData(data);
 test('accepted Ashe/Braum stages survive source edits and storage without losing the later protection task',()=>{
  const combo=DUOS.find(d=>d.carry==='Ashe'&&d.support==='Braum'),members=[{champion:'Ashe',role:'bottom'},{champion:'Braum',role:'support'}],slots=slotsFor(members),row={title:combo.name,duo:combo,slots,scope:'party'},plan=captureCreativePlan(row,data);
  const original=structuredClone(BOTTOM_PLAYS.Ashe),originalCombo=structuredClone(combo);

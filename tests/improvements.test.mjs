@@ -7,10 +7,12 @@ import path from 'node:path';
 import {createSlots,recommend,currentCombo,replaceMember} from '../src/core/recommend.mjs';
 import {getBuild,buildAsText} from '../src/core/builds.mjs';
 import {conventionalRole} from '../src/core/rules.mjs';
-import {BUNDLED_CATALOG,validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG} from './fixtures/snapshot-16.20/catalog.mjs';
 import {createCatalogStore} from '../services/catalog-store.mjs';
 import {sanitizeSession} from '../services/lcu.mjs';
 import {clientDraftStatus,moveChampion} from '../src/core/draft.mjs';
+import {comboLoadout} from '../src/core/loadouts.mjs';
 import {itemConflicts} from '../src/core/mechanics.mjs';
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
@@ -19,7 +21,7 @@ test('explicit legacy trio and bot pair lookup route each member to their own pl
  const slots=createSlots();for(const [role,id] of [['top','Malphite'],['jungle','JarvanIV'],['mid','Orianna'],['bottom','Varus'],['support','Ashe']])Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});
  assert.equal(currentCombo(slots, 'Orianna','mid',{},null,null,{allowPending:true}).id,'ball-delivery');
  const duo=currentCombo(slots,'Varus','bottom',{},null,null,{allowPending:true});assert.notEqual(duo.id,'ball-delivery');assert.equal(currentCombo(slots,'Varus','bottom',{'jarvan-varus-ashe':{invalid:true}},null,null,{allowPending:true}).id,'arrows-ice');
- const b=getBuild(hero('Varus'),'bottom',data,{comboId:duo.id});assert.equal(b.loadoutId,'spell-lethality');assert.equal(b.selectedSkill.source,'OP.GG');assert.equal(b.skillOrder.length,15);assert.ok(b.selectionWarnings.every(w=>w.includes('组合整理于')||w.includes('出门预算')||w.startsWith('当前加点使用同英雄同位置来源的部分序列')));assert.ok(b.start.reduce((n,i)=>n+i.gold.total,0)<=500);
+ const b=getBuild(hero('Varus'),'bottom',data,{comboId:duo.id,loadoutId:comboLoadout(duo,hero('Varus'),'bottom')});assert.equal(b.loadoutId,'spell-lethality');assert.equal(b.selectedSkill.source,'OP.GG');assert.equal(b.skillOrder.length,15);assert.ok(b.selectionWarnings.every(w=>w.includes('组合整理于')||w.includes('出门预算')||w.startsWith('当前加点使用同英雄同位置来源的部分序列')));assert.ok(b.start.reduce((n,i)=>n+i.gold.total,0)<=500);
  assert.equal(recommend({slots,champions:data.champions})[0].strategy.label,'团战连招');
 });
 test('bot preferences affect results, and replacing a bot position works when it is marked teammate',()=>{

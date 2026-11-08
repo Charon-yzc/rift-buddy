@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import {parseChampionCombatStats,enrichChampionStats,hasCurrentCombatStats,championStatsURL} from '../services/champion-stats.mjs';
 import {aggregateCombatStats,statAtLevel,applyLivePanel} from '../src/core/live-estimate.mjs';
 import {collectSnapshot} from '../services/data.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.21/game.json','utf8'));
 data.contentCheckedAt=data.checkedAt=new Date().toISOString(); // Recently verified fixture for the fast-path cases.
 const hero=id=>data.champions.find(c=>c.id===id);
 // Independent source values from CharacterRecords/Root, checked against
@@ -51,7 +51,7 @@ const cnNames=()=>({version:data.patch,hero:data.champions.map(c=>({alias:c.id,t
 test('an already enriched snapshot checks global and CN versions without fetching every champion again',async()=>{
  const original=global.fetch,calls=[],previous=structuredClone(data);
  global.fetch=async url=>{calls.push(url);return {ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cnNames()};};
- try{const result=await collectSnapshot(()=>{},previous);assert.equal(result.contentRevision,18);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
+ try{const result=await collectSnapshot(()=>{},previous);assert.equal(result.contentRevision,data.contentRevision);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
  finally{global.fetch=original;}
 });
 

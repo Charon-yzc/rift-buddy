@@ -1,10 +1,11 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';
 import {renderHexRoutes} from '../src/hex-routes-view.mjs';
 import {renderHexComparison} from '../src/hex-view.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url),'utf8')).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url),'utf8'));data.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url),'utf8')).entries;
 const pairs=[['Gwen',1129],['Kayle',1129],['Teemo',1129],['Sona',1141],['Soraka',1141],['Jax',1058],['Volibear',1058],['Brand',1045],['Jinx',1328],['Caitlyn',1328],['Veigar',1048],['Lux',1048]];
 
 test('reviewed routes distinguish a future idea, a real option and an owned augment without mutating a build',()=>{
@@ -21,8 +22,8 @@ test('reviewed routes distinguish a future idea, a real option and an owned augm
 
 test('a changed patch, hero kit or augment effect suppresses the authored route',()=>{
  assert.deepEqual(hexPlayerRoutes({data:{...data,patch:'16.22'},hero:'Gwen',owned:[1129]}),[]);
- for(const mutate of [d=>d.champions.find(c=>c.id==='Gwen').mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===1129).key='NewIdentity',d=>d.augments.find(a=>a.id===1129).description+=' changed']){
-  const changed=structuredClone(data);mutate(changed);assert.deepEqual(hexPlayerRoutes({data:changed,hero:'Gwen',owned:[1129]}),[]);
+ for(const [mutate,kitChanged]of [[d=>d.champions.find(c=>c.id==='Gwen').mechanicSource.character.sha256='0'.repeat(64),true],[d=>d.augments.find(a=>a.id===1129).key='NewIdentity',false],[d=>d.augments.find(a=>a.id===1129).description+=' changed',false]]){
+  const changed=structuredClone(data);mutate(changed);const remaining=hexPlayerRoutes({data:changed,hero:'Gwen',owned:[1129]});assert.deepEqual(remaining,kitChanged?[]:hexPlayerRoutes({data,hero:'Gwen',owned:[1129]}).filter(route=>route.augment.id!==1129),'Kit drift withdraws every route; a core-effect change withdraws only its dependent route');
  }
  const unchanged=structuredClone(data);unchanged.champions.find(c=>c.id==='Gwen').mechanicSource.observedAt='2026-10-21T00:00:00Z';assert.equal(hexPlayerRoutes({data:unchanged,hero:'Gwen',owned:[1129]})[0].state,'owned');
 });
@@ -55,7 +56,7 @@ test('crit routes keep normal attacks and spell damage separate, with conditiona
  assert.match(jinx.play.join(' '),/机枪.*火箭/);assert.match(cait.play.join(' '),/陷阱.*绳网/);
  assert.match(veigar.summary,/法强/);assert.match(lux.caution,/护盾/);
  for(const route of [veigar,lux]){assert.ok(route.gear.some(g=>g.items.some(i=>i.id===3089)));assert.ok(route.gear.every(g=>g.items.every(i=>![3031,3036,3072].includes(i.id))),'Spell crit does not prescribe an AD conversion');}
- assert.ok(hexPlayerRoutes({data,hero:'Jhin',owned:[1328]}).some(route=>route.state==='owned'),'Separately reviewed 16.21 Jhin route remains available');assert.deepEqual(hexPlayerRoutes({data,hero:'Ashe',owned:[1328]}),[]);
+ assert.ok(hexPlayerRoutes({data,hero:'Jhin',owned:[1328]}).some(route=>route.state==='owned'),'Separately reviewed 16.21 Jhin route remains available');assert.deepEqual(hexPlayerRoutes({data,hero:'Ashe',owned:[1328],options:[1328]}),[],'Ashe has no reviewed 1328 route; independent preview routes are outside these actual choices');
  for(const [hero,id]of pairs.slice(-4)){
   for(const [mutate,allRoutes]of [[d=>d.patch='16.22',true],[d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),true],[d=>d.augments.find(a=>a.id===id).description+=' changed',false]]){
    const changed=structuredClone(data);mutate(changed);const remaining=hexPlayerRoutes({data:changed,hero,owned:[id]});assert.deepEqual(remaining.filter(route=>allRoutes||route.augment.id===id),[]);

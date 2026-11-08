@@ -1,7 +1,9 @@
 const assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path');
-// These positive Hex contracts require the actual current bundle. Keep them
-// separate from historical authored Rift cooperation and its private loadouts.
-module.exports=async function currentConfiguration({phase,root,main,windows,js,click,state,until,delay,syncDelay,syncHits}){
+// Current source configurations and manual round notes remain usable without
+// granting the historical Hex rule set or its favorites a new review.
+module.exports=async function currentConfiguration({phase,root,base,data,main,windows,js,click,state,until,delay,syncDelay,syncHits}){
+ const {getBuild}=require(path.join(base,'src/core/builds.mjs')),{isCurrentHexData}=require(path.join(base,'src/core/hex-data-current.mjs')),{hexFavoriteIsCurrent}=require(path.join(base,'src/core/hex-acquisition.mjs'));
+ const ordinary=getBuild(data.champions.find(c=>c.id==='Ashe'),'bottom',data,{mode:'hex',loadoutId:'default'});assert.equal(ordinary.loadoutId,'default');assert.equal(ordinary.reference?.patch,data.patch);assert.match(ordinary.source,/OP.GG/);assert(ordinary.items.length>=3);
  if(phase.startsWith('hex-sync-')){
   await js('window.buddy.openGuide({id:"Ahri",role:"mid",mode:"rift"})');let guide;
   await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Current guide missing');const gjs=code=>guide.webContents.executeJavaScript(code,true);
@@ -13,6 +15,7 @@ module.exports=async function currentConfiguration({phase,root,main,windows,js,c
   await click('[data-action=build-condition][data-condition=heal]');
   await until(async()=>{const s=(await state()).guide.selection;return s.conditions.includes('heal')&&s.compareIds?.length===2;},'Hex context lost on sync');
   await click('[data-action=open-guide]');const h=(await state()).guide.selection;assert.deepEqual(h.augmentIds,[1048]);assert.deepEqual(h.compareIds,[1048,1002]);assert.deepEqual(h.ownedAugmentIds,[1047]);
+  if(!isCurrentHexData(data)){const model=(await gjs('window.guide.bootstrap()')).model;assert.deepEqual(model.hexRoutes,[]);assert.deepEqual(model.comparison,[]);assert(model.hexMicroRoutes.some(row=>row.sourceOnly&&row.patch===data.patch));}
   assert(syncHits()>0,'The delayed production update-guide handler was never called');
   return {hexContextPreserved:true,guideSyncDelay:syncDelay,guideSyncHandlerCalls:syncHits(),augmentIds:h.augmentIds,compareIds:h.compareIds,ownedAugmentIds:h.ownedAugmentIds};
  }
@@ -31,8 +34,10 @@ module.exports=async function currentConfiguration({phase,root,main,windows,js,c
  }else{
   const expected=JSON.parse(await fs.readFile(path.join(root,'expected-current-spells.json')));assert.deepEqual(await read(),expected.pair,'Rift D/F changed after restart');
   await click('[data-action=close]');await click('[data-action=navigate][data-route=favorites]');const favorites=(await state()).favorites,index=favorites.findIndex(f=>f.type==='build'&&f.champion==='Ashe'&&f.mode==='hex');assert(index>=0,'Current Hex favorite missing');
-  await click('[data-action=open-favorite][data-index="'+index+'"]');assert.deepEqual(await read(),expected.hexPair);
+  const favorite=favorites[index];assert.equal(favorite.version,data.version);assert.equal(hexFavoriteIsCurrent(data,favorite),true,'A newly saved same-patch source configuration must remain visible and usable');
+  await click('[data-action=open-favorite][data-index="'+index+'"]');
+  assert.deepEqual(await read(),expected.hexPair);assert.deepEqual((await state()).favorites.find(f=>f.id===favorite.id),favorite,'Opening a current source configuration must preserve the stored favorite');
   await click('[data-action=open-guide]');await until(()=>windows.some(w=>w.webContents.getURL().endsWith('/src/hex-micro.html')),'Restored Hex cards missing');assert.deepEqual((await state()).guide.selection.summonerIds,expected.hexPair,'Restored Hex selection lost D/F');assert.deepEqual(await read(),expected.hexPair);
  }
- return {manualDAndF:true,hexModeRestrictions:phase==='spells-prepare',separateModeChoices:true,configurationAndFavorites:true,hexGuideSummonersRestored:phase==='spells-restore',offlineRestart:phase==='spells-restore'};
+ return {manualDAndF:true,currentHexSource:true,hexModeRestrictions:phase==='spells-prepare',separateModeChoices:true,configurationAndFavorites:true,samePatchSourceFavoriteVisible:phase==='spells-restore',hexGuideSummonersRestored:phase==='spells-restore',offlineRestart:phase==='spells-restore'};
 };

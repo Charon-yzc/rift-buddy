@@ -10,7 +10,7 @@ import {gameReference} from '../src/core/game-reference.mjs';
 import {gameTooltipView} from '../src/game-tooltip-view.mjs';
 
 const read=async name=>JSON.parse(await fs.readFile(new URL(name,import.meta.url)));
-const game=await read('../data/game.json'),items=await read('./fixtures/item-scalars-16.21.json'),augments=await read('./fixtures/hex-stat-formulas-16.21.json');
+const game=await read('./fixtures/snapshot-16.21/game.json'),items=await read('./fixtures/item-scalars-16.21.json'),augments=await read('./fixtures/hex-stat-formulas-16.21.json');
 const now=Date.parse('2026-10-23T00:00:00Z');
 // Use the existing real source excerpts. The remaining catalogue items have
 // no formula source in this fixture and must retain only their DD fallback.
@@ -52,7 +52,7 @@ test('fresh, forced and daily full collection retain base parser markers and Kiw
  for(const kind of ['fresh','forced','daily']){
   const previous=kind==='fresh'?null:{...game,contentCheckedAt:new Date(kind==='forced'?now:now-2*86400000).toISOString()},before=structuredClone(previous),source=sources();
   const result=await collect(t,previous,{readJSON:source.readJSON,recheckVersion:kind==='forced'});
-  assert(source.calls.some(url=>url.endsWith('/championFull.json')));assert.equal(result.contentRevision,18);assert.equal(result.itemTooltipRevision,1);
+  assert(source.calls.some(url=>url.endsWith('/championFull.json')));assert.equal(result.contentRevision,19);assert.equal(result.itemTooltipRevision,1);
   for(const id of Object.keys(items.items)){
    assert.equal(result.items[id].tooltipParserRevision,2,kind+' lost parser marker '+id);
    assert(hasCurrentItemDescription(result.items[id],game.patch));assert(hasItemModeTooltip(result.items[id],game.patch));

@@ -1,6 +1,6 @@
 const {app,screen,globalShortcut,ipcMain,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),attempts=[],results=[],writes=[],checks=[],rangeEdits=[];
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),attempts=[],results=[],preparationResults=[],writes=[],checks=[],rangeEdits=[];
 let main,side,report,suppressPreparationSnapshot=false,heldSideClient=null,preparationResponseGate=null;
 app.setPath('userData',root);globalShortcut.register=()=>false;
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);});
@@ -11,23 +11,25 @@ global.WebSocket=class{constructor(){throw Error('Real relay connections forbidd
 const handle=ipcMain.handle.bind(ipcMain);
 ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{
  if(heldSideClient&&name==='client-status'&&args[0].sender===side?.webContents)return structuredClone(heldSideClient);
- if(name==='prepare-selection')attempts.push(structuredClone(args[1]));
+ const preparationIndex=name==='prepare-selection'?attempts.length:null;if(preparationIndex!==null)attempts.push(structuredClone(args[1]));
  const edit=name==='party-range'?{request:structuredClone(args[1])}:null;if(edit)rangeEdits.push(edit);
  const result=await handler(...args);
  if(edit){edit.partyCount=result.state?.draft?.partyCount;edit.roles=result.state?.draft?.slots.filter(slot=>slot.party).map(slot=>slot.role);}
- if(name==='prepare-selection'){results.push(structuredClone(result));if(preparationResponseGate)await preparationResponseGate;}
+ if(name==='prepare-selection'){preparationResults[preparationIndex]=structuredClone(result);results.push(structuredClone(result));if(preparationResponseGate)await preparationResponseGate;}
  return suppressPreparationSnapshot&&['bootstrap','main-ready'].includes(name)?{...result,preparationSnapshot:{revision:result.preparationSnapshot?.revision||0,events:[]}}:result;
 });};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label,timeout=18000){const deadline=Date.now()+timeout;while(Date.now()<deadline){if(await check())return;await delay(100);}throw Error(label);}
 async function checkpoint(name,run){try{await run();checks.push({name,passed:true});}catch(error){
  const ui=await Promise.all(windows.filter(window=>!window.isDestroyed()).map(async window=>({url:window.webContents.getURL(),details:await window.webContents.executeJavaScript('(async()=>{const b=await window.buddy.bootstrap();return {toast:document.querySelector("#toast")?.textContent,activeTab:document.querySelector(".companion-tabs .active")?.textContent,role:document.querySelector("#solo-role")?.value,roleDisabled:document.querySelector("#solo-role")?.disabled,savedRole:b.state?.draft?.playerPosition?.role,revision:b.revision,gameId:b.state?.draft?.clientGameId};})()').catch(()=>null)})));
- checks.push({name,passed:false,message:error.message,ui,rangeEdits:structuredClone(rangeEdits)});console.error('FAIL '+name+': '+error.message+' '+JSON.stringify({ui,rangeEdits}));
+ checks.push({name,passed:false,message:error.message,ui,rangeEdits:structuredClone(rangeEdits)});console.error('FAIL '+name+': '+error.message+' '+JSON.stringify({ui,rangeEdits}));throw error;
 }}
 async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(champion=>champion.id===id),initial=JSON.parse(await fs.readFile(path.join(root,'settings.json')));
+ data.rankings=JSON.parse(await fs.readFile(path.join(base,'data/rankings.json'))).entries;const {roleClaimChoice}=require(path.join(base,'src/core/role-claim.mjs'));
+ const {projectBuildSources}=require(path.join(base,'src/core/build-source.mjs'));data.builds=projectBuildSources(JSON.parse(await fs.readFile(path.join(base,'data/builds.json'))).entries,initial.preferences.buildSource,data.patch);
  assert.equal(initial.preferences.autoSync,true);assert.equal(initial.preferences.clickPrepare,true);assert.equal(initial.draft.playerPosition,undefined);assert.equal(initial.draft.soloRole,'');assert.equal(initial.draft.slots.filter(slot=>slot.champion).length,5,'Startup fixture needs a saved local lineup on every lane');
  let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,friendPicked=0,outsidePicked=0,ownAssigned='',friendAssigned='',completed=false,requests=0,spell1Id=12,spell2Id=4,soloParty=false,unknownAllyRoles=false;
  let page={id:44,name:'Synthetic editable page',isEditable:true,isActive:true,current:true};
@@ -71,6 +73,19 @@ async function run(){
  const bootstrap=()=>handlers.get('bootstrap')(event(main)),state=async()=>(await bootstrap()).state,client=async()=>(await bootstrap()).client;
  const click=async(window,selector)=>{assert.ok(!selector.includes('data-action=sync'),'This regression may not click manual sync');await until(()=>js(window,'(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)return false;el.click();return true;})()'),'Enabled control missing: '+selector);};
  const change=async(window,selector,value)=>{await until(()=>js(window,'(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el&&'+JSON.stringify(selector)+'==="#solo-role")document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.click();return !!el&&!el.disabled;})()'),'Enabled role control missing: '+selector);return js(window,'(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');};
+ const completeHeroClick=async(before,window,champion,role)=>{
+  await until(()=>attempts.length>before,'The avatar click did not dispatch its independent hero request');
+  const first=attempts[before];assert.equal(first.preselectOnly,true,'The first avatar request must select the hero before configuration work');assert.deepEqual(Object.keys(first).sort(),['champion','role','mode','preselectOnly','sessionGameId','context'].sort(),'The first request must contain only the hero and current public selection context');
+  assert.equal(first.champion,champion);if(role)assert.equal(first.role,role);assert.equal(first.sessionGameId,String(gameId));assert.equal(first.context.phase,'ChampSelect');assert.equal(first.context.gameId,String(gameId));assert.equal(first.context.cellId,2);
+  await until(()=>preparationResults[before]&&attempts.length>before+1&&preparationResults[before+1],'The same avatar click did not finish its subsequent full configuration');
+  assert.equal(preparationResults[before].steps.hover.status,'done');for(const step of ['runes','spells','items'])assert.equal(preparationResults[before].steps[step].status,'skipped','Hero selection must not perform configuration work');
+  const full=attempts[before+1],result=preparationResults[before+1];assert.notEqual(full.preselectOnly,true);assert.equal(full.champion,champion);assert.equal(full.role,first.role);assert.equal(full.sessionGameId,String(gameId));assert.equal(full.context.phase,'ChampSelect');assert.equal(full.context.gameId,String(gameId));assert.equal(full.context.cellId,2);assert.equal(full.context.assignedPosition,first.context.assignedPosition);assert.ok(full.buildSource&&Number.isSafeInteger(full.sourceEpoch)&&full.sourceEpoch>0,'Full configuration must retain its guarded source');assert.ok(typeof full.reviewStamp==='string'&&full.reviewStamp.length>0,'Full configuration must retain its review guard');
+  assert.equal(result.complete,true);for(const step of ['hover','runes','spells','items'])assert.equal(result.steps[step].status,'done','Missing complete '+step+' preparation');
+  // The IPC receipt precedes renderer sync/save. Do not advance the fixture's
+  // phase until that same click has finished in the originating renderer.
+  await until(()=>js(window,'(()=>{const role=document.querySelector("#solo-role"),toast=document.querySelector("#toast");return !!role&&!role.disabled&&toast?.classList.contains("show")&&!toast.classList.contains("error")&&toast.textContent.startsWith("预选与配置已完成");})()'),'The avatar click did not settle after its complete configuration');
+  await delay(250);assert.equal(attempts.length-before,2,'One avatar click must dispatch one hero request and one complete configuration');return result;
+ };
  const capture=async(window,name)=>{await js(window,'Promise.race([Promise.all([...document.images].filter(image=>{const r=image.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;}).map(image=>image.decode().catch(()=>{}))),new Promise(resolve=>setTimeout(resolve,2000))])');await js(window,'new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await window.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());report.screenshots=[...(report.screenshots||[]),name];};
  const fresh=async predicate=>until(async()=>predicate(await client()),'Automatic client snapshot did not follow the synthetic phase/selection');
  await until(()=>js(main,'!!window.buddy&&!!document.querySelector("#solo-role")'),'Main draft UI missing');await until(()=>observer,'Observer mock missing');
@@ -129,7 +144,7 @@ async function run(){
   await resetRound(430);friendIntent=hero('Nami').key;
   await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===0)?.championPickIntent===friendIntent);
   await checkpoint('teammate-hover-first-click-prepares-'+surface,async()=>{
-   const before=attempts.length,resultBefore=results.length;let target='Nami';
+   const before=attempts.length;let target='Nami';
    if(surface==='candidate'){
     await until(()=>js(side,'!!document.querySelector(".companion-candidate [data-action=companion-preview]")'),'Independent candidate missing');
     target=await js(side,'document.querySelector(".companion-candidate [data-action=companion-preview]").dataset.id');
@@ -140,12 +155,9 @@ async function run(){
     await js(side,'(()=>{const input=document.querySelector("#picker-search");input.value="Nami";input.dispatchEvent(new Event("input",{bubbles:true}));})()');
     await click(side,'#overlay-root [data-action=pick-champion][data-id=Nami]');
    }
-   await until(()=>results.length===resultBefore+1,'The first hover hero click did not complete configuration');
-   assert.equal(attempts.length-before,1);assert.equal(attempts.at(-1).champion,target);assert.notEqual(attempts.at(-1).preselectOnly,true);
-   for(const step of ['hover','runes','spells','items'])assert.equal(results.at(-1).steps[step].status,'done');
+   await completeHeroClick(before,side,target);
    assert.equal(spell2Id,4);assert.equal(friendIntent,hero('Nami').key,'The teammate hover must stay untouched');
    await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),'The completed hover must stay on recommendations');
-   await delay(250);assert.equal(attempts.length-before,1,'A hero click dispatched a duplicate');
   });
  }
  await resetRound(430);
@@ -153,19 +165,16 @@ async function run(){
   assert.equal((await state()).draft.playerPosition,undefined,'Public teammate hover invented an own position');
   await until(()=>js(side,'[...document.querySelectorAll(".companion-candidate [data-action=companion-preview]")].some(button=>button.dataset.id!=="Nami")'),'Fresh unassigned-player candidates missing');
   const candidate=await js(side,'(()=>{const el=[...document.querySelectorAll(".companion-candidate [data-action=companion-preview]")].find(button=>button.dataset.id!=="Nami");return el?{id:el.dataset.id,role:el.dataset.role,index:el.dataset.resultIndex}:null;})()');assert.ok(candidate,'An available candidate for the unassigned local player is required');
-  const before=attempts.length,resultBefore=results.length;await click(side,'[data-action=companion-preview][data-id='+candidate.id+'][data-role='+candidate.role+'][data-result-index="'+candidate.index+'"]');
-  await until(()=>results.length===resultBefore+1,'One candidate click did not complete a preparation API call',10000);
-  assert.equal(attempts.length-before,1,'One hero click dispatched more than one preparation API call');assert.notEqual(attempts.at(-1).preselectOnly,true,'The candidate click only hovered instead of preparing the complete plan');assert.equal(attempts.at(-1).champion,candidate.id);assert.equal(attempts.at(-1).role,candidate.role);assert.equal(results.at(-1).complete,true);
-  for(const step of ['hover','runes','spells','items'])assert.equal(results.at(-1).steps[step].status,'done','Missing complete '+step+' preparation');
+  const before=attempts.length;await click(side,'[data-action=companion-preview][data-id='+candidate.id+'][data-role='+candidate.role+'][data-result-index="'+candidate.index+'"]');
+  const result=await completeHeroClick(before,side,candidate.id,candidate.role);
   await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),'The candidate hover must stay on recommendations');
   await until(async()=>(await state()).preparations.some(value=>value.id===candidate.id&&value.role===candidate.role),'The clicked configuration was not saved');
   const saved=await state();assert.equal(saved.draft.playerPosition?.role,candidate.role);assert.equal(saved.draft.playerPosition?.cellId,2);
-  assert.equal(spell2Id,4,'The original Flash F key was moved');assert.equal(results.at(-1).steps.spells.summoners[1],'SummonerFlash','The receipt lost the original Flash key');
+  assert.equal(spell2Id,4,'The original Flash F key was moved');assert.equal(result.steps.spells.summoners[1],'SummonerFlash','The receipt lost the original Flash key');
   assert.ok(['current','f'].includes(saved.preferences.flashSlot),'Preparation saved the wrong Flash preference');
   const remembered=saved.preparations.find(value=>value.id===candidate.id&&value.role===candidate.role);assert.ok(remembered,'The clicked configuration was not saved');if(remembered.summonerIds)assert.equal(remembered.summonerIds[1],'SummonerFlash');
-  await delay(250);assert.equal(attempts.length-before,1,'The completed candidate click dispatched a delayed duplicate API call');
   await capture(side,'candidate-configuration.png');
-  report.singleClick={candidate,apiCalls:attempts.length-before,steps:Object.fromEntries(Object.entries(results.at(-1).steps).map(([name,value])=>[name,value.status])),flashKey:'F'};
+  report.singleClick={candidate,apiCalls:attempts.length-before,heroFirst:true,steps:Object.fromEntries(Object.entries(result.steps).map(([name,value])=>[name,value.status])),flashKey:'F'};
  });
  if(report.singleClick)await checkpoint('same-hero-lock-opens-configuration-tab',async()=>{
   await click(side,'[data-action=companion-tab][data-tab=recommend]');await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),'Could not return to recommendations before locking');
@@ -177,13 +186,13 @@ async function run(){
  for(const nextQueue of [430,0]){
   await resetRound(nextQueue);
   await checkpoint('explicit-lane-preselection-queue-'+nextQueue,async()=>{
-   for(const [role,id]of [['top','Gnar'],['mid','Ahri'],['jungle','Hecarim']]){
+   for(const role of ['top','mid','jungle']){
     if(role==='jungle'){
      picked=hero('Ahri').key;intent=0;await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championId===picked&&!snapshot.session.actions.flat().find(action=>action.actorCellId===2)?.completed);
      // Main's snapshot can precede renderer notification and its fresh sync/save.
      await until(()=>js(side,'(()=>{const scope=document.querySelector(".companion-content")?.dataset.focusScope,role=document.querySelector("#solo-role"),sync=document.querySelector(".client-connection-indicator");return !!scope&&JSON.parse(scope)[3]==="Ahri"&&role?.value==="mid"&&!role.disabled&&!!sync&&!sync.disabled;})()'),'Sidebar did not finish observing the external picked champion');
     }
-    const before=attempts.length,writeBefore=writes.length;await change(role==='mid'?main:side,'#solo-role',role);
+    const id=roleClaimChoice(await client(),role,data.champions,data).champion;assert.ok(id,'The current public role choice must have a selectable representative');const before=attempts.length,writeBefore=writes.length;await change(role==='mid'?main:side,'#solo-role',role);
     await until(()=>intent===hero(id).key,'Explicit '+role+' lane did not replace the unlocked hover in queue '+nextQueue,7000);
     await until(()=>results.length===attempts.length,'Lane preselection did not settle');assert.equal(attempts.length-before,1,'Changing one lane must make one explicit preselection API call');assert.notEqual(attempts.at(-1).preselectOnly,true);assert.equal(attempts.at(-1).claimPosition,true);assert.equal(attempts.at(-1).role,role);assert.equal(results.at(-1).steps.hover.status,'done','Lane replacement was not confirmed by the client');
     // IPC success precedes the actor's fresh sync and save. Complete that
@@ -212,28 +221,24 @@ async function run(){
    // notice marks the completed lane action before the next explicit click.
    const placeholderNotice='已预选'+hero(attempts.at(-1).champion).name+'占位';
    await until(()=>js(pickerWindow,'(()=>{const role=document.querySelector("#solo-role"),toast=document.querySelector("#toast");return role?.value==='+JSON.stringify(choice.role)+'&&!role.disabled&&toast?.classList.contains("show")&&!toast.classList.contains("error")&&toast.textContent.startsWith('+JSON.stringify(placeholderNotice)+');})()'),'Role placeholder did not finish in the '+choice.surface+' renderer');
-   const window=choice.surface==='main'?main:side,before=attempts.length,resultBefore=results.length,writeBefore=writes.length;
+   const window=choice.surface==='main'?main:side,before=attempts.length,writeBefore=writes.length;
    await click(window,'[data-action=pregame-hero]');await until(()=>js(window,'!!document.querySelector("#overlay-root [data-action=pick-champion][data-id='+choice.id+']")'),'Champion picker missing on '+choice.surface);assert.equal(attempts.length,before,'Opening the picker unexpectedly wrote to the client');
-   await click(window,'#overlay-root [data-action=pick-champion][data-id='+choice.id+']');await until(()=>results.length===resultBefore+1,'One picker hero click did not complete a preparation API call on '+choice.surface,10000);
-   assert.equal(attempts.length-before,1,'The picker hero click dispatched multiple preparation API calls');assert.equal(attempts.at(-1).champion,choice.id);assert.equal(attempts.at(-1).role,choice.role);assert.notEqual(attempts.at(-1).preselectOnly,true);assert.equal(results.at(-1).complete,true);
-   for(const step of ['hover','runes','spells','items'])assert.equal(results.at(-1).steps[step].status,'done');
+   await click(window,'#overlay-root [data-action=pick-champion][data-id='+choice.id+']');await completeHeroClick(before,window,choice.id,choice.role);
    await until(async()=>(await state()).preparations.some(value=>value.id===choice.id&&value.role===choice.role),'Picker configuration was not saved');assert.equal(spell2Id,4,'Picker preparation moved the original Flash F key');
-   const changed=writes.slice(writeBefore);assert.equal(changed.filter(write=>write.route==='/lol-champ-select/v1/session/actions/22').length,1);assert.equal(changed.find(write=>write.route==='/lol-champ-select/v1/session/actions/22').body.completed,false);
+   const changed=writes.slice(writeBefore),hovers=changed.filter(write=>write.route==='/lol-champ-select/v1/session/actions/22');assert.equal(hovers.length,2,'The hero request and complete configuration each recheck and preselect the same target');for(const hover of hovers)assert.deepEqual(hover.body,{championId:hero(choice.id).key,completed:false});assert.equal(changed.filter(write=>write.route==='/lol-perks/v1/pages/44').length,1,'One click must write its complete rune page only once');assert.equal(changed.filter(write=>write.route==='/lol-champ-select/v1/session/my-selection').length,1,'One click must write its summoner pair only once');
    if(choice.surface==='sidebar')await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),'Picker hover must stay on recommendations');
-   await delay(250);assert.equal(attempts.length-before,1,'The picker produced a delayed duplicate preparation call');
   });
  }
  ownAssigned='BOTTOM';friendAssigned='MIDDLE';await resetRound(430);
  await checkpoint('main-reference-lane-click-prepares-without-requiring-whole-lineup',async()=>{
   await click(main,'[data-action=draft-filters]');await click(main,'[data-action=reset-draft]');await click(main,'[data-action=close]');
   await until(async()=>(await state()).draft.slots.every(slot=>!slot.champion),'Explicit reset did not clear the previous local plan');
-  await until(()=>js(main,'!!document.querySelector(".result-card .candidate-member[data-role=mid]")'),'Known middle/bottom party candidates missing');
-  const candidate=await js(main,'(()=>{const card=[...document.querySelectorAll(".result-card")].find(card=>card.querySelector(".candidate-member[data-role=mid]"));const el=card.querySelector(".candidate-member[data-role=mid]");return {id:el.dataset.id,role:el.dataset.role,index:el.dataset.resultIndex,members:[...card.querySelectorAll(".candidate-member")].map(member=>({id:member.dataset.id,role:member.dataset.role}))};})()');
-  const before=attempts.length,resultBefore=results.length;
+  const sources=JSON.stringify(Object.keys(data.builds));
+  await until(()=>js(main,'[...document.querySelectorAll(".result-card .candidate-member[data-role=mid]")].some(el=>'+sources+'.includes(el.dataset.id+":"+el.dataset.role))'),'A visible middle-lane candidate with a bundled current selected source is required for full configuration');
+  const candidate=await js(main,'(()=>{const el=[...document.querySelectorAll(".result-card .candidate-member[data-role=mid]")].find(el=>'+sources+'.includes(el.dataset.id+":"+el.dataset.role));const card=el.closest(".result-card");return {id:el.dataset.id,role:el.dataset.role,index:el.dataset.resultIndex,members:[...card.querySelectorAll(".candidate-member")].map(member=>({id:member.dataset.id,role:member.dataset.role}))};})()');
+  const before=attempts.length;
   await click(main,'.result-card [data-action=build][data-id='+candidate.id+'][data-role='+candidate.role+'][data-result-index="'+candidate.index+'"]');
-  await until(()=>results.length===resultBefore+1,'Claiming another unpicked plan lane cancelled the same explicit click');
-  assert.equal(attempts.length-before,1);assert.equal(results.at(-1).complete,true);
-  for(const step of ['hover','runes','spells','items'])assert.equal(results.at(-1).steps[step].status,'done');
+  await completeHeroClick(before,main,candidate.id,candidate.role);
   await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championPickIntent===hero(candidate.id).key);
   await delay(1200); // The next automatic public-hover sync must preserve this plan, too.
   const saved=await state();assert.ok(saved.preparations.some(value=>value.id===candidate.id&&value.role===candidate.role),'The reference configuration was not retained');
@@ -242,7 +247,7 @@ async function run(){
  soloParty=true;ownAssigned='BOTTOM';await resetRound(430);
  await checkpoint('solo-party-composition-recommendations-after-lane-claim',async()=>{
   await until(async()=>(await state()).draft.slots.filter(slot=>slot.party).length===1,'Solo queue kept a multi-person recommendation range');
-  await change(side,'#solo-role','bottom');await until(()=>intent===hero('Jinx').key&&results.length===attempts.length,'Solo lane claim did not settle');
+  const placeholder=roleClaimChoice(await client(),'bottom',data.champions,data).champion;assert.ok(placeholder);await change(side,'#solo-role','bottom');await until(()=>intent===hero(placeholder).key&&results.length===attempts.length,'Solo lane claim did not settle');
   await until(()=>js(side,'(()=>{const toast=document.querySelector("#toast");return /已预选.*占位/.test(toast?.textContent)&&!toast.classList.contains("error");})()'),'Successful lane claim reported a save error instead of completion');
   picked=intent;intent=0;await fresh(snapshot=>snapshot.session.myTeam.find(p=>p.cellId===2)?.championId===picked);
   await click(side,'[data-action=draft-scope][data-scope=context]');
@@ -263,11 +268,11 @@ async function run(){
    assert.ok(new Set(candidates.flatMap(row=>row.members.map(m=>m.id))).size>=2,'Solo candidates all repeat the placeholder');
    assert.ok(candidates.every(row=>/契合 \d+/.test(row.fit)&&!/冲突/.test(row.fit)),'Known allies should produce a composition fit, not a hover conflict');
   }
-  const before=attempts.length,candidate=await js(side,'(()=>{const el=[...document.querySelectorAll(".companion-candidate [data-action=companion-preview]")].find(el=>el.dataset.id!=="Jinx");return {id:el.dataset.id,role:el.dataset.role,index:el.dataset.resultIndex};})()');
+  const before=attempts.length,candidate=await js(side,'(()=>{const el=[...document.querySelectorAll(".companion-candidate [data-action=companion-preview]")].find(el=>el.dataset.id!=='+JSON.stringify(placeholder)+');return {id:el.dataset.id,role:el.dataset.role,index:el.dataset.resultIndex};})()');
   assert.equal(await js(side,'!!document.querySelector(".companion-persistent .preparation-task")'),false);
   await capture(side,'solo-composition-candidates.png');
   await click(side,'.companion-candidate [data-id='+candidate.id+'][data-role='+candidate.role+'][data-result-index="'+candidate.index+'"]');
-  await until(()=>results.length===before+1,'Selecting a solo candidate did not apply it');assert.equal(results.at(-1).complete,true);assert.notEqual(attempts.at(-1).preselectOnly,true);
+  await completeHeroClick(before,side,candidate.id,candidate.role);
   await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),'Solo hover must stay on recommendations');
   const allies=(await state()).draft.slots.filter(slot=>slot.role!=='bottom').map(slot=>slot.champion).sort();assert.deepEqual(allies,['Ahri','Braum','Garen','Vi']);assert.equal(spell2Id,4);
  });
@@ -279,8 +284,8 @@ async function run(){
   await until(()=>js(side,'[...document.querySelectorAll(".companion-candidate .lineup-fit")].every(el=>/契合 [0-9]+/.test(el.querySelector("summary")?.textContent)&&/4 位公开队友分路未知/.test(el.textContent))'),'Public unplaced allies did not contribute to visible team fit');
   await until(async()=>(await state()).draft.slots.filter(s=>s.role!=='bottom').every(s=>!s.champion),'Unknown public ally lanes were invented');
   await capture(side,'solo-public-allies-unplaced.png');
-  const before=attempts.length;await click(side,'.companion-candidate [data-action=companion-preview]');
-  await until(()=>results.length===before+1&&results.at(-1).complete,'The public unplaced ally candidate did not complete preparation');
+  const before=attempts.length,candidate=await js(side,'(()=>{const el=document.querySelector(".companion-candidate [data-action=companion-preview]");return {id:el.dataset.id,role:el.dataset.role};})()');await click(side,'.companion-candidate [data-action=companion-preview]');
+  await completeHeroClick(before,side,candidate.id,candidate.role);
   await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),'Unplaced-ally hover must stay on recommendations');
  });
  await checkpoint('default-client-flash-key-persists-in-guide-through-loading',async()=>{
@@ -318,15 +323,15 @@ async function run(){
    await click(main,'[data-action=toggle-party][data-role=support]');
    await until(async()=>(await state()).draft.partyCount===3,'Main checkbox did not resize the captured count');
    await until(()=>js(side,'document.querySelectorAll(".companion-team-now .in-scope").length===3'),'Sidebar did not receive main range edit');
-   const previousHover=intent,resultBefore=results.length;let releasePreparation;
+   const previousHover=intent,resultBefore=results.length;let releasePreparation,manualPlaceholder;
    preparationResponseGate=new Promise(resolve=>{releasePreparation=resolve;});
    try{
-    await change(side,'#solo-role','mid');await until(()=>intent>0&&intent!==previousHover&&results.length===resultBefore+1,'Manual role claim did not reach its held response');
+    manualPlaceholder=roleClaimChoice(await client(),'mid',data.champions,data).champion;assert.ok(manualPlaceholder);await change(side,'#solo-role','mid');await until(()=>intent===hero(manualPlaceholder).key&&intent!==previousHover&&results.length===resultBefore+1,'Manual role claim did not reach its held response');
     assert.equal(await js(side,'document.querySelector("#solo-role")?.disabled'),true,'The held response must leave the renderer action unfinished');
    }finally{preparationResponseGate=null;releasePreparation();}
    // A hover PATCH and unchanged count of three do not complete a role claim.
    // Its renderer must finish fresh sync/save before we read the moved marks.
-   await until(()=>js(side,'(()=>{const role=document.querySelector("#solo-role"),toast=document.querySelector("#toast");return role?.value==="mid"&&!role.disabled&&toast?.classList.contains("show")&&!toast.classList.contains("error")&&toast.textContent.startsWith("已预选'+hero('Ahri').name+'占位");})()'),'Manual role claim did not finish in its renderer');
+   await until(()=>js(side,'(()=>{const role=document.querySelector("#solo-role"),toast=document.querySelector("#toast");return role?.value==="mid"&&!role.disabled&&toast?.classList.contains("show")&&!toast.classList.contains("error")&&toast.textContent.startsWith('+JSON.stringify('已预选'+hero(manualPlaceholder).name+'占位')+');})()'),'Manual role claim did not finish in its renderer');
    await until(async()=>{if((await state()).draft.playerPosition?.role!=='mid')return false;return (await Promise.all([main,side].map(window=>js(window,'document.querySelector("#solo-role")?.value')))).every(value=>value==='mid');},'Manual role claim did not settle across both windows');
    await until(async()=>(await state()).draft.partyCount===3&&(await state()).draft.slots.filter(slot=>slot.party).length===3,'Role claim resized the range');
    const selectedRoles=await js(side,'[...document.querySelectorAll(".companion-team-now .in-scope")].map(row=>row.dataset.dropRole)');
@@ -407,10 +412,10 @@ async function run(){
    side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
    await until(()=>js(side,'!!document.querySelector(".companion-shell[data-tab=recommend]")'),'Explicit hero hover must remain on recommendations');await click(side,'[data-action=companion-tab][data-tab=plan]');await until(()=>js(side,'!!document.querySelector(".configuration-current")'),'Explicit configuration navigation failed');
    side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
-   const configurationWrites=writes.length;
+   const configurationWrites=writes.length,configurationBefore=attempts.length;
    await click(side,'.configuration-choice:not(.configuration-current) [data-action=configuration-switch]');
-   await until(()=>writes.length===configurationWrites+3,'Whole configuration switch did not prepare all client settings');
-   await until(()=>results.length===attempts.length,'Whole configuration switch did not finish');
+   await completeHeroClick(configurationBefore,side,'Ahri');
+   const switched=writes.slice(configurationWrites);assert.equal(switched.length,4,'A complete configuration switch must perform both hero checks, one rune write and one spell write');assert.equal(switched.filter(write=>write.route==='/lol-champ-select/v1/session/actions/22'&&write.body.championId===hero('Ahri').key&&write.body.completed===false).length,2);assert.equal(switched.filter(write=>write.route==='/lol-perks/v1/pages/44').length,1);assert.equal(switched.filter(write=>write.route==='/lol-champ-select/v1/session/my-selection').length,1);
    assert.equal(intent,hero('Ahri').key,'Switching configuration changed the hero');
    assert.equal(results.at(-1).complete,true);assert.notEqual(attempts.at(-1).preselectOnly,true);
    const stale=structuredClone(await state());
@@ -423,7 +428,7 @@ async function run(){
    assert.equal(afterLateSave.preselection,undefined);assert.equal(afterLateSave.partyCount,undefined);assert.equal(afterLateSave.clientGameId,undefined);
    assert.equal(afterLateSave.slots.some(slot=>slot.champion||Number.isInteger(slot.clientCellId)),false,'Delayed old draft restored picks in the lobby');
    gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId));await delay(2800);
-   assert.equal(intent,0);assert.equal(writes.length,configurationWrites+3,'A new draft repeated the previous round\'s preselection');
+   assert.equal(intent,0);assert.equal(writes.length,configurationWrites+4,'A new draft repeated the previous round\'s preselection');
   });
  }
  if(handlers.has('stage-selection'))await checkpoint('recommendation-popup-menus-dismiss-without-changing-the-draft',async()=>{

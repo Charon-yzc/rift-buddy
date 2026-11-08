@@ -1,4 +1,6 @@
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
+import './fixtures/snapshot-16.20/catalog.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,7 +13,7 @@ import {resultPlayCard} from '../src/play-card-view.mjs';
 import {resultCooperation} from '../src/core/creative-plan.mjs';
 import {escape as e} from '../src/ui.mjs';
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const byId=new Map(data.champions.map(c=>[c.id,c]));
 const locked=(slots,pairs)=>{for(const [role,id] of pairs)Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});return slots;};
 const candidateSetsFor=(slots,scope='context')=>{
@@ -71,8 +73,8 @@ test('creative discovery seeds retain specific actions while composition fit can
  assert.ok(creative.length>=1,'at least one creative idea is discoverable');
  for(const r of rows)assert.ok(['curated','creative','adaptive','generated'].includes(r.origin));
  const curated=rows.filter(r=>r.origin==='curated');
- assert.ok(curated.length,'authored alternatives remain discoverable');
- assert.ok(rows[0].score>=Math.max(...curated.map(r=>r.score)),'the first result must respect combined fit and player-style scoring among authored alternatives');
+ assert.equal(curated.length,0,'Historical catalog text without current source proof cannot reserve a recommendation slot');
+ assert.ok(rows.every(row=>row.score<=rows[0].score),'The first unweighted result respects the restored combined score');
  for(const r of rows){
   assert.ok(Number.isFinite(r.compositionFit.score));
   for(const role of ['top','jungle'])assert.deepEqual(r.slots.find(s=>s.role===role),slots.find(s=>s.role===role));
@@ -108,8 +110,8 @@ test('discovery-seeded result and play cards show actual conditional tactics hon
  const execution=resultCooperation(creative),jobs=execution.routes?.[0]?.memberJobs||execution.memberJobs;
  assert.equal(jobs.length,3);
  assert.match(card,/共同分工|机制搭配/);for(const m of jobs)assert.ok(card.includes(e(m.job)),m.champion);
- const curatedCard=renderResultCard(rows.find(r=>r.origin==='curated'),0,{...data2},{favorites:[]});
- assert.ok(!curatedCard.includes('创意实验'));
+ const ordinary=rows.find(r=>!r.creative)||rows[0],ordinaryCard=renderResultCard(ordinary,0,{...data2},{favorites:[]});
+ assert.ok(!ordinaryCard.includes('创意实验'));
  const play=resultPlayCard(creative,4,{...data2,catalogInfo:{status:{}}});
  assert.ok(play.includes('成立条件')&&play.includes('失败处理')&&play.includes('未经组合对局验证'));for(const m of jobs)assert.ok(play.includes(e(m.job)),m.champion);
 });

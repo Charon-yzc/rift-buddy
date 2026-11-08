@@ -5,7 +5,8 @@ import {hexRouteCard} from '../src/core/hex-route-card.mjs';
 import {hexChampionReview} from '../src/core/hex-review.mjs';
 import {mechanicReview} from '../src/core/mechanic-review.mjs';
 import {validateCommunityData} from '../services/community-data.mjs';
-const game=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),catalog=JSON.parse(await fs.readFile(new URL('../src/core/catalog-data.json',import.meta.url))),routes=JSON.parse(await fs.readFile(new URL('../src/core/hex-community-routes.json',import.meta.url)));
+// Historical 16.21 Hex contracts use the frozen snapshot; current-patch acceptance is separate.
+const game=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),catalog=JSON.parse(await fs.readFile(new URL('../src/core/catalog-data.json',import.meta.url))),routes=JSON.parse(await fs.readFile(new URL('../src/core/hex-community-routes.json',import.meta.url)));
 const batch=[['Ryze',3036],['Kassadin',3036],['MonkeyKing',3049],['Riven',3049],['Irelia',3049],['Briar',3049]],source='https://www.bilibili.com/video/BV1CLn16HEk9/';
 
 test('the current 4.0 creator batch keeps six conditional directions and their explicit project adaptations',()=>{

@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createSlots,recommend,validateSlots,mergeClientSession,clearClientPicks} from '../src/core/recommend.mjs';
 import {getBuild,buildAsText,validReference,validateRunePage} from '../src/core/builds.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {profile,matchesSearch} from '../src/core/rules.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const hero=id=>data.champions.find(c=>c.id===id);
 test('three-person recommendations preserve the two other players and fill every requested role',()=>{
  const slots=createSlots();slots[0]={...slots[0],champion:'Garen',locked:true};slots[1]={...slots[1],champion:'LeeSin',locked:true};
@@ -77,14 +78,24 @@ test('Chinese names, nicknames and pinyin are searchable',()=>{
  assert.ok(matchesSearch(hero('Yasuo'),'亚索'));assert.ok(matchesSearch(hero('MissFortune'),'女枪'));assert.ok(matchesSearch(hero('MissFortune'),'mf'));
 });
 
-test('common default positions and current Cassiopeia footwear follow the current patch',async()=>{
+test('common positions and Cassiopeia boots retain Rift adjustments and the current Hex source boundary',async()=>{
  const hexCurrent=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url)));
  assert.equal(profile(hero('Zed')).roles[0],'mid');
  assert.equal(profile(hero('MonkeyKing')).roles[0],'jungle');
  assert.ok(profile(hero('MonkeyKing')).roles.includes('top'));
+ assert.match(hero('Cassiopeia').mechanics.passive.description,/移动速度加成/);
  for(const mode of ['rift','hex'])for(const conditions of [[],['ad'],['control']]){
   const build=getBuild(hero('Cassiopeia'),'mid',{...data,hexBuilds:hexCurrent.entries},{mode,conditions});
-  assert.ok(build.items.some(i=>i.tags.includes('Boots')));if(conditions.includes('ad'))assert.equal(build.boots,3047);if(conditions.includes('control'))assert.equal(build.boots,3111);
+  assert.ok(build.items.some(i=>i.tags.includes('Boots')));
+  assert.notEqual(data.items[build.boots].gold.purchasable,false);
+  if(mode==='rift'){
+   if(conditions.includes('ad'))assert.equal(build.boots,3047);
+   if(conditions.includes('control'))assert.equal(build.boots,3111);
+  }else{
+   assert.equal(build.reference,hexCurrent.entries.Cassiopeia);
+   assert.equal(build.boots,hexCurrent.entries.Cassiopeia.boots[0].items[0]);
+   assert.deepEqual(build.adjustments,[],'Current source equipment must not renew unreviewed Hex mechanism adjustments');
+  }
   assert.equal(build.missing.length,0);
  }
 });

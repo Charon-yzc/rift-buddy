@@ -77,7 +77,7 @@ export async function downloadCatalog(url,{lookup=dns.lookup,request=https.reque
  return new Promise((resolve,reject)=>{let bytes=0,parts=[];
   const req=request(u,{method:'GET',headers:{Accept:'application/json'},lookup:(_host,options,cb)=>options?.all?cb(null,records):cb(null,records[0].address,records[0].family)},res=>{
    if(res.statusCode!==200){res.resume();reject(Error('组合库服务未返回 JSON 数据（HTTP '+res.statusCode+'）；不跟随跳转'));return;}
-   res.on('data',chunk=>{bytes+=chunk.length;if(bytes>CATALOG_LIMIT){req.destroy(Error('组合库数据超过 2 MB'));return;}parts.push(chunk);});
+   res.on('data',chunk=>{bytes+=chunk.length;if(bytes>CATALOG_LIMIT){req.destroy(Error('组合库数据超过 '+CATALOG_LIMIT/1_000_000+' MB'));return;}parts.push(chunk);});
    res.on('error',reject);res.on('end',()=>{try{resolve(JSON.parse(Buffer.concat(parts).toString('utf8')));}catch{reject(Error('组合库下载内容不是有效 JSON'));}});
   });const timer=setTimeout(()=>req.destroy(Error('组合库下载超时，继续使用本地库')),timeout);req.on('error',reject);req.on('close',()=>clearTimeout(timer));req.end();
  });
@@ -104,7 +104,7 @@ export async function createCatalogStore({root,getData,write=atomicJSON,download
   // installed catalogs and personal entries. Never rewrite combinations.json.
   prepareCommunity:(catalog,patch,data=getData(),{signedReceipt=false,historicalRift=false}={})=>{if(mutating)throw Object.assign(Error('组合库正在保存'),{code:'CATALOG_BUSY'});if(historicalRift&&(!signedReceipt||!olderPatch(patch,data.patch)||!catalog))throw Error('历史组合库身份无效');const candidate=catalog?{catalog:historicalRift?validateCatalog(catalog):signedReceipt?validateOptionalCatalogReceipt(catalog,data).catalog:validateCatalog(catalog,data),patch,signedReceipt:signedReceipt===true}:null;let result;try{result=summary(data,candidate);}catch(error){throw Object.assign(Error('个人组合依赖仍需保留，社区组合库暂未启用'),{code:'COMMUNITY_CATALOG_CONFLICT',cause:error});}return {...result,commit:()=>{community=candidate;revision++;}};},
   preview,
-  previewFile:async filename=>{const stat=await fs.stat(filename);if(stat.size>CATALOG_LIMIT)throw Error('组合库文件超过 2 MB');return preview(JSON.parse(await fs.readFile(filename,'utf8')));},
+  previewFile:async filename=>{const stat=await fs.stat(filename);if(stat.size>CATALOG_LIMIT)throw Error('组合库文件超过 '+CATALOG_LIMIT/1_000_000+' MB');return preview(JSON.parse(await fs.readFile(filename,'utf8')));},
   check:async()=>{
    const sourceUrl=state.sourceUrl,version=contentVersion(state),incoming=sourceUrl?await download(sourceUrl):official();
    if(sourceUrl!==state.sourceUrl)throw Error('组合库来源地址已变化，请按新地址重新检查');

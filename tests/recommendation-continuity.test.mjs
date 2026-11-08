@@ -1,4 +1,11 @@
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
+import {canonicalJSON} from '../src/core/content-fingerprint.mjs';
+import {catalogContextRevision} from '../src/core/catalog-choice.mjs';
+import {normalizeBuildSource,sameBuildSource} from '../src/core/build-source.mjs';
+import {prepareClientSelection} from '../services/client-preparation.mjs';
+import {createCooperationGraph,cooperationPlan} from '../src/core/cooperation.mjs';
+import {automaticCreativePlan} from '../src/core/recommend.mjs';
+import {recommendationConditionsKey,RECOMMENDATION_FACTORY_FIELDS} from '../src/core/recommendation-input.mjs';
 import {createRecommendationFamiliarityState} from '../src/core/recommendation-familiarity-state.mjs';
 import {createPreparationContext} from '../src/core/preparation-context.mjs';
 import {prepareHeroWithSource} from '../src/core/hero-source-preparation.mjs';
@@ -14,9 +21,9 @@ import {createSlots,mergeClientSession,recommend,clearClientPicks,currentCombo,c
 import {companionPickIntent,localConfigurationPreview,configurationReadOnly} from '../src/core/companion-plan.mjs';
 import {preparationProgressView} from '../src/preparation-progress-view.mjs';
 import {recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft} from '../src/core/draft-intents.mjs';
-import {reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,manualPlayerSlot,clearManualPlayerPosition,moveChampion,assignClientChampion,scopeSlots,effectiveDraftScope} from '../src/core/draft.mjs';
+import {reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,manualPlayerSlot,clearManualPlayerPosition,moveChampion,selectManualChampion,assignClientChampion,scopeSlots,effectiveDraftScope} from '../src/core/draft.mjs';
 import {currentPlayerSelection} from '../src/core/guide.mjs';
-import {recommendationKey,createPreparationStore,createRuneApplicationState,configurationKey as buildChoiceKey,validatePreparation} from '../src/core/preparation.mjs';
+import {recommendationKey,CONFIGURATION_FIELDS,recallPreparation,createPreparationStore,createRuneApplicationState,configurationKey as buildChoiceKey,validatePreparation} from '../src/core/preparation.mjs';
 import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {roleClaimChoice,activeRoleClaim} from '../src/core/role-claim.mjs';
@@ -60,7 +67,7 @@ test('actual route adoption and candidate clicks keep each route configuration i
   if(preparation.partyRoutePreparations)c.partyRoutePreparations=preparation.partyRoutePreparations;
   c.preparations.remember({...origin,coreId:'core-3078-3053-6333',customRunePage:{...structuredClone(base.runePage),patch:data.patch},summonerIds:['SummonerFlash','SummonerExhaust']});const old=c.preparations.recall(origin);
   if(savedTarget)c.preparations.remember({...target,summonerIds:['SummonerFlash','SummonerHeal'],customRunePage:{...structuredClone(base.runePage),patch:data.patch}});
-  const expectedSelection=savedTarget?c.preparations.recall(target):target,expected=getBuild(hero(member.champion),member.role,data,expectedSelection);
+  const expectedSelection=entry==='adopt'?(savedTarget?c.preparations.recall(target):target):heroClickSelection(data,{id:member.champion,role:member.role,mode:'rift'}),expected=getBuild(hero(member.champion),member.role,data,expectedSelection);
   c.results=[{...result,creativePlan:to,preparationOrigin:from}];c.resultsSignature=recommendationKey(c.recommendationInput());c.sync=async()=>{};let selected;
   if(entry==='adopt'){await c.adoptResult(0);selected=c.ownTaskPreparation().selection;}
   else{c.prepareHeroClick=async selection=>{selected=structuredClone(selection);};await c.prepareCandidate({dataset:{id:member.champion,role:member.role,resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});}
@@ -74,11 +81,11 @@ function extract(start,end){
  assert(from>=0&&to>from,`Missing application function boundaries: ${start}`);
  return source.slice(from,to);
 }
-const syncFunctions=extract('const includePublicPreselection=','const currentParty=')+extract('function clearSelectionUi(){','let activeAppSelect=')+extract('function cancelRecommendation(){','let client=')+
+const syncFunctions=extract('const includePublicPreselection=','const currentParty=')+extract('function clearSelectionUi(){','let activeAppSelect=')+extract('function cancelRecommendation(','let client=')+
  extract('function queueCompanionRecommendation(){','function acceptWindowLayout(')+
- extract('function recommendationInput(refreshFamiliarity=false){','function useCatalogResult(')+
+ extract('function recommendationInput(','function useCatalogResult(')+
  extract('async function performSync(','function reflectRunePending(');
-const clickFunctions=extract('function resultCreativePlan(result){','function reconcileCreativePlan(')+
+const clickFunctions=extract('function resultCreativePlan(result){','function reconcileCreativePlan(')+extract('function selectionReviewStamp(','function invalidate(')+
  extract('function taskOwnRole(){','function renderTaskMembers(')+extract('function preparationContext(){','function roomRoleContext(){')+
  extract('function memberHeroAction(','function readOnlyPreparation(')+
  extract('function readOnlyPreparation(','function clientControls(')+
@@ -92,16 +99,17 @@ function client(){
 }
 const partySlots=()=>createSlots().map(s=>({...s,party:['mid','bottom'].includes(s.role),...(s.role==='bottom'?{champion:'Ashe',locked:true,automaticPosition:true}:{})}));
 function setup({slots=partySlots(),current=client(),incoming=client(),results=[{id:'existing candidate'}],now=Date.now()}={}){
- const timers=new Map(),calls={cancel:0,generated:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
+ // Separate hero-only requests from full configuration requests; retain the complete IPC trace.
+ const timers=new Map(),calls={cancel:0,generated:[],hovered:[],requests:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
  const clock={now};class ClockDate extends Date{static now(){return clock.now;}}
   const context=vm.createContext({
-    createPreparationContext,guideSelection:null,rankedDraftPolicy,publicRankedDraft,selectionReferenceScope,resolvedRankedDraft,enemyRolesSignature,prepareHeroWithSource,roomFamiliarityContext,recommendationFamiliarity:createRecommendationFamiliarityState(),room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
+    performance,canonicalJSON,catalogContextRevision,normalizeBuildSource,sameBuildSource,CONFIGURATION_FIELDS,recallPreparation,selectManualChampion,automaticCreativePlan,recommendationConditionsKey,RECOMMENDATION_FACTORY_FIELDS,createPreparationContext,guideSelection:null,rankedDraftPolicy,publicRankedDraft,selectionReferenceScope,resolvedRankedDraft,enemyRolesSignature,prepareHeroWithSource,roomFamiliarityContext,recommendationFamiliarity:createRecommendationFamiliarityState(),room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
     ongoing:createOngoingGameController({request:async()=>{throw Error('Recommendation sync must not query ongoing histories');},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]}),
   Date:ClockDate,data,slots,client:current,championUsage:null,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
   route:'draft',scope:'party',soloRole:'bottom',style:'wild',offset:0,activeCreativePlan:null,unassigned:[],enemy:[],clientBans:[],
   roomShareRoom:'123456',roomShareSig:'',roomShareWarned:false,roomQuietTimer:null,roomAutoQuiet:false,roomScanResults:[],roomError:'',AUTO_QUIET_MS:60000,
   generating:false,syncing:false,windowLayout:{docked:false},autoRecommendTimer:null,autoRecommendationKey:'',results,resultsSignature:'',
-  recommendationRun:0,activeRecommendation:null,cancelRecommendationReveal:noop,
+  recommendationRun:0,activeRecommendation:null,cancelRecommendationReveal:noop,recommendationRunner:null,recommendationSearchActive:false,communityAfter:'',recommendationFactoryGeneration:0,buildSourceEpoch:0,pendingBuildSourceEpoch:null,buildSourceLocked:false,lockedBuildSource:null,buildSourceDraft:null,externalState:null,stateRevision:0,
   lastRenderedClient:'',lastMatchupSession:'',lastMatchupSync:'',lastMatchupGame:'123',matchupTargets:new Map(),lastClientRead:'',
   lastAutoPartyContext:'',pendingIntentPreparation:null,pendingIntentPlanId:'',lastMatchupOwn:'',saveChain:Promise.resolve(),sharedClient:null,
   buildView:null,renderedBuildContext:null,activeAppSelect:null,dragPick:null,document:{activeElement:{matches:()=>false}},
@@ -122,8 +130,21 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   showBuild:(id,role,mode,selection)=>{const opened={id,role,mode,selection};calls.opened.push(opened);if(selection?.readOnly)calls.readOnly.push(opened);context.buildView={variant:'default',conditions:[],coreIndex:0,id,role,mode,...selection,build:getBuild(hero(id),role,data,selection)};context.renderBuild();},
   champ:hero,
   api:{client:async fresh=>{calls.clients.push(fresh);return structuredClone(incoming);},prepareSelection:async value=>{
-   calls.prepared.push(value);incoming.session.myTeam[0].championPickIntent=hero(value.champion).key;
-   return {complete:true,steps:{hover:{status:'done'},runes:{status:'done',pageId:11},spells:{status:'done'},items:{status:'done'}}};
+   calls.requests.push(value);(value.preselectOnly?calls.hovered:calls.prepared).push(value);
+   // Exercise the real write guards with mocked client transport, rune writes and item writes.
+   return prepareClientSelection({value,data},{discover:async()=>({port:1234}),writeRunes:async()=>({pageId:11}),writeItems:async()=>({title:'mock item set'}),request:async(_auth,route,method='GET',body)=>{
+    const session=incoming.session,own=session?.myTeam.find(p=>p.cellId===session.localPlayerCellId);
+    const actions=(session?.actions||[]).flat().filter(a=>a.type==='pick'&&a.actorCellId===session.localPlayerCellId);
+    const action=actions[0]||{id:1,type:'pick',actorCellId:session?.localPlayerCellId,championId:own?.championId||own?.championPickIntent||0,completed:false,isInProgress:true};
+    if(route==='/lol-gameflow/v1/gameflow-phase')return incoming.phase;
+    if(route==='/lol-gameflow/v1/session')return {gameData:{gameId:incoming.game?.gameId, mapId:incoming.mode?.id==='hex'?12:11,queue:{id:incoming.mode?.id==='hex'?2400:incoming.game?.queueId||430,gameMode:incoming.mode?.id==='hex'?'KIWI':'CLASSIC'}}};
+    if(route==='/lol-champ-select/v1/session')return {...structuredClone(session),actions:[[{...action,id:action.id??1}]],timer:{phase:'PLANNING'},bans:{myTeamBans:session.bans||[],theirTeamBans:[]}};
+    if(route.endsWith('/pickable-champion-ids'))return incoming.eligibility?.pickable||data.champions.map(h=>h.key);
+    if(route.endsWith('/disabled-champion-ids'))return incoming.eligibility?.disabled||[];
+    if(route.includes('/session/actions/')&&method==='PATCH'){if(own.championId)own.championId=body.championId;own.championPickIntent=body.championId;if(actions.length)actions[0].championId=body.championId;return;}
+    if(route==='/lol-champ-select/v1/session/my-selection'){if(method==='PATCH')Object.assign(own,body);return {spell1Id:own.spell1Id,spell2Id:own.spell2Id};}
+    throw Error('Unexpected mocked client route '+method+' '+route);
+   }});
   }},
  });
  context.currentParty=()=>context.client.party;
@@ -160,7 +181,7 @@ test('a pending actual app worker cannot publish fit based on an outdated unconf
   vm.runInContext(extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),c);
   const pending=c.generate(),before=recommendationKey(c.recommendationInput());await c.performSync(false,true);
   assert.notEqual(recommendationKey(c.recommendationInput()),before);assert.equal(s.calls.cancel,1);
-  finish([{id:'stale-fit',slots:[]}]);await pending;assert.equal(accepted,0);assert.equal(c.results.length,0);
+  finish({rows:[{id:'stale-fit',slots:[]}]});await pending;assert.equal(accepted,0);assert.equal(c.results.length,0);
  }
 });
 
@@ -337,18 +358,18 @@ test('a locked candidate rejects another hero without adopting, preparing or nav
 });
 test('a stale candidate refresh rejects unavailable targets and different games, players or modes before preparation',async()=>{
  const now=2000000;
- for(const kind of ['disabled','banned','game','player','mode']){
+ for(const kind of ['disabled','banned','game','player','mode','position']){
   const current=checkedClient(now),incoming=checkedClient(now+16001);
   if(kind==='disabled')incoming.eligibility.disabled=[hero('Ashe').key];
   if(kind==='banned')incoming.session.bans=[hero('Ashe').key];
   if(kind==='game'){incoming.session.gameId=124;incoming.game.gameId='124';}
   if(kind==='player'){incoming.session.localPlayerCellId=2;incoming.session.myTeam[0].cellId=2;}
-  if(kind==='role')incoming.session.myTeam[0].assignedPosition='MIDDLE';
+  if(kind==='position')incoming.session.myTeam[0].assignedPosition='MIDDLE';
   if(kind==='mode')incoming.mode={id:'hex'};
   if(kind==='teammate')incoming.session.myTeam.push({cellId:2,championId:hero('Veigar').key,assignedPosition:'MIDDLE'});
   incoming.eligibility.context=pickEligibilityContext(incoming.session);incoming.eligibility.localPlayerCellId=incoming.session.localPlayerCellId;
   const s=candidateSetup({current,incoming,now});s.clock.now+=16001;
-  await assert.rejects(s.context.clickBuild(avatar(s.html,'Ashe')),/变化|无法确认/,kind);
+  await assert.rejects(s.context.clickBuild(avatar(s.html,'Ashe')),/变化|无法确认|本局不可选|不支持/,kind);
   assert.equal(s.calls.prepared.length,0,kind);assert.equal(s.context.activeCreativePlan,null,kind);
  }
 });
@@ -357,7 +378,7 @@ test('one hero click survives a changed reference lane or incompatible ally pick
  const now=2000000;
  for(const kind of ['role','teammate']){
   const current=checkedClient(now),incoming=checkedClient(now+16001);
-  if(kind==='role')incoming.session.myTeam[0].assignedPosition='MIDDLE';
+  if(kind==='role')current.session.myTeam[0].assignedPosition=incoming.session.myTeam[0].assignedPosition='MIDDLE';
   else incoming.session.myTeam.push({cellId:2,championId:hero('Veigar').key,assignedPosition:'MIDDLE'});
   incoming.eligibility.context=pickEligibilityContext(incoming.session);
   const s=candidateSetup({current,incoming,now});s.clock.now+=16001;
@@ -373,7 +394,7 @@ test('the first click can learn previously unknown eligibility only when this ca
   const current=client(),incoming=checkedClient(now);if(!legal)incoming.eligibility.disabled=[hero('Ashe').key];
   const s=candidateSetup({current,incoming,now,withStats});
   if(legal){await s.context.clickBuild(avatar(s.html,'Ashe'));assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].champion,'Ashe');assert.equal(s.calls.clients[0],true);}
-  else{await assert.rejects(s.context.clickBuild(avatar(s.html,'Ashe')),/变化/);assert.equal(s.calls.prepared.length,0);}
+  else{await assert.rejects(s.context.clickBuild(avatar(s.html,'Ashe')),/本局不可选/);assert.equal(s.calls.prepared.length,0);}
  }
 });
 test('comparison recommendation input releases all unconfirmed heroes while retaining the display draft',()=>{
@@ -700,15 +721,15 @@ test('one ranking-avatar click moves an old unbound hero plan only after success
   c.rankingReference=()=>({boards:{bottom:[{champion:'Ashe'}]}});
   c.companionPreparation=()=>c.companionPreview?{selection:c.companionPreview,build:getBuild(hero(c.companionPreview.id),c.companionPreview.role,data,c.companionPreview)}:null;
   c.persist=async()=>{writes.push(validateState({...defaultState(),draft:{slots:c.slots,scope:'party',style:'wild',soloRole:'bottom'}}));};
-  if(!hovered)c.api.prepareSelection=async value=>{calls.prepared.push(value);return {complete:false,steps:{hover:{status:'error',message:'暂不可选'}}};};
+  if(!hovered)c.api.prepareSelection=async value=>{calls.hovered.push(value);assert.equal(value.preselectOnly,true);return {complete:false,steps:{hover:{status:'error',message:'暂不可选'}}};};
   vm.runInContext(`async function clickRanking(el){const action='ranking-hero';${extract("if(action==='ranking-hero'){","if(action==='task-compare')")}}`,c);
   await c.clickRanking({dataset:{id:'Ashe',role:'bottom'}});
-  assert.equal(calls.prepared.length,1,'One click dispatches one preparation');
+  assert.equal(calls.hovered.length,1,'One click dispatches one hero preselection');assert.equal(calls.prepared.length,Number(hovered),'Only a confirmed hover proceeds to a full preparation');
   assert.equal(c.slots.filter(s=>s.champion==='Ashe').length,1);
   assert.equal(c.slots.find(s=>s.role==='mid').champion,hovered?null:'Ashe');
   assert.equal(c.slots.find(s=>s.role==='bottom').champion,hovered?'Ashe':null);
   assert.deepEqual(structuredClone(c.slots.find(s=>s.role==='support')),before.find(s=>s.role==='support'));
-  assert.ok(writes.length>=1);assert.deepEqual(writes.at(-1).draft.slots,validateState({...defaultState(),draft:{slots:c.slots,scope:'party',style:'wild',soloRole:'bottom'}}).draft.slots);assert.equal(calls.prepared[0].selection.id,'Ashe');
+  if(hovered){assert.ok(writes.length>=1);assert.deepEqual(writes.at(-1).draft.slots,validateState({...defaultState(),draft:{slots:c.slots,scope:'party',style:'wild',soloRole:'bottom'}}).draft.slots);assert.equal(calls.prepared[0].selection.id,'Ashe');}else{assert.equal(writes.length,0);assert.deepEqual(c.slots,before);}
  }
 });
 
@@ -717,6 +738,46 @@ test('an explicit local hero click can replace its earlier manual plan position 
  const {context:c,calls}=setup({slots}),before=structuredClone(slots);
  await c.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'});
  assert.equal(calls.prepared.length,1);assert.equal(c.slots.filter(s=>s.champion==='Ashe').length,1);assert.equal(c.slots.find(s=>s.champion==='Ashe').role,'bottom');
+});
+
+test('explicit configuration switching preserves the chosen runes and spells while a fresh avatar resets to the role default',async()=>{
+ for(const locked of [false,true]){
+  const current=client();current.session.myTeam[0].championId=hero('Ashe').key;current.session.myTeam[0].pickState=locked?'locked':'hovered';
+  const {context:c,calls}=setup({current,incoming:structuredClone(current)}),base=getBuild(hero('Ashe'),'bottom',data,{mode:'rift',loadoutId:'default'});
+  const chosen={id:'Ashe',role:'bottom',mode:'rift',loadoutId:'default',customRunePage:{primaryStyleId:base.runePage.primaryStyleId,subStyleId:base.runePage.subStyleId,selectedPerkIds:[...base.runePage.selectedPerkIds],patch:data.patch},summonerIds:['SummonerHeal','SummonerFlash'],skillOrder:base.skillOrder};
+  const build=getBuild(hero('Ashe'),'bottom',data,chosen);
+  c.overlay={contains:()=>false};c.companionPreparation=()=>({selection:chosen,build});c.assertConfigurationEditable=()=>{};
+  c.selectionRequestContext=()=> 'same-current-hero';c.configurationChoices=()=>[{id:'current',selection:chosen,build}];
+  vm.runInContext(`async function switchConfiguration(el){const action='configuration-switch';${extract("if(action==='configuration-switch'){","if(action==='companion-jump')")}}`,c);
+  await c.switchConfiguration({dataset:{plan:'Ashe:bottom:rift',config:'current'}});
+  assert.equal(calls.prepared.length,1);assert.deepEqual(structuredClone(calls.prepared[0].selection.customRunePage),chosen.customRunePage);
+  assert.deepEqual(structuredClone(calls.prepared[0].selection.summonerIds),chosen.summonerIds);
+  await c.prepareHeroClick(chosen);
+  assert.equal(calls.prepared.length,2);assert.equal(calls.prepared[1].selection.customRunePage,undefined);assert.equal(calls.prepared[1].selection.summonerIds,undefined);
+  assert.equal(c.preparations.recall(chosen).customRunePage,undefined);assert.equal(c.preparations.recall(chosen).summonerIds,undefined);
+  assert.deepEqual(c.ownTaskPreparation().build.runePage.selectedPerkIds,base.runePage.selectedPerkIds);
+ }
+});
+
+test('a newer configuration edit during a client write remains saved after the older click completes',async()=>{
+ const current=client();current.session.myTeam[0].championId=hero('Ashe').key;
+ const {context:c,calls}=setup({current,incoming:structuredClone(current)}),apply=c.api.prepareSelection;
+ const newer={id:'Ashe',role:'bottom',mode:'rift',loadoutId:'default',summonerIds:['SummonerHeal','SummonerFlash']};
+ c.api.prepareSelection=async value=>{const result=await apply(value);if(!value.preselectOnly)c.rememberPreparation(newer);return result;};
+ await c.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'});
+ assert.equal(calls.prepared[0].selection.summonerIds,undefined);
+ assert.deepEqual(structuredClone(c.preparations.recall(newer).summonerIds),newer.summonerIds);
+});
+
+test('opening the current task keeps the explicitly selected generic identity even with a matching accepted combination',()=>{
+ const slots=createSlots().map(s=>({...s,party:['mid','bottom'].includes(s.role),champion:s.role==='mid'?'Orianna':s.role==='bottom'?'Ashe':null}));
+ const [result]=recommend({slots,champions:data.champions,scope:'party'}),accepted=captureCreativePlan(result,data),member=accepted.members.find(m=>m.role==='bottom');
+ const current=client();current.session.myTeam[0].championId=hero(member.champion).key;
+ const generic=heroClickSelection(data,{id:member.champion,role:'bottom',mode:'rift'}),group={...generic,...creativeComboContext(creativeMemberCombo(accepted,member.champion,'bottom'))};
+ const store=createPreparationStore();store.remember({...group,summonerIds:['SummonerHeal','SummonerFlash']});store.remember(generic);
+ const context=createPreparationContext({data,client:current,slots:result.slots,ownRole:'bottom',activePlan:accepted,lastTaskSelection:generic,recall:selection=>store.recall(selection)});
+ assert.equal(context.task.selection.comboId,undefined);assert.equal(context.task.selection.creativePlan,undefined);assert.equal(context.task.selection.summonerIds,undefined);
+ assert.equal(store.recall(group).comboId,group.comboId);assert.deepEqual(store.recall(group).summonerIds,['SummonerHeal','SummonerFlash']);
 });
 
 test('cancelling a lobby hero preserves the selected lane and never prepares a placeholder',async()=>{
@@ -876,7 +937,7 @@ test('an explicit different candidate replaces the previous own hover without in
  c.results=recommend(c.recommendationInput());c.resultsSignature=recommendationKey(c.recommendationInput());
  assert.ok(c.results.length);assert.equal(c.results[0].slots.find(s=>s.role==='bottom').champion,'Jinx');
  const el={dataset:{id:'Jinx',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'};
- await c.prepareCandidate(el);
+ await c.adoptResult(0);assert.ok(c.activeCreativePlan,'The lineup is adopted explicitly before preparing its hero');await c.prepareCandidate(el);
  assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Jinx');assert.ok(c.activeCreativePlan);
 });
 
@@ -909,7 +970,7 @@ test('a solo party candidate keeps its cooperation with fixed allies through one
  };
  vm.runInContext(extract('function persist(','function acceptSavedState('),c);
  c.results=recommend(c.recommendationInput());c.resultsSignature=recommendationKey(c.recommendationInput());
- const plan=c.resultCreativePlan(c.results[0]);assert.ok(plan?.members.some(m=>m.champion==='Braum'),'This candidate needs real ally cooperation');
+ const members=[{champion:'Ashe',role:'bottom'},{champion:'Braum',role:'support'}];c.results[0].adaptive=cooperationPlan(members,createCooperationGraph(data.champions));const plan=c.resultCreativePlan(c.results[0]);assert.ok(plan?.members.some(m=>m.champion==='Braum'),'This fixture explicitly adopts real ally cooperation');await c.adoptResult(0);
  await c.prepareCandidate({dataset:{id:'Ashe',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});
  assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Ashe');assert.equal(c.activeCreativePlan?.id,plan.id);
  assert.deepEqual(structuredClone(c.slots.find(s=>s.role==='support')),slots.find(s=>s.role==='support'));
@@ -979,7 +1040,7 @@ test('a real client hover change during preparation replaces stale configuration
    if(backgroundRead)await c.sync(false,{fresh:true});
    return {complete:false,steps:{hover:{status:'done'},runes:{status:'failed',message:'选人对象已变化'},spells:{status:'skipped'},items:{status:'skipped'}}};
   };
-  if(candidateClick)await c.prepareCandidate({dataset:{id:'Ashe',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});
+  if(candidateClick)await assert.rejects(c.prepareCandidate({dataset:{id:'Ashe',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'}),/选人或配置已变化/);
   else await c.useClientPreparation({dataset:{preparationView:'task'}},true);
   await c.sync(false,{fresh:true});
   const scenario=`candidate=${candidateClick}, backgroundRead=${backgroundRead}`;
@@ -1078,7 +1139,7 @@ test('a fresh candidate avatar dispatches in both windows while full sync and li
   c.api.prepareSelection=async()=>{events.push('dispatch');throw Error('isolated stop after dispatch');};
   const pending=assert.rejects(c.clickBuild(avatar(html,'Ashe')),/isolated stop after dispatch/);
   await new Promise(resolve=>setImmediate(resolve));const atClick=[...events];release();await pending;
-  assert.ok(atClick.includes('dispatch'),'The real candidate entry must not await status or disk: '+JSON.stringify({atClick,events,status:localPickEligibility(current,c.slots,data.champions,{scope:c.scope,soloRole:c.soloRole,now}).status}));assert.ok(!atClick.includes('sync'));assert.ok(c.activeCreativePlan,'Keep whole-lineup adoption');
+  assert.ok(atClick.includes('dispatch'),'The real candidate entry must not await status or disk: '+JSON.stringify({atClick,events,status:localPickEligibility(current,c.slots,data.champions,{scope:c.scope,soloRole:c.soloRole,now}).status}));assert.ok(!atClick.includes('sync'));assert.equal(c.activeCreativePlan,null,'A hero avatar must not adopt a whole lineup');
   assert.equal(c.clientPreparing,false);assert.equal(c.candidatePreparing,false);
  }
 });
@@ -1088,14 +1149,14 @@ test('an enemy role change prevents the old actual worker completion from publis
  const f=setup({current,incoming:structuredClone(current)}),c=f.context;let resolve;const gate=new Promise(done=>resolve=done);c.calculateRecommendation=()=>gate;c.resultCreativePlan=()=>assert.fail('Old enemy-role results were committed');
  vm.runInContext(extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),c);const pending=c.generate(),oldKey=recommendationKey(c.recommendationInput());
  c.saved.draft.enemyRoles=changeEnemyRole(current,data,[],{gameId:'123',cellId:5,champion:'Darius',role:'mid',context:enemyRoleContext(current,data)});
- assert.notEqual(recommendationKey(c.recommendationInput()),oldKey);resolve([{id:'old enemy roles'}]);await pending;assert.equal(c.results.some(row=>row.id==='old enemy roles'),false);
+ assert.notEqual(recommendationKey(c.recommendationInput()),oldKey);resolve({rows:[{id:'old enemy roles'}]});await pending;assert.equal(c.results.some(row=>row.id==='old enemy roles'),false);
 });
 
 test('manual recommendation cancels the queued automatic run while new inputs can still schedule another',async()=>{
  const s=setup({results:[]}),c=s.context;let calculations=0;
  c.autoRecommendationKey='';c.resultsSignature='';c.recommendationError='';c.showAllCandidates=false;
  c.queueCompanionRecommendation();assert.equal(s.timers.size,1,'Expected an automatic recommendation waiting to run');
- c.calculateRecommendation=async()=>{calculations++;return [{id:'manual candidate'}];};c.resultCreativePlan=()=>null;
+ c.calculateRecommendation=async()=>{calculations++;return {rows:[{id:'manual candidate'}]};};c.resultCreativePlan=()=>null;
  vm.runInContext(extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),c);
  await c.generate();
  assert.equal(calculations,1);assert.equal(s.timers.size,0,'A completed manual recommendation must not leave a duplicate automatic worker queued');
@@ -1121,10 +1182,10 @@ test('actual app stages own and every room member scan until reroll without clea
  }
  assert.equal(f.calls.cancel,0);assert.equal(inputs.length,1);assert.equal(f.timers.size,0);
  assert.deepEqual(inputs[0].roomFamiliarity.map(m=>m.usage.sampled),[1,1,1]);
- finish([{id:'same-snapshot'}]);await pending;assert.equal(c.results[0].id,'same-snapshot');
- const reroll=c.generate(true);assert.deepEqual(inputs[1].roomFamiliarity.map(m=>m.usage.sampled),[500,500,500]);finish([{id:'latest-batch'}]);await reroll;
+ finish({rows:[{id:'same-snapshot'}]});await pending;assert.equal(c.results[0].id,'same-snapshot');
+ const reroll=c.generate(true);assert.deepEqual(inputs[1].roomFamiliarity.map(m=>m.usage.sampled),[500,500,500]);finish({rows:[{id:'latest-batch'}]});await reroll;
  assert.equal(c.results[0].id,'latest-batch');assert.equal(inputs[1].offset,0);assert.notEqual(inputs[1].randomSeed,inputs[0].randomSeed);
- const again=c.generate(true);assert.equal(inputs[2].offset,0);assert.notEqual(inputs[2].randomSeed,inputs[1].randomSeed);finish([{id:'another-batch'}]);await again;
+ const again=c.generate(true);assert.equal(inputs[2].offset,0);assert.notEqual(inputs[2].randomSeed,inputs[1].randomSeed);finish({rows:[{id:'another-batch'}]});await again;
  // An automatic retry/route repaint keeps the chosen snapshot, even if a new
  // peer batch arrives after the user refresh. A real preference edit adopts it.
  const next=structuredClone(c.room);next.members[1].share.championUsage=shared(100);c.applyRoomSnapshot(next);
@@ -1145,7 +1206,7 @@ test('prospective single-role familiarity is revoked when its ownership proof be
   if(change==='duplicate-cell')c.client.session.myTeam.push({...c.client.session.myTeam[0]});
   if(change==='foreign-binding')c.slots=c.slots.map(s=>s.role==='support'?{...s,clientCellId:2}:s);
   assert.deepEqual(Object.keys(c.recommendationInput().familiarityByRole),[],change);assert.notEqual(recommendationKey(c.recommendationInput()),key,change);
-  finish([{id:'late'}]);await pending;assert.equal(c.results.length,0,change);
+  finish({rows:[{id:'late'}]});await pending;assert.equal(c.results.length,0,change);
  }
 });
 
@@ -1168,6 +1229,6 @@ test('a frozen room profile revokes immediately and rejects its late worker on w
   if(change==='offline')next.members[1].online=false;
   if(change==='endpoint')next.relayUrl='wss://two.example';
   if(change==='account')c.acceptChampionUsage({...c.championUsage,revision:2,session:'b'.repeat(32)});else c.applyRoomSnapshot(next);
-  assert.equal(f.calls.cancel,1,change);finish([{id:'late'}]);await pending;assert.equal(c.results.length,0,change);
+  assert.equal(f.calls.cancel,1,change);finish({rows:[{id:'late'}]});await pending;assert.equal(c.results.length,0,change);
  }
 });

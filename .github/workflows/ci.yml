@@ -116,7 +116,7 @@ jobs:
       - name: "Historical 16.20: Check independent equipment import and sidebar receipt replay"
         working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-party-preparation.mjs --standalone-items
-      - name: "Historical 16.20: Check three visible choices, more candidates and keyboard details at main and sidebar sizes"
+      - name: "Historical 16.20: Check six scrollable choices and keyboard details at main and sidebar sizes"
         working-directory: .local/smoke-snapshot-16.20
         run: pnpm exec electron scripts/smoke-selection-layout.cjs
       - name: "Historical 16.20: Check selection, loading and in-game transitions"

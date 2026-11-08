@@ -55,7 +55,7 @@ async function run(){
   return req;
  };
  const source=process.env.RIFT_BUDDY_SOURCE==='1';
- const release=source?null:JSON.parse(await fs.readFile('release/latest.json','utf8'));
+ const release=source?null:JSON.parse(await fs.readFile(process.env.RIFT_BUDDY_SMOKE_RELEASE||'release/latest.json','utf8'));
  require(source?path.resolve('electron/main.cjs'):path.join(release.directory,'resources/app.asar/electron/main.cjs'));
  const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=code=>main.webContents.executeJavaScript(code,true).catch(error=>{throw Error('Renderer expression: '+code,{cause:error});});
  const reload=()=>new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.webContents.reload();});

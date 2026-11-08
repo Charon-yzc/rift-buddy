@@ -1,3 +1,4 @@
+import './fixtures/snapshot-16.20/catalog.mjs';
 // Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -113,11 +114,12 @@ test('unlocked hover resolves the accepted trio configuration and preserves pers
  const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{localPlayerCellId:2,myTeam:[{cellId:2,championId:0,championPickIntent:hero('Galio').key,assignedPosition:'MIDDLE'}]}};
  const intent=companionPickIntent(client,data.champions,slots,{creativePlan});
  assert.deepEqual(intent.selection,accepted);
- assert.equal(build(intent.selection).runePage.selectedPerkIds[0],8439,'Accepted engage trio needs its Aftershock page, not the ordinary source page');
- const store=createPreparationStore(),custom=changeCompanionPlan(data,accepted,'summoner-swap');store.remember(custom);
+ assert.deepEqual(build(intent.selection).runePage,build({id:'Galio',role:'mid',mode:'rift'}).runePage,'An accepted lineup still starts with the ordinary lane source');
+ const explicit=changeCompanionPlan(data,accepted,'loadout','trio-galio-engage');assert.equal(build(explicit).runePage.selectedPerkIds[0],8439,'The dedicated Aftershock page requires explicit configuration adoption');
+ const store=createPreparationStore(),custom=changeCompanionPlan(data,explicit,'summoner-swap');store.remember(custom);
  const recalled={...recallPreparation(store,null,intent.selection),...intent.selection};
  assert.deepEqual(build(recalled).summoners,build(custom).summoners);
- assert.deepEqual(build(recalled).items,build(accepted).items);
+ assert.deepEqual(build(recalled).items,build(explicit).items);
  assert.equal(companionPickIntent(client,data.champions,slots,{creativePlan,soloRole:'support'}).selection.comboId,accepted.comboId,'Formal lane takes precedence');
  const different=structuredClone(client);different.session.myTeam[0].championPickIntent=hero('Lux').key;
  assert.equal(companionPickIntent(different,data.champions,slots,{creativePlan}).selection.comboId,undefined);
@@ -129,7 +131,7 @@ test('unlocked hover resolves the accepted trio configuration and preserves pers
 test('confirming a candidate keeps its prepared combo before a saved solo default while teammates remain unknown',()=>{
  const picks={top:'Camille',jungle:'Vi',mid:'Galio'},slots=createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
  const [result]=recommend({slots,champions:data.champions,scope:'party',limit:1}),plan=captureCreativePlan(result,data);
- const context={id:'Galio',role:'mid',mode:'rift'},clicked={...context,...creativeComboContext(creativeMemberCombo(plan,'Galio','mid'))},store=createPreparationStore();
+ const context={id:'Galio',role:'mid',mode:'rift'},comboContext={...context,...creativeComboContext(creativeMemberCombo(plan,'Galio','mid'))},clicked=changeCompanionPlan(data,comboContext,'loadout','trio-galio-engage'),store=createPreparationStore();
  const solo=store.remember(changeCompanionPlan(data,context,'summoner-swap'));
  assert.notDeepEqual(build(solo).runePage.selectedPerkIds,build(clicked).runePage.selectedPerkIds);
  const chosen=store.remember(clicked),personal=store.remember(changeCompanionPlan(data,chosen,'summoner-swap'));
@@ -161,8 +163,8 @@ test('the sidebar exposes all lane candidates and full configuration without ano
  const slots=createSlots(),results=recommend({slots,champions:data.champions,scope:'solo',soloRole:'',limit:6});
  const props={data,client:{connected:true,phase:'ChampSelect'},slots,unassigned:[],scope:'solo',soloRole:'',style:'fun',results};
  const html=companionView({...props,tab:'recommend'});
- assert.equal((html.match(/class="companion-candidate"/g)||[]).length,3);
- assert.match(html,/data-action="more-candidates"/);
+ assert.equal((html.match(/class="companion-candidate"/g)||[]).length,results.length);
+ assert.doesNotMatch(html,/data-action="more-candidates"/);
  assert.equal((companionView({...props,tab:'recommend',showAllCandidates:true}).match(/class="companion-candidate"/g)||[]).length,results.length);
  assert.equal(new Set(results.map(r=>r.targets[0])).size,5);
  const prepared={own:{id:'Volibear',role:'top'},selection:base,build:build(base)};
@@ -203,7 +205,7 @@ test('accepted sidebar plans show one preparation receipt and reveal distinct al
  assert.doesNotMatch(accepted,/class="companion-candidate"/);assert.match(accepted,/data-action="task-compare"/);
  const play=accepted.indexOf('<details class="companion-chosen"');assert.ok(play>0);assert.doesNotMatch(accepted.slice(play,accepted.indexOf('>',play)),/\bopen\b/);
  const comparing=companionView({...props,taskComparing:true});
- assert.deepEqual([...comparing.matchAll(/<article class="companion-candidate" data-result-index="(\d+)"/g)].map(m=>Number(m[1])),[1,2,3],'The accepted result is excluded without shifting candidate action indexes');
+ assert.deepEqual([...comparing.matchAll(/<article class="companion-candidate" data-result-index="(\d+)"/g)].map(m=>Number(m[1])),[1,2,3,4,5],'The accepted result is excluded without shifting candidate action indexes');
  assert.match(comparing,/data-action="task-return"/);
  const failed=companionView({...props,error:'推荐失败 <mock>'});assert.match(failed,/推荐失败 &lt;mock&gt;/);assert(failed.indexOf('推荐失败 &lt;mock&gt;')<failed.indexOf('<details class="companion-chosen"'),'Failure remains visible even when the recommendation list is not rendered');
 });

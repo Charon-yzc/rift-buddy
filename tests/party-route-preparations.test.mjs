@@ -1,25 +1,29 @@
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
+import {historicalData,historicalSelection} from './fixtures/snapshot-16.20/catalog.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {createSlots,recommend} from '../src/core/recommend.mjs';
+import {createSlots,recommend as recommendActual} from '../src/core/recommend.mjs';
 import {captureCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboContext,validateCreativePlan,creativePlanId} from '../src/core/creative-plan.mjs';
 import {createPreparationStore,recallPreparation} from '../src/core/preparation.mjs';
 import {captureTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {validateState,defaultState} from '../services/storage.mjs';
-const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 const context=(plan,m)=>({id:m.champion,role:m.role,mode:'rift',...creativeComboContext(creativeMemberCombo(plan,m.champion,m.role))});
 
+historicalData(data);
 test('adding fourth and fifth members retains the active reviewed trio preparation, while another route and personal choices remain independent',()=>{
  const core={top:'Camille',jungle:'Vi',mid:'Galio'},hero=id=>data.champions.find(h=>h.id===id);
  const [trio]=recommend({slots:setup(core),champions:data.champions,scope:'party'}),three=captureCreativePlan(trio,data);
- const expected=new Map(three.members.map(m=>[m.champion,getBuild(hero(m.champion),m.role,data,context(three,m))]));
+ const adopted=(plan,m)=>({...context(plan,m),loadoutId:historicalSelection('camille-galio-vi',m.champion,m.role).loadoutId});
+ const expected=new Map(three.members.map(m=>[m.champion,getBuild(hero(m.champion),m.role,data,adopted(three,m))]));
  for(const added of [{support:'Rakan'},{support:'Rakan',bottom:'Jinx'}]){
   const [result]=recommend({slots:setup({...core,...added}),champions:data.champions,scope:'party'}),plan=captureCreativePlan(result,data),saved=validateCreativePlan(JSON.parse(JSON.stringify(plan)));
   assert.equal(saved.shared.routes[0].loadoutGroup.id,three.curated.id);
-  for(const m of three.members){const b=getBuild(hero(m.champion),m.role,data,context(saved,m)),before=expected.get(m.champion);assert.equal(b.loadoutId,before.loadoutId);assert.deepEqual(b.runePage,before.runePage);assert.equal(b.skillOrder,before.skillOrder);if(m.champion!=='Camille'){assert.notEqual(b.loadoutId,'default');assert.equal(b.skillOrder.length,18);}assert.deepEqual(b.summoners,before.summoners);const manual=getBuild(hero(m.champion),m.role,data,{...context(saved,m),loadoutId:'default'});assert.equal(manual.loadoutId,'default');}
+  for(const m of three.members){const b=getBuild(hero(m.champion),m.role,data,adopted(saved,m)),before=expected.get(m.champion);assert.equal(b.loadoutId,before.loadoutId);assert.deepEqual(b.runePage,before.runePage);assert.equal(b.skillOrder,before.skillOrder);if(m.champion!=='Camille'){assert.notEqual(b.loadoutId,'default');assert.equal(b.skillOrder.length,18);}assert.deepEqual(b.summoners,before.summoners);const manual=getBuild(hero(m.champion),m.role,data,{...context(saved,m),loadoutId:'default'});assert.equal(manual.loadoutId,'default');}
   for(const m of saved.members.filter(m=>!three.members.some(p=>p.champion===m.champion)))assert.equal(getBuild(hero(m.champion),m.role,data,context(saved,m)).loadoutId,'default');
   const alternate=saved.shared.routes.find(r=>!r.loadoutGroup),changed=selectPartyRoute(saved,alternate.id);
   assert.equal(getBuild(hero('Camille'),'top',data,context(changed,{role:'top',champion:'Camille'})).loadoutId,'default');
@@ -47,3 +51,6 @@ test('destination edits win, while unrelated plans, positions and modes never su
  assert.equal(recallPreparation(store,null,target).customSkillOrder.order,'EQW');assert.equal(recallPreparation(store,null,old).customSkillOrder.order,'QEW');
  const isolated=createPreparationStore();isolated.remember({...old,mode:'hex',creativePlan:undefined});isolated.remember({...old,role:'mid',creativePlan:undefined});isolated.remember({...old,comboId:'unrelated',creativePlan:undefined});assert.equal(recallPreparation(isolated,null,target),null);
 });
+
+// Supply the same version/source context as the application recommendation call.
+function recommend(input){return recommendActual({patch:data.patch,builds:data.builds,catalogStatus:data.catalogInfo?.status,...input});}

@@ -60,7 +60,9 @@ test('only this process keeps the lobby identifier and the auto room closes with
  const saveHandler=main.slice(main.indexOf("guard('save-state'"),main.indexOf("const {createClientSync}"));
  assert.ok(saveHandler.indexOf('closeAutoRoomIfRevoked();')>=0&&saveHandler.indexOf('closeAutoRoomIfRevoked();')<saveHandler.indexOf('guide.publish()'),'turning the switch or sync off must close the auto room before publishing');
  assert.match(main,/if\(had\|\|hadError\)publishWindows\('room-update'/,'revoking must also refresh the panel');
- assert.match(main,/storage\.mergeState\(current,incoming,data\.champions\)\);closeAutoRoomIfRevoked\(\)/,'an imported backup must not leave an orphan room');
+ const importHandler=main.slice(main.indexOf(" guard('import-state'"),main.indexOf(' Menu.setApplicationMenu(null)'));
+ assert.match(importHandler,/const merged=storage\.mergeState\(current,incoming,data\.champions\)/,'backup import must merge against the current state');
+ assert.match(importHandler,/return merged;\}\);closeAutoRoomIfRevoked\(\);publishWindows\('presentation-update'/,'an imported backup must close any revoked room after saving and before publishing');
  assert.match(main,/state\.preferences\?\.roomAuto===true&&state\.preferences\?\.autoSync!==false/,'automatic rooms follow the client poll switch');
  assert.match(main,/roomAutoCancelledKey=roomAutoKey;/,'a local close must be distinguishable from a relay failure');
  assert.match(main,/if\(roomAutoBlockedKey!==key&&roomAutoCancelledKey!==key\)/,'a local close must not be reported as a relay failure');

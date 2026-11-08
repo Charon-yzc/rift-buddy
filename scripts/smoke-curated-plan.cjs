@@ -32,9 +32,22 @@ async function run(){
   assert.equal((await state()).draft.creativePlan,undefined,'Historical fixture must not pre-adopt the plan');
   await click('[data-action=navigate][data-route=favorites]');const index=(await state()).favorites.findIndex(row=>row.id==='legacy-ashe-braum-stages');assert.ok(index>=0,'Historical favorite missing');await click(`[data-action=open-favorite][data-index="${index}"]`);
   await until(async()=>(await state()).draft.creativePlan?.curated?.id==='ashe-braum','Explicit historical favorite did not restore its plan');
-  // Remove the seed through the UI so later favorite assertions can only
-  // pass if this run saves the accepted snapshot again.
-  await click('[data-action=navigate][data-route=favorites]');await click(`[data-action=delete-favorite][data-index="${index}"]`);await until(async()=>!(await state()).favorites.some(row=>row.id==='legacy-ashe-braum-stages'),'Historical seed favorite was not removed');await click('[data-action=navigate][data-route=draft]');
+  // Reading a historical favorite preserves the saved snapshot; it is not a new recommendation.
+  await click('[data-action=navigate][data-route=draft]');
+ }
+ if(duoStages){
+  const favorite=(await state()).favorites.find(f=>f.id==='legacy-ashe-braum-stages'),plan=(await state()).draft.creativePlan;assert.ok(favorite);assert.deepEqual(plan,favorite.creativePlan);
+  if(restart)assert.deepEqual(plan,JSON.parse(await fs.readFile(path.join(root,'accepted.json'))));else await fs.writeFile(path.join(root,'accepted.json'),JSON.stringify(plan));
+  for(const member of plan.members){
+   const selection={...favorite.configurations.find(c=>c.id===member.champion&&c.role===member.role),id:member.champion,role:member.role,mode:'rift',creativePlan:plan,comboId:plan.id};
+   const ownReference=member.role===ownRole;main.webContents.send('open-build',{...selection,readOnly:!ownReference});await until(()=>js('!!document.querySelector(".drawer-content")'),'Historical member reference missing');
+   await js('[...document.querySelectorAll(".drawer-content details")].forEach(d=>d.open=true)');let copy;if(ownReference){await click('[data-action=copy-build]');await until(()=>!!copied,'Historical local reference was not copied');copy=copied;await fs.writeFile(path.join(root,'historical-copy.txt'),copy);}else{assert.equal(await js('document.querySelector("[data-action=copy-build]").disabled'),true,'Peer reference must retain its read-only controls');copy=await js('document.querySelector(".drawer-content").textContent');}for(const stage of Object.values(plan.stagePlan)){for(const step of stage.steps)assert.ok(copy.includes(step),'Historical copy lost a saved stage step: '+step);assert.ok(copy.includes(stage.window));assert.ok(copy.includes(stage.exit));}
+   await js('window.buddy.openGuide('+JSON.stringify(selection)+')');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Historical guide missing');const gjs=code=>guide.webContents.executeJavaScript(code,true);
+   await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(member.champion)+')'),'Historical guide member mismatch');
+   for(const stage of ['opening','key','later']){await gjs('window.guide.control("stage",'+JSON.stringify(stage)+')');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.coach.stage==='+JSON.stringify(stage)+')'),'Historical stage did not apply');const model=(await gjs('window.guide.bootstrap()')).model,expected=plan.stagePlan[stage],own=expected.memberJobs.find(m=>m.champion===member.champion);assert.deepEqual(model.combo.creativePlan,plan);assert.equal(model.coach.action,own.job);assert.deepEqual(model.stageHint.play.steps,expected.steps);assert.equal(model.stageHint.play.window,expected.window);assert.equal(model.stageHint.play.exit,expected.exit);assert.equal(model.runes.length,9);if(member.champion==='Ashe'&&stage==='later')assert.match(model.coach.action,/自保或反开.*保护范围/);}
+   await fs.writeFile(path.join(root,(restart?'restart-':'')+'historical-'+member.champion+'.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());await click('[data-action=close]');
+  }
+  assert.deepEqual((await state()).favorites.find(f=>f.id===favorite.id),favorite,'Reading or copying must not rewrite the old favorite');assert.equal(writes,0);assert.ok(windows.every(w=>!w.isVisible()));const proof={passed:true,source,archiveSha256:release.archiveSha256,scenario,routes:false,tactics:0,independent:0,readiness:false,duoStages:true,customRunes:false,restart,planId:plan.id,memberGuides:plan.members.length,memberStages:plan.members.length*3,originalSnapshotReadOnly:true,actualRuneWrites:0,realGame:'UNPROVEN'};await fs.writeFile(path.join(root,restart?'restart.json':'select.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify(proof));app.quit();return;
  }
  if(!duoStages){await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card")'),'Results missing');}
  if(tactics){
@@ -72,7 +85,7 @@ async function run(){
   let custom=editRunePage(b.runePage,'1',tree.slots[1].runes.find(r=>r.id!==b.runePage.selectedPerkIds[1]).id,boot.data.runes,boot.data.patch);
   custom=editRunePage(custom,'6',custom.selectedPerkIds[6]===5008?5005:5008,boot.data.runes,boot.data.patch);
   await js('window.buddy.openGuide('+JSON.stringify({...saved,id:'Galio',customRunePage:custom})+')');
-  await until(async()=>JSON.stringify((await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===saved.comboId)?.customRunePage)===JSON.stringify(custom),'Imported sidebar page not retained');
+  await until(async()=>JSON.stringify((await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===saved.comboId)?.customRunePage)===JSON.stringify(custom),'Imported sidebar page not retained');await fs.writeFile(path.join(root,'preview-custom-page.json'),JSON.stringify(custom));
   for(const width of [280,400,520,600]){main.setContentSize(width,850);await delay(80);assert.equal(await js('document.documentElement.scrollWidth>innerWidth'),false);}
   await fs.writeFile(path.join(root,'custom-rune-sidebar.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
   await click('[data-action=companion-tab][data-tab=recommend]');
@@ -98,6 +111,8 @@ async function run(){
  else if(scenario==='yasuo-relay'){assert.match(plan.ordered.find(m=>m.champion==='Yasuo').job,/同一轮不安排两次自己的 R/);assert.match(plan.ordered.find(m=>m.champion==='Diana').job,/备用仅在墨菲特未开成/);}
  else{if(!duoStages&&scenario!=='trio-stages'){assert.match(plan.ordered.find(m=>m.champion==='Rakan').job,/W|R/);assert.match(plan.steps.join(' '),/洛/);}
   await js('(async()=>{const {TRIOS,DUOS}=await import(new URL("./core/rules.mjs",location.href).href),c=[...TRIOS,...DUOS].find(t=>t.id==='+JSON.stringify(plan.curated.id)+');c.name="Changed catalog";c.steps=["Changed lead"];c.members?.forEach(m=>m.job="Changed job");const {BOTTOM_PLAYS}=await import(new URL("./core/role-plays.mjs",location.href).href);if('+duoStages+')BOTTOM_PLAYS.Ashe[2]="Changed later action";})()');
+  await click('[data-action=result-detail][data-index="0"]');if(await js('!!document.querySelector(".plan-drawer")')){const frozenText=await js('document.querySelector(".plan-drawer").textContent');if(plan.steps.every(step=>frozenText.includes(step)))assert.doesNotMatch(frozenText,/Changed lead|Changed job/);else assert.match(frozenText,/Changed catalog/,'A new source preview must identify itself separately from the frozen accepted snapshot');await click('[data-action=close]');}assert.deepEqual((await state()).draft.creativePlan,plan,'Source changes must preserve the frozen accepted plan');
+  const loaded=new Promise(resolve=>main.webContents.once('did-finish-load',resolve));main.webContents.reload();await loaded;await until(()=>js('!!document.querySelector(".draft-task-workspace")'),'Saved task did not reload');await until(()=>js('!!document.querySelector("[data-action=result-detail]")'),'Saved full play did not reload');
  }
  if(scenario==='trio-stages'){assert.equal(plan.stagePlan.opening.steps[0],plan.curated.early);assert.match(plan.curated.early,/六级前/);}
  await click('[data-action=result-detail][data-index="0"]');await click('.plan-drawer [data-action=copy-result]');
@@ -112,7 +127,9 @@ async function run(){
  if(customRunes){
   if(!restart){
    await click('.plan-drawer [data-action=build][data-id="Galio"]');const reference=(await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===plan.id);main.webContents.send('open-build',{...reference,readOnly:false});await until(()=>js('!!document.querySelector("[data-rune-surface=build]")'),'Drawer editor missing');
-   const before=(await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===plan.id);assert.ok(before.customRunePage,'Sidebar edits lost during adoption');
+   // A standalone avatar edit cannot silently cross into a newly adopted group.
+   const previewCustom=JSON.parse(await fs.readFile(path.join(root,'preview-custom-page.json')));await js('window.buddy.openGuide('+JSON.stringify({...reference,id:'Galio',role:'mid',mode:'rift',creativePlan:plan,comboId:plan.id,customRunePage:previewCustom})+')');await until(async()=>JSON.stringify((await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===plan.id)?.customRunePage)===JSON.stringify(previewCustom),'Explicit group rune import was not retained');main.webContents.send('open-build',{...reference,id:'Galio',role:'mid',mode:'rift',creativePlan:plan,comboId:plan.id,customRunePage:previewCustom,readOnly:false});await until(()=>js('!!document.querySelector("[data-rune-surface=build]")'),'Imported group editor missing');
+   const before=(await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===plan.id);assert.deepEqual(before.customRunePage,previewCustom,'Explicit imported page changed');
    await editVisibleRune('build',8);expectedCustom=(await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===plan.id).customRunePage;assert.equal(expectedCustom.selectedPerkIds[1],before.customRunePage.selectedPerkIds[1]);assert.equal(expectedCustom.selectedPerkIds[6],before.customRunePage.selectedPerkIds[6]);assert.notEqual(expectedCustom.selectedPerkIds[8],before.customRunePage.selectedPerkIds[8]);
    await js('(()=>{const el=document.querySelector("[data-skill-surface=build][data-skill-index=\\"0\\"]");el.value=[...el.options].find(o=>o.value!==el.value).value;el.dispatchEvent(new Event("change",{bubbles:true}));})()');
    await until(async()=>!!(await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===plan.id)?.customSkillOrder,'Custom skill order was not saved');
@@ -127,7 +144,8 @@ async function run(){
  const favorite=(await state()).favorites.find(f=>f.type==='team');assert.deepEqual(favorite.creativePlan,plan);assert.equal(favorite.configurations.length,plan.members.length);
  if(customRunes){assert.deepEqual(favorite.configurations.find(p=>p.id==='Galio').customRunePage,expectedCustom);assert.deepEqual(favorite.configurations.find(p=>p.id==='Galio').customSkillOrder,expectedCustomSkill);assert.ok(favorite.configurations.filter(p=>p.id!=='Galio').every(p=>!p.customRunePage&&!p.customSkillOrder));}
  for(const member of plan.members){
-  await click('.plan-drawer [data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');
+  const savedReference=(await state()).preparations.find(p=>p.id===member.champion&&p.role===member.role&&p.comboId===plan.id)||favorite.configurations.find(p=>p.id===member.champion&&p.role===member.role);
+  main.webContents.send('open-build',{...savedReference,id:member.champion,role:member.role,mode:'rift',creativePlan:plan,comboId:plan.id,readOnly:true});await until(()=>js('!!document.querySelector(".drawer-content")'),'Saved member reference did not open');
   const body=await js('document.querySelector(".drawer-content").textContent');assert.ok(body.includes(plan.ordered.find(m=>m.champion===member.champion).job));assert.doesNotMatch(body,/Changed job/);
   if(scenario==='loadout-review'){
    const selected=(await state()).preparations.find(p=>p.id===member.champion&&p.comboId===plan.id);

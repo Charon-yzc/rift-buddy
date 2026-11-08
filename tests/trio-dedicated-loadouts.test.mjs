@@ -1,8 +1,10 @@
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {BUNDLED_CATALOG,validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG,historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 import {getBuild,validateRunePage} from '../src/core/builds.mjs';
 import {reviewBaseline} from '../src/core/catalog-review.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
@@ -14,7 +16,7 @@ import {preparationEquipment} from '../src/core/complete-gear.mjs';
 import {createItemSet} from '../src/core/item-sets.mjs';
 
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 data.catalogInfo=catalogIssues(BUNDLED_CATALOG,data);
 const hero=id=>data.champions.find(c=>c.id===id);
 const cases=[
@@ -29,6 +31,7 @@ const trioFor=row=>BUNDLED_CATALOG.trios.find(t=>t.id===row.combo);
 const slotsFor=trio=>createSlots().map(s=>{const m=trio.members.find(m=>m.role===s.role);return {...s,champion:m?.champion||null,locked:!!m,party:!!m};});
 const planFor=(trio,slots=slotsFor(trio))=>captureCreativePlan({slots,scope:'party',trio},data);
 
+historicalData(data);
 test('new trio defaults use six exact hero-role routes and full independently sourced rune pages',()=>{
  assert.doesNotThrow(()=>validateCatalog(BUNDLED_CATALOG,data));
  assert.ok(BUNDLED_CATALOG.version.localeCompare('2026.10.19.1',undefined,{numeric:true})>=0);
@@ -40,7 +43,7 @@ test('new trio defaults use six exact hero-role routes and full independently so
   assert.deepEqual(loadout.items,row.core);assert.equal(loadout.patch,'16.20');
   assert.deepEqual(loadout.reviewBaseline,reviewBaseline(loadout,BUNDLED_CATALOG,data));
   assert.equal(data.catalogInfo.loadoutStatus[row.loadout].stale,false);
-  const b=getBuild(hero(row.champion),row.role,data,{comboId:row.combo});
+  const b=getBuild(hero(row.champion),row.role,data,{comboId:row.combo,loadoutId:row.loadout});
   assert.equal(b.loadoutId,row.loadout);assert.deepEqual(b.items.slice(0,3).map(i=>Number(i.id)),row.core);
   assert.deepEqual(b.runePage.selectedPerkIds,row.page);assert(validateRunePage(b.runePage,data.runes));
   assert.equal(b.selectedRune.source,'机制整理');assert.equal(b.selectedRune.samples,null);assert.equal(b.reference,null);
@@ -48,14 +51,14 @@ test('new trio defaults use six exact hero-role routes and full independently so
   assert.match(b.configurationNote,/人工组合机制参考/);assert.match(b.configurationNote,/不代表组合胜率、最优路线或装备符文联合统计/);
   const source=b.configurationSources.find(s=>s.url===reference.sourceUrl);assert(source);assert.equal(source.checkedAt,'2026-10-07');
  }
- const nocturne=getBuild(hero('Nocturne'),'jungle',data,{comboId:'shen-nocturne-galio'});
+ const nocturne=getBuild(hero('Nocturne'),'jungle',data,{comboId:'shen-nocturne-galio',loadoutId:'trio-nocturne-commit'});
  assert.match(nocturne.selectedRune.when,/来源默认为丛刃/);
 });
 
 test('new three-member bindings keep independently reviewed skill nodes and Aphelios attributes',()=>{
  for(const row of cases){
   for(const t of BUNDLED_CATALOG.trios)for(const m of t.members)if(m.champion===row.champion&&m.role===row.role)assert.equal(m.loadoutId,row.loadout,t.id);
-  const b=getBuild(hero(row.champion),row.role,data,{comboId:row.combo});
+  const b=getBuild(hero(row.champion),row.role,data,{comboId:row.combo,loadoutId:row.loadout});
   if(row.role==='jungle'){
    const original=BUNDLED_CATALOG.skillPlans.find(p=>p.champion===row.champion&&p.role==='jungle'&&p.loadoutId==='trio-ad-diver');
    const next=BUNDLED_CATALOG.skillPlans.find(p=>p.champion===row.champion&&p.role==='jungle'&&p.loadoutId===row.loadout);
@@ -63,7 +66,7 @@ test('new three-member bindings keep independently reviewed skill nodes and Aphe
    assert.equal(b.skillOrder,original.order);assert.equal(b.selectedSkill.source,'机制整理');
   }
  }
- const aphelios=getBuild(hero('Aphelios'),'bottom',data,{comboId:'ori-aphelios-lulu'});
+ const aphelios=getBuild(hero('Aphelios'),'bottom',data,{comboId:'ori-aphelios-lulu',loadoutId:'trio-aphelios-weapons'});
  assert.equal(aphelios.skillOrder,null);assert.equal(aphelios.priority,null);assert.equal(aphelios.first,null);
  assert.equal(aphelios.attributePlan.kind,'attributes');
  // Changing a preparation binding is not a fresh review of every combo mechanic.
@@ -78,13 +81,18 @@ test('new three-member bindings keep independently reviewed skill nodes and Aphe
 test('legacy frozen trio profiles stay readable while new favorites and room snapshots carry exact dedicated choices',()=>{
  for(const row of cases){
   const trio=trioFor(row),slots=slotsFor(trio),plan=planFor(trio,slots),store=createPreparationStore();
-  const selection={id:row.champion,role:row.role,mode:'rift',...creativeComboContext(creativeMemberCombo(plan,row.champion,row.role))};
-  const b=getBuild(hero(row.champion),row.role,data,selection);
-  const favorite={slots,scope:'party',creativePlan:plan,configurations:captureTeamConfigurations({slots,scope:'party',trio,creativePlan:plan},data,store)};
+  const selection={id:row.champion,role:row.role,mode:'rift',loadoutId:row.loadout,...creativeComboContext(creativeMemberCombo(plan,row.champion,row.role))};
+  const b=getBuild(hero(row.champion),row.role,data,selection);store.remember(selection);
+  const pending=data.catalogInfo.status[trio.id].stale;
+  if(pending)assert.throws(()=>captureTeamConfigurations({slots,scope:'party',trio,creativePlan:plan},data,store),/组合依据已变化/);
+  const configurations=pending?[selection]:captureTeamConfigurations({slots,scope:'party',trio,creativePlan:plan},data,store);
+  const favorite={slots,scope:'party',creativePlan:plan,configurations};
   const restored=restoreTeamFavorite(favorite,createSlots(),data.champions),saved=restored.configurations.find(s=>s.id===row.champion);
   assert(saved);assert.equal(saved.loadoutId,row.loadout);
   assert.deepEqual(getBuild(hero(row.champion),row.role,data,saved).runePage.selectedPerkIds,row.page);
-  const configs=captureRoomConfigurations(slots,data,store,{creativePlan:plan});
+  // Explicitly sharing the concrete manual member page does not reactivate a pending group.
+  const manual={...selection};delete manual.comboId;delete manual.creativePlan;
+  const configs=captureRoomConfigurations(slots,data,store,pending?{current:manual}:{creativePlan:plan});
   const wire=configs.find(c=>c.champion===row.champion),receiver=roomClientPlan(wire,{...data,builds:{},buildSources:{}},plan);
   assert.deepEqual(receiver.build.runePage.selectedPerkIds,row.page);
   const expected=preparationEquipment(data,b,selection).map(i=>Number(i.id));
@@ -94,7 +102,7 @@ test('legacy frozen trio profiles stay readable while new favorites and room sna
   assert.deepEqual(new Set(ids),new Set(expected));
   const oldId=row.role==='jungle'?'trio-ad-diver':'trio-crit-carry',frozen=structuredClone(trio);
   frozen.members.find(m=>m.champion===row.champion).loadoutId=oldId;
-  const oldPlan=planFor(frozen),old=getBuild(hero(row.champion),row.role,data,{comboId:oldPlan.id,creativePlan:oldPlan});
+  const oldPlan=planFor(frozen),old=getBuild(hero(row.champion),row.role,data,{comboId:oldPlan.id,creativePlan:oldPlan,loadoutId:oldId});
   assert.equal(old.loadoutId,oldId);
   assert.deepEqual(old.items.slice(0,3).map(i=>Number(i.id)),row.role==='jungle'?[6692,3071,3053]:[6672,3031,3085]);
  }

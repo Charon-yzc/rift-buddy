@@ -1,6 +1,7 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {buildAugmentDescriptions,AUGMENT_TOOLTIP_PARSER_REVISION} from '../services/augments.mjs';
-const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-level-values-16.21.json',import.meta.url))),game=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
+const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-level-values-16.21.json',import.meta.url))),game=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
 function render(parts,{text='@Amount@',values=[],...calculation}={}){
  return buildAugmentDescriptions([{key:'Example'}],{a:{__type:'AugmentData',AugmentNameId:'Example',RootSpell:'spell',DescriptionTra:'description'},spell:{mSpell:{DataValues:values,mSpellCalculations:{Amount:{__type:'GameCalculation',mFormulaParts:parts,...calculation}}}}},{description:text})[0];
 }

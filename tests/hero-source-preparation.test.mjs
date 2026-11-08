@@ -19,3 +19,9 @@ test('a successful hover followed by a new operation identity cannot fetch or ap
 test('an intervening different public hero cannot become the baseline for an old source click',async()=>{
  const calls=[];await assert.rejects(()=>prepareHeroWithSource({build:{mode:'rift',loadoutId:'default'},canRefresh:true,apply:async only=>{calls.push(only);return {steps:{hover:{status:'done'}}};},snapshot:()=>"same-game",isSelectedHero:()=>false,refresh:()=>assert.fail('Do not fetch for the overwritten click'),rebuild:()=>assert.fail('Do not rebuild')}),/选人或配置已变化/);assert.deepEqual(calls,[true]);
 });
+
+test('an already confirmed avatar hover fetches its missing source without issuing a second hover',async()=>{
+ const calls=[],preselected={steps:{hover:{status:'done'}}};
+ const result=await prepareHeroWithSource({preselected,build:{mode:'rift',loadoutId:'default'},canRefresh:true,apply:async only=>{calls.push(only?'hover':'apply');return {complete:true};},refresh:async()=>{calls.push('fetch');return {};},snapshot:()=> 'same-game-and-hero',isSelectedHero:()=>true,rebuild:()=>({reference:{}})});
+ assert.equal(result.complete,true);assert.deepEqual(calls,['fetch','apply']);
+});

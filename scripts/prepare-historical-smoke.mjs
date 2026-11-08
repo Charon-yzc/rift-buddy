@@ -8,7 +8,7 @@ import {createHash} from 'node:crypto';
 import {execFile,spawn} from 'node:child_process';
 import {promisify} from 'node:util';
 import {once} from 'node:events';
-const root=process.cwd(),target=path.join(root,'.local/smoke-snapshot-16.20'),fixture=path.join(root,'tests/fixtures/snapshot-16.20');
+const root=process.cwd(),preferredTarget=path.join(root,'.local/smoke-snapshot-16.20'),fixture=path.join(root,'tests/fixtures/snapshot-16.20');
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex'),current=await fs.readFile('release/latest.json'),release=JSON.parse(current);
 assert.equal(sha(await fs.readFile(path.join(release.directory,'resources/app.asar'))),release.archiveSha256);
 const provenance=JSON.parse(await fs.readFile(path.join(fixture,'provenance.json'))),overrides=new Map();
@@ -18,9 +18,15 @@ for(const entry of provenance.files){
  assert.equal(sha(Buffer.from(JSON.stringify(JSON.parse(bytes))+'\n')),entry.historicalJsonHash);overrides.set(entry.file,bytes);
 }
 assert.equal(JSON.parse(overrides.get('data/game.json')).patch,'16.20');
+const catalogProvenance=JSON.parse(await fs.readFile(path.join(fixture,'catalog-provenance.json'))),catalogBytes=await fs.readFile(path.join(fixture,'catalog.json'));
+assert.equal(catalogProvenance.source,'src/core/catalog-data.json');assert.equal(catalogProvenance.sourceCommit,provenance.sourceCommit);assert.equal(sha(catalogBytes),catalogProvenance.sha256);
+overrides.set(catalogProvenance.source,catalogBytes);
 const {stdout}=await promisify(execFile)('git',['ls-files','--cached','--others','--exclude-standard','-z'],{encoding:'utf8',maxBuffer:8*1024*1024,windowsHide:true});
 const files=[...new Set(stdout.split('\0').filter(Boolean))];assert(files.includes('scripts/package.mjs'));
-await fs.mkdir(path.join(root,'.local'),{recursive:true});await fs.mkdir(target); // Existing exports are preserved, never reset.
+await fs.mkdir(path.join(root,'.local'),{recursive:true});
+// CI's first export retains the documented path. A prior local export belongs
+// to its original run and must never be overwritten or cleaned implicitly.
+let target;try{await fs.mkdir(preferredTarget);target=preferredTarget;}catch(error){if(error.code!=='EEXIST')throw error;target=await fs.mkdtemp(preferredTarget+'-');}
 const hashes={};
 for(const file of files){
  assert(!path.isAbsolute(file)&&!file.split('/').includes('..'));const source=path.join(root,file),stat=await fs.lstat(source);assert(stat.isFile()&&!stat.isSymbolicLink(),file);
@@ -30,7 +36,7 @@ await fs.symlink(path.join(root,'node_modules'),path.join(target,'node_modules')
 for(const file of files)assert.equal(sha(await fs.readFile(path.join(target,file))),sha(overrides.get(file)||await fs.readFile(path.join(root,file))),file);
 const child=spawn(process.execPath,[path.join(target,'scripts/package.mjs')],{cwd:target,windowsHide:true,stdio:'inherit'});const [code]=await once(child,'exit');assert.equal(code,0,'Historical test package failed');
 const historical=JSON.parse(await fs.readFile(path.join(target,'release/latest.json')));
-const receipt={purpose:'Historical interaction regression only; never an installer or current-data acceptance',fixturePatch:'16.20',sourceFixtureCommit:provenance.sourceCommit,dataInjected:true,overrides:Object.fromEntries([...overrides].map(([file,bytes])=>[file,sha(bytes)])),sourceHashes:hashes,currentArchiveSha256:release.archiveSha256,historicalArchiveSha256:historical.archiveSha256,directory:target};
+const receipt={purpose:'Historical interaction regression only; never an installer or current-data acceptance',fixturePatch:'16.20',sourceFixtureCommit:provenance.sourceCommit,catalogFixture:catalogProvenance,dataInjected:true,overrides:Object.fromEntries([...overrides].map(([file,bytes])=>[file,sha(bytes)])),sourceHashes:hashes,currentArchiveSha256:release.archiveSha256,historicalArchiveSha256:historical.archiveSha256,directory:target};
 assert((await fs.readFile(path.join(root,'release/latest.json'))).equals(current));assert.equal(sha(await fs.readFile(path.join(release.directory,'resources/app.asar'))),release.archiveSha256);
 await fs.writeFile(path.join(target,'.local/historical-fixture.json'),JSON.stringify(receipt,null,2),{flag:'wx'});
 await fs.writeFile(path.join(root,'.local/latest-historical-smoke.json'),JSON.stringify(receipt,null,2));

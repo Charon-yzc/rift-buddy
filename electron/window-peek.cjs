@@ -6,7 +6,9 @@ module.exports=function createWindowPeek({root,getWindow,getArea,title,onRestore
  if(!registered){registered=true;ipcMain.handle('peek-control',(event,action)=>{const item=tabs.get(event.sender.id);if(!item||event.senderFrame!==event.sender.mainFrame)throw Error('不允许此操作');if(action==='bootstrap')return item.payload();if(action==='restore')return item.restore();throw Error('收起按钮操作不正确');});}
  const payload=()=>({title,side});
  function place(){if(!tab||tab.isDestroyed())return;const area=getArea(),b=getWindow()?.getBounds()||area;side=b.x+b.width/2<area.x+area.width/2?'left':'right';
-  const width=28,height=Math.min(64,area.height),x=side==='left'?area.x:area.x+area.width-width;let y=Math.max(area.y,Math.min(b.y,area.y+area.height-height));
+  // Windows can enforce a native minimum wider than the requested 28 DIP.
+  // Position the actual window, so its restore button stays inside the screen.
+  const measured=tab.getBounds(),width=Math.min(area.width,Math.max(28,measured.width)),height=Math.min(64,area.height),x=side==='left'?area.x:area.x+area.width-width;let y=Math.max(area.y,Math.min(b.y,area.y+area.height-height));
   for(let attempt=0;attempt<tabs.size+1;attempt++){const conflict=[...tabs.values()].some(item=>item.tab!==tab&&item.tab.isVisible()&&Math.abs(item.tab.getBounds().x-x)<width&&Math.abs(item.tab.getBounds().y-y)<height+4);if(!conflict)break;y=y+height*2+8<=area.y+area.height?y+height+8:Math.max(area.y,y-height-8);}
   const current=tab.getBounds(),next={x,y,width,height};if(['x','y','width','height'].some(k=>Math.abs(current[k]-next[k])>3))tab.setBounds(next);tab.webContents.send('peek-update',payload());
  }

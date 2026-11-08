@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {getBuild} from '../src/core/builds.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {prepareGear} from '../src/core/gear-choices.mjs';
 import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {createPreparationStore,configurationPatch,mergeConfiguration} from '../src/core/preparation.mjs';
@@ -9,7 +10,7 @@ import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {selectedBuildFields,buildFavoriteId,findSavedBuild} from '../src/core/build-favorites.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 import {gearSelector} from '../src/build-options-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('data/game.json','utf8'));data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const hero=id=>data.champions.find(c=>c.id===id),build=s=>getBuild(hero(s.id),s.role,data,s);
 
 test('independent starter and footwear choices retain exact quantities, page and core, then reach saved plans and guide',()=>{

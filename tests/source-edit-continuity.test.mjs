@@ -4,13 +4,13 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {getBuild} from '../src/core/builds.mjs';
-import {selectBuildSource} from '../src/core/build-source.mjs';
+import {selectBuildSource,DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {selectedBuildFields,buildFavoriteId,findSavedBuild} from '../src/core/build-favorites.mjs';
 import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
 import {defaultState,saveState,readState} from '../services/storage.mjs';
-const game=JSON.parse(await fs.readFile('data/game.json')),builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const game=JSON.parse(await fs.readFile('data/game.json')),builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json')).entries,DEFAULT_BUILD_SOURCE,game.patch);
 const hero=game.champions.find(c=>c.id==='Ahri');
 const get=(data,s)=>getBuild(hero,s.role,data,s);
 function fixture(){

@@ -19,8 +19,9 @@ test('all bundled champions have resolved five-slot descriptions, explicit prove
  for(const c of data.abilityReference.champions)for(const a of c.abilities)for(const part of [a,...a.variants])assert.doesNotMatch(part.description,/@[^@]+@|\{\{|<[^>]+>/);
 });
 test('decreasing resource costs keep rank order instead of the Tencent sorted order',()=>{
- for(const [id,key,expected] of [['Akali','Q',[110,100,90,80,70]],['Darius','R',[100,100,0]],['Mel','W',[80,60,40,20,0]],['Shen','Q',[140,130,120,110,100]],['Teemo','R',[75,55,35]]])assert.deepEqual(ability(id,key).metrics.find(m=>m.label.endsWith('消耗')).values,expected);
- assert.equal(data.abilityReference.corrections.filter(c=>c.field==='cost').length,27);
+ for(const [id,key,expected] of [['Akali','Q',[110,100,90,80,70]],['Darius','R',[100,100,0]],['Mel','W',[100,80,60,40,0]],['Shen','Q',[140,130,120,110,100]],['Teemo','R',[75,55,35]]])assert.deepEqual(ability(id,key).metrics.find(m=>m.label.endsWith('消耗')).values,expected);
+ assert.equal(data.abilityReference.corrections.filter(c=>c.field==='cost'&&!c.evidence?.includes('patch-26-22-notes')).length,27);
+ assert.match(ability('Mel','W').metrics.find(m=>m.label==='法力消耗').basis,/26.22正式公告/);
 });
 test('two forms have independent rank-aware cooldowns, costs and growth',()=>{
  assert.deepEqual(ability('Jayce','W').variants[1].metrics.find(m=>m.label==='冷却').values,[13,11.4,9.8,8.2,6.6,5]);
@@ -63,8 +64,8 @@ test('nine Hwei subskills and five Aphelios weapons do not inherit meaningless t
 test('invalid, stale or incomplete reference cannot silently masquerade as current data',async()=>{
  const clone=()=>structuredClone(data.abilityReference);
  for(const change of [r=>r.champions.pop(),r=>r.champions.push(r.champions[0]),r=>r.champions[0].abilities[0].description='@unresolved@',r=>r.champions[0].abilities[1].metrics[0].values=[NaN],r=>r.champions[0].source.url='http://evil.test',r=>r.version='16.19.1']){const r=clone();change(r);assert.equal(validAbilityReference(r,data),false);}
- const next={...data,patch:'16.22',version:'16.22.1'};assert.equal(validAbilityReference(data.abilityReference,next),false);assert.equal(validAbilityReference(data.abilityReference,next,{allowOlder:true}),true);
- assert.match(championReferenceView(next,{id:'Ahri'}),/尚未完成新版技能复核/);
+ const [major,minor]=data.patch.split('.').map(Number),nextPatch=major+'.'+(minor+1),next={...data,patch:nextPatch,version:nextPatch+'.1'};assert.equal(validAbilityReference(data.abilityReference,next),false);assert.equal(validAbilityReference(data.abilityReference,next,{allowOlder:true}),true);
+ assert.match(championReferenceView(next,{id:'Ahri'}),/请按不同版本参考/);
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-ability-'));assert.equal(await loadAbilities(root,data),null);
  await fs.writeFile(path.join(root,'abilities.json'),'{broken');assert.equal(await loadAbilities(root,data),null);
 });

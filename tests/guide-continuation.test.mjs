@@ -1,4 +1,5 @@
 import {getBuild} from '../src/core/builds.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {laterItemSelector} from '../src/build-options-view.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,7 +9,7 @@ import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {upsertPreparation,storedPreparation} from '../src/core/preparation.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const prepare=(id='Ashe',role='bottom')=>selectGuide(null,{id,role,mode:'rift'});
 const image=()=>'<img>';
 test('finishing core plus boots continues through the same complete runtime route',()=>{

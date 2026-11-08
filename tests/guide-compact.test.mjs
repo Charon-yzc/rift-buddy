@@ -2,7 +2,8 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 import {compactGuidePlacement,skillWidgetPlacement,skillWidgetOffset} from '../src/core/guide-placement.mjs';
 import {createGuideModel,selectGuide,validateGuideState,reconcileGuide} from '../src/core/guide.mjs';
 import {renderGuide} from '../src/guide-view.mjs';
-const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));data.builds=JSON.parse(fs.readFileSync(new URL('../data/builds.json',import.meta.url))).entries;
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
+const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));data.builds=projectBuildSources(JSON.parse(fs.readFileSync(new URL('../data/builds.json',import.meta.url))).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const selection={id:'Ashe',mode:'rift',role:'bottom',conditions:[]};
 test('default in-game card shows complete ordered items, and ignores obsolete full-window layout requests',()=>{
  const m=createGuideModel(data,selectGuide(null,selection)),html=renderGuide({model:m},'overview',false,()=>'<img>');

@@ -1,3 +1,4 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,9 +12,9 @@ import {renderGuide} from '../src/guide-view.mjs';
 import {escape,asset,icon,button} from '../src/ui.mjs';
 import {hexHeroPool} from '../src/core/hex-pool.mjs';
 import {hexPoolBadge} from '../src/hex-pool-view.mjs';
-import {isCurrentHexData,HEX_DATA_PENDING} from '../src/core/hex-data-current.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url),'utf8')).entries;
+import {isCurrentHexData,isReadableHexData,HEX_DATA_PENDING} from '../src/core/hex-data-current.mjs';
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url),'utf8'));
+data.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url),'utf8')).entries;
 const find=id=>data.augments.find(a=>a.id===id),champion=data.champions.find(c=>c.id==='Ashe');
 
 test('current Mayhem review corrects known stale descriptions without changing downloaded data',()=>{
@@ -43,9 +44,9 @@ test('current text correction requires every full-tooltip field and preserves th
 });
 
 test('main cards, details, three-choice comparison and restored guide share the reviewed effect',async()=>{
- const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8'),extract=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));
- const context=vm.createContext({data,isCurrentHexData,HEX_DATA_PENDING,e:escape,asset,icon,button,hexAugmentReference,hexAugmentAcquisition,hexHandbookAugments,hexCurrentAugmentIds,hexAugmentDetail,augmentCategories,hexHeroPool,hexPoolBadge,hexPoolRound:0,hexPoolFilter:'all',hexMechanism:'unknown',hexHero:null,hexCategory:'all',hexForHero:false,hexSelectedOnly:false,hexRarity:'all',hexQuery:'',hexSelected:[],hexOptions:[],hexOwned:[],currentHexRound:()=>null,refreshHexNotes:()=>{},windowLayout:{docked:false},rarityName:{},overlay:{innerHTML:''},picker:null,buildView:null,detailResult:null});
- vm.runInContext(extract('function augmentTiles(){','function renderFavorites(){')+extract('function showAugment(','const recommendationRunner='),context);
+ const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8'),definition=name=>source.split('\n').find(line=>line.startsWith('function '+name+'('));
+ const context=vm.createContext({data,isCurrentHexData,isReadableHexData,HEX_DATA_PENDING,e:escape,asset,icon,button,hexAugmentReference,hexAugmentAcquisition,hexHandbookAugments,hexCurrentAugmentIds,hexAugmentDetail,augmentCategories,hexHeroPool,hexPoolBadge,hexPoolRound:0,hexPoolFilter:'all',hexMechanism:'unknown',hexHero:null,hexCategory:'all',hexForHero:false,hexSelectedOnly:false,hexRarity:'all',hexQuery:'',hexSelected:[],hexOptions:[],hexOwned:[],currentHexRound:()=>null,refreshHexNotes:()=>{},windowLayout:{docked:false},rarityName:{},overlay:{innerHTML:''},picker:null,buildView:null,detailResult:null});
+ vm.runInContext(definition('augmentTiles')+'\n'+definition('showAugment'),context);
  assert.doesNotMatch(context.augmentTiles(),/在命中时、最大距离时/);context.showAugment(2005);assert.match(context.overlay.innerHTML,/5秒冷却时间/);
  const comparison=compareAugments({champion,options:[2072,2005],augments:data.augments,patch:data.patch});assert.match(comparison[1].description,/冷却：5秒/);assert.ok(comparison.every(a=>a.review));
  const state={...selectGuide(null,{id:'Ashe',role:'bottom',mode:'hex',augmentIds:[2072],ownedAugmentIds:[2005],compareIds:[]}),compact:false},model=createGuideModel(data,state),html=renderGuide({model},'augments',false,()=>'<img>');

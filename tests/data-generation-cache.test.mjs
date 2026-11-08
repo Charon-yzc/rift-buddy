@@ -19,7 +19,7 @@ function fixture(value=seed,{sequence=100,checkedAt='2026-10-18T23:00:00Z',publi
  const payload=Buffer.from(JSON.stringify(manifest)),envelope={keyId:'test',payload:payload.toString('base64'),signature:sign(null,payload,pair.privateKey).toString('base64')};
  return {manifest,envelope,assets:packed.assets,bundle};
 }
-const original=fixture(),newPatch=fixture(await loadServerSeed('data'),{sequence:102,checkedAt:'2026-10-18T23:30:00Z'}),newerCheck=fixture(seed,{sequence:101,checkedAt:'2026-10-18T23:30:00Z'});
+const original=fixture(),newPatch=fixture(await loadServerSeed('tests/fixtures/snapshot-16.21'),{sequence:102,checkedAt:'2026-10-18T23:30:00Z'}),newerCheck=fixture(seed,{sequence:101,checkedAt:'2026-10-18T23:30:00Z'});
 const oldFormulaSeed=structuredClone(seed);oldFormulaSeed.game.contentRevision=8;oldFormulaSeed.game.items[3115].tooltip.description='old unresolved formula';const oldFormulas=fixture(oldFormulaSeed,{sequence:105});
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 async function setup(t,{initial=seed.game,manualBase=null,prepareHook=async()=>{},write=atomicJSON,promote,initialIdle=true}={}){

@@ -3,7 +3,9 @@ import {communitySourceMedium,communitySourceLabel,validCommunitySource} from '.
 import {hexPlayerRoutes,hexCommunitySourceURLs} from '../src/core/hex-routes.mjs';import {hexMechanismMicroRoutes} from '../src/core/hex-micro-routes.mjs';import {hexRouteCard} from '../src/core/hex-route-card.mjs';
 import vm from 'node:vm';import {safeSourceURL} from '../src/core/catalog.mjs';
 import {hexChampionReview} from '../src/core/hex-review.mjs';import {validateCommunityData} from '../services/community-data.mjs';import {publishCommunityData} from '../services/community-data-publish.mjs';
-const read=async file=>JSON.parse(await fs.readFile(new URL(file,import.meta.url))),game=await read('../data/game.json'),catalog=await read('../src/core/catalog-data.json'),routes=await read('../src/core/hex-community-routes.json');
+import {HEX_CHAMPION_SOURCE} from '../src/core/hex-champion-statistics.mjs';
+// Historical 16.21 Hex contracts use the frozen snapshot; current-patch acceptance is separate.
+const read=async file=>JSON.parse(await fs.readFile(new URL(file,import.meta.url))),game=await read('./fixtures/snapshot-16.21/game.json'),catalog=await read('../src/core/catalog-data.json'),routes=await read('../src/core/hex-community-routes.json');
 const source=routes.routes.find(r=>r.hero==='Malphite').communitySource;
 const find=(data,hero,id,extra={})=>hexPlayerRoutes({data,hero,options:[id],...extra}).find(r=>r.augment.id===id);
 const value=()=>({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:routes.reviewedAt,catalog:structuredClone(catalog),hexRoutes:structuredClone(routes)});
@@ -36,13 +38,13 @@ test('new text and video routes are scoped to reviewed current effects, kit and 
  for(const [hero,id]of [['Malphite',3049],['TahmKench',3094],['Kaisa',3086],['Teemo',3086]]){
   const r=find(game,hero,id);assert(r);assert.equal(hexChampionReview(game.champions.find(c=>c.id===hero),game.patch),hero==='Teemo'?'current':'pending-review');
   for(const mutate of [d=>d.patch='16.20',d=>d.patch='16.22',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' drift']){const d=structuredClone(game);mutate(d);assert(!find(d,hero,id));}
-  const noR=find(game,hero,id,{owned:[id,1004]});if(hero==='Teemo')assert.equal(noR,undefined);else{assert(noR.ultimateUnavailable);assert.match(noR.play[0],/已失去R/);assert.doesNotMatch(noR.play.join(' '),/吞敌仍需三层|安排大招/);}
+  const noR=find(game,hero,id,{owned:[id,1004]});if(hero==='Teemo')assert.equal(noR,undefined);else{assert(noR.ultimateUnavailable);assert.match(noR.caution,/终极技能不可使用/);assert.match(hexMechanismMicroRoutes([noR])[0].augments.find(a=>a.core).brief,/终极技能不可使用/);assert.doesNotMatch(noR.play.join(' '),/吞敌仍需三层|安排大招/);}
   for(const group of r.gear)for(const item of group.items){const d=structuredClone(game);d.items[item.id].description+=' drift';const kept=find(d,hero,id);if(item.core){assert(!kept);continue;}assert(kept);assert(kept.gear.every(g=>g.items.every(i=>!group.items.some(x=>x.id===i.id))));}
  }
  const tahm=find(game,'TahmKench',3094),card=hexRouteCard(hexMechanismMicroRoutes([tahm])[0]);assert.equal(card.source,'照赜 · 改编');assert.deepEqual(tahm.gear.flatMap(g=>g.items.map(i=>i.id)),[2510,3089,3065]);assert.equal(card.priority,'');assert.match(tahm.basis,/两段对局/);assert(tahm.gear.every(g=>g.items.every(i=>!i.core)));
- const kaisa=find(game,'Kaisa',3086);assert.deepEqual(kaisa.gear.flatMap(g=>g.items.map(i=>i.id)),[3100,4646,6655]);assert.match(kaisa.caution,/不保证W叠满/);assert.match(find(game,'Teemo',3086).caution,/一句局部/);
+ const kaisa=find(game,'Kaisa',3086);assert.deepEqual(kaisa.gear.flatMap(g=>g.items.map(i=>i.id)),[3004,4645,3137,3089,3020,3102]);assert.equal(kaisa.communitySource.author,'驻韩研究员');assert.equal(kaisa.communitySource.url,'https://www.bilibili.com/video/BV1kQHP6zEvx/');assert.equal(kaisa.communitySource.publishedAt,'2026-10-24T15:11:52+08:00');assert.deepEqual(kaisa.communitySource.evidenceSeconds,[35,50,65,80,95,105]);assert.match(kaisa.basis,/额外被动叠层.*未作定论.*不依赖/s);assert.match(kaisa.play.join(' '),/不依赖单发W固定叠满被动/);assert.match(kaisa.caution,/蜂巢有自身冷却.*不把.*战绩视为固定收益或胜率/);assert.match(find(game,'Teemo',3086).caution,/一句局部/);
  const invalid=value();invalid.hexRoutes.routes.find(r=>r.hero==='Teemo').requiresUltimate='yes';assert.throws(()=>validateCommunityData(invalid,game),/大招条件/);
- for(const hero of ['Graves','Corki']){const r=hexPlayerRoutes({data:game,hero})[0];assert.match(r.basis,/停用地图/);assert.match(r.basis,/不视为当前正式服实战证明/);assert.equal(r.communitySource.sourcePatch,null);}
+ const corki=find(game,'Corki',3078);assert.match(corki.basis,/停用地图/);assert.match(corki.basis,/不视为当前正式服实战证明/);assert.equal(corki.communitySource.sourcePatch,null);const graves=find(game,'Graves',3081);assert.equal(graves.communitySource.url,'https://www.bilibili.com/video/BV1wSnX6GETA/');assert.match(graves.communitySource.observedMode,/确切录制补丁与服务器未知/);assert.match(graves.basis,/录像补丁和服务器未知.*按16.21英雄、强化及装备独立复核/);assert.equal(graves.communitySource.sourcePatch,null);
 });
 
 test('signed text snapshots require a compatible client while legacy video-only feeds retain their prior floor',async()=>{
@@ -56,7 +58,7 @@ test('signed text snapshots require a compatible client while legacy video-only 
 
 test('actual external-link handler opens current creator videos without authorizing arbitrary Bilibili URLs',async()=>{
  const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),opened=[],data={...game,catalog};
- vm.runInNewContext(source.slice(source.indexOf(" guard('open-link'"),source.indexOf(" guard('export-preparation'")),{URL,Error,data,catalogCore:{safeSourceURL},hexCommunitySourceURLs,isReleaseNotesUrl:()=>false,guard:(name,handler)=>handlers.set(name,handler),shell:{openExternal:async value=>opened.push(value)}});
+ vm.runInNewContext(source.slice(source.indexOf(" guard('open-link'"),source.indexOf(" guard('export-preparation'")),{URL,Error,HEX_CHAMPION_SOURCE,data,catalogCore:{safeSourceURL},hexCommunitySourceURLs,isReleaseNotesUrl:()=>false,guard:(name,handler)=>handlers.set(name,handler),shell:{openExternal:async value=>opened.push(value)}});
  const link='https://www.bilibili.com/video/BV1FGHP6TEzC/';assert(hexCommunitySourceURLs(data).includes(link));await handlers.get('open-link')(link);assert.deepEqual(opened,[link]);
  for(const bad of [link.replace('www.bilibili.com','www.bilibili.com.evil.invalid'),'https://www.bilibili.com/video/BV1UnknownSource/',link+'?redirect=elsewhere'])await assert.rejects(handlers.get('open-link')(bad),/不支持的链接/);
  data.patch='16.22';await assert.rejects(handlers.get('open-link')(link),/不支持的链接/);assert.equal(opened.length,1);

@@ -2,8 +2,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {BUNDLED_CATALOG,configureCatalog,catalogIssues} from '../src/core/catalog.mjs';
-import {createSlots,recommend} from '../src/core/recommend.mjs';
+import {configureCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG,historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
+import {createSlots,recommend as recommendActual} from '../src/core/recommend.mjs';
 import {comboMembers} from '../src/core/combo-members.mjs';
 import {generateCreativeTrios} from '../src/core/creative-trios.mjs';
 import {curatedDescriptor} from '../src/core/curated-plan.mjs';
@@ -11,6 +12,7 @@ const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json
 const ids=['poppy-top-anivia-mid','viego-jungle-lissandra-mid','nocturne-jungle-twistedfate-mid'];
 const fixed=members=>createSlots().map(slot=>({...slot,party:true,champion:members.find(m=>m.role===slot.role)?.champion||null,locked:true}));
 
+historicalData(data);
 test('current cross-role duos retain role-specific jobs and become pending on member-source changes',()=>{
  for(const id of ids){
   const entry=BUNDLED_CATALOG.duos.find(e=>e.id===id),members=comboMembers(entry),descriptor=curatedDescriptor(entry,data);
@@ -47,11 +49,14 @@ test('a pending earlier trio cannot change the fit of another reviewed trio in t
  }finally{configureCatalog(BUNDLED_CATALOG);}
 });
 
-test('only a reviewed duo containing this support can exempt its high-economy build penalty',()=>{
+test('catalog labels do not grant a support composition an unrelated fit bonus',()=>{
  const catalog=structuredClone(BUNDLED_CATALOG),unrelated={...catalog.duos.find(d=>d.id==='poppy-top-anivia-mid'),difficulty:'适中'},bot={...catalog.duos.find(d=>!d.members&&d.support==='Ashe'),id:'supported-ashe',carry:'Jhin',support:'Ashe',patch:data.patch,style:'fun',difficulty:'适中',loadouts:{bottom:'default',support:'default'}};
  catalog.trios=[];catalog.links=[];
  const members=[{role:'top',champion:'Poppy'},{role:'jungle',champion:'Sejuani'},{role:'mid',champion:'Anivia'},{role:'bottom',champion:'Jhin'}],slots=fixed(members);Object.assign(slots.find(s=>s.role==='support'),{champion:null,locked:false});
- const score=duos=>{catalog.duos=duos;configureCatalog(catalog);return recommend({slots,champions:data.champions,scope:'context',style:'balanced',rolePools:{support:{mode:'only',heroes:['Ashe']}},patch:data.patch,limit:1,randomSeed:'economy-check'})[0].score;};
- try{const ordinary=score([]);assert.equal(score([unrelated]),ordinary,'An unrelated top/mid duo must not waive the support cost');assert.equal(score([bot])-ordinary,9,'The explicitly supported bot duo keeps its existing waiver');}
+ const score=duos=>{catalog.duos=duos;configureCatalog(catalog);return recommend({catalogStatus:catalogIssues(catalog,data).status,slots,champions:data.champions,scope:'context',style:'balanced',rolePools:{support:{mode:'only',heroes:['Ashe']}},patch:data.patch,limit:1,randomSeed:'economy-check'})[0].score;};
+ try{const ordinary=score([]);assert.equal(score([unrelated]),ordinary,'An unrelated top/mid duo must not waive the support cost');assert.equal(score([bot]),ordinary,'A reviewed catalog label is provenance, not a strength or economy bonus');}
  finally{configureCatalog(BUNDLED_CATALOG);}
 });
+
+// Supply the same version/source context as the application recommendation call.
+function recommend(input){return recommendActual({patch:data.patch,builds:data.builds,catalogStatus:data.catalogInfo?.status,...input});}

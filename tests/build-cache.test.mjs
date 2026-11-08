@@ -4,8 +4,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {createBuildCache,loadBuilds} from '../services/build-cache.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-const refs=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const bundledSources=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const refs=projectBuildSources(bundledSources,DEFAULT_BUILD_SOURCE,data.patch);
 const hexRefs=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url),'utf8')).entries;
 
 test('failed cache writes preserve visible Rift and Hex plans and release the refresh queue',async()=>{

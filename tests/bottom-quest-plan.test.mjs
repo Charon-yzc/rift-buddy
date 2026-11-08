@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {getBuild} from '../src/core/builds.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {selectGuide,createGuideModel,validateGuideSelection,validateGuideState,reconcileGuide} from '../src/core/guide.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
@@ -14,7 +15,7 @@ import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {itemConflicts} from '../src/core/mechanics.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const c=data.champions.find(c=>c.id==='Ashe'),base={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,conditions:[]};
 const build=s=>getBuild(c,s.role,data,s);
 function seven(){let s=changeCompanionPlan(data,base,'quest-plan');for(const id of [6672,3072,3036])s=changeCompanionPlan(data,s,'later',id);return s;}

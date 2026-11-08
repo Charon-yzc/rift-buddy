@@ -1,3 +1,4 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -5,7 +6,7 @@ import {buildAugmentDescriptions,AUGMENT_TOOLTIP_PARSER_REVISION} from '../servi
 import {hexAugmentReference} from '../src/core/hex-augment-reference.mjs';
 import {hexAugmentDetail} from '../src/core/hex-augment-detail.mjs';
 const read=file=>fs.readFile(new URL(file,import.meta.url),'utf8').then(JSON.parse);
-const fixture=await read('./fixtures/hex-stat-formulas-16.21.json'),proof=await read('./fixtures/hex-stat-primary-16.21.json'),game=await read('../data/game.json');
+const fixture=await read('./fixtures/hex-stat-formulas-16.21.json'),proof=await read('./fixtures/hex-stat-primary-16.21.json'),game=await read('./fixtures/snapshot-16.21/game.json');
 function render(parts,values=[]){
  return buildAugmentDescriptions([{key:'Example'}],{a:{__type:'AugmentData',AugmentNameId:'Example',RootSpell:'spell',DescriptionTra:'description'},spell:{mSpell:{DataValues:values,mSpellCalculations:{Amount:{__type:'GameCalculation',mFormulaParts:parts}}}}},{description:'@Amount@'})[0];
 }

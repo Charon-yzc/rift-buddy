@@ -1,7 +1,7 @@
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 app.commandLine.appendSwitch('force-device-scale-factor','1');app.disableHardwareAcceleration();
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],attempts=[],shots=[],geometry=[];
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],attempts=[],hoverAttempts=[],shots=[],geometry=[];
 let fixture,room,main,data;const registered=new Map();
 app.setPath('userData',root);globalShortcut.register=()=>false;
 global.fetch=async()=>{throw Error('Fixture blocks external requests');};https.request=http.request=()=>{throw Error('Fixture blocks real game sockets');};global.WebSocket=class{constructor(){throw Error('Fixture blocks room sockets');}};
@@ -9,7 +9,7 @@ app.on('browser-window-created',(_event,window)=>{windows.push(window);window.sh
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
 const original=ipcMain.handle.bind(ipcMain);
 ipcMain.handle=(name,handler)=>{registered.set(name,handler);return original(name,async(event,...args)=>{
- if(name==='party-range'){const boot=await registered.get('bootstrap')(event),next=structuredClone(boot.state);next.draft.slots=next.draft.slots.map(slot=>slot.role===args[0].role?{...slot,party:args[0].checked,partyManual:true}:slot);next.draft.partyCount=next.draft.slots.filter(slot=>slot.party).length;return registered.get('save-state')(event,next,boot.state);}
+ if(name==='party-range'){const boot=await registered.get('bootstrap')(event),next=structuredClone(boot.state);next.draft.slots=next.draft.slots.map(slot=>slot.role===args[0].role?{...slot,party:args[0].checked,partyManual:true}:slot);next.draft.partyCount=next.draft.slots.filter(slot=>slot.party).length;return registered.get('save-state')(event,next,boot.state,undefined,undefined);}
  if(name==='client-status')return structuredClone(fixture);
  if(name==='room-status')return structuredClone(room);
  if(name==='room-addresses')return [];
@@ -20,7 +20,7 @@ ipcMain.handle=(name,handler)=>{registered.set(name,handler);return original(nam
   return structuredClone(room);
  }
  if(name==='prepare-selection'){
-  const value=args[0],own=fixture.session.myTeam[0];assert.ok(value.page?.selectedPerkIds?.length===9);assert.equal(value.summoners.length,2);assert.ok(value.itemSet);assert.ok(!value.preselectOnly,'Position claims must apply a complete configuration');
+  const value=args[0],own=fixture.session.myTeam[0];if(value.preselectOnly){assert.equal(value.page,undefined);assert.equal(value.summoners,undefined);assert.equal(value.itemSet,undefined);hoverAttempts.push(structuredClone(value));own.championId=0;own.championPickIntent=data.champions.find(c=>c.id===value.champion).key;return {complete:true,preselectOnly:true,steps:{hover:{status:'done'},runes:{status:'skipped'},spells:{status:'skipped'},items:{status:'skipped'}}};}assert.ok(value.page?.selectedPerkIds?.length===9);assert.equal(value.summoners.length,2);assert.ok(value.itemSet);assert.ok(!value.preselectOnly,'Position claims must apply a complete configuration');
   if(own.pickState==='locked')assert.equal(data.champions.find(c=>c.id===value.champion).key,own.championId,'A locked hero was replaced');
   attempts.push(structuredClone(value));if(own.pickState!=='locked'){own.championId=0;own.championPickIntent=data.champions.find(c=>c.id===value.champion).key;}
   return {complete:true,steps:Object.fromEntries(['hover','runes','spells','items'].map(key=>[key,{status:'done'}]))};
@@ -52,7 +52,7 @@ async function run(){
  await click('[data-action=pregame-hero]');await until(()=>js('!!document.querySelector("#picker-search")'),'Picker missing');await capture('preselection-picker.png');
  await click('[data-action=pick-champion][data-id=Ashe]');await until(()=>attempts.length===1,'Hero click did not configure');
  assert.equal(await js('document.querySelector(".companion-tabs .active").dataset.tab'),'recommend','Hover navigated to configuration');assert.equal(await js('!!document.querySelector("#overlay-root>*")'),false);
- assert.equal(attempts[0].champion,'Ashe');assert.ok(attempts[0].page);await sync();
+ assert.equal(hoverAttempts.length,1,'An explicit hero click dispatches its hover first');assert.equal(hoverAttempts[0].champion,'Ashe');assert.equal(attempts[0].champion,'Ashe');assert.ok(attempts[0].page);await sync();
  await click('#include-preselected');await until(()=>js('document.querySelectorAll(".companion-candidate").length>0&&[...document.querySelectorAll(".companion-candidate")].every(r=>r.querySelector("[data-id=Ashe]"))'),'Opt-in did not anchor hover');
  const state=JSON.parse(await fs.readFile(path.join(root,'settings.json')));assert.equal(state.preferences.includePreselected,true);assert.equal(state.draft.slots.filter(s=>s.party).length,3);
  await capture('sidebar-preselected-on.png');
@@ -108,6 +108,6 @@ async function run(){
  await js('window.buddy.companionMode(false)');await until(()=>js('!document.querySelector(".companion-shell")'),'Main did not expand');
  for(const width of [1180,900]){main.setContentSize(width,820);for(const route of ['draft','room','builds','reference','rankings','patches','hex','favorites','settings']){await click(`[data-action=navigate][data-route=${route}]`);await until(()=>js(`document.querySelector("#main")?.dataset.page===${JSON.stringify(route)}`),'Wrong main route');await capture(`main-${route}-${width}.png`);geometry.push({surface:'main',route,width,...await js('({viewport:innerWidth,scroll:document.documentElement.scrollWidth})')});}}
  assert.ok(geometry.every(row=>row.scroll<=row.viewport+1),'Page overflow: '+JSON.stringify(geometry.filter(row=>row.scroll>row.viewport+1)));
- await fs.writeFile(path.join(root,'report.json'),JSON.stringify({passed:true,source,archiveSha256:release?.archiveSha256||null,attempts:attempts.length,realLcuWrites:0,shots,geometry},null,2));console.log('RECOMMENDATION EXPERIENCE PASS '+root);app.quit();
+ await fs.writeFile(path.join(root,'report.json'),JSON.stringify({passed:true,source,archiveSha256:release?.archiveSha256||null,attempts:attempts.length,hoverAttempts:hoverAttempts.length,realLcuWrites:0,shots,geometry},null,2));console.log('RECOMMENDATION EXPERIENCE PASS '+root);app.quit();
 }
 run().catch(async error=>{console.error(error);if(main){await fs.writeFile(path.join(root,'failure.png'),(await main.webContents.capturePage()).toPNG());await fs.writeFile(path.join(root,'failure-state.json'),JSON.stringify(await main.webContents.executeJavaScript('({workers:window.__workers,toast:document.querySelector("#toast")?.textContent,body:document.body.innerText})'),null,2));}await fs.writeFile(path.join(root,'failure.txt'),error.stack);app.exit(1);});

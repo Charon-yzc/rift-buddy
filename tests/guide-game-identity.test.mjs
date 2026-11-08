@@ -9,7 +9,7 @@ import {publicClientGameId} from '../src/core/draft.mjs';
 import {mergeConfiguration,upsertPreparation} from '../src/core/preparation.mjs';
 
 const main=fs.readFileSync(new URL('../electron/main.cjs',import.meta.url),'utf8');
-const slice=(start,end)=>main.slice(main.indexOf(start),main.indexOf(end,main.indexOf(start)));
+const slice=(start,end)=>{const a=main.indexOf(start),b=main.indexOf(end,a);assert(a>=0&&b>a,`Production fixture anchors changed: ${start}`);return main.slice(a,b);};
 const own={id:'Nautilus',role:'support',mode:'rift',conditions:[],coreIndex:0,runeId:'source-guardian'};
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 function setup({fresh=false,phase='ChampSelect'}={}){
@@ -17,13 +17,14 @@ function setup({fresh=false,phase='ChampSelect'}={}){
  const selected=guideCore.selectGuide(null,own);selected.match={phase,gameId:'471001'};
  const context=vm.createContext({isDeepStrictEqual,structuredClone,publicClientGameId,mergeConfiguration,upsertPreparation,
   guideCore:{...guideCore,createGuideModel:(_data,guide)=>({completedItems:guide.completedItems})},data:{champions:[]},
-  state:{guide:fresh?null:selected,preparations:[],preferences:{autoLive:false}},guideRevision:0,
+  state:{guide:fresh?null:selected,preparations:[],preferences:{autoLive:false}},guideRevision:0,selectionWriteRevision:0,manualGuideReference:null,detachedGuideSelection:false,
+  actualGuideSelection:()=>own,guideManualRole:()=>null,
   latestClient:{connected:true,phase,game:{gameId:470000},session:{gameId:471001}},latestLive:null,liveTask:null,
   hexRounds:createHexRoundStore(),currentGame:{current:()=>own},guideHexContext:null,currentGuideSelection:()=>own,appWindows:()=>[],guide:{show:()=>({}),publish(){},isVisible:()=>true,needsAutoShow:()=>false},
   liveService:{liveSnapshot:async()=>({available:false})},guard:(name,handler)=>handlers.set(name,handler)});
- context.saveCurrentState=update=>{const task=queue.catch(()=>{}).then(()=>{if(writeError){const error=writeError;writeError=null;throw error;}context.state=structuredClone(update(structuredClone(context.state)));});queue=task;return task;};
- vm.runInContext(slice('function mergeSavedFields(', 'function saveCurrentState(')+slice(' const setGuideState=', ' const publicEnemyIds=')+slice(' const pollLive=', " guard('client-status'")+slice(" guard('open-guide'", " guard('matchup-focus'"),context);
- const sync=vm.runInContext('(async()=>{const enemyIds=[];'+slice('   const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:publicClientGameId', '   if(state.preferences.guideAutoShow')+'})',context);
+ context.saveCurrentState=(update,_exclude,onCommitted)=>{const task=queue.catch(()=>{}).then(()=>{if(writeError){const error=writeError;writeError=null;throw error;}context.state=structuredClone(update(structuredClone(context.state)));onCommitted?.();});queue=task;return task;};
+ vm.runInContext(slice('function mergeSavedFields(', 'function saveCurrentState(')+slice(' const guideConfirmedSlots=', ' const rememberAppliedGuide=')+slice(' const setGuideState=', ' const publicEnemyIds=')+slice(' const pollLive=', " guard('client-status'")+slice(" guard('open-guide'", " guard('matchup-focus'"),context);
+ const sync=vm.runInContext('(async()=>{const enemyIds=[];'+slice('   const previousGuide=state.guide,reconcileGame=', '   if(state.preferences.guideAutoShow')+'})',context);
  return {context,handlers,sync,prepare:()=>vm.runInContext('prepareCurrentGuide()',context),live:()=>vm.runInContext('pollLive()',context),failNextWrite:error=>{writeError=error;},hold(){const gate=deferred();queue=queue.catch(()=>{}).then(()=>gate.promise);return gate;}};
 }
 
@@ -63,6 +64,6 @@ test('status synchronization queued ahead of an edit does not falsely reject sam
 test('an edit captured before a real session change is still rejected by the match CAS',async()=>{
  const s=setup(),gate=s.hold();s.context.latestClient.session.gameId=471002;
  const status=s.sync(),edit=s.handlers.get('update-guide')({...own,runeId:'source-aftershock'});
- const rejection=assert.rejects(edit,/本局指引已变化/);gate.resolve();await status;await rejection;
+ const rejection=assert.rejects(edit,error=>error.code==='GUIDE_CONTEXT_CHANGED');gate.resolve();await status;await rejection;
  assert.equal(s.context.state.guide.match.gameId,'471002');assert.equal(s.context.state.guide.selection.runeId,own.runeId);
 });

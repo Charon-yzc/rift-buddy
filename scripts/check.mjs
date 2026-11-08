@@ -13,6 +13,7 @@ import {validatePairStatistics} from '../src/core/pair-statistics.mjs';
 import {validRankingReference} from '../src/core/rankings.mjs';
 import {validPatchNotes} from '../src/core/patch-notes.mjs';
 import {validAbilityReference} from '../src/core/abilities.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 const root=path.resolve('.');let checked=0;const errors=[];
 async function syntax(folder){for(const item of await fs.readdir(folder,{withFileTypes:true})){
  const file=path.join(folder,item.name);if(item.isDirectory()){if(!item.name.startsWith('.'))await syntax(file);}
@@ -28,9 +29,10 @@ if(!validAbilityReference(abilities,data))errors.push('Invalid or outdated bundl
 validatePairStatistics(JSON.parse(await fs.readFile('data/pair-statistics.json','utf8')),data.champions);
 for(const champion of data.champions)if(!hasCurrentCombatStats(champion,data.patch))errors.push(`Missing current-patch champion combat stats: ${champion.id}`);
 validateCatalog(BUNDLED_CATALOG,data);
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+data.buildSources=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+data.builds=projectBuildSources(data.buildSources,DEFAULT_BUILD_SOURCE,data.patch);
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
-for(const [key,ref] of Object.entries(data.builds)){const c=data.champions.find(c=>c.id===ref.champion);if(!c||!validReference(ref,c,ref.role,data,{allowOlder:true}))errors.push(`Invalid source reference: ${key}`);}
+for(const [key,ref] of Object.entries(data.buildSources)){const c=data.champions.find(c=>c.id===ref.champion);if(!c||!validReference(ref,c,ref.role,data,{allowOlder:true}))errors.push(`Invalid source reference: ${key}`);}
 for(const [key,ref] of Object.entries(data.hexBuilds)){const c=data.champions.find(c=>c.id===key);if(!c||!validHexReference(ref,c,data,{allowOlder:true}))errors.push(`Invalid Hex source reference: ${key}`);}
 const spellsFile=JSON.parse(await fs.readFile('data/spells.json','utf8'));
 if(spellsFile.version!==data.version)errors.push(`Spells data ${spellsFile.version} does not match game data ${data.version}; rerun the spell enrichment.`);

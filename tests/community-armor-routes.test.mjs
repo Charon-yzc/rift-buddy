@@ -1,7 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';import {hexMechanismMicroRoutes} from '../src/core/hex-micro-routes.mjs';import {hexRouteCard} from '../src/core/hex-route-card.mjs';import {hexChampionReview} from '../src/core/hex-review.mjs';
 import {validateCommunityData} from '../services/community-data.mjs';
-const read=async name=>JSON.parse(await fs.readFile(new URL(name,import.meta.url))),game=await read('../data/game.json'),catalog=await read('../src/core/catalog-data.json'),routes=await read('../src/core/hex-community-routes.json'),find=(data,hero,extra={})=>hexPlayerRoutes({data,hero,options:[3049],...extra}).find(r=>r.augment.id===3049);
+// Historical 16.21 Hex contracts use the frozen snapshot; current-patch acceptance is separate.
+const read=async name=>JSON.parse(await fs.readFile(new URL(name,import.meta.url))),game=await read('./fixtures/snapshot-16.21/game.json'),catalog=await read('../src/core/catalog-data.json'),routes=await read('../src/core/hex-community-routes.json'),find=(data,hero,extra={})=>hexPlayerRoutes({data,hero,options:[3049],...extra}).find(r=>r.augment.id===3049);
 const batch=[['Taric','zzz_Days',[3084,2502,3070,3047],[1053]],['KSante','黄焖鸡少放辣',[6662,6665,3075],[3131,1344,3078]],['Jax','akaciparaci',[3078,3110,3075],[]]];
 
 test('three current armor routes keep distinct author configurations and source-scoped kit reviews',()=>{

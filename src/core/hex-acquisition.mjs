@@ -1,5 +1,6 @@
 import {isCurrentHexData,isReadableHexData} from './hex-data-current.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
+import {validCurrentHexReference} from './builds.mjs';
 const update='https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/';
 const missions='https://support.riotgames.com/en-us/league-of-legends/events/aram-mayhem-journey-to-stardom';
 // Band progression unlocks are account conditions, not this game's Headliner
@@ -40,7 +41,15 @@ export function hexCurrentAugmentIds(data,ids){
 // collection indices used by the existing open/delete actions.
 export function hexFavoriteIsCurrent(data,favorite){
  if(favorite?.type!=='hex'&&!(favorite?.type==='build'&&favorite.mode==='hex'))return true;
- if(!isCurrentHexData(data)||!/^\d+\.\d+\.\d+$/.test(favorite.version||'')||favorite.version.split('.').slice(0,2).join('.')!==data.patch)return false;
+ if(!/^\d+\.\d+\.\d+$/.test(favorite.version||'')||favorite.version.split('.').slice(0,2).join('.')!==data.patch)return false;
+ if(!isCurrentHexData(data)){
+  // A current source build is readable without renewing old effect reviews.
+  // Authored recipes and augment-only favorites still need reviewed rules.
+  if(favorite.type!=='build'||favorite.comboId||favorite.creativePlan||favorite.sharedEquipment||favorite.loadoutId&&favorite.loadoutId!=='default')return false;
+  const champion=data.champions?.find(hero=>hero.id===favorite.champion);
+  if(!validCurrentHexReference(data.hexBuilds?.[favorite.champion],champion,data))return false;
+  return ['augmentIds','compareIds','ownedAugmentIds'].every(key=>favorite[key]===undefined||Array.isArray(favorite[key])&&hexCurrentAugmentIds(data,favorite[key]).length===favorite[key].length);
+ }
  if(favorite.type!=='hex')return true;
  return Array.isArray(favorite.augments)&&favorite.augments.length>0&&hexCurrentAugmentIds(data,favorite.augments).length===favorite.augments.length;
 }

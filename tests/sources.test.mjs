@@ -5,6 +5,7 @@ import {decodeHydration,itemRows,separateComponents,resolveReferences} from '../
 import {parseBuildPage,parseBuildJSON,fetchChampionBuild,BUILD_PARSER_VERSION} from '../services/build-sources.mjs';
 import {parseHexBuildPage} from '../services/hex-sources.mjs';
 import {validHexReference,getBuild} from '../src/core/builds.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {RUNE_PLANS} from '../src/core/loadouts.mjs';
 import {createRequire} from 'node:module';
 import {companionPlanView} from '../src/companion-view.mjs';
@@ -13,7 +14,7 @@ const item=(id,quantity=1)=>['$','$1',`${id}-0`,{children:[{metaType:'item',meta
 const row=(name,items)=>['$','tr',name,{children:[...items,['$','strong',null,{children:'40%'}],['$','span',null,{children:['2,345',' ','Games']}]]}];
 const hydration=values=>`<script>self.__next_f.push([1,${JSON.stringify(Object.entries(values).map(([key,value])=>`${key}:${JSON.stringify(value)}`).join('\n'))}])</script>`;
 test('complete source rune pages retain the exact content behind their statistics',async()=>{
- const entries=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,fixture={...data,builds:entries};let checked=0;
+ const entries=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch),fixture={...data,builds:entries};let checked=0;
  for(const ref of Object.values(entries)){
   const champion=data.champions.find(c=>c.id===ref.champion),build=getBuild(champion,ref.role,fixture);
   for(const option of build.runeOptions.filter(o=>o.source==='OP.GG')){
@@ -31,13 +32,13 @@ test('complete source rune pages retain the exact content behind their statistic
 });
 
 test('HTML fallback cards preserve source identity without borrowing rune-family samples',async()=>{
- const champion=data.champions.find(c=>c.id==='Ashe'),cached=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries['Ashe:bottom'];
+ const champion=data.champions.find(c=>c.id==='Ashe'),cached=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch)['Ashe:bottom'];
  const fixture=createRequire(import.meta.url)('../scripts/build-source-fixture.cjs');
  const ref=parseBuildPage(fixture(cached,data),{champion,role:'bottom',data,url:'https://op.gg/lol/champions/ashe/build/bottom'}),fallback={...data,builds:{'Ashe:bottom':ref}};
  const selection={id:'Ashe',role:'bottom',mode:'rift'},build=getBuild(champion,'bottom',fallback,selection);
  assert.equal(build.selectedRune.source,'OP.GG');assert.equal(build.selectedRune.samples,0);assert.ok(build.selectedRune.familySamples>0);
  const html=companionPlanView(fallback,{build,selection});
- assert.match(html,/OP.GG 来源参考 · 完整页样本未提供/);assert.match(html,/OP.GG 来源参考 · 核心路线样本未提供/);
+ assert.match(html,/OP.GG 来源参考 · 完整页样本未提供/);assert.match(html,/OP.GG 来源参考 · 原始核心路线样本未提供/);
  assert.match(html,/data-action="configuration-switch"/);assert.doesNotMatch(html,/data-action="companion-rune"/);
  const mechanism=build.runeOptions.find(o=>o.source==='机制整理');assert.ok(mechanism);
  const chosen=getBuild(champion,'bottom',fallback,{...selection,runeId:mechanism.id});assert.equal(chosen.selectedRune.source,'机制整理');

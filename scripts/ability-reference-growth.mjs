@@ -4,7 +4,7 @@ const round=v=>Math.round(v*10000)/10000;
 // These Tencent intervals mix skill ranks, hero levels and example attributes.
 // Recheck their exact localized client bindings whenever the patch changes.
 export function correctGrowthDescriptions({patch,ability,spell,values,replace,dictionary}){
- assert(['16.20','16.21'].includes(patch));
+ assert(['16.20','16.21','16.22'].includes(patch));
  const bound=(id,name,field,expected)=>assert.deepEqual(values(id,name,field,expected.length),expected);
  const calc=(id,name,key)=>{const c=spell(id,name).mSpellCalculations[key];assert(c);return c;};
  const change=(id,key,name,field,expected,old,next)=>{bound(id,name,field,expected);replace(id,key,old,next,name+' '+field+' rank/level basis from same-patch client binding');};
@@ -14,7 +14,7 @@ export function correctGrowthDescriptions({patch,ability,spell,values,replace,di
  bound('Soraka','SorakaR','BaseHeal',[150,250,350]);bound('Soraka','SorakaR','HealingAmpForLowHealthAllies',[.5]);
  const sr=calc('Soraka','SorakaR','AmpedHealing');assert.equal(sr.mModifiedGameCalculation,'HealingCalc');assert.equal(sr.mMultiplier.mSubparts[0].mNumber,1);assert.equal(sr.mMultiplier.mSubparts[1].mDataValue,'HealingAmpForLowHealthAllies');
  replace('Soraka','R','【225-525】【随等级提升】','【225/375/525】（随R等级）','SorakaR HealingCalc ×1.5, not champion-level interpolation');
- change('MissFortune','E','MissFortuneScattershot','BaseDamagePerSecond',patch==='16.21'?[45,60,75,90,105]:[35,50,65,80,95],patch==='16.21'?'【90-210】【随等级提升】':'【70-190】【随等级提升】',patch==='16.21'?'【90/120/150/180/210】（随E等级）':'【70/100/130/160/190】（随E等级）');
+ change('MissFortune','E','MissFortuneScattershot','BaseDamagePerSecond',patch!=='16.20'?[45,60,75,90,105]:[35,50,65,80,95],patch!=='16.20'?'【90-210】【随等级提升】':'【70-190】【随等级提升】',patch!=='16.20'?'【90/120/150/180/210】（随E等级）':'【70/100/130/160/190】（随E等级）');
  assert.equal(calc('MissFortune','MissFortuneScattershot','TotalDamage').mMultiplier.mDataValue,'BaseDuration');bound('MissFortune','MissFortuneScattershot','BaseDuration',[2]);
  change('Fiddlesticks','W','FiddleSticksW','VampPercentage',[25,32.5,40,47.5,55],'【25%/32.5%/40%/47.5%/55%】【随等级提升】','【25%/32.5%/40%/47.5%/55%】（随W等级）');
  change('Fiddlesticks','R','FiddleSticksR','DamagePerSecond',[150,250,350],'【750/1250/1750】【随等级提升】','【750/1250/1750】（随R等级）');bound('Fiddlesticks','FiddleSticksR','Duration',[5]);
@@ -46,11 +46,11 @@ export function correctGrowthDescriptions({patch,ability,spell,values,replace,di
  const nasus=calc('Nasus','NasusQ','CritDamage');assert.equal(nasus.mFormulaParts[0].mPart1.mStat,9);assert.equal(nasus.mFormulaParts[1].__type,'BuffCounterByCoefficientCalculationPart');bound('Nasus','NasusQ','BonusDamage',[30,50,70,90,110]);
  replace('Nasus','Q','这个技能可以暴击，造成194-330【随等级提升】(汲魂痛击层数)物理伤害。','这个技能可以暴击，造成([【30/50/70/90/110】（随Q等级）+【总攻击力】]×当前暴击伤害倍率+汲魂痛击层数)物理伤害；层数伤害不随暴击翻倍。','NasusQ CritDamage multiplies base and AD, then adds current stacks');
  const level=(id,key,name,field,old,next)=>{const p=calc(id,name,field).mFormulaParts[0];assert.equal(p.__type,'ByCharLevelInterpolationCalculationPart');replace(id,key,old,next,name+' '+field+' explicitly interpolates hero level');};
- level('Locke','Q','LockeQ','AmmoCooldownReset',patch==='16.21'?'10%−40%【随等级提升】':'20%−35%【随等级提升】',patch==='16.21'?'10%—40%【随英雄等级提升】':'20%—35%【随英雄等级提升】');
+ level('Locke','Q','LockeQ','AmmoCooldownReset',patch!=='16.20'?'10%−40%【随等级提升】':'20%−35%【随等级提升】',patch!=='16.20'?'10%—40%【随英雄等级提升】':'20%—35%【随英雄等级提升】');
  level('Locke','W','LockeW','AttackSpeed','40%−70%【随等级提升】','40%—70%【随英雄等级提升】');
- level('Locke','W','LockeW','AdditionalHeal',patch==='16.21'?'20-200【随等级提升】':'40-200【随等级提升】',patch==='16.21'?'20—200【随英雄等级提升】':'40—200【随英雄等级提升】');
- const lc=calc('Locke','LockeW','MaxHealingThreshold').mFormulaParts[0];assert.equal(lc.StartDataValue,'HealCapLevel1Value');assert.equal(lc.EndDataValue,'HealCapLevel18Value');replace('Locke','W',patch==='16.21'?'100−500【随等级提升】':'150−450【随等级提升】',patch==='16.21'?'100—500【随英雄等级提升】':'150—450【随英雄等级提升】','LockeW MaxHealingThreshold interpolates level 1 to 18 fields');
- if(patch==='16.21'){
+ level('Locke','W','LockeW','AdditionalHeal',patch!=='16.20'?'20-200【随等级提升】':'40-200【随等级提升】',patch!=='16.20'?'20—200【随英雄等级提升】':'40—200【随英雄等级提升】');
+ const lc=calc('Locke','LockeW','MaxHealingThreshold').mFormulaParts[0];assert.equal(lc.StartDataValue,'HealCapLevel1Value');assert.equal(lc.EndDataValue,'HealCapLevel18Value');replace('Locke','W',patch!=='16.20'?'100−500【随等级提升】':'150−450【随等级提升】',patch!=='16.20'?'100—500【随英雄等级提升】':'150—450【随英雄等级提升】','LockeW MaxHealingThreshold interpolates level 1 to 18 fields');
+ if(patch!=='16.20'){
   const refund=calc('Locke','LockeQ','AmmoCooldownReset').mFormulaParts[0],heal=calc('Locke','LockeW','AdditionalHeal').mFormulaParts[0];
   assert.deepEqual([round(refund.mStartValue),round(refund.mEndValue)],[.1,.4]);assert.deepEqual([heal.mStartValue,heal.mEndValue],[20,200]);
   bound('Locke','LockeW','HealCapLevel1Value',[100]);bound('Locke','LockeW','HealCapLevel18Value',[500]);

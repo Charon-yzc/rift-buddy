@@ -7,6 +7,7 @@ import {electronExecutable} from './electron-runtime.mjs';
 import {defaultState,saveState} from '../services/storage.mjs';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {captureCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboContext} from '../src/core/creative-plan.mjs';
+import {projectBuildSources,DEFAULT_BUILD_SOURCE} from '../src/core/build-source.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {clientPreparationPlan} from '../src/client-preparation-view.mjs';
 import {validatePreparation} from '../src/core/preparation.mjs';
@@ -19,18 +20,20 @@ const rolePools=Object.fromEntries(Object.entries(picks).map(([role,id])=>[role,
 const slots=createSlots().map(s=>({...s,party:!!picks[s.role],partyManual:true,champion:unadopted?null:picks[s.role]||null,locked:!unadopted&&!!picks[s.role],...(!unadopted?(s.role==='top'?{clientCellId:0,manualPosition:true}:s.role==='jungle'?{clientCellId:1,manualPosition:true}:s.role==='mid'?{automaticPosition:true}:{}):{})}));
 const result=recommend({slots,champions:data.champions,scope:'party',limit:1,...(unadopted?{rolePools,style:'balanced'}:{})})[0],plan=captureCreativePlan(result,data,'2026-10-12T00:00:00Z');
 const alternativePlan=selectPartyRoute(captureCreativePlan({...result,trio:null,duo:null},data,'2026-10-12T00:00:00Z'),'side-pressure');
-data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const alternativeSelection={id:'Galio',role:'mid',mode:'rift',...creativeComboContext(creativeMemberCombo(alternativePlan,'Galio','mid'))};
+const alternateRune=getBuild(data.champions.find(c=>c.id==='Galio'),'mid',data,alternativeSelection).runeOptions.find(option=>option.page.selectedPerkIds[0]===8439);assert.ok(alternateRune);alternativeSelection.runeId=alternateRune.id;
 const alternativeValue=clientPreparationPlan(data,{selection:alternativeSelection,build:getBuild(data.champions.find(c=>c.id==='Galio'),'mid',data,alternativeSelection)}).value;
-const fixture={unadopted,alternativePlan,alternativeValue};
+const primarySelection={id:'Galio',role:'mid',mode:'rift',...creativeComboContext(creativeMemberCombo(plan,'Galio','mid'))};const primaryValue=clientPreparationPlan(data,{selection:primarySelection,build:getBuild(data.champions.find(c=>c.id==='Galio'),'mid',data,primarySelection)}).value;
+const fixture={unadopted,alternativePlan,alternativeSelection,alternativeValue,primarySelection,primaryValue};if(!unadopted)state.preparations=[validatePreparation(alternativeSelection)];
 if(unadopted){
- const champion=data.champions.find(c=>c.id==='Galio'),ordinaryBuild=getBuild(champion,'mid',data,{id:'Galio',role:'mid',mode:'rift'}),ordinaryRune=ordinaryBuild.runeOptions.find(option=>option.page.selectedPerkIds[0]===8230);
+ const champion=data.champions.find(c=>c.id==='Galio'),ordinaryBuild=getBuild(champion,'mid',data,{id:'Galio',role:'mid',mode:'rift'}),ordinaryRune=ordinaryBuild.runeOptions.find(option=>option.page.selectedPerkIds[0]===8439);
  assert.ok(ordinaryRune,'The unadopted regression needs a distinct saved solo rune page');
- const oldSolo=validatePreparation({id:'Galio',role:'mid',mode:'rift',runeId:ordinaryRune.id,summonerIds:['SummonerTeleport','SummonerFlash']}),candidateSelection={id:'Galio',role:'mid',mode:'rift',...creativeComboContext(creativeMemberCombo(plan,'Galio','mid'))};
+ const oldSolo=validatePreparation({id:'Galio',role:'mid',mode:'rift',...creativeComboContext(creativeMemberCombo(alternativePlan,'Galio','mid')),runeId:ordinaryRune.id,summonerIds:['SummonerTeleport','SummonerFlash']}),candidateSelection={id:'Galio',role:'mid',mode:'rift',...creativeComboContext(creativeMemberCombo(plan,'Galio','mid'))};
  const oldSoloBuild=getBuild(champion,'mid',data,oldSolo),candidateBuild=getBuild(champion,'mid',data,candidateSelection);
- assert.equal(result.trio?.id,'camille-galio-vi');assert.equal(oldSoloBuild.items.length,4);assert.equal(candidateBuild.items.length,6);
+ assert.equal(candidateBuild.loadoutId,'default','A recommendation does not force a dedicated catalog build');assert.ok(oldSoloBuild.reference&&candidateBuild.reference);
  assert.notDeepEqual(oldSoloBuild.runePage,candidateBuild.runePage);assert.notDeepEqual(oldSoloBuild.summoners,candidateBuild.summoners);
- Object.assign(fixture,{candidateValue:clientPreparationPlan(data,{selection:candidateSelection,build:candidateBuild}).value,oldSolo,oldSoloValue:clientPreparationPlan(data,{selection:oldSolo,build:oldSoloBuild}).value});
+ Object.assign(fixture,{candidateValue:clientPreparationPlan(data,{selection:{id:'Galio',role:'mid',mode:'rift'},build:candidateBuild}).value,oldSolo,oldSoloValue:clientPreparationPlan(data,{selection:oldSolo,build:oldSoloBuild}).value});
  state.preparations=[oldSolo];state.preferences.rolePools=rolePools;
 }
 await fs.writeFile(path.join(root,'party-fixture.json'),JSON.stringify(fixture,null,2));

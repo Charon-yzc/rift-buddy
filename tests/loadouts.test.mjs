@@ -1,3 +1,5 @@
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
+import {historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,8 +12,9 @@ import {createSlots,analyzeTeam} from '../src/core/recommend.mjs';
 import {validateState,defaultState,mergeState} from '../services/storage.mjs';
 import {selectGuide,createGuideModel,validateGuideSelection} from '../src/core/guide.mjs';
 const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
-data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const hero=id=>data.champions.find(c=>c.id===id),pair=(a,b)=>DUOS.find(d=>d.carry===a&&d.support===b);
+historicalData(data);
 test('researched pairs are distinct, sourced and reachable with real champions',()=>{
  assert.ok(DUOS.length>=200);assert.equal(CROSS_SYNERGIES.length,127);assert.equal(new Set(DUOS.map(d=>d.id)).size,DUOS.length);
  assert.equal(COMMUNITY_DUOS.length,45);
@@ -30,12 +33,12 @@ test('every authored loadout has legal current items and distinct usable rune pa
  const mundo=getBuild(hero('DrMundo'),'bottom',data,{loadoutId:'farm-tank'});assert.ok(mundo.runeOptions.every(o=>o.page.selectedPerkIds[0]!==8439));
 });
 test('combo configuration controls both economy and actual rune/item selection',()=>{
- const rengar=pair('Rengar','Ivern'),b=getBuild(hero('Rengar'),'bottom',data,{comboId:rengar.id});assert.equal(b.loadoutId,'rengar-bush');assert.ok(!b.support);assert.equal(b.items[0].id,3074);
- const ivern=getBuild(hero('Ivern'),'support',data,{comboId:rengar.id});assert.equal(ivern.loadoutId,'ivern-shield');assert.equal(ivern.granted[0].id,3865);
- const song=pair('Seraphine','Sona'),sera=getBuild(hero('Seraphine'),'bottom',data,{comboId:song.id});assert.equal(sera.loadoutId,'sera-team');assert.match(sera.sourceNote,/玩法参考/);assert.equal(sera.reference,null);
+ const rengar=pair('Rengar','Ivern'),b=getBuild(hero('Rengar'),'bottom',data,{comboId:rengar.id,loadoutId:'rengar-bush'});assert.equal(b.loadoutId,'rengar-bush');assert.ok(!b.support);assert.equal(b.items[0].id,3074);
+ const ivern=getBuild(hero('Ivern'),'support',data,{comboId:rengar.id,loadoutId:'ivern-shield'});assert.equal(ivern.loadoutId,'ivern-shield');assert.equal(ivern.granted[0].id,3865);
+ const song=pair('Seraphine','Sona'),sera=getBuild(hero('Seraphine'),'bottom',data,{comboId:song.id,loadoutId:'sera-team'});assert.equal(sera.loadoutId,'sera-team');assert.match(sera.sourceNote,/玩法启发/);assert.equal(sera.reference,null);
  const original=getBuild(hero('Seraphine'),'bottom',data,{comboId:song.id,loadoutId:'default'});assert.equal(original.loadoutId,'default');assert.ok(original.reference);
  assert.equal(comboLoadout(song,hero('Seraphine'),'mid'),null);assert.equal(getBuild(hero('Seraphine'),'mid',data,{comboId:song.id}).combo,null);
- const snake=getBuild(hero('Cassiopeia'),'bottom',data,{comboId:pair('Cassiopeia','Twitch').id,conditions:['control']});assert.equal(snake.boots,3111);assert.ok(snake.items.some(i=>i.tags.includes('Boots')));
+ const snake=getBuild(hero('Cassiopeia'),'bottom',data,{loadoutId:pair('Cassiopeia','Twitch').loadouts.bottom,comboId:pair('Cassiopeia','Twitch').id,conditions:['control']});assert.equal(snake.boots,3111);assert.ok(snake.items.some(i=>i.tags.includes('Boots')));
 });
 test('all refreshed sources retain multiple pages and selecting one changes the applied payload',()=>{
  assert.equal(new Set(Object.values(data.builds).map(ref=>ref.champion)).size,data.champions.length);

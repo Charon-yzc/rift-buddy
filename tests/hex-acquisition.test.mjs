@@ -1,10 +1,11 @@
+// Frozen 16.21 acceptance contract; tests/hex-live-bundle.test.mjs covers the actual current bundle.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {hexAugmentAcquisition,hexHandbookAugments,hexOrdinaryAugments} from '../src/core/hex-acquisition.mjs';
 import {hexAcquisitionRules} from '../src/core/hex-mode-rules.mjs';
 import {hexHeroPool} from '../src/core/hex-pool.mjs';import {hexPoolBadge,hexPoolView} from '../src/hex-pool-view.mjs';
 import {createHexRoundStore} from '../src/core/hex-round.mjs';import {renderHexComparison} from '../src/hex-view.mjs';
 import vm from 'node:vm';import {hexAugmentReference} from '../src/core/hex-augment-reference.mjs';
-const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex40-acquisition-16.21.json',import.meta.url))),base=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),data={...base,...fixture,hexBuilds:{}};
+const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex40-acquisition-16.21.json',import.meta.url))),base=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),data={...base,...fixture,hexBuilds:{}};
 const record=id=>data.augments.find(a=>a.id===id);
 
 test('official band unlocks preserve all twelve milestones without inventing account completion or this game headliner',()=>{
@@ -24,7 +25,7 @@ test('Pentakill QWER are source-labelled skill records while the internal Generi
 
 test('main-owned round input rejects system skill entries but preserves actual ordinary choices and removal of existing notes',()=>{
  const store=createHexRoundStore({newToken:()=> 'isolated'});store.select('Sona',data);let r=store.snapshot().manual;
- for(const id of [3170,3171,3172,3173,3176])for(const operation of ['compare','own'])assert.throws(()=>store.change({operation,id,context:r.context,revision:r.revision},data),/主秀技能增强不是普通三选一/);
+ const before=store.snapshot();for(const id of [3170,3171,3172,3173,3176])for(const operation of ['compare','own']){assert.throws(()=>store.change({operation,id,context:r.context,revision:r.revision},data),{message:'该特殊强化暂不能作为普通选项录入，请在图鉴查看来源。'});assert.deepEqual(store.snapshot(),before);}
  store.change({operation:'own',id:3150,context:r.context,revision:r.revision},data);r=store.snapshot().manual;assert.deepEqual(r.owned,[3150]);store.change({operation:'remove',id:3150,context:r.context,revision:r.revision},data);assert.deepEqual(store.snapshot().manual.owned,[]);
 });
 
@@ -40,7 +41,7 @@ test('current four regular phases are timing only, separate from extra offers an
 });
 
 test('version, source and identity changes never borrow the frozen 4.0 access explanation',()=>{
- for(const mutate of [d=>d.patch='16.22',d=>d.augmentVersion='16.20.1',d=>d.sources.augmentDescriptions+='changed',d=>d.augmentError='unavailable']){const d=structuredClone(data);mutate(d);assert.equal(hexAugmentAcquisition(d,record(3150)).unlock,undefined);assert.equal(hexAugmentAcquisition(d,record(3150)).ordinaryOption,true);for(const id of [3170,3171,3172,3173,3176]){assert.equal(hexAugmentAcquisition(d,record(id)).ordinaryOption,false);assert(!hexOrdinaryAugments(d).some(a=>a.id===id));}}
+ for(const mutate of [d=>d.patch='16.22',d=>d.augmentVersion='16.20.1',d=>d.sources.augmentDescriptions+='changed',d=>d.augmentError='unavailable']){const d=structuredClone(data);mutate(d);const access=hexAugmentAcquisition(d,record(3150));assert.equal(access.unlock,undefined);assert.equal(access.kind,'unknown');assert.equal(access.ordinaryOption,false);assert.equal(access.manualOption,true);assert.equal(access.note,'当前版本的普通获取资格尚未确认；仅手动记录局内实际出现或已选的强化。');for(const id of [3170,3171,3172,3173,3176]){assert.equal(hexAugmentAcquisition(d,record(id)).ordinaryOption,false);assert.equal(hexAugmentAcquisition(d,record(id)).manualOption,false);assert(!hexOrdinaryAugments(d).some(a=>a.id===id));}}
  assert.equal(hexAugmentAcquisition(data,{...record(3150),key:'Changed'}).unlock,undefined);
  for(const a of [{...record(3176),key:'Changed'},{...record(3170),id:9000},{...record(3170),key:'Changed'}]){assert.equal(hexAugmentAcquisition(data,a).ordinaryOption,false);assert.equal(hexAugmentAcquisition(data,a).displayable,false);}
  const store=createHexRoundStore({newToken:()=> 'drift'});store.select('Sona',data);const round=store.snapshot().manual;

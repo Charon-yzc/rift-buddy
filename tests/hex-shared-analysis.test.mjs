@@ -1,11 +1,12 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {hexDecision,analyzeAugmentSet} from '../src/core/hex-decisions.mjs';
 import {createHexRecommendations,hexRecommendations} from '../src/core/hex-recommendations.mjs';
 import {createAugmentComparison,compareAugments} from '../src/core/hex-compare.mjs';
-const game=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
-game.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
+const game=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
+game.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url))).entries;
 const args=(data,extra={})=>({data,hero:'Sona',options:[1011,1349,2134],owned:[1004],...extra});
 
 test('one evaluator recomputes ownership effects for every subset and empty baseline',()=>{

@@ -1,0 +1,6 @@
+{
+  "sourceCommit": "ad2b62bc18b9e191fc1d61ef80a0429508e516c4",
+  "source": "src/core/catalog-data.json",
+  "sha256": "7e1154012845f99d43c5722b12c8de88ded033a5338655d4c3875080e94374b1",
+  "purpose": "Historical catalog replay contracts; never current game advice"
+}

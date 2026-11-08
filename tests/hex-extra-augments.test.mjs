@@ -1,3 +1,4 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -15,10 +16,10 @@ import {captureRoomConfigurations} from '../src/core/room-configuration.mjs';
 import {renderHexComparison} from '../src/hex-view.mjs';
 import {renderGuide} from '../src/guide-view.mjs';
 import {defaultState,saveState,readState,createBackup,validateState} from '../services/storage.mjs';
-const base=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
+const base=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
 const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-item-synergies-16.21.json',import.meta.url)));
 const data={...base,...fixture,champions:base.champions,items:{...base.items,...fixture.items},augments:base.augments.map(a=>fixture.augments.find(row=>row.id===a.id)||a)};
-data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
+data.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url))).entries;
 const ordinary=data.augments.filter(a=>hexAugmentAcquisition(data,a).ordinaryOption).map(a=>a.id);
 const marks=(last,length)=>[...ordinary.filter(id=>![last,1011,1349,2134,1047,1048].includes(id)).slice(0,length-1),last];
 const selection=owned=>({id:'Sona',role:'support',mode:'hex',ownedAugmentIds:owned,compareIds:[1011,1349,2134]});

@@ -1,3 +1,4 @@
+// Frozen 16.21 acceptance contract; tests/hex-live-bundle.test.mjs covers the actual current bundle.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,8 +12,8 @@ import {getBuild} from '../src/core/builds.mjs';
 import {hexMicroHint} from '../src/core/hex-micro-hint.mjs';
 import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';
 import {hexPairedMicroRoutes} from '../src/core/hex-micro-routes.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url),'utf8')).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url),'utf8'));
+data.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url),'utf8')).entries;
 const key=id=>data.champions.find(h=>h.id===id).key;
 const client=()=>({connected:true,phase:'ChampSelect',mode:{id:'hex'},party:{members:[{cellId:0},{cellId:2},{cellId:99}]},session:{gameId:1,localPlayerCellId:0,myTeam:['Lux','Ashe','Veigar','Sona','Jinx'].map((id,cellId)=>({cellId,championId:key(id)})),bench:{championIds:['Malphite','Xerath','Lux','Ashe','Sona'].map(key)}}});
 test('party lineups use current cells and shared bench, excluding ordinary teammates and duplicate heroes',()=>{

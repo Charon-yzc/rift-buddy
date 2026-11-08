@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {buildFavoriteId,findSavedBuild,selectedBuildFields} from '../src/core/build-favorites.mjs';
 import {getBuild} from '../src/core/builds.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {defaultState,validateState,mergeState} from '../services/storage.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {companionPlanView} from '../src/companion-view.mjs';
@@ -12,7 +13,7 @@ import {laterItemSelector} from '../src/build-options-view.mjs';
 import {createItemSet,validateItemSet} from '../src/core/item-sets.mjs';
 
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const value=(selection)=>({...selection,conditions:selection.conditions||[],build:getBuild(data.champions.find(c=>c.id===selection.id),selection.role,data,selection)});
 const base={id:'Volibear',role:'top',mode:'rift',coreIndex:0};

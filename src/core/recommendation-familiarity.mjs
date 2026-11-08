@@ -48,7 +48,7 @@ export function familiarityLineups(fixed,targets,candidates,weights,seed='',limi
 
 // Use log probabilities so a five-person product cannot underflow. This changes
 // selection frequency only, never the composition's mechanism score.
-export function familiarityWinner(entries,targets,weights,seed,index,{bestVariant=false,variantPriority=null,available}={}){
+export function familiarityWinner(entries,targets,weights,seed,index,{bestVariant=false}={}){
  const weighted=targets.filter(role=>weights[role]);if(!weighted.length)return null;
  const groups=new Map();
  for(const entry of entries){
@@ -61,19 +61,7 @@ export function familiarityWinner(entries,targets,weights,seed,index,{bestVarian
  const max=Math.max(...[...groups.values()].map(group=>group.log));if(!Number.isFinite(max))return null;
  let winner=null,best=Infinity;
  for(const group of groups.values()){const rank=race(seed,`preference:${index}:${group.key}`,Math.exp(group.log-max));if(rank<best){best=rank;winner=group;}}
- // Preserve the original standalone contract for callers without a live pool.
- if(available===undefined){
-  const fit=entry=>entry.compositionFit?.rawScore??entry.score??0,ceiling=Math.max(...winner.entries.map(fit));
-  let variants=bestVariant?winner.entries.filter(entry=>fit(entry)>=ceiling-5):winner.entries;
-  if(variantPriority){const priority=Math.max(...variants.map(variantPriority));variants=variants.filter(entry=>variantPriority(entry)===priority);}
-  return variants.map(entry=>({entry,rank:seededFraction(seed,`variant:${index}:`+entry.slots.map(s=>s.role+':'+(s.champion||'')).sort().join('|'))})).sort((a,b)=>a.rank-b.rank)[0].entry;
- }
- // The group is sampled from the original population even after some of its
- // variants have been shown. An exhausted group leaves this draw empty.
- const variants=winner.entries.filter(entry=>available.has(entry));
- if(!variants.length)return null;
- return variants.map(entry=>{
-  const key=entry.slots.map(s=>s.role+':'+(s.champion||'')).sort().join('|');
-  return {entry,key,fit:Number.isFinite(entry.recommendationFit?.score)?entry.recommendationFit.score:-Infinity,priority:variantPriority?variantPriority(entry):0,rank:seededFraction(seed,`variant:${index}:`+key)};
- }).sort((a,b)=>a.fit===b.fit?b.priority-a.priority||a.rank-b.rank||a.key.localeCompare(b.key):b.fit-a.fit)[0].entry;
+ const fit=entry=>entry.compositionFit?.rawScore??entry.score??0,ceiling=Math.max(...winner.entries.map(fit));
+ const variants=bestVariant?winner.entries.filter(entry=>fit(entry)>=ceiling-5):winner.entries;
+ return variants.map(entry=>({entry,rank:seededFraction(seed,`variant:${index}:`+entry.slots.map(s=>s.role+':'+(s.champion||'')).sort().join('|'))})).sort((a,b)=>a.rank-b.rank)[0].entry;
 }

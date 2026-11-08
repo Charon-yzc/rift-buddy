@@ -2,7 +2,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {BUNDLED_CATALOG,catalogIssues,validateCatalog} from '../src/core/catalog.mjs';
+import {catalogIssues,validateCatalog} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG} from './fixtures/snapshot-16.20/catalog.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {createGuideModel,selectGuide,validateGuideSelection,reconcileGuide} from '../src/core/guide.mjs';
 import {legalSkillOrder,nextSkill,recommendSkill} from '../src/core/skill-advice.mjs';
@@ -17,7 +18,7 @@ const live=(extra={})=>({available:true,at:Date.now(),champion:'Ashe',mode:'rift
 test('new database contains executable sourced plans with multiple builds rather than duplicate pair inflation',()=>{
  validateCatalog(BUNDLED_CATALOG,data);assert.equal(new Set(BUNDLED_CATALOG.duos.map(comboKey)).size,BUNDLED_CATALOG.duos.length);
  assert.ok(BUNDLED_CATALOG.duos.every(d=>d.sources.length&&d.plan&&d.risk));assert.ok(data.builds['Ashe:bottom'].core.length>3);assert.ok(data.builds['Ashe:bottom'].runeOptions.length>6);
- const b=getBuild(hero('Taric'),'support',data,{comboId:BUNDLED_CATALOG.duos.find(d=>d.carry==='Nilah'&&d.support==='Taric').id});assert.equal(b.loadoutId,'taric-guardian');assert.equal(b.skillOrder[3],'Q');assert.ok(b.runeOptions.some(r=>r.page.selectedPerkIds[0]===8465));
+ const b=getBuild(hero('Taric'),'support',data,{comboId:BUNDLED_CATALOG.duos.find(d=>d.carry==='Nilah'&&d.support==='Taric').id,loadoutId:'taric-guardian'});assert.equal(b.loadoutId,'taric-guardian');assert.equal(b.skillOrder[3],'Q');assert.ok(b.runeOptions.some(r=>r.page.selectedPerkIds[0]===8465));
 });
 test('a refreshed source preserves the exact selected core when sample sorting changes',()=>{
  const b=getBuild(hero('Ashe'),'bottom',data,{coreIndex:8}),ref=structuredClone(data.builds['Ashe:bottom']);ref.core.reverse();

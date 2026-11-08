@@ -6,7 +6,7 @@ import {createPreparationStore,configurationKey,configurationPatch,mergeConfigur
 import {selectedBuildFields,buildFavoriteId,findSavedBuild} from '../src/core/build-favorites.mjs';
 import {captureTeamConfigurations,validateTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
-import {selectBuildSource} from '../src/core/build-source.mjs';
+import {selectBuildSource,DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {defaultState,validateState,createBackup,mergeState} from '../services/storage.mjs';
 import {summonerSelector} from '../src/summoner-selection-view.mjs';
 import {parseBuildJSON} from '../services/build-json.mjs';
@@ -15,7 +15,7 @@ import {sourceStatisticsLabel} from '../src/source-statistics-view.mjs';
 import {runeSelector,skillSelector} from '../src/build-options-view.mjs';
 import {coreRouteChoices} from '../src/draft-result-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),base={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,conditions:[]},pair=['SummonerDot','SummonerFlash'];
 const build=(selection,fixture=data)=>getBuild(fixture.champions.find(c=>c.id===selection.id),selection.role,fixture,selection);
 test('player Flash preference follows new heroes and combo identities without overriding explicit pairs',()=>{
@@ -117,7 +117,7 @@ test('configuration cards expose independent core, full-page and skill results w
  Object.assign(ref.runeOptions[0],{samples:403,wins:201,winRate:49.876,pickRate:null});
  ref.skillOptions=[{id:'source-skill-wqewwrwqwqrqqee',order:'WQEWWRWQWQRQQEE',samples:205,wins:100,winRate:48.78,pickRate:30}];
  const b=build({...base,loadoutId:'default'},fixture);
- assert.match(coreRouteChoices(b,0,fixture),/601 场核心三件样本 · 胜率 50.1% · 使用率 40.0%/);
+ assert.match(coreRouteChoices(b,0,fixture),/601 场原始核心三件样本 · 胜率 50.1% · 使用率 40.0%/);
  assert.match(runeSelector(b,fixture),/403 场完整符文页样本 · 胜率 49.9% · 使用率未提供/);
  assert.match(skillSelector(b),/205 场加点样本 · 胜率 48.8% · 使用率 30.0%/);
  const custom={...b,runeOptions:[{...b.runeOptions[0],source:'个人自选',samples:null,winRate:null,pickRate:null}]};

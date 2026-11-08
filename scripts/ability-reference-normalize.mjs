@@ -4,6 +4,7 @@ import {correctSemanticDescriptions} from './ability-reference-semantics.mjs';
 import {correctDirectRankFields} from './ability-reference-values.mjs';
 import {correctAdditionalForms} from './ability-reference-forms.mjs';
 import {correctGrowthDescriptions} from './ability-reference-growth.mjs';
+import {retiredAbilityAlternate,correctCurrentPatch} from './ability-reference-current.mjs';
 
 export const resolvedText=v=>String(v??'').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim();
 const round=v=>Math.round(v*10000)/10000;
@@ -20,7 +21,10 @@ export function normalizeAbilityReference(game,records,{overview,bins,sources,fe
   const abilities=['passive','q','w','e','r'].map((key,i)=>{
    const dd=i?hero.mechanics.spells[i-1]:hero.mechanics.passive;
    const candidates=raw.spells.filter(s=>s.spellKey===key&&s.name===dd.name&&resolvedText(s.description));assert.equal(candidates.length,1,hero.id+':'+key);
-   assert(raw.spells.filter(s=>s.spellKey===key&&!candidates.includes(s)).every(s=>!resolvedText(s.description)),'unhandled nonempty alternate '+hero.id+key);
+   for(const alternate of raw.spells.filter(s=>s.spellKey===key&&!candidates.includes(s)&&resolvedText(s.description))){
+    assert(retiredAbilityAlternate(game.patch,hero.id,key,alternate,candidates[0]),'unhandled nonempty alternate '+hero.id+key);
+    corrections.push({champion:hero.id,key:key.toUpperCase(),field:'retiredAlternate',old:alternate.name,value:candidates[0].name,evidence:source.url});
+   }
    const s=candidates[0],maxRank=i?hero.id==='Aphelios'&&i<4?null:dd.maxrank:null;
    const metrics=i?[
     metric('冷却',dd.cooldown,'秒',basis(dd.maxrank)),
@@ -64,13 +68,14 @@ export function normalizeAbilityReference(game,records,{overview,bins,sources,fe
  }
  const syndra=ability('Syndra','Q'),upgradedQ=spell('Syndra','SyndraQUpgrade');assert.deepEqual(upgradedQ.mMaxAmmo.slice(1,6),[2,2,2,2,2]);
  syndra.metrics.push(metric('超然升级后充能',upgradedQ.mAmmoRechargeTime.slice(1,6),'秒',basis(5)),noteMetric('升级后储存','达到被动的升级条件后，Q最多储存2次；未升级时用普通冷却'));
- const replace=(id,key,old,next,evidence)=>{const a=ability(id,key);assert.equal(a.description.split(old).length,2,id+key+old);a.description=a.description.replace(old,next);corrections.push({champion:id,key,field:'description',old,value:next,evidence});};
+ const replace=(id,key,old,next,evidence)=>{const a=ability(id,key);if(game.patch==='16.22')old=old.replaceAll('星辰层数','星尘层数');assert.equal(a.description.split(old).length,2,id+key+old);a.description=a.description.replace(old,next);corrections.push({champion:id,key,field:'description',old,value:next,evidence});};
  // Curated source corrections are patch-gated and guarded by both exact source
  // prose and same-version game-data fields. They must be reviewed next patch.
- assert(['16.20','16.21'].includes(game.patch),'Review the curated special-skill normalization for the new patch first');
+ assert(['16.20','16.21','16.22'].includes(game.patch),'Review the curated special-skill normalization for the new patch first');
  correctSemanticDescriptions({patch:game.patch,ability,spell,values,replace,dictionary});
  correctGrowthDescriptions({patch:game.patch,ability,spell,values,replace,dictionary});
  correctDirectRankFields({patch:game.patch,ability,spell,values,replace,dictionary});
+ correctCurrentPatch({patch:game.patch,ability,spell,values,replace,corrections});
  const rengarQ=ability('Rengar','Q'),rengarTooltip=dictionary[spell('Rengar','RengarQ').mClientData.mTooltipData.mLocKeys.keyTooltipExtended.toLowerCase()];
  assert(rengarTooltip.includes('第一次攻击造成')&&!rengarTooltip.includes('暴击'));
  assert.equal(rengarQ.description.split('第一次攻击会暴击，造成').length,3);

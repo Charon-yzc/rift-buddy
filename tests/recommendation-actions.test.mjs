@@ -1,4 +1,6 @@
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
+import './fixtures/snapshot-16.20/catalog.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,7 +8,7 @@ import path from 'node:path';
 import {createSlots,recommend,currentCombo} from '../src/core/recommend.mjs';
 import {createCooperationGraph,cooperationPlan} from '../src/core/cooperation.mjs';
 import {TRIOS} from '../src/core/rules.mjs';
-import {BUNDLED_CATALOG,configureCatalog} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG} from './fixtures/snapshot-16.20/catalog.mjs';
 import {generateCreativeTrios} from '../src/core/creative-trios.mjs';
 import {captureCreativePlan,creativePlanId,validateCreativePlan,resultCooperation,selectPartyRoute} from '../src/core/creative-plan.mjs';
 import {captureTeamConfigurations,restoreTeamFavorite} from '../src/core/team-favorites.mjs';
@@ -20,21 +22,19 @@ import {resultPlayCard} from '../src/play-card-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
 import {resultAsText} from '../src/result-text.mjs';
 
-const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
-// Job/route tests use simulated current reviews; old real catalog records are
-// separately covered by the stale/invalid boundary test below.
-const fixtureCatalog=structuredClone(BUNDLED_CATALOG);for(const trio of fixtureCatalog.trios)trio.patch=data.patch;configureCatalog(fixtureCatalog);test.after(()=>configureCatalog(BUNDLED_CATALOG));
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);
+// Replay the exact historical catalog alongside its 16.20 game snapshot.
 const hero=id=>data.champions.find(c=>c.id===id),member=(champion,role)=>({champion,role});
 const setup=members=>createSlots().map(s=>({...s,party:members.some(m=>m.role===s.role),champion:members.find(m=>m.role===s.role)?.champion||null,locked:members.some(m=>m.role===s.role)}));
 
 test('expanded curated trios assign jobs to the actual actor in the runtime catalog and all three member guides',()=>{
  const trios=TRIOS.filter(t=>t.id.startsWith('expand-'));assert.equal(trios.length,18);
  for(const trio of trios){
-  const slots=setup(trio.members),[result]=recommend({slots,champions:data.champions,scope:'party'});
-  assert.equal(result.trio.id,trio.id);assert.equal(resultMemberJobs(result,data).length,3);
+  const slots=setup(trio.members),result={slots,scope:'party',trio};result.creativePlan=captureCreativePlan(result,data);
+  assert.equal(result.creativePlan.curated.id,trio.id);assert.equal(resultMemberJobs(result,data).length,3);
   for(const m of trio.members){
    assert.doesNotMatch(m.job,/^保持输出距离并确认跟进窗口$|^控制与保护错开，提前约好撤退$/);
-   const combo=currentCombo(slots,m.champion,m.role),b=getBuild(hero(m.champion),m.role,data,{comboId:combo.id});
+   const b=getBuild(hero(m.champion),m.role,data,{comboId:result.creativePlan.id,creativePlan:result.creativePlan,loadoutId:m.loadoutId||'default'});
    assert.equal(b.combo.ownJob,m.job);
   }
  }
@@ -90,7 +90,7 @@ test('four and five friends receive full-member honest plans that survive disk, 
   const slots=setup(members),before=structuredClone(slots),[result]=recommend({slots,champions:data.champions,scope:'party'}),plan=captureCreativePlan(result,data);result.creativePlan=plan;
   assert.deepEqual(slots,before);assert.equal(result.origin,'adaptive');assert.equal(plan.archetype,'shared');assert.equal(plan.members.length,members.length);assert.equal(plan.steps.length,3);assert.equal(plan.shared.bonus,0);assert.deepEqual(plan.shared.edges,[]);assert.equal(plan.shared.sourceUrls.length,members.length);
   assert.match(plan.feasibility,/未确认四人或五人独特协同.*不代表统计优势/);
-  for(const m of plan.ordered){assert.match(m.job,/[QWER]|普攻/);assert.match(m.job,/成立前先确认：.*停止条件：/);}
+  for(const m of plan.ordered){assert.match(m.job,/[QWER]|普攻/);assert.equal(plan.shared.memberJobs.find(job=>job.champion===m.champion&&job.role===m.role).job,m.job);assert.ok(plan.shared.conditions.length&&plan.shared.failures.length);}
   const configs=captureTeamConfigurations(result,data,createPreparationStore());assert.equal(configs.length,members.length);
   await fs.mkdir('.local',{recursive:true});const root=await fs.mkdtemp(path.resolve('.local/full-party-state-test-'));
   const favorite={id:'party-'+members.length+'-'+members[0].champion,type:'team',title:result.title,slots,creativePlan:plan,configurations:configs,scope:'party',style:'fun',version:data.version,createdAt:plan.createdAt};
@@ -124,16 +124,16 @@ test('wide-draft bounds preserve locked manual friends and exact role pools whil
 
 test('pending or invalid curated subgroups cannot supply current full-party jobs',()=>{
  const members=[member('Urgot','top'),member('Udyr','jungle'),member('Orianna','mid'),member('Varus','bottom'),member('Milio','support')],slots=setup(members),trio=TRIOS.find(t=>t.id==='expand-orianna-varus-milio');
- const [valid]=recommend({slots,champions:data.champions,scope:'party'});assert.ok(valid.adaptive.memberJobs.find(m=>m.champion==='Orianna').job.includes(trio.members[0].job));
+ const [valid]=recommend({slots,champions:data.champions,scope:'party'});assert.ok(valid.adaptive.memberJobs.length===members.length);for(const m of trio.members)assert.ok(!valid.adaptive.memberJobs.find(j=>j.champion===m.champion).job.includes(m.job),'Missing review cannot silently certify a historical subgroup');
  for(const flag of ['invalid','stale']){const [invalid]=recommend({slots,champions:data.champions,scope:'party',catalogStatus:{[trio.id]:{[flag]:true}}});for(const m of trio.members)assert.ok(!invalid.adaptive.memberJobs.find(j=>j.champion===m.champion).job.includes(m.job));}
 });
 
-test('full-party route changes preserve curated defaults and carry chosen jobs and conditions through favorites and guides',async()=>{
+test('full-party route changes preserve ordinary defaults and carry chosen jobs and conditions through favorites and guides',async()=>{
  const members=[member('Urgot','top'),member('Udyr','jungle'),member('Orianna','mid'),member('Varus','bottom'),member('Milio','support')];
  const slots=setup(members),[result]=recommend({slots,champions:data.champions,scope:'party'}),original=captureCreativePlan(result,data),backup=original.shared.routes[1];
- assert.ok(original.shared.routes.length>=2);assert.equal(original.shared.routes[0].id.startsWith('curated:'),true);
- const trio=TRIOS.find(t=>'curated:'+t.id===original.shared.routes[0].id);
- for(const m of trio.members)assert.ok(original.ordered.find(j=>j.champion===m.champion).job.includes(m.job));
+ assert.ok(original.shared.routes.length>=2);assert.equal(original.shared.routes[0].id.startsWith('curated:'),false);
+ assert.deepEqual(original.ordered,original.shared.routes[0].memberJobs);
+ for(const m of members)assert.ok(original.ordered.some(j=>j.champion===m.champion&&j.role===m.role));
  const before=structuredClone(original),chosen=selectPartyRoute(original,backup.id);
  assert.deepEqual(original,before);assert.notEqual(chosen.id,original.id);assert.deepEqual(chosen.ordered,backup.memberJobs);
  assert.equal(chosen.shared.conditions[1],backup.condition);assert.equal(chosen.shared.failures[1],backup.failure);

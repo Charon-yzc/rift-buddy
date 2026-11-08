@@ -1,29 +1,33 @@
+import {reviewBaseline,reviewSourceAnchors} from '../src/core/catalog-review.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 // Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import {BUNDLED_CATALOG,validateCatalog,mergePersonal,configureCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {validateCatalog,mergePersonal,configureCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG,historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 import {createCatalogStore} from '../services/catalog-store.mjs';
 import {personalCombo,loadPersonalCombo} from '../src/core/personal-combo.mjs';
 import {comboMembers,comboKey} from '../src/core/combo-members.mjs';
-import {createSlots,recommend,currentCombo} from '../src/core/recommend.mjs';
+import {createSlots,recommend as recommendActual,currentCombo} from '../src/core/recommend.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {combinationRows} from '../src/draft-library-view.mjs';
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const values={name:'我们的野中', 'role-0':'jungle','hero-0':'Graves','job-0':'保持可输出距离，跟已命中魅惑打一轮后退回刷野','loadout-0':'default','role-1':'mid','hero-1':'Ahri','job-1':'处理好中线，再用实际命中的魅惑让搭档接输出','loadout-1':'default',difficulty:'适中',tempo:'early',why:'先控再输出，保住两人的兵线和刷野经济',plan:'中线能离开且双方在场时约好同一目标\n魅惑实际命中再接输出，空了就各自返回经济',risk:'双方距离脱节或魅惑落空就不追',window:'实际具备魅惑，搭档能输出且有退出路线',early:'中路先处理兵线，打野不为等待浪费整轮刷野',economy:'中路补刀，打野刷野；支援失败各自回到原经济',source:'https://example.com/our-plan'};
-const entry=()=>personalCombo({kind:'duo',values,patch:'16.20',today:'2026-10-09',id:'local-mid-jg'});
+const entry=()=>{const e=personalCombo({kind:'duo',values,patch:'16.20',today:'2026-10-09',id:'local-mid-jg'});e.reviewBaseline=reviewBaseline(e,data.catalog,data);e.reviewSourceAnchors=reviewSourceAnchors(e,data.catalog,data);return e;};
 const slots=()=>createSlots().map(s=>({...s,party:['jungle','mid'].includes(s.role),champion:s.role==='jungle'?'Graves':null,locked:s.role==='jungle'}));
 
+historicalData(data);
 test('cross-lane personal duos preserve actual roles, jobs and complete configs across store restart',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-personal-pair-')),store=await createCatalogStore({root,getData:()=>data}),pair=entry();
  const saved=await store.savePersonal(pair);assert.equal(saved.info.personalCount,1);assert.ok(saved.catalog.duos.some(d=>d.id===pair.id));assert.ok(!saved.catalog.trios.some(d=>d.id===pair.id));
  const reopened=await createCatalogStore({root,getData:()=>data});assert.deepEqual(reopened.export().duos.find(d=>d.id===pair.id),pair);
  configureCatalog(reopened.export());try{
-  const rows=recommend({slots:slots(),champions:data.champions,scope:'party',play:{unusual:false},limit:3}),authored=rows.find(row=>row.duo?.id===pair.id);assert.ok(authored,'the saved personal completion remains discoverable beside better-fitting alternatives');assert.equal(authored.slots.find(s=>s.role==='mid').champion,'Ahri');assert.deepEqual(authored.duo.members,pair.members);for(const row of rows)assert.deepEqual(row.slots.find(s=>s.role==='jungle'),slots().find(s=>s.role==='jungle'));
-  const loaded=loadPersonalCombo(slots(),pair);assert.equal(currentCombo(loaded,'Ahri','mid').id,pair.id);
+  const rows=recommend({catalogStatus:reopened.summary().info.status,slots:slots(),champions:data.champions,scope:'party',rolePools:{mid:{mode:'only',heroes:['Ahri']}},play:{unusual:false},limit:3}),authored=rows.find(row=>row.duo?.id===pair.id);assert.ok(authored,'the explicit saved personal completion remains executable under the player hero constraint');assert.equal(authored.slots.find(s=>s.role==='mid').champion,'Ahri');assert.deepEqual(authored.duo.members,pair.members);for(const row of rows)assert.deepEqual(row.slots.find(s=>s.role==='jungle'),slots().find(s=>s.role==='jungle'));
+  const loaded=loadPersonalCombo(slots(),pair);assert.equal(currentCombo(loaded,'Ahri','mid',reopened.summary().info.status,null,null,{patch:data.patch}).id,pair.id);
   for(const m of pair.members){const build=getBuild(data.champions.find(c=>c.id===m.champion),m.role,data,{comboId:pair.id});assert.equal(build.combo.ownJob,m.job);assert.equal(build.combo.economy,pair.economy);assert.equal(build.combo.play.stages.key.ownAction,m.job);assert.equal(build.runePage.selectedPerkIds.length,9);assert.equal(build.missing.length,0);}
   const html=combinationRows({...data,catalog:reopened.export()},{kind:'duos',style:'all',query:'我们的野中'},loaded);assert.match(html,/格雷福斯/);assert.match(html,/data-role="jungle"/);assert.match(html,/data-role="mid"/);assert.ok(!html.includes('data-role="bottom"'));assert.match(html,/中路配置/);
  }finally{configureCatalog(BUNDLED_CATALOG);}
@@ -82,3 +86,6 @@ test('empty cross-lane parties surface existing concrete mechanism plans before 
   const empty=createSlots().map(s=>({...s,party:roles.includes(s.role)}));const [first]=recommend({slots:empty,champions:data.champions,scope:'party',style:'fun',play:{unusual:false},limit:3});assert.ok(first.adaptive||first.duo||first.trio);assert.notEqual(first.origin,'generated');
  }
 });
+
+// Supply the same version/source context as the application recommendation call.
+function recommend(input){return recommendActual({patch:data.patch,builds:data.builds,catalogStatus:data.catalogInfo?.status,...input});}

@@ -64,12 +64,17 @@ async function run(){
   await until(async()=>JSON.stringify((await state()).guide.selection)===JSON.stringify(guideBefore),'Source roundtrip changed guide choice');
   await click('[data-action=close]');await click('[data-action=navigate][data-route=draft]');await click('[data-action=recommend]');
   await until(()=>js('document.querySelectorAll(".result-card").length>0'),'Restricted Aphelios/Thresh recommendation missing');
-  await click('.result-card [data-action=build][data-id=Aphelios]');await click('[data-action=build-core][data-index="1"]');await selectRune(await differentRune());
+  // Use the real generated member identity, then edit its explicit source
+  // configuration. An avatar no longer adopts a proposal's private build.
+  await click('[data-action=favorite-result][data-index="0"]');
+  const teamContext=(await state()).favorites[0].configurations.find(s=>s.id==='Aphelios');assert.ok(teamContext.comboId&&teamContext.creativePlan);assert.equal(teamContext.loadoutId,'default');
+  await click('[data-action=favorite-result][data-index="0"]');assert.equal((await state()).favorites.length,0);
+  await open('Aphelios','bottom',teamContext);await click('[data-action=build-core][data-index="1"]');await selectRune(await differentRune());
   const teamChoice=await read();await click('[data-action=close]');await click('[data-action=favorite-result][data-index="0"]');
   await until(()=>js('document.querySelector("[data-action=favorite-result][data-index=\\"0\\"]").classList.contains("active")'),'Favorite star did not light');
   const favorite=(await state()).favorites[0];assert.equal(favorite.type,'team');assert.equal(favorite.configurations.length,2);
   const member=favorite.configurations.find(s=>s.id==='Aphelios');assert.equal(member.runeId,teamChoice.rune);assert.equal(member.coreIndex,Number(teamChoice.core));assert.ok(member.comboId);
-  await click('.result-card [data-action=build][data-id=Aphelios]');await click('[data-action=build-core][data-index="0"]');await selectRune(await differentRune());await click('[data-action=close]');
+  await open('Aphelios','bottom',member);await click('[data-action=build-core][data-index="0"]');await selectRune(await differentRune());await click('[data-action=close]');
   await click('[data-action=navigate][data-route=favorites]');await click('[data-action=open-favorite][data-index="0"]');
   await until(async()=>{const s=await state();return s.preparations.some(p=>p.id==='Aphelios'&&p.comboId===member.comboId&&p.runeId===member.runeId&&p.coreId===member.coreId);},'Team load did not restore saved member choices');
   await open('Aphelios');assert.deepEqual(await read(),teamChoice);

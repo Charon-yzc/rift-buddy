@@ -1,0 +1,36 @@
+{
+  "patch": "16.22",
+  "source": "https://game.gtimg.cn/images/lol/act/img/js/hero/800.js",
+  "alternate": {
+    "heroId": "800",
+    "spellKey": "q",
+    "name": "耀光齐射",
+    "description": "梅尔释放一道由【6/7/8/9/10】个耀光飞弹组成的弹幕，飞弹会在目标位置周围爆炸。\n命中的第一次爆炸造成(【60/85/110/135/160】+55%【法术强度】)魔法伤害并且每次后续爆炸造成(【5/7/9/11/13】+5%【法术强度】)魔法伤害，至多增加至(【60/85/110/135/160】+【25/42/63/88/117】)魔法伤害总和。",
+    "abilityIconPath": "https://game.gtimg.cn/images/lol/act/img/spell/MelQ.png",
+    "abilityVideoPath": "champion-abilities/0800/ability_0800_Q1.webm",
+    "dynamicDescription": "梅尔发射一连串耀光飞弹，飞弹会在目标位置周围爆炸，对范围内的敌人造成多段伤害。",
+    "cost": "70/75/80/85/90",
+    "costburn": "70/75/80/85/90",
+    "cooldown": "10/9/8/7/6",
+    "cooldownburn": "10/9/8/7/6",
+    "range": "950/950/950/950/950",
+    "cooldownupgrade": "10/9/8/7/6",
+    "costupgrade": "70/75/80/85/90"
+  },
+  "primary": {
+    "heroId": "800",
+    "spellKey": "q",
+    "name": "耀光弹幕",
+    "description": "梅尔释放一道由【6/7/8/9/10】个耀光飞弹组成的弹幕，飞弹会在目标位置周围爆炸。\n命中的第一次爆炸造成(60+25%【法术强度】)魔法伤害并且每次后续爆炸造成(【5/10/15/20/25】+8%【法术强度】)魔法伤害，至多增加至(60+【25/60/105/160/225】+【65%/73%/81%/89%/97%】【法术强度】)魔法伤害总和。",
+    "abilityIconPath": "https://game.gtimg.cn/images/lol/act/img/spell/MelQ.png",
+    "abilityVideoPath": "champion-abilities/0800/ability_0800_Q1.webm",
+    "dynamicDescription": "梅尔发射一阵弹幕，造成魔法伤害。命中敌方英雄会缩减该技能的冷却时间。",
+    "cost": "60/65/70/75/80",
+    "costburn": "60/65/70/75/80",
+    "cooldown": "10/9/8/7/6",
+    "cooldownburn": "10/9/8/7/6",
+    "range": "950/950/950/950/950",
+    "cooldownupgrade": "10/9/8/7/6",
+    "costupgrade": "60/65/70/75/80"
+  }
+}

@@ -1,9 +1,10 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import vm from 'node:vm';
 import {renderHexComparison} from '../src/hex-view.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {createHexRoundStore,hexRoundForHero} from '../src/core/hex-round.mjs';
 import {readOnlyConfigurationMarkup,readOnlyConfigurationAction} from '../src/companion-view.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const plan=(hero,items)=>({selection:{id:hero,mode:'hex'},build:{champion:hero,mode:'hex',items:items.map(id=>data.items[id])}});
 const input={data,hero:'Ahri',options:[],owned:[1318]};
 test('workbench exposes the same named upgrade as the guide without inventing ownership or changing a plan',()=>{

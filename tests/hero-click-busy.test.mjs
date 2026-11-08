@@ -16,7 +16,7 @@ function busyContext({busy=true,phase='ChampSelect',mode='rift',selectionMode=nu
  const client={connected:true,phase,mode:{id:mode},session:{gameId:'777',localPlayerCellId:1,myTeam:[{cellId:1,championId:locked?hero.key:0,assignedPosition:'BOTTOM',championPickIntent:0}]}};
  const context=vm.createContext({
   structuredClone,api:{prepareSelection:writes||(async()=>{throw Error('must not reach client in this test');})},
-  client,clientPreparing:busy,runeApplying:false,itemSetPending:null,
+  client,clientPreparing:busy,runeApplying:false,itemSetPending:null,pendingBuildSourceEpoch:null,buildSourceEpoch:0,selectionReviewStamp:()=>'',pendingReviewChanged:()=>false,ownManualRole:()=>'',
   selectedClientPreparation:()=>mode==='hex'?{...plan,selection:{...plan.selection,mode:'hex'}}:plan,hexQuickSelectionRevision:0,clientPreparationPlan,data,readOnlyPreparation:()=>false,
   runeWriteContext,preparationGameId:()=> '777',clientPreparationKey,activeCreativePlan:null,
   preparationTarget:null,preparationPendingKey:'',clientPreparationStatuses:new Map(),render(){},buildView:null,

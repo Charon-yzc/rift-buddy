@@ -4,6 +4,7 @@ import {canonicalFamiliarity,localChampionFamiliarity,roleFamiliarityWeights,fam
 import {recommend,createSlots} from '../src/core/recommend.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
 import vm from 'node:vm';
+import {recommendationConditionsKey} from '../src/core/recommendation-input.mjs';
 const {champions}=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
 const profile=(counts,mass=.85,member='local:a')=>({member,mass,usage:{sampled:Object.values(counts).reduce((a,b)=>a+b,0),counts}});
 const bottom=()=>createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),...(s.role==='support'?{champion:'Nami',locked:true}:{})}));
@@ -58,7 +59,7 @@ test('best teammate variants retain the hero draw mass while excluding clearly w
 });
 
 test('an explicit tempo cannot silently fall back to a familiar hero that does not match it',()=>{
- const options={...input(),play:{tempo:'growth'},randomSeed:'tempo',limit:30},ordinary=recommend(options);
+ const options={...input(),rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx']}},play:{tempo:'growth'},randomSeed:'tempo',limit:30},ordinary=recommend(options);
  assert.ok(ordinary.some(entry=>entry.strategy.matched));
  assert.equal(ordinary.find(entry=>entry.slots.find(s=>s.role==='bottom').champion==='Ashe').strategy.matched,false);
  const strict=recommend({...options,familiarityByRole:{bottom:profile({Ashe:10},1)}});
@@ -114,9 +115,9 @@ test('actual app summary notifications cancel an old worker only for changed pre
  const source=fs.readFileSync(new URL('../src/app.mjs',import.meta.url),'utf8'),extract=(a,b)=>source.slice(source.indexOf(a),source.indexOf(b,source.indexOf(a)));
  let finish,cancelled=0,queued=0;const summary={revision:1,status:'ready',session:'a'.repeat(32),usage:profile({Ahri:500}).usage};
  const context=vm.createContext({data:{champions},client:{connected:true,session:{localPlayerCellId:1}},slots:createSlots().map(s=>s.role==='mid'?{...s,clientCellId:1}:s),scope:'party',saved:{preferences:{familiarityMass:.85}},championUsage:summary,route:'draft',windowLayout:{docked:false},history:{observeClient(){}},
-  recommendationKey,localChampionFamiliarity,results:[{id:'old'}],offset:0,generating:false,recommendationRun:0,autoRecommendationKey:'old',activeRecommendation:null,autoRecommendTimer:null,recommendationError:'',resultsSignature:'',showAllCandidates:false,clearTimeout,render(){},markResultStale(){},cancelRecommendationReveal(){},toast(){},queueCompanionRecommendation(){queued++;},resultCreativePlan(){throw Error('stale completion was accepted');},
+  recommendationKey,recommendationConditionsKey,performance,recommendationFactoryGeneration:0,recommendationSearchActive:false,communityAfter:'',recommendationRunner:{invalidate(){},dispose(){}},localChampionFamiliarity,results:[{id:'old'}],offset:0,generating:false,recommendationRun:0,autoRecommendationKey:'old',activeRecommendation:null,autoRecommendTimer:null,recommendationError:'',resultsSignature:'',showAllCandidates:false,clearTimeout,render(){},markResultStale(){},cancelRecommendationReveal(){},toast(){},queueCompanionRecommendation(){queued++;},resultCreativePlan(){throw Error('stale completion was accepted');},
   calculateRecommendation(){context.activeRecommendation={cancel(){cancelled++;}};return new Promise(resolve=>finish=resolve);},recommendationInput(){return {slots:context.slots,familiarityByRole:localChampionFamiliarity({client:context.client,slots:context.slots,scope:'party',ownRole:'mid',summary:context.championUsage,mass:.85})};}});
- vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function cancelRecommendation(){','\n',)+extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),context);
+ vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function cancelRecommendation(','\n')+extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),context);
  const pending=context.generate();context.acceptChampionUsage({...summary,revision:2,scanned:500});assert.equal(cancelled,0);assert.equal(context.generating,true);
  context.acceptChampionUsage({...summary,revision:3,usage:profile({Ahri:400,Lux:100}).usage});assert.equal(cancelled,1);assert.equal(queued,1);assert.equal(context.results.length,0);
  finish([{id:'late'}]);await pending;assert.equal(context.results.length,0);assert.equal(context.generating,false);

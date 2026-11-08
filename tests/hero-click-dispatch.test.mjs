@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import {runeWriteContext} from '../src/core/rune-context.mjs';
 import {preparationGameId,clientPreparationKey,clientPreparationPlan} from '../src/client-preparation-view.mjs';
 import {getBuild} from '../src/core/builds.mjs';
+import {createPreparationStore} from '../src/core/preparation.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const implementation=source.slice(source.indexOf('async function useClientPreparation('),source.indexOf('\nasync function claimPosition('));
@@ -14,6 +15,7 @@ function fixture(){
  let release,manualRole='';const gate=new Promise(resolve=>release=resolve),events=[],client={connected:true,phase:'ChampSelect',session:{gameId:'777',localPlayerCellId:0,myTeam:[{cellId:0,championId:0,championPickIntent:0,assignedPosition:'BOTTOM'}]}};
  const context=vm.createContext({structuredClone,api:{prepareSelection:async value=>{events.push('dispatch');assert.equal(value.champion,'Ashe');assert.equal(value.context.gameId,'777');throw Error('isolated stop after dispatch');}},
   client,clientPreparing:false,runeApplying:false,itemSetPending:null,selectedClientPreparation:()=>plan,clientPreparationPlan,data,readOnlyPreparation:()=>false,ownManualRole:()=>manualRole,
+  pendingBuildSourceEpoch:null,buildSourceEpoch:0,preparations:createPreparationStore(),selectionReviewStamp:()=>'',pendingReviewChanged:()=>false,
   runeWriteContext,preparationGameId,clientPreparationKey,activeCreativePlan:null,preparationTarget:null,preparationPendingKey:'',clientPreparationStatuses:new Map(),render(){},buildView:null,
   sync:async()=>{events.push('sync');await gate;},persist:async()=>{events.push('save');await gate;},memberHeroAction:()=>({prepare:true}),saved:{preferences:{chatNotice:false}}});
  vm.runInContext(implementation,context);

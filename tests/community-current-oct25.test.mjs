@@ -2,7 +2,8 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 import {hexPlayerRoutes}from'../src/core/hex-routes.mjs';import {hexMechanismMicroRoutes}from'../src/core/hex-micro-routes.mjs';import {hexChampionReview}from'../src/core/hex-review.mjs';
 import {hexRouteCard}from'../src/core/hex-route-card.mjs';
 import {validateCommunityData}from'../services/community-data.mjs';import {publishCommunityData}from'../services/community-data-publish.mjs';
-const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('../data/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json');
+// Historical 16.21 Hex contracts use the frozen snapshot; current-patch acceptance is separate.
+const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('./fixtures/snapshot-16.21/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json');
 const cases=[['Cassiopeia',1048],['Ryze',1048],['Morgana',3004],['Nautilus',1056],['Udyr',1004]],find=(data,hero,id,extra={})=>hexPlayerRoutes({data,hero,options:[id],...extra}).find(r=>r.augment.id===id);
 
 test('post-live text routes retain their exact author scope and independently checked current kit',()=>{
@@ -14,7 +15,7 @@ test('post-live text routes retain their exact author scope and independently ch
 });
 
 test('AP comparisons keep fifth-item prerequisites in the actual narrow item projection',()=>{
- for(const hero of ['Cassiopeia','Ryze']){const r=find(game,hero,1048),micro=hexMechanismMicroRoutes([r])[0],rite=micro.items.find(i=>i.id===123430);assert(rite);assert(rite.brief.slice(0,100).includes('第五件'));assert(rite.brief.slice(0,100).includes('其他强化'));assert(micro.items.every(i=>!i.core));assert(!r.optionalAugments.length);assert.doesNotMatch(r.play.join(' '),/123430|护盾按概率|无尽之刃/);
+ for(const hero of ['Cassiopeia','Ryze']){const r=find(game,hero,1048),micro=hexMechanismMicroRoutes([r])[0],items=micro.gearGroups.flatMap(g=>g.items),rite=items.find(i=>i.id===123430);assert.deepEqual(micro.gearGroups.map(g=>[g.when,g.why,g.items.map(i=>i.id)]),r.gear.map(g=>[g.when,g.why,g.items.map(i=>i.id)]));assert.deepEqual(micro.items,micro.gearGroups[0].items);assert(rite);assert(!micro.items.some(i=>i.id===123430));assert(rite.brief.slice(0,100).includes('第五件'));assert(rite.brief.slice(0,100).includes('其他强化'));assert(items.every(i=>!i.core));assert(!r.optionalAugments.length);assert.doesNotMatch(r.play.join(' '),/123430|护盾按概率|无尽之刃/);
   const d=structuredClone(game);d.items[123430].description+='changed';const kept=find(d,hero,1048);assert(kept.gear.some(g=>g.items.some(i=>i.id===3089)));assert(!kept.gear.some(g=>g.items.some(i=>i.id===123430)));assert.doesNotMatch(kept.play.join(' '),/短时暴击层|概率触发/);
  }
  const ryze=hexPlayerRoutes({data:game,hero:'Ryze',owned:[3036,1048]});assert(ryze.findIndex(r=>r.augment.id===3036)<ryze.findIndex(r=>r.augment.id===1048));
@@ -41,7 +42,8 @@ test('Udyr partial Q source never fabricates the unnamed boots, EH or perpetual 
  for(const [hero,id]of cases){const base=find(game,hero,id);for(const group of base.gear){const item=group.items[0],d=structuredClone(game);d.items[item.id].description+='changed';const kept=find(d,hero,id);assert(kept);assert(!kept.gear.some(g=>g.items.some(i=>i.id===item.id)));}}
 });
 
+// Small source-backed fixtures isolate the format floor from the expanded-library size floor.
 test('publication can require the client containing new bounded descriptor guards',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'current-community-')),pair=generateKeyPairSync('ed25519'),key=path.join(root,'key.pem');await fs.writeFile(key,pair.privateKey.export({type:'pkcs8',format:'pem'}));
- const manifest=await publishCommunityData({publicRoot:path.join(root,'public'),keyFile:key,keyId:'isolated',keys:{isolated:pair.publicKey.export({type:'spki',format:'pem'})},game,catalog,hexRoutes:{...routes,routes:routes.routes.filter(r=>r.skillPriorityOrigin===undefined&&!r.communitySource.url.startsWith('https://www.youtube.com/'))},minimumApp:'0.59.37'});assert.equal(manifest.minimumApp,'0.59.37');assert.equal(manifest.version,catalog.version);
+ const descriptorFormat={...routes,routes:routes.routes.filter(r=>r.hero==='MissFortune'&&r.augment===1092)};assert.equal(descriptorFormat.routes.length,1);const manifest=await publishCommunityData({publicRoot:path.join(root,'public'),keyFile:key,keyId:'isolated',keys:{isolated:pair.publicKey.export({type:'spki',format:'pem'})},game,catalog,hexRoutes:descriptorFormat,minimumApp:'0.59.37'});assert.equal(manifest.minimumApp,'0.59.37');assert.equal(manifest.version,catalog.version);
 });

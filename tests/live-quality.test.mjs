@@ -80,18 +80,19 @@ test('an unread public inventory never becomes a bare-stat damage comparison',()
  assert.ok(createGuideModel(data,state,restored).estimate.targetSelected);
 });
 
-test('current patch crit fallback includes IE and uses the live multiplier without stacking it twice',()=>{
- const c=hero('Jinx'),yone=hero('Yone');
- const bare=aggregateCombatStats(c,11,[],data),edge=aggregateCombatStats(c,11,[{id:'3031',count:1}],data);
+test('reviewed 16.21 crit fallback includes IE and uses the live multiplier without stacking it twice',async()=>{
+ const current=data,reviewed=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
+ const c=reviewed.champions.find(c=>c.id==='Jinx'),yone=reviewed.champions.find(c=>c.id==='Yone');assert.equal(aggregateCombatStats(current.champions.find(c=>c.id==='Jinx'),11,[],current).critDamage,1.75,'Unreviewed 16.22 does not inherit the 16.21 static fallback');
+ const bare=aggregateCombatStats(c,11,[],reviewed),edge=aggregateCombatStats(c,11,[{id:'3031',count:1}],reviewed);
  assert.equal(bare.critDamage,2);assert.ok(Math.abs(edge.critDamage-2.3)<1e-12);
  assert.equal(edge.crit,0.25);
- const blades=aggregateCombatStats(yone,11,[{id:'3031',count:1}],data);
+ const blades=aggregateCombatStats(yone,11,[{id:'3031',count:1}],reviewed);
  assert.ok(Math.abs(blades.critDamage-2.3*0.95)<1e-12);assert.equal(blades.crit,0.5);
- const target=hero('Ahri'),def={hp:5000,armor:0,mr:0};
+ const target=reviewed.champions.find(c=>c.id==='Ahri'),def={hp:5000,armor:0,mr:0};
  const auto=combatWindow(c,target,11,{...edge,ad:100,atkSpeed:1},def,0,{windowSeconds:2});
  assert.equal(auto.total,265,'Two expected attacks at 25% crit and 230% crit damage');
  const live=applyLivePanel(c,11,{ad:100,critDamage:2.4},edge).agg;
  assert.equal(live.ad,100);assert.equal(live.critDamage,2.4);
- const passiveOnly={...data,items:{...data.items,3031:{...data.items[3031],description:'75攻击力\n25%暴击几率\n\n条件效果\n50攻击力\n40%暴击伤害'}}};
+ const passiveOnly={...reviewed,items:{...reviewed.items,3031:{...reviewed.items[3031],description:'75攻击力\n25%暴击几率\n\n条件效果\n50攻击力\n40%暴击伤害'}}};
  assert.equal(aggregateCombatStats(c,11,[{id:'3031',count:1}],passiveOnly).critDamage,2,'Conditional text does not become permanent crit damage');
 });

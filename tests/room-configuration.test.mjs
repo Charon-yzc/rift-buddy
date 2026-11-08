@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createSlots} from '../src/core/recommend.mjs';
 import {TRIOS} from '../src/core/rules.mjs';
-import {BUNDLED_CATALOG} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG,historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import {createRoomService} from '../services/room.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
@@ -15,6 +15,7 @@ import {sanitizeRoomConfiguration,sanitizeShare,encodeFrame,decodeFrame,MAX_FRAM
 import {roomConfigurationDialog,roomConfigurationText} from '../src/room-view.mjs';
 const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
 data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries;
+historicalData(data);
 const hexData=JSON.parse(await fs.readFile('data/game.json'));hexData.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json')).entries;
 const slots=createSlots();for(const [role,champion]of [['jungle','Diana'],['mid','Yasuo'],['support','Rakan']])slots.find(s=>s.role===role).champion=champion;
 const store=createPreparationStore();
@@ -53,14 +54,16 @@ test('offline room sharing keeps the explicit local role and ignores a disconnec
  assert.equal(roomPlayerRole(slots,data.champions,null,''),'');
 });
 
-test('a directly loaded catalog duo freezes its public instructions and exact recommended runes',()=>{
- const team=createSlots().map(s=>({...s,champion:s.role==='bottom'?'Seraphine':s.role==='support'?'Sona':null}));
- assert.equal(captureRoomStrategy(team,data),null,'A legacy duo is not automatically activated');
- const chosen=captureCreativePlan({slots:team,scope:'bot',duo:BUNDLED_CATALOG.duos.find(row=>row.id==='double-song')},data);
- const plan=captureRoomStrategy(team,data,chosen);assert.equal(plan.curated.id,'double-song');assert.equal(plan.members.length,2);
- const config=captureRoomConfigurations(team,data,createPreparationStore(),{creativePlan:plan}).find(c=>c.champion==='Seraphine');
- const next=getBuild(data.champions.find(c=>c.id==='Seraphine'),'bottom',data,roomPreparation(config,data,plan));
- assert.deepEqual(next.runePage.selectedPerkIds,config.runes.selectedPerkIds);assert.equal(next.combo.creativePlan.curated.id,'double-song');
+test('a directly loaded reviewed catalog duo freezes its public instructions and exact selected runes without renewing legacy routes',()=>{
+ const legacy=createSlots().map(s=>({...s,champion:s.role==='bottom'?'Seraphine':s.role==='support'?'Sona':null}));
+ assert.equal(captureRoomStrategy(legacy,data),null,'A legacy duo is not automatically activated');
+ const old=captureCreativePlan({slots:legacy,scope:'bot',duo:BUNDLED_CATALOG.duos.find(row=>row.id==='double-song')},data);assert(old);assert.equal(captureRoomStrategy(legacy,data,old),null,'Explicit selection cannot renew an unreviewed old patch');
+ const team=createSlots().map(s=>({...s,champion:s.role==='bottom'?'Morgana':s.role==='support'?'Twitch':null}));
+ const chosen=captureCreativePlan({slots:team,scope:'bot',duo:BUNDLED_CATALOG.duos.find(row=>row.id==='morgana-twitch-roam')},data);
+ const plan=captureRoomStrategy(team,data,chosen);assert.equal(plan.curated.id,'morgana-twitch-roam');assert.equal(plan.members.length,2);
+ const config=captureRoomConfigurations(team,data,createPreparationStore(),{creativePlan:plan}).find(c=>c.champion==='Morgana');
+ const next=getBuild(data.champions.find(c=>c.id==='Morgana'),'bottom',data,roomPreparation(config,data,plan));
+ assert.deepEqual(next.runePage.selectedPerkIds,config.runes.selectedPerkIds);assert.equal(next.combo.creativePlan.curated.id,'morgana-twitch-roam');
  assert.equal(captureRoomStrategy(team,data,plan,'hex'),null);
 });
 
@@ -95,7 +98,7 @@ test('untrusted configurations are bounded, role-bound and cannot substitute unk
 });
 
 test('a personal snapshot without strategy applies to the receiving current trio and remains its next shared equipment',()=>{
- const trio=TRIOS.find(t=>t.id==='ball-delivery'),team=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
+ const trio=TRIOS.find(t=>t.id==='diana-ori-rell'),team=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
  const strategy=captureCreativePlan({trio,slots:team,scope:'party'},data),choices=createPreparationStore(),config=captureRoomConfigurations(team,data,choices,{creativePlan:strategy})[0];
  config.items.reverse();const applied=roomClientPlan(config,data,undefined,{localStrategy:strategy});choices.remember(applied.selection);
  assert.equal(applied.build.combo.creativePlan.id,strategy.id);assert.deepEqual(applied.build.items.map(i=>Number(i.id)),config.items);
@@ -103,7 +106,7 @@ test('a personal snapshot without strategy applies to the receiving current trio
 });
 
 test('a late room member receives the original accepted trio, concrete configurations and all saved stages over loopback',async()=>{
- const trio=TRIOS.find(t=>t.members.some(m=>m.champion==='Orianna')),team=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
+ const trio=TRIOS.find(t=>t.id==='diana-ori-rell'),team=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
  const strategy=captureCreativePlan({trio,slots:team,scope:'party'},data),configs=captureRoomConfigurations(team,data,createPreparationStore(),{creativePlan:strategy});
  const a=createRoomService({nick:'房主',listenHost:'127.0.0.1',discovery:false}),b=createRoomService({nick:'客人',listenHost:'127.0.0.1',discovery:false});
  try{
@@ -116,7 +119,7 @@ test('a late room member receives the original accepted trio, concrete configura
 });
 
 test('clearing an accepted trio member publishes the current lineup and can restore the original plan',async()=>{
- const trio=TRIOS.find(t=>t.id==='ball-delivery'),team=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
+ const trio=TRIOS.find(t=>t.id==='diana-ori-rell'),team=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
  const original=captureCreativePlan({trio,slots:team,scope:'party'},data),before=JSON.stringify(original);
  const a=createRoomService({nick:'房主',listenHost:'127.0.0.1',discovery:false}),b=createRoomService({nick:'客人',listenHost:'127.0.0.1',discovery:false});
  const publish=lineup=>{const strategy=captureRoomStrategy(lineup,data,original);a.publish({lineup,configurations:captureRoomConfigurations(lineup,data,createPreparationStore(),{creativePlan:strategy}),...(strategy?{strategy}:{})});return strategy;};
@@ -167,7 +170,7 @@ test('a late trio peer keeps attribute guidance and a three-point opening withou
   assert.deepEqual(aphelios.attributePlan,original.attributePlan);assert.equal(aphelios.skills,null);assert.equal(aphelios.first,null);
   const text=roomConfigurationText(aphelios,data,'房主'),html=roomConfigurationDialog(aphelios,data,'房主');
   for(const detail of [original.attributePlan.action,original.attributePlan.note,original.attributePlan.sourceUrl,...original.attributePlan.mechanismUrls])assert(text.includes(detail)&&html.includes(detail));
-  assert.match(text,/攻击力 > 穿甲 > 攻速/);assert.match(html,/属性方案供查看与复制/);assert.doesNotMatch(html,/<li>|采用符文、加点/);
+  assert(text.includes('攻击力 › 穿甲 › 攻速'));assert.match(html,/属性方案供查看与复制/);assert.doesNotMatch(html,/<li>|采用符文、加点/);
   assert(!roomPreparation(aphelios,data).customSkillOrder);
   assert.equal(lulu.skills,null);assert.equal(lulu.first,'EQW');
   const adopted=roomPreparation(lulu,data,received.strategy),build=getBuild(data.champions.find(c=>c.id==='Lulu'),'support',data,adopted);

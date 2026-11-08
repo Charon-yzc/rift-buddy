@@ -38,7 +38,7 @@ export function createPreparationContext({data,client,slots,ownRole='',guideSele
   const current=own(),pending=currentOnly(),member=activePlan?.members.find(m=>m.role===ownRole),slot=slots.find(s=>s.role===ownRole);
   const publicOwn=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId);
   const publicOwnId=buildData.champions.find(c=>c.key===Number(publicOwn?.championId||publicOwn?.championPickIntent))?.id;
-  if(lastTaskSelection&&(!ownRole||lastTaskSelection.role===ownRole)&&(slot?.champion===lastTaskSelection.id||publicOwnId===lastTaskSelection.id))return plan({...creativeComboContext(comboFor(lastTaskSelection.id,lastTaskSelection.role)),...lastTaskSelection,...recall(lastTaskSelection)});
+  if(lastTaskSelection&&(!ownRole||lastTaskSelection.role===ownRole)&&(slot?.champion===lastTaskSelection.id||publicOwnId===lastTaskSelection.id))return plan({...lastTaskSelection,...recall(lastTaskSelection)});
   if(publicOwnId&&member&&member.champion!==publicOwnId){if(pending?.selection.id===publicOwnId)return pending;if(current?.selection.id===publicOwnId)return current;}
   if(member)return plan(recalled({id:member.champion,role:ownRole,mode:'rift',...creativeComboContext(creativeMemberCombo(activePlan,member.champion,ownRole))}));
   if(current)return current;

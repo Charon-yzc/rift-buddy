@@ -1,10 +1,11 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {hexRecommendations,hexEquipmentImpact,resolveHexAugmentInput} from '../src/core/hex-recommendations.mjs';
 import {renderHexAdvice,renderHexComparison} from '../src/hex-view.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url),'utf8')).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url),'utf8'));
+data.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url),'utf8')).entries;
 
 test('current hero recommendations cover the bundled roster without inventing samples or changing source records',()=>{
  const before=JSON.stringify(data.hexBuilds);

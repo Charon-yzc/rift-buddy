@@ -72,7 +72,9 @@ async function run(){
  await click('[data-action=result-detail]');assert.ok(await js('document.querySelector("#overlay-root [data-opponent-fit]")?.textContent.includes("敌方分路、出装和技能状态未确认")'));await click('[data-action=close]');
  // Hold a real worker before dispatch to prove refresh cancels an unfinished
  // recommendation rather than only clearing an already completed card list.
- await click('.result-card [data-action=build][data-role=mid]');
+ // Browse full configuration explicitly. Candidate avatars now choose the
+ // hero and open its compact default instead of this source-editing surface.
+ const member=await js('(()=>{const el=document.querySelector(".result-card [data-action=build][data-role=mid]");return {id:el.dataset.id,role:el.dataset.role,mode:"rift"};})()');main.webContents.send('open-build',member);await until(()=>js('!!document.querySelector("[data-action=refresh-build]")'),'Full source configuration missing');
  await js('window.__originalPostMessage=Worker.prototype.postMessage;window.__originalTerminate=Worker.prototype.terminate;window.__heldWorkers=[];window.__terminatedWorkers=0;Worker.prototype.postMessage=function(...args){this.heldMessage=args;window.__heldWorkers.push(this);};Worker.prototype.terminate=function(){window.__terminatedWorkers++;return window.__originalTerminate.call(this);};true');
  await click('[data-action=recommend]');await until(()=>js('window.__heldWorkers.length===1'),'Pending source worker missing');
  await click('[data-action=refresh-build]');await until(()=>sourceRefreshes===1,'Source refresh did not reach isolated fixture');

@@ -16,7 +16,7 @@ await fs.writeFile(path.join(install,'runtime.bin'),'unchanged fixture runtime')
 await fs.writeFile(path.join(install,INSTALL_MANIFEST),installManifestText(await payloadManifest(install,'99.0.0')));
 await fs.writeFile(path.join(root,'player.json'),'{"favorites":["Ashe"]}');
 const override=process.argv.find(arg=>arg.startsWith('--asar='));
-const archive=override?path.resolve(override.slice(7)):path.join(JSON.parse(await fs.readFile('release/latest.json')).directory,'resources/app.asar');
+const archive=override?path.resolve(override.slice(7)):path.join(JSON.parse(await fs.readFile(process.env.RIFT_BUDDY_SMOKE_RELEASE||'release/latest.json')).directory,'resources/app.asar');
 const config=path.join(root,'config.json');await fs.writeFile(config,JSON.stringify({root,install,archive}));
 const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-incremental-update.cjs'),config],{windowsHide:true,stdio:'inherit'}),timer=setTimeout(()=>child.kill(),60000);
 try{const [code]=await once(child,'exit');if(code!==0)throw Error(`Incremental Electron smoke failed (${code}); ${root}`);await fs.writeFile('.local/latest-incremental-electron-smoke.json',JSON.stringify({root},null,2));}finally{clearTimeout(timer);}

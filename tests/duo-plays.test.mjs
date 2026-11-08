@@ -1,3 +1,5 @@
+import {historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -14,8 +16,9 @@ import {duoPlayView} from '../src/duo-play-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 import {comboMembers} from '../src/core/combo-members.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
+data.builds=projectBuildSources(JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
+historicalData(data);
 const hero=id=>data.champions.find(c=>c.id===id),duo=id=>DUOS.find(d=>d.id===id);
 
 test('every bundled duo gives both actual member roles different actionable stages through the real build resolver',()=>{
@@ -88,7 +91,7 @@ test('guide stage, own action and displayed pair sequence agree while loadout ch
 test('custom preparation notes and old-version tasks survive display and copy',()=>{
  const original=duo('naut-samira'),custom={...original,steps:['我们的第一步','我们的第二步'],early:'我们先保线不进场',window:'我们约定的窗口',economy:'我们的经济安排',risk:'我们的限制'};
  const play=duoPlay(custom,data);assert.deepEqual(play.stages.key.steps,custom.steps);assert.deepEqual(play.stages.opening.steps,[custom.early]);assert.equal(play.window,custom.window);assert.equal(play.economy,custom.economy);assert.match(play.stages.key.exit,/我们的限制/);
- const old=duoPlay(original,{...data,patch:'16.21'});assert.equal(old.stale,true);assert.match(duoPlayText(old),/旧版本需核对/);assert.match(duoPlayView(old),/内容保留供参考/);
+ const old=duoPlay(original,{...data,patch:'16.21'});assert.equal(old.stale,true);assert.match(duoPlayText(old,'16.21'),/16\.20 · 不同版本待核/);assert.match(duoPlayView(old,{currentPatch:'16.21'}),/16\.20 · 不同版本待核/);
  const build=getBuild(hero('Nautilus'),'support',data,{comboId:original.id});const text=buildAsText(build,hero('Nautilus'),data);
  for(const term of ['开局 / 对线','关键配合','后期团战','经济分工','未经组合对局统计验证'])assert.ok(text.includes(term),term);
  assert.doesNotMatch(duoPlayText(play),/必杀|最优胜率|对手现在没技能|已经冷却/);

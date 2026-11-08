@@ -9,7 +9,7 @@ import {legalSkillOrder} from './skill-advice.mjs';
 import {comboMembers,comboKey} from './combo-members.mjs';
 
 export const BUNDLED_CATALOG=bundled;
-export const CATALOG_LIMIT=2_000_000;
+export const CATALOG_LIMIT=8_000_000;
 const roles=['top','jungle','mid','bottom','support'],styles=['balanced','fun','wild'];
 const bases=['crit','jhin','onhit','meleeCrit','ezreal','mage','burn','apAssassin','adAssassin','fighter','tank','supportTank','enchanter','senna','pokeSupport'];
 const id=v=>typeof v==='string'&&/^[a-z0-9][a-z0-9-]{0,99}$/.test(v);

@@ -11,7 +11,7 @@ const base=()=>({patch:'16.20',version:'16.20.1',catalog:{version:1,name:'one'},
 function fixture({requestSnapshot,onAccepted=()=>{}}={}){
  let source={...DEFAULT_BUILD_SOURCE};const calls={catalog:0,images:0,source:0,inspect:0},changes=[],errors=[];
  const store=createRendererDataState({getSource:()=>source,requestSnapshot,onChange:change=>{changes.push(change);onAccepted(change);},onError:error=>errors.push(error.message),
-  catalog:{prepare:value=>{if(value.invalid)throw Error('invalid catalog');return structuredClone(value);},install:()=>calls.catalog++,inspect:()=>{calls.inspect++;return {status:{one:'rechecked'}};}},
+  catalog:{prepare:value=>{if(value.invalid)throw Error('invalid catalog');return {duos:[],trios:[],links:[],...structuredClone(value)};},install:()=>calls.catalog++,inspect:()=>{calls.inspect++;return {status:{one:'rechecked'}};}},
   images:{prepare:value=>{if(value.invalidImages)throw Error('invalid images');return {};},install:()=>calls.images++},projectSource:(data,selected)=>{calls.source++;selectBuildSource(data,selected);}});
  return {store,calls,changes,errors,choose:value=>source=value};
 }

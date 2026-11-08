@@ -2,11 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
+import {recommendationConditionsKey} from '../src/core/recommendation-input.mjs';
+import {validReferenceForUse} from '../src/core/builds.mjs';
+import {projectBuildSources,DEFAULT_BUILD_SOURCE,selectBuildSource} from '../src/core/build-source.mjs';
+import {OPPONENT_SCOPE_EVIDENCE} from '../src/core/opponent-build-source.mjs';
 import {publicClientGameId} from '../src/core/draft.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
 import {createRendererDataState,awaitDataOperation,hasDataRevision} from '../src/renderer-data-state.mjs';
 import {resolvedRankedDraft,enemyRolesSignature} from '../src/core/enemy-roles.mjs';
 
+const game=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
+const ordinaryReference=structuredClone(projectBuildSources(JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries,DEFAULT_BUILD_SOURCE,game.patch)['Ashe:bottom']);
+const reference=structuredClone(ordinaryReference);
+reference.scope='specific-opponent';reference.scopeEvidence=OPPONENT_SCOPE_EVIDENCE;reference.opponent='Lux';reference.roleSamples=null;delete reference.matchups;reference.sourceUrl+='&target_champion=lux';
+assert.ok(validReferenceForUse(reference,game.champions.find(c=>c.id==='Ashe'),'bottom',game,{opponent:'Lux'}));
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 function extract(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a);return source.slice(a,b);}
 const contextFunction=extract('const selectionRequestContext=','function clearSelectionUi(');
@@ -16,8 +25,8 @@ const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve
 function fixture(){
  const events=[],gate=deferred(),selection={id:'Ashe',role:'bottom',mode:'rift'},target={id:'Lux'};
  const context=vm.createContext({client:{connected:true,phase:'ChampSelect',mode:{id:'rift'},game:{gameId:'old-gameflow-id'},session:{gameId:'101',localPlayerCellId:0}},selectionUiRevision:0,publicClientGameId,resolvedRankedDraft,enemyRolesSignature,saved:{draft:null},
-  data:{patch:'16.20',buildSource:{region:'global'},pairStatistics:{revision:'cached'},opponentBuildSources:{}},pairRefreshKey:()=> 'same-heroes-source',currentPairTargets:()=>[],pairRefreshes:new Set(),pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshes:new Set(),opponentRefreshErrors:new Map(),
-  overlay:{contains:()=>false},companionPreparation:()=>({selection}),chosenMatchupOpponent:()=>target,matchupPreparation:()=>({context:'original-ui-context'}),publicMatchupIds:()=>['Lux'],matchupPreparationContext:()=> 'original-ui-context',opponentBuildKey:()=> 'same-opponent-source',opponentRequestKey:()=> 'same-opponent-source',sameBuildSource:()=>true,validReference:()=>true,champ:()=>({id:'Ashe'}),buildView:null,
+  data:{...game,buildSource:{...DEFAULT_BUILD_SOURCE},pairStatistics:{revision:'cached'},opponentBuildSources:{}},pairRefreshKey:()=> 'same-heroes-source',currentPairTargets:()=>[],pairRefreshes:new Set(),pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshes:new Set(),opponentRefreshErrors:new Map(),
+  overlay:{contains:()=>false},companionPreparation:()=>({selection}),chosenMatchupOpponent:()=>target,matchupPreparation:()=>({context:'original-ui-context'}),publicMatchupIds:()=>['Lux'],matchupPreparationContext:()=> 'original-ui-context',opponentBuildKey:()=> 'same-opponent-source',opponentRequestKey:()=> 'same-opponent-source',sameBuildSource:()=>true,validReferenceForUse,champ:()=>game.champions.find(c=>c.id==='Ashe'),buildView:null,
   render(){},renderBuild(){},invalidate:()=>events.push('invalidate'),generate:async()=>events.push('generate'),toast:message=>events.push(message),api:{refreshPairs:()=>gate.promise,refreshOpponentBuild:()=>gate.promise}});
  context.hasDataRevision=hasDataRevision;context.dataState={baseGeneration:()=>0,waitForRevision:async()=>{},local:changes=>Object.assign(context.data,changes)};context.dataOperation=operation=>awaitDataOperation(operation,context.dataState);
  vm.runInContext(contextFunction+extract('const pairRefreshStatus=','async function refreshPairData(')+extract('const opponentRefreshStatus=','async function refreshOpponentConfiguration(')+pairFunction+opponentFunction,context);
@@ -59,7 +68,7 @@ test('late opponent results retain validated public cache without reviving old d
  for(const failure of [false,true])for(const change of ['new-game','own-hero']){
   const f=fixture(),pending=f.context.refreshOpponentConfiguration(f.element);
   if(change==='new-game')f.context.client.session.gameId='102';else f.context.matchupPreparationContext=()=> 'different-own-hero';
-  if(failure)f.gate.reject(Error('previous opponent offline'));else f.gate.resolve({patch:'16.20',champion:'Ashe'});
+  if(failure)f.gate.reject(Error('previous opponent offline'));else f.gate.resolve(structuredClone(reference));
   await pending;assert.deepEqual(f.events,[]);assert.equal(f.context.opponentRefreshErrors.size,0);assert.equal(f.context.opponentRefreshes.size,0);
   assert.equal(!!f.context.data.opponentBuildSources['same-opponent-source'],!failure,'Valid public statistics remain available offline');
  }
@@ -86,7 +95,7 @@ test('a new public matchup refresh is independent of the old draft pending state
  assert.equal(vm.runInContext('opponentRefreshStatus({}).pending',f.context),false);const current=f.context.refreshOpponentConfiguration(f.element);
  assert.equal(calls,2,'Old matchup pending state leaked into the next draft');
  f.gate.reject(Error('old request offline'));await old;assert.deepEqual(f.events,[]);assert.equal(f.context.opponentRefreshes.size,1);
- next.resolve({patch:'16.20',champion:'Ashe'});await current;assert.equal(f.context.opponentRefreshes.size,0);assert.equal(f.context.opponentRefreshErrors.size,0);assert.equal(f.events.length,1);
+ next.resolve(structuredClone(reference));await current;assert.equal(f.context.opponentRefreshes.size,0);assert.equal(f.context.opponentRefreshErrors.size,0);assert.equal(f.events.length,1);
 });
 
 
@@ -108,7 +117,7 @@ test('late ordinary build downloads retain public data without reviving previous
   if(change==='lobby')f.context.client.phase='Lobby';
   if(change==='reset')f.context.selectionUiRevision++;
   if(change==='offline')f.context.client.connected=false;
-  if(failure)f.gate.reject(Error('previous build unavailable'));else f.gate.resolve({patch:'16.20',champion:'Ashe'});
+  if(failure)f.gate.reject(Error('previous build unavailable'));else f.gate.resolve(structuredClone(ordinaryReference));
   await pending;assert.deepEqual(f.events,[],mode+' '+failure);assert.equal(f.context.buildErrors.size,0);assert.equal(f.context.refreshingBuilds.size,0);
   assert.equal(mode==='hex'?!!f.context.data.hexBuilds.Ashe:!!f.context.data.buildSources['cached-public-reference'],!failure);
  }
@@ -116,7 +125,7 @@ test('late ordinary build downloads retain public data without reviving previous
 test('current ordinary build requests still report success and failure',async()=>{
  for(const failure of [false,true]){
   const f=buildFixture(),pending=f.context.refreshConfiguration('Ashe','bottom','rift');
-  if(failure)f.gate.reject(Error('current build unavailable'));else f.gate.resolve({patch:'16.20',champion:'Ashe'});
+  if(failure)f.gate.reject(Error('current build unavailable'));else f.gate.resolve(structuredClone(ordinaryReference));
   await pending;
   if(failure){assert.equal(f.context.buildErrors.size,1);assert.match(f.events[0],/current build unavailable/);}
   else{assert.equal(f.events[0],'invalidate');assert.match(f.events[1],/已缓存/);}
@@ -125,16 +134,16 @@ test('current ordinary build requests still report success and failure',async()=
 
 function sharedDataFixture(){
  const events=[],gate=deferred(),context=vm.createContext({
-  data:{patch:'16.20',version:'16.20.1',champions:[{id:'Aatrox',mechanics:{control:1}}],catalog:{version:1},catalogInfo:{status:{}}},dataRevision:0,api:{},hasDataRevision,awaitDataOperation,createRendererDataState:options=>createRendererDataState({...options,catalog:{prepare:v=>v,install(){},inspect:()=>({status:{}})},images:{prepare:()=>({}),install(){}},projectSource(){}}),
-  saved:{preferences:{buildSource:{region:'global'}}},BUNDLED_CATALOG:{version:1},rankedRolesCache:null,route:'draft',buildView:null,
-  recommendationKey,recommendationInput:()=>({slots:[],patch:context.data.patch,version:context.data.version,catalogStatus:context.data.catalogInfo.status}),
+  performance,recommendationConditionsKey,lockedBuildSource:null,data:{patch:'16.20',version:'16.20.1',champions:[{id:'Aatrox',mechanics:{control:1}}],catalog:{version:1,duos:[],trios:[],links:[],loadouts:[],skillPlans:[],runes:{}},catalogInfo:{status:{}}},dataRevision:0,api:{},hasDataRevision,awaitDataOperation,createRendererDataState:options=>createRendererDataState({...options,catalog:{prepare:v=>v,install(){},inspect:()=>({status:{}})},images:{prepare:()=>({}),install(){}},projectSource:selectBuildSource}),
+  saved:{preferences:{buildSource:{region:'global'}}},BUNDLED_CATALOG:{version:1,duos:[],trios:[],links:[],loadouts:[],skillPlans:[],runes:{}},rankedRolesCache:null,route:'draft',buildView:null,
+  recommendationKey,recommendationInput:()=>({slots:[],patch:context.data.patch,version:context.data.version,catalogStatus:context.data.catalogInfo.status,factoryGeneration:context.recommendationFactoryGeneration}),
   bindPlayerBuildPreferences(){},configureCatalog:value=>value,catalogIssues:()=>({status:{}}),configureAssets(){},selectBuildSource(){},
   markResultStale:()=>events.push('stale'),queueCompanionRecommendation:()=>events.push('queue'),render(){},renderBuild(){},repaintNationalDetail(){},
   generating:false,recommendationRun:0,autoRecommendationKey:'old-key',autoRecommendTimer:null,recommendationError:'',offset:0,
-  results:[{id:'cached'}],resultsSignature:'old-signature',showAllCandidates:false,activeRecommendation:{cancel:()=>events.push('cancel')},
-  clearTimeout,cancelRecommendationReveal(){},calculateRecommendation:()=>gate.promise,resultCreativePlan:()=>events.push('apply'),toast:message=>events.push(message)
+  results:[{id:'cached'}],resultsSignature:'old-signature',showAllCandidates:false,activeRecommendation:{cancel:()=>events.push('cancel')},recommendationRunner:null,recommendationSearchActive:false,communityAfter:'',recommendationFactoryGeneration:0,
+  clearTimeout,cancelRecommendationReveal(){},calculateRecommendation:(_input,accept)=>gate.promise.then(rows=>{if(!accept(rows))throw Object.assign(Error('outdated test worker'),{cancelled:true});return {rows};}),resultCreativePlan:()=>events.push('apply'),toast:message=>events.push(message)
  });
- vm.runInContext(extract('function cancelRecommendation(){','let client=')+extract('let dataReady=false;','async function restorePreparationSnapshot(')+extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),context);
+ vm.runInContext(extract('function cancelRecommendation(','let client=')+extract('let dataReady=false;','async function restorePreparationSnapshot(')+extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),context);
  vm.runInContext('dataState.bootstrap({data,revision:0});dataReady=true;',context);
  return {context,gate,events};
 }
@@ -145,7 +154,7 @@ test('same-patch base refresh invalidates cached and in-flight recommendations e
   const champions=[{id:'Aatrox',mechanics:{control:2}}];
   f.context.acceptSharedData({revision:1,replace,changes:replace?{...f.context.data,champions}:{champions}});
   assert.equal(recommendationKey(f.context.recommendationInput()),before,'The kit change is intentionally absent from the lightweight key');
-  assert.equal(f.context.results.length,0);assert.equal(f.context.resultsSignature,'');assert.equal(f.context.autoRecommendationKey,'');assert.equal(f.context.generating,false);
+  assert.equal(f.context.results.length,0,JSON.stringify(f.events));assert.equal(f.context.resultsSignature,'');assert.equal(f.context.autoRecommendationKey,'');assert.equal(f.context.generating,false);
   assert.deepEqual(f.events,['stale','cancel','queue']);
   f.gate.resolve([{id:'late-old-kit'}]);await pending;
   assert.equal(f.context.results.length,0,'A late old worker result must not restore stale recommendations');assert.deepEqual(f.events,['stale','cancel','queue']);
@@ -154,7 +163,7 @@ test('same-patch base refresh invalidates cached and in-flight recommendations e
 
 test('same-version catalog text edits invalidate cached and in-flight recommendations',async()=>{
  const f=sharedDataFixture(),before=recommendationKey(f.context.recommendationInput()),pending=f.context.generate();
- f.context.acceptSharedData({revision:1,changes:{catalog:{version:1,duos:[{id:'same',name:'new name',plan:'new steps'}]},catalogInfo:{status:{}}}});
+ f.context.acceptSharedData({revision:1,changes:{catalog:{...f.context.data.catalog,duos:[{id:'same',name:'new name',plan:'new steps'}]},catalogInfo:{status:{}}}});
  assert.equal(recommendationKey(f.context.recommendationInput()),before,'Text edits must not depend on the lightweight key');
  assert.equal(f.context.results.length,0);assert.equal(f.context.autoRecommendationKey,'');assert.deepEqual(f.events,['stale','cancel','queue']);
  f.gate.resolve([{id:'late-old-text'}]);await pending;assert.equal(f.context.results.length,0);assert.deepEqual(f.events,['stale','cancel','queue']);

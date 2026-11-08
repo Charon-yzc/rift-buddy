@@ -10,18 +10,21 @@ import {publicClientGameId,reconcileClientDraft} from '../src/core/draft.mjs';
 import {rebaseWindowState} from '../src/core/window-state.mjs';
 import {currentEnemyRoles} from '../src/core/enemy-roles.mjs';
 import {preparationIdentity,upsertPreparation} from '../src/core/preparation.mjs';
+import {EventEmitter} from 'node:events';
+import {requireBuildSource} from '../src/core/build-source.mjs';
 
 const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
 const merge=source.slice(source.indexOf('function mergeSavedFields('),source.indexOf('function saveCurrentState('));
 const handler=source.slice(source.indexOf(" guard('save-state'"),source.indexOf(" const {createClientSync}"));
+const sourceBindings=source.slice(source.indexOf(' const windowSources=new WeakMap()'),source.indexOf(" guard('note-build-source'"));
 const slots=()=>['top','jungle','mid','bottom','support'].map(role=>({role,champion:null,party:false,locked:false}));
 function base(){const value=storage.defaultState();value.draft={slots:slots(),partyCount:0,scope:'party',style:'fun',clientGameId:'123'};return storage.validateState(value);}
 async function setup(current=base(),gameId='123'){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-scope-save-'));let save;
- const context=vm.createContext({state:current,stateRevision:0,storage,structuredClone,isDeepStrictEqual,publicClientGameId,reconcileClientDraft,currentEnemyRoles,preparationIdentity,upsertPreparation,data:{champions:[]},latestClient:{connected:true,phase:'ChampSelect',game:{gameId},session:{gameId,localPlayerCellId:0,myTeam:[],actions:[]}},guard(name,callback){assert.equal(name,'save-state');save=callback;},closeAutoRoomIfRevoked(){},guide:{publish(){}},companion:{sync(){}}});
+ const sender=new EventEmitter(),context=vm.createContext({state:current,stateRevision:0,selectionWriteRevision:0,storage,structuredClone,isDeepStrictEqual,requireBuildSource,publicClientGameId,reconcileClientDraft,currentEnemyRoles,preparationIdentity,upsertPreparation,data:{champions:[]},latestClient:{connected:true,phase:'ChampSelect',game:{gameId},session:{gameId,localPlayerCellId:0,myTeam:[],actions:[]}},guard(name,callback,withContext){assert.equal(name,'save-state');assert.equal(withContext,true);save=callback;},closeAutoRoomIfRevoked(){},guide:{publish(){}},companion:{sync(){}}});
  context.saveCurrentState=async update=>{const next=update(structuredClone(context.state));await storage.saveState(root,next);context.state=next;context.stateRevision++;};
- vm.runInContext(merge+handler,context);
- return {context,save:(next,previous)=>save(next,previous,{sender:null}),read:()=>storage.readState(root)};
+ vm.runInContext(sourceBindings+merge+handler,context);
+ return {context,save:(next,previous,preparationGuard,sourceEpoch)=>save(next,previous,preparationGuard,sourceEpoch,{sender}),read:()=>storage.readState(root)};
 }
 
 test('actual save handler retains an explicit same-visible-value scope over automatic initialization in either arrival order',async()=>{
@@ -47,4 +50,12 @@ test('rebasing a queued old-game scope cannot disguise it as a new-game explicit
  const f=await setup(current,'124');await f.save(queued,current);assert.equal(f.context.state.draft.scope,'context');assert.equal(f.context.state.draft.scopeSelection,undefined);
  const lobby=structuredClone(current);delete lobby.draft.clientGameId;delete lobby.draft.referenceQueue;lobby.draft.scope='party';assert.equal(rebaseWindowState(previous,old,lobby).draft.scopeSelection,undefined);
  const fresh=structuredClone(current);fresh.draft.scope='party';fresh.draft.scopeSelection='party';assert.equal(rebaseWindowState(previous,fresh,current).draft.scopeSelection,'party','A choice actually made in new game124 remains explicit');
+});
+
+test('the sender context retains source epochs and rejects a delayed source save before changing state',async()=>{
+ const before=base(),f=await setup(),latest=structuredClone(before);latest.preferences.buildSource={region:'kr',tier:'diamond_plus'};
+ await f.save(latest,before,undefined,2);const accepted=f.context.state,acceptedBytes=JSON.stringify(accepted),stale=structuredClone(accepted);stale.preferences.buildSource={region:'global',tier:'gold_plus'};
+ await assert.rejects(f.save(stale,accepted,undefined,1),/配置来源已变化/);
+ await assert.rejects(f.save(stale,accepted,undefined,-1),/配置来源状态格式不正确/);
+ assert.equal(f.context.state,accepted);assert.equal(JSON.stringify(f.context.state),acceptedBytes);assert.deepEqual((await f.read()).preferences.buildSource,latest.preferences.buildSource);
 });

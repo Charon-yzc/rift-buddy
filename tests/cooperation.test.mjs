@@ -1,5 +1,7 @@
 import {heroCoachView} from '../src/hero-coach-view.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
+import './fixtures/snapshot-16.20/catalog.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -20,7 +22,7 @@ import {companionView} from '../src/companion-view.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8')),byId=new Map(data.champions.map(c=>[c.id,c]));
-data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const member=(champion,role)=>({champion,role}),graph=()=>createCooperationGraph(data.champions);
 const setup=(roles,picks=[])=>createSlots().map(s=>({...s,party:roles.includes(s.role),...(picks.some(p=>p[0]===s.role)?{champion:picks.find(p=>p[0]===s.role)[1],locked:true}:{} )}));
 const trio=[member('Trundle','top'),member('Sejuani','jungle'),member('Seraphine','mid')];
@@ -226,9 +228,11 @@ test('a known teammate duo cannot take over the party plan or its member configu
  assert.equal(row.origin,'adaptive');assert.equal(row.duo,undefined);assert.equal(row.trio,undefined);assert.deepEqual(row.targets,['mid']);
  assert.equal(row.analysis.known,5,'Other teammates still affect whole-team composition');
  assert.match(row.title,/近战叠霜/);assert.match(row.reason,/萨勒芬妮[^。]* E/);assert.match(resultPlayCard(row,0,data),/四层/);
- const configs=captureTeamConfigurations(row,data,createPreparationStore());
- assert.equal(configs.length,5);for(const id of ['Trundle','Sejuani','Seraphine'])assert.equal(configs.find(c=>c.id===id).creativePlan.archetype,'cooperation');
- assert.equal(configs.find(c=>c.id==='Ashe').creativePlan,undefined,'The unrelated duo keeps its own member build');
+ assert.throws(()=>captureTeamConfigurations(row,data,createPreparationStore()),/成员配置与组合身份不一致/,'An unrelated stale duo cannot be silently adopted without source proof');
+ const scoped={...row,scope:'party'},configs=captureTeamConfigurations(scoped,data,createPreparationStore());
+ assert.equal(configs.length,3);for(const id of ['Trundle','Sejuani','Seraphine'])assert.equal(configs.find(c=>c.id===id).creativePlan.archetype,'cooperation');
+ assert.ok(!configs.some(c=>c.id==='Ashe'),'The unrelated teammate receives no party build');
+ assert.equal(getBuild(byId.get('Ashe'),'bottom',data).loadoutId,'default');
 });
 
 test('accepted two- and three-person mechanisms retain original conditions, sources and all member guides after saving',async()=>{

@@ -1,9 +1,10 @@
+// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {hexHeroPool,hexCatalogDisabled} from '../src/core/hex-pool.mjs';
 import {hexPoolView} from '../src/hex-pool-view.mjs';
 import {hexRecommendations} from '../src/core/hex-recommendations.mjs';
 import {buildAugmentDescriptions} from '../services/augments.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));data.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url))).entries;
 // Exercise missing-evidence semantics deterministically. The actual bundled
 // current selected records are validated separately in current-bundle.test.
 for(const ref of Object.values(data.hexBuilds))delete ref.poolEvidence;

@@ -1,6 +1,8 @@
 import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs/promises';import vm from'node:vm';import path from'node:path';import os from'node:os';import{generateKeyPairSync}from'node:crypto';
 import{communitySourceMedium,validCommunitySource}from'../src/core/community-source.mjs';import{hexPlayerRoutes,hexCommunitySourceURLs}from'../src/core/hex-routes.mjs';import{hexMechanismMicroRoutes}from'../src/core/hex-micro-routes.mjs';import{hexChampionReview}from'../src/core/hex-review.mjs';import{safeSourceURL}from'../src/core/catalog.mjs';import{validateCommunityData}from'../services/community-data.mjs';import{publishCommunityData}from'../services/community-data-publish.mjs';
-const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('../data/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json'),cases=[['Zoe',1116,[1187,1348,1347]],[ 'Quinn',1019,[1375]]];
+import {HEX_CHAMPION_SOURCE} from '../src/core/hex-champion-statistics.mjs';
+// Historical 16.21 Hex contracts use the frozen snapshot; current-patch acceptance is separate.
+const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('./fixtures/snapshot-16.21/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json'),cases=[['Zoe',1116,[1187,1348,1347]],[ 'Quinn',1019,[1375]]];
 const find=(data,hero,id,owned=[])=>hexPlayerRoutes({data,hero,options:[id],owned}).find(r=>r.augment.id===id);
 test('dated editorial sources bind their exact civil day and do not authorize general web URLs',()=>{
  for(const [hero]of cases){const s=routes.routes.find(r=>r.hero===hero).communitySource;assert.equal(communitySourceMedium(s),'text');assert(validCommunitySource(s,routes.reviewedAt));assert.equal(s.sourcePatch,null);assert.match(s.publishedAt,/^2026-10-2[23]$/);
@@ -17,11 +19,11 @@ test('two editorial routes need their independently reviewed current kit and exa
  }
 });
 test('Zoe keeps summoner haste, missile stacking and spellblade as separate conditions',()=>{
- const r=find(game,'Zoe',1116),m=hexMechanismMicroRoutes([r])[0];assert.deepEqual(m.items.map(i=>i.id),[3158,3100,3089,4645,4646,3135]);assert(m.items.every(i=>!i.core));assert.match(m.augments[0].brief,/3层充能.*120秒/);assert.match(r.caution,/不推定两个闪现各有三层/);assert.match(r.caution,/不把吵闹鬼算成两次W触发/);assert.match(r.gear.find(g=>g.items.some(i=>i.id===3100)).why,/单独闪现不保证/);assert.match(r.play.join(' '),/R不当作召唤师技能/);
+ const r=find(game,'Zoe',1116),m=hexMechanismMicroRoutes([r])[0],items=m.gearGroups.flatMap(g=>g.items);assert.deepEqual(m.gearGroups.map(g=>[g.when,g.why,g.items.map(i=>i.id)]),r.gear.map(g=>[g.when,g.why,g.items.map(i=>i.id)]));assert.deepEqual(m.items,m.gearGroups[0].items);assert.deepEqual(items.map(i=>i.id),[3158,3100,3089,4645,4646,3135]);assert(items.every(i=>!i.core));assert.deepEqual(m.items.map(i=>i.id),[3158]);assert.match(m.augments[0].brief,/3层充能.*120秒/);assert.match(r.caution,/不推定两个闪现各有三层/);assert.match(r.caution,/不把吵闹鬼算成两次W触发/);assert.match(r.gear.find(g=>g.items.some(i=>i.id===3100)).why,/单独闪现不保证/);assert.match(r.play.join(' '),/R不当作召唤师技能/);
  const noR=find(game,'Zoe',1116,[1004,1116]);assert(noR.ultimateUnavailable);assert.doesNotMatch(noR.play.join(' '),/R折返|R触发/);
 });
 test('Quinn never invents the two unresolved chosen-spell bindings or an infinite E loop',()=>{
- const r=find(game,'Quinn',1019),m=hexMechanismMicroRoutes([r])[0];assert.deepEqual(m.augments.map(a=>a.id),[1019,1375]);assert.deepEqual(m.items.map(i=>i.id),[6675,3161,3084,2501,3053,3111]);assert(m.items.every(i=>!i.core));assert.match(m.augments[0].brief,/位移.*175/);assert.match(r.play[0],/W主动只开视野/);assert.match(r.play[0],/实际击退敌方英雄/);assert.match(r.gear[0].why,/剩余冷却/);assert.match(r.gear[2].why,/额外生命值/);assert.match(r.caution,/具体技能绑定未核/);
+ const r=find(game,'Quinn',1019),m=hexMechanismMicroRoutes([r])[0],items=m.gearGroups.flatMap(g=>g.items);assert.deepEqual(m.gearGroups.map(g=>[g.when,g.why,g.items.map(i=>i.id)]),r.gear.map(g=>[g.when,g.why,g.items.map(i=>i.id)]));assert.deepEqual(m.items,m.gearGroups[0].items);assert.deepEqual(m.augments.map(a=>a.id),[1019,1375]);assert.deepEqual(items.map(i=>i.id),[6675,3161,3084,2501,3053,3111]);assert(items.every(i=>!i.core));assert.deepEqual(m.items.map(i=>i.id),[6675]);assert.match(m.augments[0].brief,/位移.*175/);assert.match(r.play[0],/W主动只开视野/);assert.match(r.play[0],/实际击退敌方英雄/);assert.match(r.gear[0].why,/剩余冷却/);assert.match(r.gear[2].why,/额外生命值/);assert.match(r.caution,/具体技能绑定未核/);
  const noR=find(game,'Quinn',1019,[1004,1019]);assert(noR);assert.match(noR.play[0],/不依赖R/);
 });
 test('Quinn core instructions never inherit the optional Navori purchase effect',()=>{
@@ -29,7 +31,7 @@ test('Quinn core instructions never inherit the optional Navori purchase effect'
 });
 test('actual external-link handler authorizes only the active dated editorial recipes',async()=>{
  const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),opened=[],data={...game,catalog};
- vm.runInNewContext(source.slice(source.indexOf(" guard('open-link'"),source.indexOf(" guard('export-preparation'")),{URL,Error,data,catalogCore:{safeSourceURL},hexCommunitySourceURLs,isReleaseNotesUrl:()=>false,guard:(name,handler)=>handlers.set(name,handler),shell:{openExternal:async v=>opened.push(v)}});
+ vm.runInNewContext(source.slice(source.indexOf(" guard('open-link'"),source.indexOf(" guard('export-preparation'")),{URL,Error,HEX_CHAMPION_SOURCE,data,catalogCore:{safeSourceURL},hexCommunitySourceURLs,isReleaseNotesUrl:()=>false,guard:(name,handler)=>handlers.set(name,handler),shell:{openExternal:async v=>opened.push(v)}});
  for(const [hero]of cases){const url=routes.routes.find(r=>r.hero===hero).communitySource.url;assert(hexCommunitySourceURLs(data).includes(url));await handlers.get('open-link')(url);}
  assert.equal(opened.length,2);for(const url of ['https://deeparam.com/kitchen','https://deeparam.com/embed/fun/cook-builds/#chefs-special-2026-10-19','https://deeparam.com/embed/fun/cook-builds/#chefs-special-2026-10-23?redirect=x'])await assert.rejects(handlers.get('open-link')(url),/不支持的链接/);
  data.patch='16.22';await assert.rejects(handlers.get('open-link')(opened[0]),/不支持的链接/);

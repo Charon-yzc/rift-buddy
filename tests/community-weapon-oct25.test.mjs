@@ -1,6 +1,7 @@
 import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs/promises';
 import{hexPlayerRoutes}from'../src/core/hex-routes.mjs';import{hexMechanismMicroRoutes}from'../src/core/hex-micro-routes.mjs';import{hexChampionReview}from'../src/core/hex-review.mjs';import{validateCommunityData}from'../services/community-data.mjs';
-const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('../data/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json');
+// Historical 16.21 Hex contracts use the frozen snapshot; current-patch acceptance is separate.
+const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('./fixtures/snapshot-16.21/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json');
 const find=(d,hero,augment=3081,owned=[])=>hexPlayerRoutes({data:d,hero,owned}).find(r=>r.augment.id===augment),ids=r=>r.gear.flatMap(g=>g.items.map(i=>i.id));
 test('two dated author comments bind only their own first legendary direction',()=>{
  validateCommunityData({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:routes.reviewedAt,catalog,hexRoutes:routes},game);

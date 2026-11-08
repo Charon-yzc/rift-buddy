@@ -1,3 +1,4 @@
+// Historical 16.21 Hex provenance and withdrawal contracts.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -12,7 +13,7 @@ import {validateCommunityData,verifyCommunityEnvelope,decodeCommunityData} from 
 import {publishCommunityData} from '../services/community-data-publish.mjs';
 import {createCommunityFeedCache} from '../services/community-feed-cache.mjs';
 const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url)));
-const game=await read('../data/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json');
+const game=await read('./fixtures/snapshot-16.21/game.json'),routes=await read('./fixtures/community-2026.10.26/hex-community-routes.json'),catalog=await read('./fixtures/community-2026.10.26/catalog-data.json');
 const snapshot=hexRoutes=>({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:routes.reviewedAt,catalog,hexRoutes});
 const data=()=>({...structuredClone(game),communityHexRoutes:structuredClone(routes)});
 const find=(d,hero,owned=[])=>hexPlayerRoutes({data:d,hero,owned}).find(r=>r.augment.id===3086);
@@ -60,7 +61,7 @@ test('project-completed skills require client39 before signing and remain correc
  const envelope=JSON.parse(await fs.readFile(path.join(opts.publicRoot,'community/v1/latest.json'))),packed=await fs.readFile(path.join(opts.publicRoot,'community/v1/assets',manifest.file));
  assert.deepEqual(verifyCommunityEnvelope(envelope,{keys}),manifest);const decoded=decodeCommunityData(manifest,packed,game);assert.equal(decoded.hexRoutes.routes.find(r=>r.hero==='Viego').skillPriorityOrigin,'project');
  for(const currentVersion of ['0.59.38','0.59.39']){
-  let active=null,downloads=0;const cache=await createCommunityFeedCache({root:path.join(root,currentVersion),getData:()=>game,currentVersion,keys,clock:opts.clock,canActivate:()=>true,prepare:value=>()=>{active=value;},download:async relative=>{downloads++;return relative.endsWith('latest.json')?Buffer.from(JSON.stringify(envelope)):packed;}});
+  let active=null,downloads=0;const cache=await createCommunityFeedCache({root:path.join(root,currentVersion),getData:()=>game,currentVersion,bundledVersion:catalog.version,keys,clock:opts.clock,canActivate:()=>true,prepare:value=>()=>{active=value;},download:async relative=>{downloads++;return relative.endsWith('latest.json')?Buffer.from(JSON.stringify(envelope)):packed;}});
   const result=await cache.check();assert.equal(result.phase,currentVersion==='0.59.39'?'ready':'offline');assert.equal(downloads,currentVersion==='0.59.39'?2:1);
   if(active){const r=find({...game,communityHexRoutes:active.hexRoutes},'Viego');assert.equal(hexRouteCard(hexMechanismMicroRoutes([r])[0]).skillSource,'开黑搭子 · 机制改编');}else assert.equal(currentVersion,'0.59.38');
  }

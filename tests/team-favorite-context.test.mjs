@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 import {restoreTeamFavorite} from '../src/core/team-favorites.mjs';
 import {createSlots,mergeClientSession} from '../src/core/recommend.mjs';
 import {cooperationPlan,createCooperationGraph} from '../src/core/cooperation.mjs';
@@ -13,6 +14,7 @@ import os from 'node:os';
 import path from 'node:path';
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),champions=data.champions;
 data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
+historicalData(data);
 const key=id=>champions.find(c=>c.id===id).key;
 const favorite={scope:'context',slots:createSlots().map((s,i)=>({...s,champion:['Garen','LeeSin','Ahri','Ashe','Nami'][i],locked:true})),configurations:[{id:'Ahri',role:'mid',mode:'rift',runeId:'selected-page'},{id:'Garen',role:'top',mode:'rift'}]};
 const session={localPlayerCellId:1,myTeam:[{cellId:2,championId:key('Darius'),assignedPosition:'TOP'},{cellId:1,championId:key('Vi'),assignedPosition:'JUNGLE'}]};

@@ -1,4 +1,6 @@
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
+import './fixtures/snapshot-16.20/catalog.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -13,7 +15,7 @@ import {createGuideModel,selectGuide,reconcileGuide} from '../src/core/guide.mjs
 import {resultMemberJobs,resultActionsView,cooperationView} from '../src/cooperation-view.mjs';
 import {resultAsText} from '../src/result-text.mjs';
 import {getBuild,buildAsText} from '../src/core/builds.mjs';
-const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const stamp='2026-10-10T16:00:00.000Z';
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 const trio={jungle:'Gragas',mid:'Yasuo',support:'Rakan'};

@@ -1,5 +1,5 @@
 import test from 'node:test';
-import {buildSourceKey,DEFAULT_BUILD_SOURCE} from '../src/core/build-source.mjs';
+import {buildSourceKey,DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
@@ -16,7 +16,7 @@ import {preparationSummary,runeApplicationKey} from '../src/preparation-view.mjs
 import {defaultState,validateState,mergeState} from '../services/storage.mjs';
 import {createPreparationStore,recallPreparation} from '../src/core/preparation.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const selection={id:'Ashe',role:'bottom',mode:'rift'};
 const live=()=>({available:true,champion:'Ashe',mode:'rift',mapId:11,at:Date.now(),inventory:[],gold:1000,level:8,gameTime:700,skills:{Q:4,W:1,E:1,R:1}});
 

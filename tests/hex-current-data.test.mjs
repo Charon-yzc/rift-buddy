@@ -1,5 +1,6 @@
+// Frozen 16.21 acceptance contract; tests/hex-live-bundle.test.mjs covers the actual current bundle.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import vm from 'node:vm';
-import {isCurrentHexData,HEX_DATA_PENDING} from '../src/core/hex-data-current.mjs';
+import {isCurrentHexData,isReadableHexData,HEX_DATA_PENDING} from '../src/core/hex-data-current.mjs';
 import {hexHandbookAugments,hexOrdinaryAugments,hexCurrentAugmentIds} from '../src/core/hex-acquisition.mjs';
 import {hexRecommendations} from '../src/core/hex-recommendations.mjs';import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';
 import {hexMicroRoutes,hexMicroFallback} from '../src/core/hex-micro-routes.mjs';import {hexAcquisitionRules} from '../src/core/hex-mode-rules.mjs';
@@ -9,7 +10,7 @@ import {createPreparationContext} from '../src/core/preparation-context.mjs';imp
 import {configurationChoices} from '../src/core/configuration-choices.mjs';import {companionPlanView} from '../src/companion-view.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {compareAugments} from '../src/core/hex-compare.mjs';
-const base=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex40-acquisition-16.21.json',import.meta.url))),current={...base,...fixture,hexBuilds:{}};
+const base=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex40-acquisition-16.21.json',import.meta.url))),current={...base,...fixture,hexBuilds:{}};
 const unavailable=[{...base,patch:'16.20',version:'16.20.1'},{...current,patch:'16.22',version:'16.22.1'},{...current,augmentError:'unavailable'},{...current,augmentVersion:'16.20.1'},{...current,sources:{...current.sources,augmentDescriptions:'https://other.example/kiwi.json'}}];
 
 test('reviewed current augment cooldown scope does not depend on an unreviewed hero kit',()=>{
@@ -62,6 +63,6 @@ test('the owner rejects stale additions while a disappeared owned record and old
 
 test('actual main handbook and automatic-guide owner share the current-data gate without changing Rift preparation',async()=>{
  const app=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8'),main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
- const context=vm.createContext({data:unavailable[0],hexSelected:[],hexCurrentAugmentIds,isCurrentHexData,HEX_DATA_PENDING,e:String,heading:()=>'',button:(action,label)=>`<button data-action="${action}">${label}</button>`});vm.runInContext(app.match(/^function renderHex\(\).*$/m)[0],context);const html=context.renderHex();assert(html.includes(HEX_DATA_PENDING));assert(html.includes('data-action="update"'));assert(!html.includes('augment-card'));
- const code=main.match(/ const prepareCurrentGuide=async[\s\S]*?\n \};/)[0];let own={id:'Sona',mode:'hex'},called=0;const owner=vm.createContext({data:unavailable[0],isCurrentHexData,currentGuideSelection:()=>own,state:{guide:{selection:own}},guideCore:{guideIdentity:s=>s.id+':'+s.mode},setGuideState:()=>{called++;throw Error('Unexpected write');}});vm.runInContext(code+'\nglobalThis.prepare=prepareCurrentGuide;',owner);assert.equal(await owner.prepare(),false);assert.equal(called,0);owner.data=current;assert.equal(await owner.prepare(),true);own={id:'Sona',mode:'rift'};owner.state.guide.selection=own;owner.data=unavailable[0];assert.equal(await owner.prepare(),true);assert.equal(called,0);
+ const context=vm.createContext({data:unavailable[0],hexSelected:[],hexCurrentAugmentIds,isCurrentHexData,isReadableHexData,HEX_DATA_PENDING,e:String,heading:()=>'',button:(action,label)=>`<button data-action="${action}">${label}</button>`});vm.runInContext(app.match(/^function renderHex\(\).*$/m)[0],context);const html=context.renderHex();assert(html.includes(HEX_DATA_PENDING));assert(html.includes('data-action="update"'));assert(!html.includes('augment-card'));
+ const code=main.match(/ const prepareCurrentGuide=async[\s\S]*?\n \};/)[0];let own={id:'Sona',mode:'hex'},called=0;const owner=vm.createContext({data:unavailable[0],isCurrentHexData,isReadableHexData,detachedGuideSelection:null,currentGuideSelection:()=>own,state:{guide:{selection:own}},guideCore:{guideIdentity:s=>s.id+':'+s.mode},setGuideState:()=>{called++;throw Error('Unexpected write');}});vm.runInContext(code+'\nglobalThis.prepare=prepareCurrentGuide;',owner);assert.equal(await owner.prepare(),false);assert.equal(called,0);owner.data=current;assert.equal(await owner.prepare(),true);own={id:'Sona',mode:'rift'};owner.state.guide.selection=own;owner.data=unavailable[0];assert.equal(await owner.prepare(),true);assert.equal(called,0);
 });

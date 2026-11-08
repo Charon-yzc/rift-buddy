@@ -1,15 +1,17 @@
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {BUNDLED_CATALOG,validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG,historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 import {dependencyChanges} from '../src/core/catalog-review.mjs';
 import {getBuild,buildAsText} from '../src/core/builds.mjs';
 import {COOPERATION_SKILLS} from '../src/core/cooperation-skills.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
-data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const hero=id=>data.champions.find(h=>h.id===id);
 const conditions={
  'kindred-taric-yasuo':[/10%.*不能.*治疗/,/E 眩晕不能触发亚索 R/,/未衔接成功就撤/],
@@ -26,6 +28,7 @@ const conditions={
  'expand-graves-swain-taric':[/护甲与魔抗/,/烟幕.*不沉默/,/E 返回段实际禁锢/,/吸取不到英雄.*收缩/]
 };
 
+historicalData(data);
 test('reviewed trios have current dependencies while unrelated pending reviews stay visible',()=>{
  validateCatalog(BUNDLED_CATALOG,data);const issues=catalogIssues(BUNDLED_CATALOG,data);
  for(const id of Object.keys(conditions)){
@@ -46,7 +49,7 @@ test('member builds and copied plans retain actual timing, control types and can
   const plan=captureCreativePlan({id,title:t.name,slots,scope:'party',targets:[],trio:t},data);
   assert(plan);
   const text=t.members.map(m=>{
-   const b=getBuild(hero(m.champion),m.role,data,{comboId:plan.id,creativePlan:plan});
+   const b=getBuild(hero(m.champion),m.role,data,{comboId:plan.id,creativePlan:plan,loadoutId:m.loadoutId});
    assert.equal(b.loadoutId,m.loadoutId);
    assert.deepEqual(b.combo.steps,t.steps);
    assert.equal(b.combo.ownJob,m.job);

@@ -1,6 +1,7 @@
+// Historical 16.21 source identity, publication, and manual preparation contracts.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import {generateKeyPairSync,sign} from 'node:crypto';import {gzipSync} from 'node:zlib';
-import {BUNDLED_CATALOG,configureCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {configureCatalog,catalogIssues} from '../src/core/catalog.mjs';
 import {getBuild} from '../src/core/builds.mjs';import {comboMembers} from '../src/core/combo-members.mjs';
 import {createSlots} from '../src/core/recommend.mjs';import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';import {hexMechanismMicroRoutes} from '../src/core/hex-micro-routes.mjs';import {hexRouteCard} from '../src/core/hex-route-card.mjs';
@@ -8,18 +9,19 @@ import {validateCommunityData,verifyCommunityEnvelope,decodeCommunityData,COMMUN
 import {feedHash} from '../services/data-feed.mjs';
 import {publishCommunityData} from '../services/community-data-publish.mjs';
 import os from 'node:os';import path from 'node:path';
-const game=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url))),hexRoutes=JSON.parse(fs.readFileSync(new URL('../src/core/hex-community-routes.json',import.meta.url)));
+const BUNDLED_CATALOG=JSON.parse(fs.readFileSync(new URL('./fixtures/community-2026.10.26/catalog-data.json',import.meta.url))),game=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),hexRoutes=JSON.parse(fs.readFileSync(new URL('./fixtures/community-2026.10.26/hex-community-routes.json',import.meta.url)));
+game.communityHexRoutes=hexRoutes;
 const value=()=>({schema:1,kind:'community-snapshot',patch:game.patch,version:BUNDLED_CATALOG.version,reviewedAt:hexRoutes.reviewedAt,catalog:structuredClone(BUNDLED_CATALOG),hexRoutes:structuredClone(hexRoutes)});
-test('current community duo resolves complete distinct member builds and a savable exact plan',()=>{
+test('archived community duo resolves complete distinct member builds and a savable exact plan',()=>{
  configureCatalog(BUNDLED_CATALOG);const duo=BUNDLED_CATALOG.duos.find(d=>d.id==='xayah-kayle-guard'),members=comboMembers(duo),issues=catalogIssues(BUNDLED_CATALOG,game);
  assert.equal(issues.status[duo.id].stale,false);assert.equal(issues.status[duo.id].invalid,false);
  const slots=createSlots().map(s=>({...s,party:members.some(m=>m.role===s.role),champion:members.find(m=>m.role===s.role)?.champion||null,locked:true}));
- const plan=captureCreativePlan({slots,duo,scope:'party'},game);assert.equal(plan.archetype,'curated');assert.equal(plan.patch,'16.21');
- for(const member of members){const b=getBuild(game.champions.find(c=>c.id===member.champion),member.role,game,{comboId:duo.id});assert.equal(b.loadoutId,member.loadoutId);assert.equal(b.missing.length,0);assert.equal(b.skillOrder.length,18);assert.equal(b.runePage.selectedPerkIds.length,9);assert.equal(b.summoners.length,2);assert.deepEqual(b.combo.steps,duo.steps);assert.equal(b.combo.ownJob,member.job);}
+ const plan=captureCreativePlan({slots,duo,scope:'party'},game);assert.equal(plan.archetype,'curated');assert.equal(plan.patch,game.patch);
+ for(const member of members){const b=getBuild(game.champions.find(c=>c.id===member.champion),member.role,game,{comboId:duo.id,loadoutId:member.loadoutId});assert.equal(b.loadoutId,member.loadoutId);assert.equal(b.missing.length,0);assert.equal(b.skillOrder.length,18);assert.equal(b.runePage.selectedPerkIds.length,9);assert.equal(b.summoners.length,2);assert.deepEqual(b.combo.steps,duo.steps);assert.equal(b.combo.ownJob,member.job);}
  const old=structuredClone(game);old.patch='16.20';assert.ok(catalogIssues(BUNDLED_CATALOG,old).status[duo.id].stale);
 });
 
-for(const id of ['feather-dance','twitch-rakan-ambush'])test('current sourced '+id+' resolves both dedicated member configurations',()=>{
+for(const id of ['feather-dance','twitch-rakan-ambush'])test('archived sourced '+id+' resolves both dedicated member configurations',()=>{
  configureCatalog(BUNDLED_CATALOG);const duo=BUNDLED_CATALOG.duos.find(d=>d.id===id),members=comboMembers(duo),status=catalogIssues(BUNDLED_CATALOG,game).status[id];
  assert.equal(status.invalid,false);assert.equal(status.stale,false);assert.equal(duo.patch,game.patch);assert.equal(members.length,2);
  for(const member of members){const hero=game.champions.find(c=>c.id===member.champion);assert.equal(getBuild(hero,member.role,game,{comboId:id}).loadoutId,'default');const build=getBuild(hero,member.role,game,{comboId:id,loadoutId:member.loadoutId});assert.equal(build.loadoutId,member.loadoutId);assert.equal(build.missing.length,0);assert.equal(build.skillOrder.length,18);assert.equal(build.runePage.selectedPerkIds.length,9);assert.equal(build.summoners.length,2);assert(build.early.length>0);const selected=BUNDLED_CATALOG.loadouts.find(l=>l.id===member.loadoutId);assert.match(selected.skillReason,/项目/);assert(selected.sources.some(s=>s.url.includes('mobafire.com')));}
@@ -28,7 +30,7 @@ for(const id of ['feather-dance','twitch-rakan-ambush'])test('current sourced '+
 
 test('new Headliner creator route keeps its exact core and fails closed when its effect or core gear changes',()=>{
  const route=hexPlayerRoutes({data:game,hero:'Yasuo'}).find(r=>r.augment.id===3078);assert(route);assert.equal(route.communitySource.author,'一个老九');assert.equal(route.communitySource.publishedAt,'2026-10-24T09:30:00.000Z');assert.match(route.caution,/未取得该强化/);assert.match(route.caution,/冷却/);
- const micro=hexMechanismMicroRoutes([route])[0];assert.deepEqual(micro.augments.filter(a=>a.core).map(a=>a.id),[3078]);assert.deepEqual(micro.items.filter(i=>i.core).map(i=>i.id),[123430,6333]);assert.equal(route.pendingItems,0);assert.deepEqual(micro.items.map(i=>i.id),[123430,6333,3031,3072,3008,3065]);assert.equal(hexRouteCard(micro).source,'一个老九 · 改编');assert.equal(hexRouteCard(micro).priority,'');
+ const micro=hexMechanismMicroRoutes([route])[0];assert.deepEqual(micro.augments.filter(a=>a.core).map(a=>a.id),[3078]);assert.deepEqual(micro.items.filter(i=>i.core).map(i=>i.id),[123430,6333]);assert.equal(route.pendingItems,0);assert.deepEqual(micro.gearGroups.flatMap(g=>g.items.map(i=>i.id)),[123430,6333,3031,3072,3008,3065]);assert.deepEqual(micro.items,micro.gearGroups[0].items);assert.equal(hexRouteCard(micro).source,'一个老九 · 改编');assert.equal(hexRouteCard(micro).priority,'');
  const changed=structuredClone(game);changed.augments.find(a=>a.id===3078).description+=' trigger changed';assert.equal(hexPlayerRoutes({data:changed,hero:'Yasuo'}).some(r=>r.augment.id===3078),false);
  const gear=structuredClone(game);gear.items[123430].description+=' shield changed';assert.equal(hexPlayerRoutes({data:gear,hero:'Yasuo'}).some(r=>r.augment.id===3078),false);
  const later=structuredClone(game);later.items[3031].description+=' crit changed';const kept=hexPlayerRoutes({data:later,hero:'Yasuo'}).find(r=>r.augment.id===3078);assert(kept);assert.equal(kept.gear.some(g=>g.items.some(i=>[3031,3072].includes(i.id))),false);assert.doesNotMatch(JSON.stringify({play:kept.play,summary:kept.summary,brief:hexMechanismMicroRoutes([kept])[0].augments}),/无尽|饮血/);

@@ -2,20 +2,34 @@ const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain,globalShortcut,session,clipboard}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events'),{pathToFileURL}=require('node:url');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),phase=process.env.RIFT_BUDDY_MATCHUP_PHASE,windows=[];
-let runeWrites=0,fixture;
+let runeWrites=0,fixture,seedLobby=false;
 const copiedTexts=[];clipboard.writeText=text=>copiedTexts.push(text);
 globalShortcut.register=()=>false;
 global.fetch=async()=>{throw Error('Isolated matchup smoke: source network disabled');};
-https.request=()=>{throw Error('Isolated matchup smoke: all game sockets disabled');};
+// Both processes read the same loopback fixture. Renderer-only client status
+// cannot satisfy the main process's current-game/source CAS guards.
+https.request=(options,callback)=>{const req=new EventEmitter();req.end=()=>queueMicrotask(()=>{try{
+ assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);assert.equal(options.auth,'riot:isolated-matchups-only');assert.equal(options.method||'GET','GET','Game writes prohibited');
+ const identity=cell=>({summonerId:cell,puuid:'isolated-matchups-player-'+cell,gameName:'隔离队友'+cell,tagLine:'TEST'}),route=options.path;
+ const value=route==='/lol-gameflow/v1/gameflow-phase'?(seedLobby?'Lobby':fixture.phase):
+  route==='/lol-gameflow/v1/session'?{gameData:{...fixture.game,queue:{id:420,gameMode:'CLASSIC'}}}:
+  route==='/lol-champ-select/v1/session'?{...fixture.session,gameId:fixture.game.gameId,myTeam:fixture.session.myTeam.map(player=>({...player,...identity(player.cellId)})),bans:{myTeamBans:[],theirTeamBans:[]}}:
+  route==='/lol-lobby/v2/lobby'?{localMember:identity(1),members:[identity(1),identity(2)]}:
+  route==='/lol-summoner/v1/current-summoner'?identity(1):
+  route==='/lol-champ-select/v1/pickable-champion-ids'||route==='/lol-champ-select/v1/disabled-champion-ids'?[]:null;
+ if(value===null)throw Error('Unexpected synthetic client route '+route);
+ const res=new EventEmitter();res.statusCode=200;callback(res);res.emit('data',Buffer.from(JSON.stringify(value)));res.emit('end');req.emit('close');
+ }catch(error){req.emit('error',error);}});req.write=()=>{runeWrites++;throw Error('Game writes prohibited');};req.destroy=error=>{if(error)req.emit('error',error);req.emit('close');};return req;};
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
 const originalHandle=ipcMain.handle.bind(ipcMain);
-ipcMain.handle=(name,handler)=>originalHandle(name,name==='client-status'?()=>structuredClone(fixture):name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes are prohibited in this smoke');}:name==='companion-mode'?(_event,value)=>{const main=windows[0];main.setMinimumSize(value?360:820,480);main.setContentSize(value?440:1180,value?729:820);const layout={docked:!!value,overlap:false};main.webContents.send('window-layout',layout);return layout;}:handler);
+ipcMain.handle=(name,handler)=>originalHandle(name,name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes are prohibited in this smoke');}:name==='companion-mode'?(_event,value)=>{const main=windows[0];main.setMinimumSize(value?360:820,480);main.setContentSize(value?440:1180,value?729:820);const layout={docked:!!value,overlap:false};main.webContents.send('window-layout',layout);return layout;}:handler);
 const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{
  if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);
  const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;
  observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;
 };
+cp.execFile=(_file,_args,options,callback)=>{queueMicrotask(()=>(typeof options==='function'?options:callback)?.(null,'',''));return new EventEmitter();};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label){for(let n=0;n<150;n++){if(await check())return;await delay(70);}throw Error(label);}
 async function run(){
@@ -38,7 +52,7 @@ async function run(){
    await click('[data-action=open-favorite][data-index="'+index+'"]');
    await until(()=>js('window.buddy.bootstrap().then(b=>b.state.draft?.creativePlan?.curated?.id==="naut-samira")'),'Explicit historical matchup plan not restored');
   };
-  await until(()=>js('!!document.querySelector("[data-action=sync]")'),'Main not loaded');await click('[data-action=sync]');
+  await until(()=>js('!!document.querySelector("[data-action=sync]")'),'Main not loaded');seedLobby=true;await click('[data-action=sync]');await js('window.buddy.client(true)');seedLobby=false;await click('[data-action=sync]');
   await until(()=>js('!!document.querySelector(".champ-pick[data-id=Nautilus]")'),'Public pick not synchronized');
   await until(()=>js('window.buddy.bootstrap().then(b=>b.state.draft?.slots.filter(s=>s.locked&&s.party).length===2)'),'Public party locks not saved');
   assert.equal(await js('window.buddy.bootstrap().then(b=>b.data.catalogInfo.status["naut-samira"].stale)'),true,'Historical fixture must remain pending review');
@@ -53,7 +67,7 @@ async function run(){
   assert.ok(Math.abs(geometry.width-440)<=1);assert.ok(Math.abs(geometry.height-729)<=1);assert.equal(geometry.overflow,false);assert.ok(geometry.summary.top>=geometry.panel.top&&geometry.summary.top<geometry.panel.bottom,'The configuration must start in the first viewport');
   await capture(main,'side-first-screen.png');
   await click('[data-action=companion-tab][data-tab=plan]');
-  assert.equal(await js('document.querySelectorAll(\'[data-duo-play="'+adoptedPlan.id+'"] [data-duo-stage]\').length'),3,'Prepared side plan omitted the explicitly restored duo stages');
+  assert.equal(await js('document.querySelectorAll("[data-duo-stage]").length'),0,'Pending historical stages leaked into the ordinary personal configuration');
   assert.equal(await js('document.querySelectorAll("[data-matchup-enemy]").length'),0,'No enemy should be selected automatically');
   const selectedRune=await js('JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].page.selectedPerkIds.join(",")');await click('[data-companion-disclosure=edit-opponent]>summary');
   const plans={};
@@ -61,7 +75,7 @@ async function run(){
    await change('[data-matchup-target]',id);await until(()=>js('document.querySelector("[data-matchup-enemy]")?.dataset.matchupEnemy==='+JSON.stringify(id)),id+' condition plan missing');
    plans[id]=await js('document.querySelector(".hero-coach").textContent');assert.equal(await js('JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].page.selectedPerkIds.join(",")'),selectedRune);
   }
-  assert.equal(new Set(Object.values(plans)).size,3);assert.ok(plans.Morgana.includes('黑盾'));assert.ok(plans.Janna.includes('W 不能阻止风女 R'));assert.ok(plans.Yuumi.includes('同一宿主'));
+  assert.equal(new Set(Object.values(plans)).size,3);assert.ok(plans.Morgana.includes('黑盾'));assert.ok(plans.Janna.includes('先看风女 Q/R 的打断'));assert.ok(plans.Yuumi.includes('附身时不可被选取'));
   await js('document.querySelector("[data-companion-section=opponent]").scrollIntoView({block:"start"})');await capture(main,'side-yuumi-plan.png');
   console.log('Side: three distinct plans and first-screen summary verified');
   assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.preferences.autoSync)'),true,'Connecting must already enable automatic synchronization');
@@ -74,21 +88,29 @@ async function run(){
   console.log('Side: vanished public target hidden');
   await change('[data-matchup-target]','Janna');
   console.log('Side: selected Janna before new game');
-  fixture.game.gameId='2102';await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-matchup-target]").value===""'),'New draft retained previous-game target');
+  // The next draft has fresh public lobby evidence for the same two queued
+  // players. Skipping Lobby would correctly reset an unknown party to self.
+  seedLobby=true;await js('window.buddy.client(true)');seedLobby=false;
+  fixture.game.gameId='2102';await click('[data-action=sync]');await until(()=>js('window.buddy.bootstrap().then(b=>b.state.draft.clientGameId==="2102")'),'New draft identity not saved');await click('[data-action=companion-tab][data-tab=plan]');await until(()=>js('document.querySelector("[data-matchup-target]")?.value===""'),'New draft retained previous-game target');
   console.log('Side: new-game target cleared');
   assert.equal(await js('window.buddy.bootstrap().then(b=>!!b.state.draft?.creativePlan)'),false,'New draft retained the previously adopted historical plan');
-  await click('[data-action=companion-full]');await restoreHistorical();await click('[data-action=companion-attach]');await click('[data-action=companion-tab][data-tab=plan]');
+  await click('[data-action=companion-full]');console.log('Side: returned to full assistant');await restoreHistorical();console.log('Side: explicitly restored historical reference in new game');await click('[data-action=companion-attach]');await click('[data-action=companion-tab][data-tab=plan]');
   await change('[data-matchup-target]','Morgana');await click('[data-action=companion-full]');await until(()=>js('!document.body.classList.contains("companion-mode")'),'Full assistant missing');
   console.log('Side: expanded assistant');
   await click('[data-action=my-build]');await until(()=>js('document.querySelector("#overlay-root [data-matchup-enemy]")?.dataset.matchupEnemy==="Morgana"'),'Full configuration did not share the same manual target');
-  assert.equal(await js('document.querySelectorAll(\'#overlay-root [data-duo-play="'+adoptedPlan.id+'"] [data-duo-stage]\').length'),3);
-  await click('#overlay-root [data-companion-disclosure=configuration-actions]>summary');await click('[data-action=copy-build]');assert.ok(copiedTexts.at(-1).includes('经济分工'));assert.ok(copiedTexts.at(-1).includes('后期团战'));assert.ok(copiedTexts.at(-1).includes('莎弥拉'));
+  assert.equal(await js('document.querySelectorAll("#overlay-root [data-duo-stage]").length'),0,'Ordinary configuration auto-adopted a pending plan');
   console.log('Side: full configuration shares the selected target');
   await change('#overlay-root [data-matchup-target]','Janna');assert.equal(await js('document.querySelector("#overlay-root [data-matchup-enemy]").dataset.matchupEnemy'),'Janna');
   await click('#overlay-root [data-companion-disclosure=edit-opponent]>summary');await capture(main,'full-janna-plan.png');
   await js('window.openDrawerMatchupSelect=document.querySelector("#overlay-root [data-matchup-target]");openDrawerMatchupSelect.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));void 0');
   fixture.session.theirTeam=[];main.webContents.send('client-update',structuredClone(fixture));await until(()=>js('document.querySelectorAll("#overlay-root [data-matchup-enemy]").length===0'),'Open drawer retained vanished target');
   assert.equal(await js('openDrawerMatchupSelect.isConnected'),false,'Invalid full configuration target menu remained open');
+  // Historical instructions remain readable when explicitly opened with their
+  // saved identity; this does not adopt their equipment or renew their review.
+  main.webContents.send('open-build',{id:'Nautilus',role:'support',mode:'rift',comboId:adoptedPlan.id,creativePlan:adoptedPlan});
+  await until(()=>js('document.querySelectorAll(\'#overlay-root [data-duo-play="'+adoptedPlan.id+'"] [data-duo-stage]\').length===3'),'Explicit historical member reference omitted its stages');
+  assert.equal(await js('document.querySelectorAll(\'#overlay-root [data-duo-play="'+adoptedPlan.id+'"] [data-duo-stage]\').length'),3);
+  if(await js('!!document.querySelector("#overlay-root [data-companion-disclosure=configuration-actions]>summary")'))await click('#overlay-root [data-companion-disclosure=configuration-actions]>summary');await click('[data-action=copy-build]');assert.ok(copiedTexts.at(-1).includes('经济分工'));assert.ok(copiedTexts.at(-1).includes('后期团战'));assert.ok(copiedTexts.at(-1).includes('莎弥拉'));
   await click('#overlay-root [data-action=close]');await click('[data-action=combination-library]');await click('[data-action=combo-kind][data-kind=duos]');
   await js('(()=>{const el=document.querySelector("#combo-search");el.value="Samira";el.dispatchEvent(new Event("input",{bubbles:true}));})()');
   await until(()=>js('!!document.querySelector(".combo-row [data-duo-play=naut-samira]")'),'Combo library omitted pair steps');
@@ -96,7 +118,7 @@ async function run(){
   assert.equal(await js('document.querySelectorAll(".combo-row [data-duo-play=naut-samira] [data-duo-stage]").length'),3);
   const expandedWidth=await js('(()=>{const row=document.querySelector(".combo-row [data-duo-play=naut-samira]").closest(".combo-row"),list=row.parentElement;return {row:row.getBoundingClientRect().width,list:list.getBoundingClientRect().width,available:list.clientWidth-parseFloat(getComputedStyle(list).paddingLeft)-parseFloat(getComputedStyle(list).paddingRight),column:getComputedStyle(row).gridColumn,layout:getComputedStyle(list).display,open:row.querySelector(":scope>details").open};})()');assert.ok(Math.abs(expandedWidth.row-expandedWidth.available)<=2&&expandedWidth.column==='1 / -1','Expanded pair explanation should use the available list width: '+JSON.stringify(expandedWidth));
   await js('document.querySelector(".combo-row [data-duo-play=naut-samira]").closest(".combo-row").scrollIntoView({block:"start"});void 0');await capture(main,'library-naut-samira.png');
-  report={passed:true,archiveSha256:release.archiveSha256,geometry,ownPlans:plans,historicalPlanExplicitlyRestored:true,pendingPlanNotAutomaticallyAdopted:true,newDraftClearsHistoricalPlan:true,explicitPublicTargetOnly:true,vanishedTargetCleared:true,activeTargetMenuInvalidated:true,newDraftCleared:true,fullDrawerSharesTarget:true,loadoutUnchanged:true,duoSideFullAndLibrary:true,duoCopy:true,clipboardMocked:true,runeWrites};
+  report={passed:true,archiveSha256:release.archiveSha256,geometry,ownPlans:plans,historicalPlanExplicitlyRestored:true,pendingPlanNotAutomaticallyAdopted:true,newDraftClearsHistoricalPlan:true,explicitPublicTargetOnly:true,vanishedTargetCleared:true,activeTargetMenuInvalidated:true,newDraftCleared:true,fullDrawerSharesTarget:true,loadoutUnchanged:true,duoExplicitReferenceAndLibrary:true,duoCopy:true,clipboardMocked:true,runeWrites};
  }else if(phase.startsWith('team-order')){
   await app.whenReady();
   const core=await import(pathToFileURL(path.join(base,'src/core/guide.mjs')).href);
@@ -152,11 +174,12 @@ async function run(){
   const guide=factory({root:base,getState:()=>state,setState:async next=>{state=core.validateGuideState(next);},getModel:()=>core.createGuideModel(data,state,{...live,at:Date.now()},current),currentSelection:()=>current,prepareCurrent:async()=>true,getPreferences:()=>({guideAutoShow:false}),isQuitting:()=>true,showMain:()=>{},diagnostic:()=>{}});
   guide.show();const w=guide.window(),{js,click,change}=actions(w);await until(()=>js('!!window.guide'),'Guide preload missing');await until(()=>js('!!document.querySelector(".compact-guide-main")'),'Compact guide missing');
   const guideControl=(action,value)=>js("window.guide.control("+JSON.stringify(action)+","+JSON.stringify(value)+")");
-  const plans={};for(const id of ['Morgana','Janna','Yuumi']){
+  const plans={},partnerConditions={};for(const id of ['Morgana','Janna','Yuumi']){
    await guideControl('threatId',id);await until(()=>js('window.guide.bootstrap().then(b=>b.model.coach.matchup?.enemy.id==='+JSON.stringify(id)+')'),id+' guide plan missing');
    plans[id]=await js('window.guide.bootstrap().then(b=>b.model.coach.action)');
+   partnerConditions[id]=await js('window.guide.bootstrap().then(b=>b.model.coach.matchup.teamCondition)');
   }
-  assert.equal(new Set(Object.values(plans)).size,3);await capture(w,'guide-yuumi-plan.png');assert.equal(await js('window.guide.bootstrap().then(b=>b.model.coach.matchup?.enemy.id)'),'Yuumi');
+  assert.equal(new Set(Object.values(plans)).size,3);assert.ok(partnerConditions.Janna.includes('W 不能阻止风女 R'));assert.ok(partnerConditions.Yuumi.includes('同一宿主'));await capture(w,'guide-yuumi-plan.png');assert.equal(await js('window.guide.bootstrap().then(b=>b.model.coach.matchup?.enemy.id)'),'Yuumi');
   await guideControl('threatId','Janna');await guideControl('stage','opening');const opening=await js('window.guide.bootstrap().then(b=>b.model.coach.action)');
   await guideControl('stage','later');assert.notEqual(await js('window.guide.bootstrap().then(b=>b.model.coach.action)'),opening);
   const duoActions={};for(const stage of ['opening','key','later']){

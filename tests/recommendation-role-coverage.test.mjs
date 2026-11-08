@@ -33,22 +33,23 @@ test('community search revisits the player role across batches and still covers 
  assert.deepEqual(firstVisits(order[1]).slice(0,3),order.slice(2,5));
 });
 
-test('a manually selected position guides recipe search before it is bound to the client slot',()=>{
+test('a manually selected position remains a concrete recommendation target before client binding',()=>{
  const slots=createSlots().map(slot=>({...slot,party:['top','jungle'].includes(slot.role)}));
  const clientSession={localPlayerCellId:1,myTeam:[{cellId:1,championId:0,assignedPosition:''}]};
- const focusRole=recommend({slots,champions:game.champions,patch:game.patch,scope:'party',soloRole:'top',clientSession},lane=>lane.focusRole);
- assert.equal(focusRole,'top');
+ const rolePools={top:{mode:'only',heroes:['Shen']},jungle:{mode:'only',heroes:['Vi']}};
+ const rows=recommend({slots,champions:game.champions,patch:game.patch,scope:'party',soloRole:'top',clientSession,rolePools});
+ assert.ok(rows.length);
+ for(const row of rows){assert.deepEqual(row.targets,['top','jungle']);assert.equal(row.slots.find(s=>s.role==='top').champion,'Shen');assert.equal(row.slots.find(s=>s.role==='jungle').champion,'Vi');}
+ assert.equal(slots[0].clientCellId,undefined,'Recommendation cannot invent a client lane binding');
 });
 
-test('a manually confirmed position overrides the formal assignment and invalidates draft searches',()=>{
+test('a manually confirmed position overrides formal assignment and invalidates draft searches',()=>{
  const slots=createSlots().map(slot=>({...slot,party:['top','jungle'].includes(slot.role),champion:slot.role==='top'?'Shen':null}));
- const session={localPlayerCellId:3,myTeam:[{cellId:3,championId:0,assignedPosition:'BOTTOM'}]};
- const confirmed=clientRecommendationDraft(slots,session,game.champions,{ownRole:'top'});
- const input={slots:recommendationDraft(confirmed.slots,confirmed.session,game.champions,{ownRole:'top'}),fitSlots:slots,fitSession:session,clientSession:confirmed.session,champions:game.champions,patch:game.patch,scope:'context',soloRole:'top'};
- const searchFocus=options=>recommend(options,lane=>lane.focusRole);
- assert.equal(searchFocus(input),'bottom');
- const claimed={...input,ownRole:'top'};
- assert.equal(searchFocus(claimed),'top');
+ const session={localPlayerCellId:3,myTeam:[{cellId:3,championId:0,championPickIntent:Number(game.champions.find(c=>c.id==='Shen').key),assignedPosition:'BOTTOM'}]};
+ const ordinary=clientRecommendationDraft(slots,session,game.champions,{includePreselected:true}),confirmed=clientRecommendationDraft(slots,session,game.champions,{includePreselected:true,ownRole:'top'});
+ assert.equal(ordinary.slots.find(s=>s.clientCellId===3)?.role,'bottom');
+ assert.equal(confirmed.slots.find(s=>s.clientCellId===3)?.role,'top');
+ const input={slots,champions:game.champions,patch:game.patch,scope:'context',soloRole:'top',clientSession:session},claimed={...input,ownRole:'top'};
  assert.notEqual(recommendationKey(claimed),recommendationKey(input));
  assert.notEqual(recommendationConditionsKey(claimed),recommendationConditionsKey(input));
 });
@@ -237,15 +238,20 @@ test('a later same-fit completion with better matchup can replace an already pre
  assert.deepEqual(communityCompletionRows(supports,id=>({opponent:{adjustment:id==='Zyra'?12:0}})),['A','Zyra']);
 });
 
-test('a scored skill relationship can involve my position even when a different team tactic wins',()=>{
+test('an existing reviewed interaction keeps its actual role and lock constraints without a source-label bonus',()=>{
  const slots=createSlots().map(slot=>({...slot,party:['jungle','mid'].includes(slot.role),...(slot.role==='jungle'?{champion:'Vi',locked:true}:{})}));
  const search=createRecommendationSearch({slots,champions:game.champions,patch:game.patch,scope:'party',soloRole:'mid',rolePools:{mid:{mode:'only',heroes:['Ahri']}}});
  let result;
  for(let i=0;i<5&&!result?.rows.length;i++)result=search.advance({limit:6});
  const [row]=result.rows;
  assert.equal(row.recommendationFit.tacticEvidence,undefined);
- assert.ok(row.recommendationFit.relationships.some(link=>link.from==='Vi'&&link.to==='Ahri'&&link.mechanicLabel));
- assert.equal(row.recommendationFocus,1);
+ assert.deepEqual(row.targets,['mid']);
+ assert.equal(row.slots.find(s=>s.role==='jungle').champion,'Vi');
+ assert.equal(row.slots.find(s=>s.role==='jungle').locked,true);
+ assert.equal(row.slots.find(s=>s.role==='mid').champion,'Ahri');
+ const graph=createCompositionMechanics(new Map(game.champions.map(c=>[c.id,c])),game.patch);
+ assert.equal(graph.match(row.slots.find(s=>s.role==='jungle'),row.slots.find(s=>s.role==='mid'),true).tactic.evidence.setupSpell,'ViR');
+ assert.equal(row.recommendationFit.score,lineupFit(row.slots,slots,game.champions,{scope:'party',patch:game.patch}).score);
 });
 
 test('solo recommendation retains the chosen position through the search lane',()=>{
@@ -254,8 +260,10 @@ test('solo recommendation retains the chosen position through the search lane',(
  let result;
  for(let i=0;i<5&&!result?.rows.length;i++)result=search.advance({limit:6});
  const [row]=result.rows;
- assert.equal(row.recommendationFit.tacticEvidence?.from,'Anivia');
- assert.equal(row.recommendationFocus,2);
+ assert.equal(row.soloRole,'mid');
+ assert.deepEqual(row.targets,['mid']);
+ assert.equal(row.slots.find(s=>s.role==='mid').champion,'Anivia');
+ assert.deepEqual(row.slots.find(s=>s.role==='top'),slots.find(s=>s.role==='top'));
 });
 
 test('the bundled Rift source supports unchanged verified spells and rejects changed source content',()=>{
@@ -282,31 +290,25 @@ test('offline skill evidence distinguishes actual airborne and carried-zone trig
  assert.equal(match('Diana','Orianna').followSpell,'OrianaDetonateCommand');
 });
 
-test('open five-lane search does not spend each position pair on the same mechanic',()=>{
- const slots=createSlots().map(slot=>({...slot,party:true}));
- const graph=createCompositionMechanics(new Map(game.champions.map(c=>[c.id,c])),game.patch);
- const {seeds}=recommend({slots,champions:game.champions,patch:game.patch,scope:'party'},input=>input);
- const groups=new Map();
- for(const seed of seeds){
-  const members=seed.filter(slot=>slot.champion);
-  if(members.length!==2)continue;
-  const match=graph.match(...members,false);if(!match)continue;
-  const key=members.map(slot=>slot.role).join('|');
-  if(!groups.has(key))groups.set(key,{tactic:match.tactic.label,heroes:members.map(slot=>slot.champion).sort().join('|')});
- }
- assert.equal(groups.size,10);
- const first=[...groups.values()];
- assert.ok(new Set(first.map(group=>group.tactic)).size>=4,JSON.stringify(first));
- assert.ok(new Set(first.map(group=>group.heroes)).size>=8,JSON.stringify(first));
+test('open five-lane search respects every exact role pool without requiring catalog anchors',()=>{
+ const slots=createSlots().map(slot=>({...slot,party:true})),before=structuredClone(slots);
+ const heroes={top:'Ornn',jungle:'Vi',mid:'Ahri',bottom:'Jinx',support:'Lulu'};
+ const rolePools=Object.fromEntries(Object.entries(heroes).map(([role,hero])=>[role,{mode:'only',heroes:[hero]}]));
+ const rows=recommend({slots,champions:game.champions,patch:game.patch,scope:'party',rolePools});
+ assert.equal(rows.length,1);assert.deepEqual(rows[0].targets,Object.keys(heroes));
+ for(const slot of rows[0].slots)assert.equal(slot.champion,heroes[slot.role]);
+ assert.deepEqual(slots,before);assert.equal(new Set(rows[0].slots.map(s=>s.champion)).size,5);
 });
 
-test('one protected damage dealer cannot supply the whole team tactical score',()=>{
+test('the restored full-team budget counts all known members and applies unknown-member ceilings',()=>{
  const member=(role,p)=>({role,champion:role,c:{id:role},p:{reviewed:true,roles:[role],build:'mage',...p}});
  const shooter=member('bottom',{sustain:true}),guard=member('support',{build:'tank',frontline:true});
  const passives=[member('top',{build:'enchanter'}),member('jungle',{build:'enchanter'}),member('mid',{build:'enchanter'})];
  const duo=compositionFit({members:[shooter,guard]},null),team=compositionFit({members:[shooter,guard,...passives]},null);
  assert.ok(duo.tactic.quality>=.94);
- assert.ok(team.tactic.quality<.8,JSON.stringify(team.tactic));
+ assert.equal(team.known,5);assert.equal(team.size,5);
+ const incomplete=compositionFit({members:[shooter,guard,...passives.map(m=>({...m,p:{reviewed:false}}))]},null);
+ assert.equal(incomplete.known,2);assert.equal(incomplete.size,5);assert.ok(incomplete.score<=40);assert.ok(team.score>incomplete.score);
 });
 
 test('cross-role mechanics require the actual second cast and enemy-targeted stun',()=>{
@@ -320,12 +322,14 @@ test('cross-role mechanics require the actual second cast and enemy-targeted stu
  assert.match(control.failure,/自施 R/);
 });
 
-test('created terrain raises Poppy and Anivia fit without requiring an authored combination',()=>{
+test('created-terrain evidence stays independently verifiable without forcing the pairing into the score',()=>{
  const current=[{role:'top',party:true},{role:'mid',party:true}];
  const lineup=current.map(slot=>({...slot,champion:slot.role==='top'?'Poppy':'Anivia'}));
  const fit=lineupFit(lineup,current,game.champions,{patch:game.patch,scope:'party',editableRoles:['top','mid'],catalogStatus:{}});
- assert.ok(fit.score>=60);
- assert.equal(fit.tacticEvidence.setupSpell,'Crystallize');
- assert.equal(fit.tacticEvidence.followSpell,'PoppyE');
- assert.match(fit.tacticEvidence.failure,/墙体已经消失/);
+ assert.ok(Number.isFinite(fit.score));
+ const graph=createCompositionMechanics(new Map(game.champions.map(c=>[c.id,c])),game.patch);
+ const evidence=graph.match(lineup[0],lineup[1],true).tactic.evidence;
+ assert.equal(evidence.setupSpell,'Crystallize');assert.equal(evidence.followSpell,'PoppyE');
+ assert.match(evidence.failure,/墙体已经消失/);
+ assert.equal(fit.tacticEvidence,undefined,'The restored score does not manufacture a mechanism bonus');
 });

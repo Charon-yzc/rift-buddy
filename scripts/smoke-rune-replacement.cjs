@@ -9,7 +9,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(check,label){for(let n=0;n<160;n++){if(await check())return;await delay(100);}throw Error(label);}
 async function run(){
  app.setPath('userData',root);
- const release=JSON.parse(await fs.readFile('release/latest.json')),base=path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));
+ const release=JSON.parse(await fs.readFile(process.env.RIFT_BUDDY_SMOKE_RELEASE||'release/latest.json')),base=path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));
  const {getBuild}=await import(pathToFileURL(path.join(base,'src/core/builds.mjs')).href);
  const old=getBuild(data.champions.find(c=>c.id==='Ashe'),'bottom',data).runePage;
  const preset={...old,id:8000,name:'客户端预设',isEditable:false,current:false};

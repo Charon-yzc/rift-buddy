@@ -1,6 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {getBuild} from '../src/core/builds.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
+const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));data.builds=projectBuildSources(JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const hero=id=>data.champions.find(champion=>champion.id===id);
 test('source core combination cannot force Yasuo to buy three non-attack-speed items before his attack-speed boots',()=>{
  const original=data.builds['Yasuo:mid'],reference={...original,core:[{...original.core[0],items:[6673,3031,6333]}],boots:[{items:[3006],samples:100}]};

@@ -89,6 +89,18 @@ test('low-fit retained pairs are filtered as new suggestions but chosen growth l
  const [chosen]=worker({...input,slots:growth});assert.ok(chosen);assert.deepEqual(chosen.targets,[]);assert.equal(chosen.adaptive.kind,'shared');assert.equal(chosen.adaptive.tempo,'growth');
 });
 
+test('member replacement applies the same displayed-fit floor and public projection as a new search',()=>{
+ const slots=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role),...(['top','jungle'].includes(s.role)?{champion:s.role==='top'?'Kayle':'Kindred',locked:true,manualPosition:true}:{})}));
+ const input={slots,fitSlots:slots,champions,patch,scope:'party',minimumFitScore:60,rolePools:{mid:{mode:'only',heroes:['Vladimir','Viktor']}}};
+ const [current]=recommend({...input,rolePools:{mid:{mode:'only',heroes:['Vladimir']}}}),before=structuredClone(current);
+ const [raw]=recommend({...input,excluded:['Vladimir']});
+ const fit=lineupFit(raw.slots,slots,champions,{scope:'party',editableRoles:raw.targets,patch});assert.equal(fit.score,54);
+ assert.deepEqual(replaceMember(current,'mid',input),[],'The 54-point alternative cannot bypass the 60-point replacement floor');
+ const [allowed]=replaceMember(current,'mid',{...input,minimumFitScore:54});assert.ok(allowed);assert.equal(allowed.recommendationFit.score,54);
+ for(const role of ['top','jungle'])assert.deepEqual(allowed.slots.find(s=>s.role===role),current.slots.find(s=>s.role===role));
+ assert.deepEqual(current,before);
+});
+
 test('fit evidence changes cache identity while ignored hovers and timer refreshes do not',()=>{
  const ids=['Garen','Amumu','Ahri','Ashe',null],fitSlots=visibleRoster(ids),fitSession=rawRoster(ids),confirmed=clientRecommendationDraft(fitSlots,fitSession,champions,{ownRole:'support'}),base={slots:confirmed.slots,clientSession:confirmed.session,champions,scope:'context',soloRole:'support',fitSlots,fitSession},before=recommendationKey(base);
  for(const id of ['Veigar',null]){const next=structuredClone(base);next.fitSession.myTeam[2].championId=id?key(id):0;next.fitSlots[2].champion=id;assert.notEqual(recommendationKey(next),before);}
@@ -99,7 +111,7 @@ test('fit evidence changes cache identity while ignored hovers and timer refresh
 
 test('style selects different actual trio candidates, without adding points to their fit',()=>{
  const input={slots:createSlots(),champions,patch,scope:'party',minimumFitScore:60,stylePolicy:true,limit:3,randomSeed:'style-proof',rolePools:{mid:{mode:'only',heroes:['Annie','Ahri','Orianna','Yasuo']},bottom:{mode:'only',heroes:['Ashe','Lucian','Kalista','Yasuo']},support:{mode:'only',heroes:['Braum','Nami','Alistar','Malphite']}}},sets=[];
- for(const style of ['balanced','fun','wild']){const rows=orderRecommendationPage(recommend({...input,style}));assert.ok(rows.length);sets.push(rows.map(r=>r.id).join(','));for(const row of rows){assert.ok(row.recommendationFit.score>=60);assert.equal(row.recommendationFit.score,lineupFit(row.slots,input.slots,champions,{scope:'party',editableRoles:row.targets,patch}).score);}if(style==='balanced')assert.ok(rows.every(row=>recommendationStyleTier(row,style)===2));if(style==='wild')assert.ok(rows.every(row=>recommendationStyleTier(row,style)===2));}
+ for(const style of ['balanced','fun','wild']){const rows=worker({...input,style});assert.ok(rows.length);sets.push(rows.map(r=>r.id).join(','));for(const row of rows){assert.ok(row.recommendationFit.score>=60);assert.equal(row.recommendationFit.score,lineupFit(row.slots,input.slots,champions,{scope:'party',editableRoles:row.targets,patch}).score);}assert.ok(rows.every(row=>row.slots.filter(slot=>row.targets.includes(slot.role)).every(slot=>input.rolePools[slot.role].heroes.includes(slot.champion))));}
  assert.equal(new Set(sets).size,3,'All styles must make an observable selection difference on the same hero pools');
 });
 
@@ -114,12 +126,12 @@ test('sorting a page preserves the worker stream and successive pages have no du
  assert.equal(new Set([...left,...right]).size,left.length+right.length);
 });
 
-test('style picks teammate variants after the familiar draw without changing the member hero probabilities',()=>{
+test('teammate variant multiplicity cannot change the bound member hero probability',()=>{
  const entries=['Ashe','Jinx'].flatMap(champion=>['Braum','Malphite'].map(support=>({slots:[{role:'bottom',champion},{role:'support',champion:support}],score:80}))),weights={bottom:{Ashe:.85,Jinx:.15}};
  let familiar=0;
  for(let i=0;i<300;i++){
   const plain=familiarityWinner(entries,['bottom','support'],weights,'style-mass',i,{bestVariant:true});
-  for(const preferred of ['Braum','Malphite']){const styled=familiarityWinner(entries,['bottom','support'],weights,'style-mass',i,{bestVariant:true,variantPriority:row=>Number(row.slots[1].champion===preferred)});assert.equal(styled.slots[0].champion,plain.slots[0].champion);assert.equal(styled.slots[1].champion,preferred);}
+  const expanded=[...entries,...entries.filter(row=>row.slots[0].champion==='Jinx').flatMap(row=>Array(12).fill(row))];const withVariants=familiarityWinner(expanded,['bottom','support'],weights,'style-mass',i,{bestVariant:true});assert.equal(withVariants.slots[0].champion,plain.slots[0].champion);assert.equal(withVariants.score,80);
   if(plain.slots[0].champion==='Ashe')familiar++;
  }
  assert.ok(familiar>=235&&familiar<=275,String(familiar));
@@ -128,14 +140,16 @@ test('style picks teammate variants after the familiar draw without changing the
 test('actual worker keeps a fixed familiar population across successive cursor pages',()=>{
  const slots=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),...(s.role==='support'?{champion:'Nami',locked:true}:{})})),base={slots,champions,patch,scope:'bot',style:'wild',limit:6,rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx','Vayne','Jhin','Ezreal','MissFortune','Lucian','KogMaw']}}};
  let unfamiliar=0;
- for(let seed=0;seed<24;seed++){
-  const input={...base,randomSeed:'fixed-mass:'+seed,familiarityByRole:{bottom:{member:'own',mass:.85,usage:{sampled:100,counts:{Ashe:100}}}}},pages=workerPages(input),rows=pages();
-  unfamiliar+=rows.filter(row=>row.slots.find(s=>s.role==='bottom').champion!=='Ashe').length;
+ // A weighted unique page samples without replacement: probability belongs
+ // to its first draw, not to the count of distinct heroes after exhaustion.
+ for(let seed=0;seed<96;seed++){
+  const input={...base,randomSeed:'fixed-mass:'+seed,familiarityByRole:{bottom:{member:'own',mass:.85,usage:{sampled:100,counts:{Ashe:100}}}}},pages=workerPages(input,{order:rows=>rows}),rows=pages();
+  assert.ok(rows.length);unfamiliar+=Number(rows[0].slots.find(s=>s.role==='bottom').champion!=='Ashe');
   const strict=worker({...input,familiarityByRole:{bottom:{member:'own',mass:1,usage:{sampled:100,counts:{Ashe:100}}}}});assert.equal(strict.length,1);assert.equal(strict[0].slots.find(s=>s.role==='bottom').champion,'Ashe');
   const next=pages();
   assert.equal(new Set([...rows,...next].map(r=>r.id)).size,rows.length+next.length);
  }
- assert.ok(unfamiliar<35,`Repeated familiar draws must be skipped, never donated to strangers: ${unfamiliar}`);
+ assert.ok(unfamiliar>=5&&unfamiliar<=30,`The first weighted draw should retain 85% familiarity across independent seeds: ${unfamiliar}/96`);
 });
 
 test('production styles preserve explicit tempo and each bound member hero preference',()=>{

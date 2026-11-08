@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "f7f5c91abdff46979a711b1f668c2907a563ef5a",
+  "purpose": "Exact historical publication format and independent author recipe contracts; use with snapshot-16.21/game.json",
+  "files": [
+    {
+      "source": "src/core/catalog-data.json",
+      "sha256": "45a148a13f8f72bb09e8b80fa7f1fdad3bde8c86fcd40abeeb732356ecd8a006"
+    },
+    {
+      "source": "src/core/hex-community-routes.json",
+      "sha256": "7af95e6d0606d81297587d669261e9e074e15b86d9fcbf9aee434d4bdad01715"
+    }
+  ]
+}

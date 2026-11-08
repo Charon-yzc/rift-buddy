@@ -8,24 +8,26 @@ const member=(role,champion,p={},range=550)=>({role,champion,c:{id:champion,name
 const guard=()=>member('support','Guard',{build:'enchanter',peel:true});
 const damagePoints=fit=>fit.breakdown.find(row=>row.key==='damage').points;
 
-test('a mage can execute a covered short window without being relabelled sustained output',()=>{
+// v0.59.0 responsibilities: range or a protector alone does not manufacture sustain.
+test('a short-window mage keeps its original profile without a synthetic covered-window bonus',()=>{
  const output=member('mid','WindowMage'),protector=guard();
  const fit=compositionFit({members:[output,protector]});
- assert.equal(fit.tactic.id,'covered-window');
- assert.match(fit.tactic.name,/技能空档退出/);
- assert.match(fit.relationships[0].kind,/短轮/);
+ assert.equal(fit.tactic.id,'none');
+ assert.equal(fit.rawScore,28.5);
+ assert.deepEqual(fit.relationships,[]);
  assert.equal(output.p.sustain,undefined);
- assert.ok(fit.score>=60&&fit.score<100);
- assert.ok(fit.score>compositionFit({members:[output,member('support','OtherMage')]}).score);
+ assert.ok(fit.score<60);
+ assert.ok(compositionFit({members:[{...output,p:{...output.p,sustain:true}},protector]}).score>fit.score);
 });
 
-test('two-player damage responsibility does not reward incidental opposite-type support damage',()=>{
+test('the restored damage budget uses the original member damage mix without rewriting sustain',()=>{
  const protector=guard(),physical=member('mid','Physical',{sustain:true,damageWeights:{ad:1,ap:0}});
  const magical={...physical,p:{...physical.p,damageWeights:{ad:0,ap:1}}};
  const a=compositionFit({members:[physical,protector]}),b=compositionFit({members:[magical,protector]});
  assert.equal(damagePoints(a),10);
- assert.equal(damagePoints(b),10);
- assert.equal(a.rawScore,b.rawScore);
+ assert.equal(damagePoints(b),0);
+ assert.equal(a.rawScore-b.rawScore,10);
+ assert.equal(a.tactic.id,b.tactic.id);
  const tank=member('top','Tank',{build:'tank',frontline:true},125);
  const noOutput=compositionFit({members:[tank,protector]});
  assert.equal(damagePoints(noOutput),0);
@@ -33,15 +35,15 @@ test('two-player damage responsibility does not reward incidental opposite-type 
  assert.ok(noOutput.gaps.some(gap=>gap.includes('缺少能接控制兑现伤害')));
 });
 
-test('the real Viktor and Zilean profiles retain their roles and receive a conditional window',()=>{
+test('real Viktor and Zilean profiles retain their original roles and unboosted window',()=>{
  const members=[['mid','Viktor'],['support','Zilean']].map(([role,id])=>{
   const c=game.champions.find(hero=>hero.id===id);return {role,champion:id,c,p:profile(c,role)};
  });
  const fit=compositionFit({members});
- assert.equal(fit.tactic.id,'covered-window');
- assert.ok(fit.score>=60);
+ assert.equal(fit.tactic.id,'none');
+ assert.ok(fit.score<60);
  assert.ok(members.every(m=>!m.p.sustain));
- assert.ok(!fit.relationships[0].sourceUrls,'generic jobs must not acquire authored-mechanism evidence');
+ assert.ok(fit.relationships.every(link=>!link.sourceUrls),'generic jobs must not acquire authored-mechanism evidence');
 });
 
 test('an assassin is neither excluded by class nor granted entry by a protector',()=>{
@@ -49,7 +51,9 @@ test('an assassin is neither excluded by class nor granted entry by a protector'
  assert.notEqual(compositionFit({members:[melee,guard()]}).tactic.id,'covered-window');
  for(const output of [{...melee,p:{...melee.p,engage:true}},{...melee,c:{...melee.c,stats:{attackrange:550}}}]){
   const fit=compositionFit({members:[output,guard()]});
-  assert.ok(fit.relationships.some(link=>link.kind==='短轮输出与接应'));
+  assert.equal(fit.tactic.id,'none');
+  assert.ok(!fit.relationships.some(link=>link.kind==='短轮输出与接应'));
+  assert.equal(output.p.sustain,undefined);
  }
 });
 
@@ -57,9 +61,10 @@ test('extra teammates contribute by their jobs and a single guard cannot cover a
  const output=member('mid','Window'),support=guard(),extra=member('top','OtherWindow');
  const crowded=compositionFit({members:[output,support,extra]});
  const covered=compositionFit({members:[output,support,{...extra,p:{...extra.p,build:'tank',frontline:true}}]});
- assert.equal(crowded.tactic.id,'covered-window');
- assert.equal(covered.tactic.id,'covered-window');
- assert.ok(covered.tactic.quality>crowded.tactic.quality);
+ assert.equal(crowded.tactic.id,'none');
+ assert.equal(covered.tactic.id,'none');
+ assert.equal(covered.known,crowded.known);
+ assert.ok(Number.isFinite(covered.score)&&Number.isFinite(crowded.score));
  assert.ok(crowded.gaps.some(gap=>gap.includes('持续输出缺口')));
  const full=[output,support,extra,member('jungle','Fourth'),member('bottom','Fifth')];
  const fit=compositionFit({members:full});
@@ -67,14 +72,15 @@ test('extra teammates contribute by their jobs and a single guard cannot cover a
  assert.ok(fit.gaps.some(gap=>gap.includes('持续输出缺口')));
 });
 
-test('generic coverage cannot replace a skill-conditional tactic with its own evidence',()=>{
+test('unsupported graph annotations do not manufacture scoring evidence',()=>{
  const members=[member('mid','Window'),guard()];
  const tacticEvidence={mechanicLabel:'控制接驻留力场',step:'实际禁锢后，目标仍须驻留足够时间。'};
  const graph={edge:()=>null,mechanics:{match:()=>({relation:{quality:.79,label:'控制接驻留力场',evidence:{}},tactic:{tactic:.49,evidence:tacticEvidence}})}};
  const fit=compositionFit({members},graph);
- assert.equal(fit.tactic.id,'conditional-mechanics');
- assert.equal(fit.tactic.quality,.49);
- assert.deepEqual(fit.tacticEvidence,tacticEvidence);
+ assert.equal(fit.tactic.id,'none');
+ assert.equal(fit.tactic.quality,0);
+ assert.equal(fit.tacticEvidence,undefined);
+ assert.ok(!fit.reason.includes(tacticEvidence.mechanicLabel));
  assert.equal(fit.rawScore,compositionFit({members},graph,{details:false}).rawScore);
 });
 
@@ -91,7 +97,7 @@ test('larger groups retain mixed-damage requirements and unknown-member ceilings
 });
 
 test('scalar caches include window eligibility and scoring agrees with detailed and reordered paths',()=>{
- const output=member('mid','Changing',{},125),members=[output,guard()],graph={edge:()=>null,fitCache:new Map()};
+ const output=member('mid','Changing',{sustain:true},125),members=[output,guard()],graph={edge:()=>null,fitCache:new Map()};
  const before=compositionFit({members},graph,{details:false});
  output.c.stats.attackrange=550;
  const after=compositionFit({members},graph,{details:false});

@@ -1,16 +1,18 @@
 // Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+import {BUNDLED_CATALOG,historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 import {clientPreparationPlan,clientPreparationControls,clientPreparationKey} from '../src/client-preparation-view.mjs';
 import {roomWorkspace} from '../src/room-workspace-view.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 import {captureRoomStrategy,captureRoomConfigurations} from '../src/core/room-configuration.mjs';
-import {creativeMemberCombo,creativeComboContext} from '../src/core/creative-plan.mjs';
+import {captureCreativePlan,creativeMemberCombo,creativeComboContext} from '../src/core/creative-plan.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 const data=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));data.builds=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries;
+historicalData(data);
 const slots=createSlots().map(s=>({...s,champion:({jungle:'Ivern',bottom:'Rengar',support:'Lulu'})[s.role]||null}));
-const strategy=captureRoomStrategy(slots,data),hero=data.champions.find(c=>c.id==='Rengar');
-const selection={id:hero.id,role:'bottom',mode:'rift',...creativeComboContext(creativeMemberCombo(strategy,hero.id,'bottom'))};
+const selected=BUNDLED_CATALOG.trios.find(t=>t.id==='ivern-rengar-lulu'),strategy=captureRoomStrategy(slots,data,captureCreativePlan({slots,scope:'party',trio:selected},data)),hero=data.champions.find(c=>c.id==='Rengar');
+const selection={id:hero.id,role:'bottom',mode:'rift',loadoutId:selected.members.find(m=>m.champion===hero.id).loadoutId,...creativeComboContext(creativeMemberCombo(strategy,hero.id,'bottom'))};
 const plan={selection,build:getBuild(hero,'bottom',data,selection)},client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:'777',localPlayerCellId:0,myTeam:[{cellId:0,championId:0}],actions:[[{type:'pick',actorCellId:0,completed:false}]]}};
 test('hex hover-only selection produces a hover-only plan without runes or items',()=>{
  const hero=data.champions.find(c=>c.id==='Ashe');
@@ -20,7 +22,7 @@ test('hex hover-only selection produces a hover-only plan without runes or items
  assert.ok(!('page' in prepared.value));assert.ok(!('itemSet' in prepared.value));
 });
 test('one-click payload uses the concrete selected combination and keeps explicit personal edits',()=>{
- assert(strategy);assert(plan.build.combo);const prepared=clientPreparationPlan(data,plan);
+ assert(strategy);assert(plan.build.combo);assert.equal(plan.build.loadoutId,'rengar-bush');const {loadoutId,...ordinary}=selection;assert.equal(getBuild(hero,'bottom',data,ordinary).loadoutId,'default','A selected combination does not silently replace the default source build');const prepared=clientPreparationPlan(data,plan);
  assert.deepEqual(prepared.value.page.selectedPerkIds,plan.build.runePage.selectedPerkIds);assert.deepEqual(prepared.value.summoners,plan.build.summoners);
  assert.equal(prepared.value.itemSet.associatedChampions[0],hero.key);
  const changed={selection:{...selection,summonerIds:[...plan.build.summoners].reverse()},build:getBuild(hero,'bottom',data,{...selection,summonerIds:[...plan.build.summoners].reverse()})};

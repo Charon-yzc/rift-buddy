@@ -9,6 +9,7 @@ import {normalizeRelayUrl,initialRelayUrl,DEFAULT_RELAY_URL,relayEndpoint,relayH
 import {createRoomService,RELAY_FRAME_BUDGET,RELAY_FRAME_REFILL_PER_SECOND} from '../services/room.mjs';
 import {ROOM_PROTOCOL,MAX_FRAME} from '../src/core/room.mjs';
 import fs from 'node:fs/promises';
+import {historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 import {TRIOS} from '../src/core/rules.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
@@ -706,9 +707,9 @@ test('exhausted initial relay transport attempts publish idle for an actionable 
 });
 
 test('relay late join and reconnect retain the sender trio configuration and accepted responsibilities',async t=>{
- const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
- data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
- const trio=TRIOS.find(t=>t.members.some(m=>m.champion==='Orianna'));
+ const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
+ data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries;historicalData(data);
+ const trio=TRIOS.find(t=>t.id==='diana-ori-rell');
  const lineup=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
  const strategy=captureRoomStrategy(lineup,data,captureCreativePlan({trio,slots:lineup,scope:'party'},data)),configurations=captureRoomConfigurations(lineup,data,createPreparationStore(),{creativePlan:strategy});
  assert.equal(configurations.length,3);assert(strategy);
@@ -731,13 +732,13 @@ test('relay late join and reconnect retain the sender trio configuration and acc
 });
 
 test('the default relay sends full mode, configuration and duties after publish, late join and reconnect',async t=>{
- const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
- data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
- const trio=TRIOS.find(row=>row.id==='ball-delivery');
+ const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
+ data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries;historicalData(data);
+ const trio=TRIOS.find(row=>row.id==='diana-ori-rell');
  const lineup=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
  const chosen=captureCreativePlan({slots:lineup,scope:'party',trio},data),strategy=captureRoomStrategy(lineup,data,chosen),configurations=captureRoomConfigurations(lineup,data,createPreparationStore(),{creativePlan:strategy});
  assert(strategy);assert.equal(configurations.length,3);
- const full={lineup,mode:'rift',pick:{champion:'Malphite',role:'top',mode:'rift'},configurations,strategy,at:123};
+ const full={lineup,mode:'rift',pick:{champion:'Diana',role:'jungle',mode:'rift'},configurations,strategy,at:123};
  assert(Buffer.byteLength(JSON.stringify(full))>10000,'exercise a realistic full trio, not a tiny lineup frame');
  const fake=fakeRelay(),service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayBackoffMs:2});t.after(()=>service.dispose());
  const socket=await joined(service,fake,{url:DEFAULT_RELAY_URL+'/',members:[{nick:'乙'}]});

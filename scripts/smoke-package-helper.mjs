@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {requestHelper} from '../services/client-helper.mjs';
-const release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
+const release=JSON.parse(await fs.readFile(process.env.RIFT_BUDDY_SMOKE_RELEASE||'release/latest.json','utf8'));
 const bundleRoot=path.join(release.directory,'resources/connection');
 const root=await fs.mkdtemp(path.resolve('.local/packaged-helper-'));
 const key=crypto.randomBytes(16).toString('hex');

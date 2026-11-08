@@ -1,6 +1,7 @@
 import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs/promises';import path from'node:path';import os from'node:os';import{generateKeyPairSync}from'node:crypto';
 import{communityHexItemFingerprint}from'../src/core/community-item-review.mjs';import{hexPlayerRoutes}from'../src/core/hex-routes.mjs';import{validateCommunityData}from'../services/community-data.mjs';import{publishCommunityData}from'../services/community-data-publish.mjs';
-const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('../data/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json');
+// Historical 16.21 Hex contracts use the frozen snapshot; current-patch acceptance is separate.
+const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('./fixtures/snapshot-16.21/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json');
 const value=()=>({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:routes.reviewedAt,catalog:structuredClone(catalog),hexRoutes:structuredClone(routes)});
 const live=()=>({...structuredClone(game),communityHexRoutes:structuredClone(routes)}),find=(d,hero='Lillia',augment=1045)=>hexPlayerRoutes({data:d,hero}).find(r=>r.augment.id===augment),ids=r=>r.gear.flatMap(g=>g.items.map(i=>i.id));
 test('offline creator evidence binds three observed Lillia items without a complete author build or Tab attribution',()=>{
@@ -29,7 +30,7 @@ test('route item review schema is exact, bounded and cannot approve unlisted ite
  for(const mutate of mutations){const v=value(),r=v.hexRoutes.routes.find(r=>r.hero==='Lillia');mutate(r);assert.throws(()=>validateCommunityData(v,game),/装备复核/);const d=live();d.communityHexRoutes=v.hexRoutes;assert.equal(find(d),undefined);}
 });
 test('later same-patch maintenance retains the original individual equipment review day',()=>{
- const v=value();v.reviewedAt='2026-10-26';v.hexRoutes.reviewedAt=v.reviewedAt;validateCommunityData(v,game);const d=live();d.communityHexRoutes=v.hexRoutes;assert(ids(find(d)).includes(3742));assert.equal(d.communityHexRoutes.routes.find(r=>r.hero==='Lillia').itemReview.reviewedAt,'2026-10-25');
+ const v=value(),recordDays=v.hexRoutes.routes.flatMap(r=>[r.itemReview?.reviewedAt,r.augmentReview?.reviewedAt,r.communitySource.publishedAt?.slice(0,10),r.communitySource.editedAt?.slice(0,10)]).filter(Boolean);v.reviewedAt=recordDays.sort().at(-1);assert(v.reviewedAt>v.hexRoutes.routes.find(r=>r.hero==='Lillia').itemReview.reviewedAt);v.hexRoutes.reviewedAt=v.reviewedAt;validateCommunityData(v,game);const d=live();d.communityHexRoutes=v.hexRoutes;assert(ids(find(d)).includes(3742));assert.equal(d.communityHexRoutes.routes.find(r=>r.hero==='Lillia').itemReview.reviewedAt,'2026-10-25');
 });
 test('new review format rejects old floors and stale review hashes before publishing, while legacy snapshots retain their format floor',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'community-item-review-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const pair=generateKeyPairSync('ed25519'),keyFile=path.join(root,'key.pem');await fs.writeFile(keyFile,pair.privateKey.export({type:'pkcs8',format:'pem'}));

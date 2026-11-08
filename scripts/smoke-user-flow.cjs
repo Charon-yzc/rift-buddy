@@ -104,7 +104,9 @@ async function run(){
  main.setSize(1080,720);await delay(150);
  assert.ok(await js('{const r=document.querySelector(".plan-actions").getBoundingClientRect();r.bottom<=innerHeight&&r.top>=0}'),'Confirmation footer clipped');
  await js('document.querySelector(".drawer-content").scrollTop=220');const scroll=await js('document.querySelector(".drawer-content").scrollTop');
- const id=(await members())[0].id;await click('.lineup-detail [data-action=build]');await click('[data-action=back-result]');
+ // A candidate avatar now selects that hero. Browse configuration explicitly
+ // here so the unchanged recommendation retains its return/scroll identity.
+ const member=(await members())[0],id=member.id;main.webContents.send('open-build',{...member,mode:'rift'});await until(()=>js('!!document.querySelector("[data-action=back-result]")'),'Configuration return missing');await click('[data-action=back-result]');
  assert.equal((await members())[0].id,id);assert.equal(await js('document.querySelector(".drawer-content").scrollTop'),scroll);
  await capture('replacement-and-confirmation.png');
  // A genuinely exhausted replacement pool must leave the existing scheme usable.
@@ -127,19 +129,21 @@ async function run(){
  // From here the main process reads the same synthetic pick through the
  // isolated lockfile, so no stale offline snapshot can replace it.
  syntheticClient=publicFixture;
- ipcMain.removeHandler('prepare-selection');ipcMain.handle('prepare-selection',(_event,value)=>{prepares.push(value);const selected=bootstrapData.champions.find(hero=>hero.id===value.champion);publicFixture.session.myTeam[0].championId=0;publicFixture.session.myTeam[0].championPickIntent=selected.key;return {complete:true,steps:Object.fromEntries(['hover','runes','spells','items'].map(step=>[step,{status:'done',...(step==='runes'?{pageId:44}:{})}]))};});
+ ipcMain.removeHandler('prepare-selection');ipcMain.handle('prepare-selection',(_event,value)=>{prepares.push(value);const selected=bootstrapData.champions.find(hero=>hero.id===value.champion);publicFixture.session.myTeam[0].championId=0;publicFixture.session.myTeam[0].championPickIntent=selected.key;return {complete:true,steps:Object.fromEntries((value.preselectOnly?['hover']:['hover','runes','spells','items']).map(step=>[step,{status:'done',...(step==='runes'?{pageId:44}:{})}]))};});
   await click('[data-action=navigate][data-route=settings]');await click('.settings-connection [data-action=sync]');
   await until(async()=>publicReads>0&&await js('document.querySelector(".settings-connection [data-action=sync]")?.disabled===false&&document.querySelector(".settings-connection .badge")?.textContent==="已连接"'),'Mock public sync did not finish');
   await click('[data-action=navigate][data-route=draft]');await until(()=>js('!!document.querySelector(".champ-pick[data-id=Garen]")'),'Mock public pick not read');
   assert.equal((await state()).preferences.autoSync,false,'Synthetic client-status fixture must not enable native background polling');
   assert.ok(clientBroadcasts.every(phase=>phase==='ChampSelect'),'The main process published a client snapshot that disagrees with the synthetic pick');
   await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');
- try{await until(()=>prepares.length===1,'A different unlocked reference hero was not prepared');}catch(error){console.error('UNLOCKED_REFERENCE_CONTEXT',JSON.stringify({prepares:prepares.map(p=>({champion:p.champion,role:p.role})),publicPhase:publicFixture.phase,syntheticReads,ui:await js('({toast:document.querySelector("#toast")?.textContent,route:document.querySelector("main[data-page]")?.dataset.page,pending:document.querySelector("[data-action=sync]")?.disabled,drawer:!!document.querySelector(".drawer")})')}));throw error;}
- assert.equal(prepares[0].champion,'Seraphine');assert.equal(prepares[0].role,'bottom');assert.equal(prepares[0].page.selectedPerkIds.length,9);assert.ok(prepares[0].itemSet.blocks.length);
+ try{await until(()=>prepares.length===2,'An unlocked hero must be selected before its default configuration is prepared');}catch(error){console.error('UNLOCKED_REFERENCE_CONTEXT',JSON.stringify({prepares:prepares.map(p=>({champion:p.champion,role:p.role,preselectOnly:p.preselectOnly})),publicPhase:publicFixture.phase,syntheticReads,ui:await js('({toast:document.querySelector("#toast")?.textContent,route:document.querySelector("main[data-page]")?.dataset.page,pending:document.querySelector("[data-action=sync]")?.disabled,drawer:!!document.querySelector(".drawer")})')}));throw error;}
+ for(const prepared of prepares){assert.equal(prepared.champion,'Seraphine');assert.equal(prepared.role,'bottom');assert.equal(prepared.sessionGameId,'6601');}
+ assert.equal(prepares[0].preselectOnly,true);assert.equal(prepares[0].page,undefined);assert.equal(prepares[0].itemSet,undefined);
+ assert.equal(prepares[1].preselectOnly,undefined);assert.equal(prepares[1].selection.loadoutId,'default');assert.equal(prepares[1].selection.comboId,undefined,'A fresh avatar inherited a former private configuration');assert.equal(prepares[1].page.selectedPerkIds.length,9);assert.ok(prepares[1].itemSet.blocks.length);
  await until(()=>js('!document.querySelector(".drawer")'),'Unconfirmed hero click must keep configuration closed');
  await click('[data-action=navigate][data-route=draft]');await until(()=>js('!!document.querySelector("[data-action=task-configuration]")'),'Prepared hero configuration entry missing');await click('[data-action=task-configuration]');
  await until(()=>js('!!document.querySelector(".configuration-current [data-action=configuration-switch]")'),'Explicit configuration navigation failed');
- assert.equal(prepares.length,1,'Opening the configuration repeated the client preparation');
+ assert.equal(prepares.length,2,'Opening the configuration repeated the client preparation');
  assert.equal(await js('document.querySelectorAll(".rune-target-warning").length'),0,'The reference lane must not block an explicit unlocked hero choice');
  // Changing the arranged partner must not leak a former combo's private build.
  // Return to manual planning and explicitly choose our own bottom role first.

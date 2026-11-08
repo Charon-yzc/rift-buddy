@@ -1,6 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';import {hexMechanismMicroRoutes} from '../src/core/hex-micro-routes.mjs';import {hexRouteCard} from '../src/core/hex-route-card.mjs';import {hexMicroHint} from '../src/core/hex-micro-hint.mjs';import {validateCommunityData} from '../services/community-data.mjs';
-const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('../data/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json'),live=()=>({...structuredClone(game),communityHexRoutes:structuredClone(routes)}),find=(d,hero,id,owned=[])=>hexPlayerRoutes({data:d,hero,owned}).find(r=>r.augment.id===id);
+// Historical 16.21 Hex contracts use the frozen snapshot; current-patch acceptance is separate.
+const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('./fixtures/snapshot-16.21/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json'),live=()=>({...structuredClone(game),communityHexRoutes:structuredClone(routes)}),find=(d,hero,id,owned=[])=>hexPlayerRoutes({data:d,hero,owned}).find(r=>r.augment.id===id);
 
 test('editorial tank and on-hit routes add different combat plans without inventing creator skills, six items or current win rates',()=>{
  validateCommunityData({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:routes.reviewedAt,catalog,hexRoutes:routes},game);
@@ -10,12 +11,12 @@ test('editorial tank and on-hit routes add different combat plans without invent
 
 test('Heartsteel task corrects the source threshold and reward and keeps Warmog conditions inside its own gear group',()=>{
  const r=find(game,'TahmKench',1152),micro=hexMechanismMicroRoutes([r])[0],core=micro.augments.find(a=>a.core),hint=hexMicroHint(micro,core,'augment').brief.slice(0,100);assert.match(hint,/300层或以上/);assert.match(hint,/乘以3/);assert.match(r.play[0],/至少300层/);assert.match(r.play[0],/不把后续/);
- const warm=micro.items.find(i=>i.id===3083);assert(warm);const warmHint=hexMicroHint(micro,warm,'item').brief.slice(0,100);for(const term of ['2000','8秒','未完全解析','不承诺'])assert(warmHint.includes(term));assert.match(r.optionalAugments.find(a=>a.id===1353).brief,/5%.*65%/s);assert.match(game.items[3083].modeTooltips.hex.description,/〔数值未解析〕/);
+ assert.deepEqual(micro.gearGroups.map(g=>[g.when,g.why,g.items.map(i=>i.id)]),r.gear.map(g=>[g.when,g.why,g.items.map(i=>i.id)]));assert.deepEqual(micro.items,micro.gearGroups[0].items);const warmGroup=micro.gearGroups.find(g=>g.items.some(i=>i.id===3083)),warm=warmGroup?.items.find(i=>i.id===3083);assert(warm);assert(!micro.items.some(i=>i.id===3083));const warmHint=hexMicroHint(micro,warm,'item').brief.slice(0,100);for(const term of ['2000','8秒','未完全解析','不承诺'])assert(warmHint.includes(term));assert.match(r.optionalAugments.find(a=>a.id===1353).brief,/5%.*65%/s);assert.match(game.items[3083].modeTooltips.hex.description,/〔数值未解析〕/);
 });
 
 test('Master Yi native conditions retain actual attack triggers and Hex item values without multiplied resets',()=>{
  const r=find(game,'MasterYi',1058),micro=hexMechanismMicroRoutes([r])[0];assert.match(r.play.join(' '),/1.25秒/);assert.match(r.play.join(' '),/不免眩晕或压制/);assert.doesNotMatch(r.play.join(' '),/无限Q|固定次数就能刷新Q[^。]/);assert.match(r.caution,/不能把连击/);assert.match(r.optionalAugments[0].brief,/40%伤害.*40%效能.*10%/s);
- const bork=hexMicroHint(micro,micro.items.find(i=>i.id===3153),'item').brief.slice(0,100);assert.match(bork,/近战9%目标当前生命/);const dance=hexMicroHint(micro,micro.items.find(i=>i.id===6333),'item').brief.slice(0,100);for(const term of ['3秒','2秒','100%','不是免伤'])assert(dance.includes(term));assert.doesNotMatch(dance,/75%/);
+ assert.deepEqual(micro.gearGroups.map(g=>[g.when,g.why,g.items.map(i=>i.id)]),r.gear.map(g=>[g.when,g.why,g.items.map(i=>i.id)]));assert.deepEqual(micro.items,micro.gearGroups[0].items);const bork=hexMicroHint(micro,micro.items.find(i=>i.id===3153),'item').brief.slice(0,100);assert.match(bork,/近战9%目标当前生命/);const dance=hexMicroHint(micro,micro.gearGroups.flatMap(g=>g.items).find(i=>i.id===6333),'item').brief.slice(0,100);for(const term of ['3秒','2秒','100%','不是免伤'])assert(dance.includes(term));assert.doesNotMatch(dance,/75%/);
 });
 
 test('current hero, core effect and item changes withdraw only their scope, and optional gear never survives as fixed advice',()=>{

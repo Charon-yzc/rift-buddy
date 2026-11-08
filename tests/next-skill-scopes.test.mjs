@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
-import {BUNDLED_CATALOG,validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG,historicalData,historicalSelection} from './fixtures/snapshot-16.20/catalog.mjs';
 import {TRIOS,DUOS} from '../src/core/rules.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {legalSkillOrder} from '../src/core/skill-advice.mjs';
-import {createSlots,recommend} from '../src/core/recommend.mjs';
+import {createSlots,recommend as recommendActual} from '../src/core/recommend.mjs';
 import {loadoutSelector} from '../src/build-options-view.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import {captureTeamConfigurations} from '../src/core/team-favorites.mjs';
@@ -20,8 +21,13 @@ const hero=id=>data.champions.find(c=>c.id===id);
 function accepted(combo){
  const members=combo.members||[{champion:combo.carry,role:'bottom'},{champion:combo.support,role:'support'}],slots=createSlots().map(s=>({...s,champion:members.find(m=>m.role===s.role)?.champion||null,party:members.some(m=>m.role===s.role),locked:members.some(m=>m.role===s.role)}));
  const result={slots,scope:'party',...(members.length===3?{trio:combo}:{duo:combo})},creativePlan=captureCreativePlan(result,data);
- return captureTeamConfigurations({...result,creativePlan},data,createPreparationStore());
+ const saved=members.map(m=>({id:m.champion,role:m.role,mode:'rift',...historicalSelection(combo.id,m.champion,m.role),comboId:creativePlan.id,creativePlan}));
+ // Replaying a saved manual preparation does not authorize a new capture of pending advice.
+ if(data.catalogInfo.status[combo.id].stale){assert.throws(()=>captureTeamConfigurations({...result,creativePlan},data,createPreparationStore()),/组合依据已变化/);return saved;}
+ const store=createPreparationStore();for(const selection of saved)store.remember(selection);
+ return captureTeamConfigurations({...result,creativePlan},data,store);
 }
+historicalData(data);
 test('accepted Camille/Galio/Vi and Shen/Nocturne/Galio plans have usable scoped skill nodes with independent provenance',()=>{
  for(const id of ['camille-galio-vi','shen-nocturne-galio']){
   const combo=TRIOS.find(c=>c.id===id);assert(combo);const configurations=accepted(combo);assert.equal(configurations.length,3);
@@ -81,9 +87,9 @@ test('four/five-member preparation retains active subgroup preparation and prese
   const slots=createSlots().map(s=>({...s,champion:picks[s.role]||null,party:!!picks[s.role],locked:!!picks[s.role]}));
   const [result]=recommend({slots,champions:data.champions,scope:'party',builds:data.builds,patch:data.patch,catalogStatus:data.catalogInfo.status});assert(result);
   const creativePlan=captureCreativePlan(result,data);assert.equal(creativePlan.archetype,'shared');
-  const selection={comboId:creativePlan.id,creativePlan},ordinary=getBuild(hero('Vi'),'jungle',data,selection);assert.equal(ordinary.loadoutId,'trio-vi-followup');assert.equal(ordinary.skillOrder.length,18);
-  assert.match(loadoutSelector(ordinary,data),/当前主线的三人专用配置/);
-  const explicit=getBuild(hero('Vi'),'jungle',data,{...selection,loadoutId:'default'});assert.equal(explicit.loadoutId,'default');assert.equal(explicit.skillOrder.length,15);assert.match(loadoutSelector(explicit,data),/同位置常用配置/);
+  const selection={comboId:creativePlan.id,creativePlan,loadoutId:'trio-vi-followup'},ordinary=getBuild(hero('Vi'),'jungle',data,selection);assert.equal(ordinary.loadoutId,'trio-vi-followup');assert.equal(ordinary.skillOrder.length,18);
+  assert.match(loadoutSelector(ordinary,data),/配置玩法/);
+  const explicit=getBuild(hero('Vi'),'jungle',data,{...selection,loadoutId:'default'});assert.equal(explicit.loadoutId,'default');assert.equal(explicit.skillOrder.length,15);assert.match(loadoutSelector(explicit,data),/常规位置配置/);
   assert(!explicit.selectionWarnings.some(s=>s.includes('个人准备当前使用普通位置参考')));
  }
 });
@@ -99,3 +105,6 @@ test('Rengar bottom has a reviewed full mechanism reference while keeping empowe
  const sera=BUNDLED_CATALOG.loadouts.find(l=>l.id==='sera-team');assert.equal(sera.patch,'16.20');assert.match(sera.why,/海力亚先伤害敌方英雄积充能/);
  assert.equal(BUNDLED_CATALOG.loadouts.find(l=>l.id==='farm-tank').patch,'16.19','other old gear review remains unchanged');
 });
+
+// Supply the same version/source context as the application recommendation call.
+function recommend(input){return recommendActual({patch:data.patch,builds:data.builds,catalogStatus:data.catalogInfo?.status,...input});}

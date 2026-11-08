@@ -1,5 +1,6 @@
+// Frozen 16.21 acceptance contract; tests/hex-live-bundle.test.mjs covers the actual current bundle.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import vm from 'node:vm';
-import {hexAugmentAcquisition,hexHandbookAugments,hexOrdinaryAugments,hexCurrentAugmentIds,hexFavoriteIsCurrent} from '../src/core/hex-acquisition.mjs';
+import {hexAugmentAcquisition,hexHandbookAugments,hexOrdinaryAugments,hexManualAugments,hexCurrentAugmentIds,hexFavoriteIsCurrent} from '../src/core/hex-acquisition.mjs';
 import {hexCatalogDisabled} from '../src/core/hex-catalog.mjs';import {isCurrentHexData,HEX_DATA_PENDING} from '../src/core/hex-data-current.mjs';
 import {hexHeroPool} from '../src/core/hex-pool.mjs';import {hexPoolView,hexPoolBadge} from '../src/hex-pool-view.mjs';
 import {hexAugmentReference} from '../src/core/hex-augment-reference.mjs';import {escape,asset,icon,button} from '../src/ui.mjs';
@@ -7,8 +8,8 @@ import {hexConfigurationView} from '../src/hex-configuration-view.mjs';
 import {companionPlanView} from '../src/companion-view.mjs';import {getBuild} from '../src/core/builds.mjs';import {selectedBuildFields} from '../src/core/build-favorites.mjs';
 import {resolveHexAugmentInput} from '../src/core/hex-recommendations.mjs';import {hexAugmentDetail} from '../src/core/hex-augment-detail.mjs';
 import FavoriteList from '../src/generated/FavoriteList.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
-data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
+data.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url))).entries;
 const line=name=>source.split('\n').find(line=>line.startsWith('function '+name+'(')||line.startsWith('async function '+name+'('));
 const visible=hexHandbookAugments(data),retired=data.augments.filter(a=>hexCatalogDisabled(data,a)),active=hexOrdinaryAugments(data)[0];
 
@@ -65,7 +66,7 @@ test('full configuration favorite caption follows old-only, add current, remove 
 });
 
 test('actual input handler accepts explicitly typed catalogue-conflicting offers while browse stays filtered and system offers stay rejected',async()=>{
- let handler;const changes=[],errors=[],context=vm.createContext({document:{addEventListener:(_event,fn)=>handler=fn,querySelector:()=>null},data,hexOrdinaryAugments,resolveHexAugmentInput,overlay:{contains:()=>false},buildView:null,hexRoundSnapshot:{manual:{context:'isolated',options:[]}},changeHexRound:async(operation,id)=>changes.push([operation,id]),render:()=>{},toast:message=>errors.push(message)});
+ let handler;const changes=[],errors=[],context=vm.createContext({document:{addEventListener:(_event,fn)=>handler=fn,querySelector:()=>null},data,hexManualAugments,resolveHexAugmentInput,overlay:{contains:()=>false},buildView:null,hexRoundSnapshot:{manual:{context:'isolated',options:[]}},changeHexRound:async(operation,id)=>changes.push([operation,id]),render:()=>{},toast:message=>errors.push(message)});
  vm.runInContext(source.split('\n').find(line=>line.startsWith("document.addEventListener('change'")&&line.includes('[data-hex-option-input]')),context);
  const submit=async a=>handler({target:{matches:()=>true,value:a.name+' · #'+a.id,closest:()=>({dataset:{hexContext:'isolated'}})}});
  await submit(retired[0]);assert.deepEqual(changes,[['compare',retired[0].id]]);assert.deepEqual(errors,[]);assert(!hexOrdinaryAugments(data).some(a=>a.id===retired[0].id));

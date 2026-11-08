@@ -13,7 +13,7 @@ const spawn=cp.spawn;cp.spawn=(file,...args)=>{if(!file.endsWith('window-observe
 dialog.showOpenDialog=async()=>({canceled:false,filePaths:[path.join(root,'incoming.json')]});dialog.showSaveDialog=async()=>({canceled:false,filePath:path.join(root,'export.json')});
 async function until(check,label){for(let n=0;n<180;n++){if(await check())return;await delay(50);}throw Error(label);}
 async function run(){
- app.setPath('userData',root);const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json')),base=source?path.resolve('.'):path.join(release.directory,'resources/app.asar');require(path.join(base,'electron/main.cjs'));
+ app.setPath('userData',root);const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile(process.env.RIFT_BUDDY_SMOKE_RELEASE||'release/latest.json')),base=source?path.resolve('.'):path.join(release.directory,'resources/app.asar');require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');const js=code=>main.webContents.executeJavaScript(code,true);
  await until(()=>js('!!document.querySelector("[data-action=recommend]")'),'UI missing');await delay(250);
  const bootstrap=()=>js('window.buddy.bootstrap().then(b=>({state:b.state,source:b.data.buildSource}))'),before=await bootstrap(),bytes=await fs.readFile(path.join(root,'settings.json'));

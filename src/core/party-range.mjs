@@ -71,7 +71,9 @@ export function reconcilePartyRange(slots,session,champions,{count,party,ownRole
   const located=slot.manualPosition||roleOf(player?.assignedPosition)||confirmedPlayerPick(player,session);
   return !!located&&!memberCells.has(slot.clientCellId);
  };
- const available=slot=>slot&&!(slot.partyManual&&!slot.party)&&!occupiedByOther(slot);
+ // A confirmed ally is not automatically a premade member. An explicit
+ // user mark is independent evidence and follows that player during a swap.
+ const available=slot=>slot&&!(slot.partyManual&&!slot.party)&&(slot.partyManual&&slot.party||!occupiedByOther(slot));
  const used=new Set();
  const use=role=>{const slot=ordered.find(value=>value.role===role);if(used.size<count&&available(slot))used.add(role);};
  const hints=members.map(member=>{

@@ -4,8 +4,9 @@ import fs from 'node:fs/promises';
 import {createGuideModel,selectGuide,validateGuideState,currentPlayerSelection} from '../src/core/guide.mjs';
 import {defaultState,validateState,mergeState} from '../services/storage.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 try{data.spellbook=JSON.parse(await fs.readFile('data/spells.json','utf8')).champions||{};}catch{data.spellbook={};}
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const selection={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,conditions:[]};
@@ -35,9 +36,9 @@ test('guide requests reject malformed heroes, modes, conditions, plans and overs
 });
 test('guide state round trip retains local progress and importing another backup preserves local guide',()=>{
  const guide={...selectGuide(null,selection),completedItems:['3031'],opacity:.85,collapsed:true};
- const state={...defaultState(),guide},restored=validateState(state);assert.deepEqual(restored.guide,{...guide,collapsed:false});
+ const state={...defaultState(),guide},restored=validateState(state);assert.deepEqual(restored.guide,{...guide,collapsed:false,progressGameUnknown:true});
  const merged=mergeState(restored,{...defaultState(),guide:selectGuide(null,{...selection,id:'Jhin'})},data.champions);
- assert.deepEqual(merged.guide,{...guide,collapsed:false});assert.equal(validateState({...state,guide:{...guide,completedItems:['private',3031],opacity:0}}).guide.opacity,1);
+ assert.deepEqual(merged.guide,{...guide,collapsed:false,progressGameUnknown:true});assert.equal(validateState({...state,guide:{...guide,completedItems:['private',3031],opacity:0}}).guide.opacity,1);
 });
 test('current player shortcut respects manual positions and never substitutes another player',()=>{
  const session={myTeam:[{cellId:1,championId:22,assignedPosition:'BOTTOM'},{cellId:2,championId:99,assignedPosition:'UTILITY'}],localPlayerCellId:1};

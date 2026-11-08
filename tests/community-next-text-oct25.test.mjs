@@ -2,7 +2,8 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';import {hexMechanismMicroRoutes} from '../src/core/hex-micro-routes.mjs';
 import {validateCommunityData} from '../services/community-data.mjs';import {hexChampionReview}from'../src/core/hex-review.mjs';
 import {publishCommunityData}from'../services/community-data-publish.mjs';import {generateKeyPairSync}from'node:crypto';import path from'node:path';import os from'node:os';
-const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('../data/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json');
+// Historical 16.21 Hex contracts use the frozen snapshot; current-patch acceptance is separate.
+const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('./fixtures/snapshot-16.21/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json');
 const find=(data,hero,id,owned=[])=>hexPlayerRoutes({data,hero,options:[id],owned}).find(r=>r.augment.id===id);
 test('two post-live first-person text excerpts stay partial and need the current independent hero anchors',()=>{
  validateCommunityData({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:routes.reviewedAt,catalog,hexRoutes:routes},game);
@@ -14,9 +15,9 @@ test('two post-live first-person text excerpts stay partial and need the current
  }
 });
 test('Karthus does not recommend AD items as an unconditional Eureka build or promise creator panels',()=>{
- const r=find(game,'Karthus',1030),micro=hexMechanismMicroRoutes([r])[0];assert.deepEqual(r.optionalAugments.map(a=>a.id),[3132,1048,1205]);assert.deepEqual(micro.items.map(i=>i.id),[3031,6696]);assert(micro.items.every(i=>!i.core));
- for(const i of micro.items)assert(i.brief.slice(0,100).includes('物理转魔法'));
- assert(micro.items.find(i=>i.id===3031).brief.slice(0,100).includes('珠光护手'));
+ const r=find(game,'Karthus',1030),micro=hexMechanismMicroRoutes([r])[0],items=micro.gearGroups.flatMap(g=>g.items);assert.deepEqual(micro.gearGroups.map(g=>[g.when,g.why,g.items.map(i=>i.id)]),r.gear.map(g=>[g.when,g.why,g.items.map(i=>i.id)]));assert.deepEqual(micro.items,micro.gearGroups[0].items);assert.deepEqual(r.optionalAugments.map(a=>a.id),[3132,1048,1205]);assert.deepEqual(items.map(i=>i.id),[3031,6696]);assert(items.every(i=>!i.core));assert.deepEqual(micro.items.map(i=>i.id),[3031]);
+ for(const i of items)assert(i.brief.slice(0,100).includes('物理转魔法'));
+ assert(items.find(i=>i.id===3031).brief.slice(0,100).includes('珠光护手'));
  assert.match(r.gear.find(g=>g.items.some(i=>i.id===6696)).why,/3秒内阵亡/);assert.match(r.gear.find(g=>g.items.some(i=>i.id===6696)).why,/穿甲不增加魔法伤害/);
  assert.match(r.optionalAugments.find(a=>a.id===3132).brief,/移动速度.*阵亡.*一半/);assert.doesNotMatch(r.summary+' '+r.play.join(' '),/2500|500急速|100%|15秒R|无限/);
  for(const id of [3132,1048,1205]){const d=structuredClone(game);d.augments.find(a=>a.id===id).description+='drift';const kept=find(d,'Karthus',1030);assert(kept);assert(!kept.optionalAugments.some(a=>a.id===id));assert.deepEqual(kept.gear.flatMap(g=>g.items.map(i=>i.id)),id===1205?[]:id===1048?[6696]:[3031,6696]);}

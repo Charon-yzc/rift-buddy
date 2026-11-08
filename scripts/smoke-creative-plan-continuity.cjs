@@ -37,7 +37,7 @@ async function run(){
   assert.deepEqual(plan,sourcePlan,'Saving or reopening changed the original reordered plan');
   assert.notDeepEqual(plan.members.map(m=>m.champion),plan.ordered.map(m=>m.champion));assert.equal(favorite.configurations.length,3);
   for(const member of plan.members){
-   await click('.plan-drawer [data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');await until(()=>js('!!document.querySelector("#build-role,.configuration-current")'),'Reordered member could not open');
+   main.webContents.send('open-build',{...favorite.configurations.find(c=>c.id===member.champion&&c.role===member.role),id:member.champion,role:member.role,mode:'rift',creativePlan:plan,comboId:plan.id,readOnly:true});await until(()=>js('!!document.querySelector("#build-role,.configuration-current")'),'Reordered member could not open');
    assert.equal(await js('document.querySelector("#build-role")?.value||JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].role'),member.role);
    for(const job of plan.ordered)assert.ok((await js('document.querySelector(".combo-config,.companion-note").textContent')).includes(job.job));
    await click('[data-action=close]');await click('[data-action=result-detail][data-index="0"]');

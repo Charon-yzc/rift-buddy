@@ -1,8 +1,10 @@
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
+import {historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 // Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {createSlots,recommend} from '../src/core/recommend.mjs';
+import {createSlots,recommend as recommendActual} from '../src/core/recommend.mjs';
 import {generateCreativeTrios} from '../src/core/creative-trios.mjs';
 import {draftTargets} from '../src/core/draft.mjs';
 import {profile} from '../src/core/rules.mjs';
@@ -12,10 +14,11 @@ import {resultPlayCard} from '../src/play-card-view.mjs';
 import {resultCooperation} from '../src/core/creative-plan.mjs';
 import {escape as e} from '../src/ui.mjs';
 const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const locked=(slots,pairs)=>{for(const [role,id] of pairs)Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});return slots;};
 const viewData={champions:data.champions,catalogInfo:{status:{}}};
 
+historicalData(data);
 test('tempo preference mismatch is exposed, not silent',()=>{
  const slots=locked(createSlots(),[['top','Malphite'],['jungle','JarvanIV'],['mid','Orianna'],['bottom','Varus'],['support','Ashe']]);
  const [row]=recommend({slots,champions:data.champions,play:{tempo:'poke'}});
@@ -30,8 +33,9 @@ test('tempo preference mismatch is exposed, not silent',()=>{
 
 test('cards retain structured reasons and adaptive drawers expose their underlying execution evidence',()=>{
  const slots=locked(createSlots(),[['top','Garen'],['jungle','LeeSin']]);
- const rows=recommend({slots,champions:data.champions,limit:3});
- assert.ok(rows.some(row=>resultCooperation(row))&&rows.some(row=>!resultCooperation(row)),'exercise adaptive and authored drawer paths');
+ const authoredSlots=createSlots().map(s=>({...s,party:['mid','bottom','support'].includes(s.role),champion:({mid:'Galio',bottom:'Nilah',support:'Rakan'})[s.role]||null,locked:true}));
+ const rows=[...recommend({slots,champions:data.champions,limit:3}),...recommend({slots:authoredSlots,champions:data.champions,scope:'party'})];
+ assert.ok(rows.some(row=>row.origin==='adaptive')&&rows.some(row=>row.origin==='curated'),'exercise adaptive and authored drawer paths');
  for(const row of rows){
   const card=renderResultCard(row,0,viewData,{favorites:[]}),play=resultPlayCard(row,0,viewData),execution=resultCooperation(row);
   assert.ok(row.reasonPoints.length);
@@ -56,7 +60,7 @@ test('creative ideas carry distinct per-archetype plans and visible cautions',()
  assert.ok(defs.length>=2);
  assert.equal(new Set(defs.map(d=>d.plan)).size,defs.length);
  const rows=recommend({slots:createSlots(),champions:data.champions,limit:5});
- const creative=rows.find(r=>r.creative);
+ const creative=rows.find(r=>r.origin==='adaptive'&&resultCooperation(r));
  assert.ok(creative);
  assert.equal(creative.origin,'adaptive');assert.ok(creative.reasonPoints.some(t=>t.startsWith('失败就退出：')));for(const m of creative.adaptive.memberJobs)assert.match(m.job,/[QWER]|普攻/);
  const card=renderResultCard(creative,4,viewData,{favorites:[]});
@@ -74,3 +78,6 @@ test('hex favorites preserve the full augment context through validation',()=>{
  assert.deepEqual(hexFav.compareIds,[2,3]);
  assert.deepEqual(hexFav.ownedAugmentIds,[4]);
 });
+
+// Supply the same version/source context as the application recommendation call.
+function recommend(input){return recommendActual({patch:data.patch,builds:data.builds,catalogStatus:data.catalogInfo?.status,...input});}

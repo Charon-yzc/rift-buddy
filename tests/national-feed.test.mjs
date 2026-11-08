@@ -145,9 +145,10 @@ test('an older authentic bundle renders immediately while a normal guarded refre
 });
 
 test('the actual bundled national snapshot verifies with the production pin and renders its offline origin',async()=>{
- const current=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),envelope=JSON.parse(await fs.readFile(new URL('../data/national-feed.json',import.meta.url))),payload=verifyNationalEnvelope(envelope,current);
- assert.equal(Object.keys(payload.entries).length,3);assert.equal(payload.patch,current.patch);
- const {nationalRankingsView}=await import('../src/national-reference-view.mjs');assert.match(nationalRankingsView(current,{state:{reference:Object.values(payload.entries)[0],bundled:true}}),/内置参考/);
+ const current=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),envelope=JSON.parse(await fs.readFile(new URL('../data/national-feed.json',import.meta.url))),historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
+ assert.throws(()=>verifyNationalEnvelope(envelope,current),/版本或格式不匹配/);const payload=verifyNationalEnvelope(envelope,historical);
+ assert.equal(Object.keys(payload.entries).length,3);assert.equal(payload.patch,historical.patch);
+ const {nationalRankingsView}=await import('../src/national-reference-view.mjs');assert.match(nationalRankingsView(historical,{state:{reference:Object.values(payload.entries)[0],bundled:true}}),/内置参考/);
 });
 
 test('actual app base acceptance invalidates both completed and in-flight national overlays',async()=>{
@@ -156,8 +157,8 @@ test('actual app base acceptance invalidates both completed and in-flight nation
  for(const pending of [false,true]){
   let generation=1,resolve;const response=new Promise(r=>{resolve=r;}),overlay={innerHTML:'old content',querySelector:()=>true};
   const controller=createNationalReferenceController({request:()=>response,getData:()=>data,getGeneration:()=>generation});let task;if(pending)task=controller.refresh({kind:'build',tier:'emerald_plus',champion:'Yasuo',role:'mid'});
-  const context=vm.createContext({data,nationalDetail:{generation:1,input:{kind:'build',patch:data.patch,tier:'emerald_plus',champion:'Yasuo',role:'mid'}},overlay,dataState:{baseGeneration:()=>generation},nationalState:()=>controller,nationalBuildView,bindPlayerBuildPreferences(){},dataReady:true,recommendationKey:()=>'',recommendationInput:()=>({}),markResultStale(){},cancelRecommendation(){},render(){},buildView:null,queueCompanionRecommendation(){}});
-  vm.runInContext(repaint+'\n'+accept,context);generation=2;context.acceptDataState({data,origin:'remote',baseChanged:true},'');assert.match(overlay.innerHTML,/基础资料已变化/);assert.doesNotMatch(overlay.innerHTML,/核心组合/);
+  const context=vm.createContext({data,nationalDetail:{generation:1,input:{kind:'build',patch:data.patch,tier:'emerald_plus',champion:'Yasuo',role:'mid'}},overlay,dataState:{baseGeneration:()=>generation},nationalState:()=>controller,nationalBuildView,bindPlayerBuildPreferences(){},dataReady:true,recommendationFactoryGeneration:0,results:[],offset:0,resultsSignature:'',recommendationKey:()=>'',recommendationInput:()=>({}),markResultStale(){},cancelRecommendation(){},render(){},buildView:null,queueCompanionRecommendation(){}});
+  vm.runInContext(repaint+'\n'+accept,context);generation=2;context.acceptDataState({data,origin:'remote',baseChanged:true,keys:[]},'');assert.match(overlay.innerHTML,/基础资料已变化/);assert.doesNotMatch(overlay.innerHTML,/核心组合/);
   resolve({reference:null});if(task)await task;assert.match(overlay.innerHTML,/基础资料已变化/);
  }
 });
