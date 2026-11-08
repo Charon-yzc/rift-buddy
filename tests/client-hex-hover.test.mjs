@@ -101,3 +101,21 @@ test('queued Hex target is checked against the new session and bench before it w
   assert.equal(f.calls.filter(c=>c.method==='POST').length,1);
  }
 });
+
+test('a Hex bench click reaches its swap request after only two rounds of reads',async()=>{
+ // A client round trip is the click latency, so independent reads must overlap.
+ // Depth counts the rounds of requests that finished before a request was issued.
+ const f=hexHoverFixture(),request=f.deps.request,issued=[];let finished=0;
+ f.deps.request=async(...args)=>{const depth=finished+1;issued.push({method:args[2]||'GET',depth});await new Promise(resolve=>setImmediate(resolve));try{return await request(...args);}finally{finished=Math.max(finished,depth);}};
+ const result=await f.run('Caitlyn');
+ assert.equal(result.complete,true);assert.equal(f.own.championId,51);
+ const post=issued.find(call=>call.method==='POST');
+ assert.ok(post.depth<=3,`the swap waited behind ${post.depth-1} sequential read rounds`);
+});
+
+test('leaving champion select is still reported when the session endpoints fail with it',async()=>{
+ const f=hexHoverFixture(),request=f.deps.request;
+ f.deps.request=async(auth,route,...rest)=>{if(route==='/lol-gameflow/v1/gameflow-phase')return 'Lobby';if(route==='/lol-champ-select/v1/session')throw Error('no champion select');return request(auth,route,...rest);};
+ await assert.rejects(f.run('Caitlyn'),/已离开选人阶段/);
+ assert(!f.calls.some(c=>c.method==='POST'));
+});
