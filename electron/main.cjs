@@ -338,7 +338,7 @@ async function boot(){
   if(edited)selectionWriteRevision++;
   await saveCurrentState(current=>{
    let accepted=valid;
-   if(contextGuard&&!contextGuard()||strictBase&&(!isDeepStrictEqual(current.guide?.selection||null,previous?.selection||null)||current.guide?.match?.gameId!==previous?.match?.gameId))throw Object.assign(Error('指引或选人已变化，请重新确认'),{code:'GUIDE_CONTEXT_CHANGED'});
+   if(contextGuard&&!contextGuard()||strictBase&&(!isDeepStrictEqual(guideCore.validateGuideState(current.guide)?.selection||null,previous?.selection||null)||current.guide?.match?.gameId!==previous?.match?.gameId))throw Object.assign(Error('指引或选人已变化，请重新确认'),{code:'GUIDE_CONTEXT_CHANGED'});
    if(explicitSelection==='open'&&!editContext.gameId){
     const progressContext=guide=>guide?{progress:guideCore.guideProgressSnapshot(guide),gameId:guide.match?.gameId||null,owner:guide.progressGameId||null,unknown:guide.progressGameUnknown===true}:null;
     if(!isDeepStrictEqual(progressContext(current.guide),progressContext(progressBefore)))throw Object.assign(Error('本局进度已变化，请同步后重新打开'),{code:'GUIDE_CONTEXT_CHANGED'});
@@ -421,6 +421,8 @@ async function boot(){
   const result=guideCore.reconcileGuide(guideCore.clearUnknownGuideProgress(value),options);
   return {...result,reset:true,changed:true};
  };
+ // A hex guide keeps the round's compare/owned lists even when empty, while reconciliation output omits them. Empty lists are not a change.
+ const selectionKey=guide=>{const s=guide?.selection;return JSON.stringify(s?.mode==='hex'?{...s,compareIds:s.compareIds?.length?s.compareIds:undefined,ownedAugmentIds:s.ownedAugmentIds?.length?s.ownedAugmentIds:undefined}:s);};
  const prepareCurrentGuide=async({matchingOnly=false}={})=>{
   const own=currentGuideSelection(),previous=state.guide;
   // An ordinary preference save can refresh this hero's role/configuration,
@@ -940,7 +942,7 @@ async function boot(){
    if(latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide();
    const enemyIds=publicEnemyIds();observeOpponentContext();await bindPendingOpponent();
    const previousGuide=state.guide,reconcileGame=publicClientGameId(latestClient),reconciled=reconcileKnownGuide(previousGuide,{phase:latestClient.phase,gameId:reconcileGame,enemyIds});
-   if(JSON.stringify(previousGuide?.selection)!==JSON.stringify(reconciled.guide?.selection)){try{await setGuideState(reconciled.guide,previousGuide,undefined,false,true,()=>publicClientGameId(latestClient)===reconcileGame);}catch(error){if(error.code!=='GUIDE_CONTEXT_CHANGED')throw error;}}
+   if(selectionKey(previousGuide)!==selectionKey(reconciled.guide)){try{await setGuideState(reconciled.guide,previousGuide,undefined,false,true,()=>publicClientGameId(latestClient)===reconcileGame);}catch(error){if(error.code!=='GUIDE_CONTEXT_CHANGED')throw error;}}
    else if(reconciled.changed)await saveCurrentState(current=>({...current,guide:reconcileKnownGuide(current.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),enemyIds}).guide}));
    if(state.preferences.guideAutoShow!==false&&latestClient.connected&&latestClient.phase==='InProgress'&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame))await pollLive(true);
    try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}

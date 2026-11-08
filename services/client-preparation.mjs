@@ -33,8 +33,13 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  if(!auth?.port)throw Error('请先连接客户端并确认 Windows 权限');
  const currentRequest=async(...args)=>{if(!isCurrent())throw Error('组合或配置已变化，请重新选择');return request(...args);};
  const read=async()=>{
-  if(await request(auth,'/lol-gameflow/v1/gameflow-phase')!=='ChampSelect')throw Error('已离开选人阶段，请在客户端核对');
-  const [gameValue,raw]=await Promise.all([request(auth,'/lol-gameflow/v1/session'),request(auth,'/lol-champ-select/v1/session')]);
+  // The phase and both sessions are independent reads. Overlap them so a read costs one client round trip, and fail in the order the sequential reads did.
+  const [phase,gameRead,sessionRead]=await Promise.allSettled([request(auth,'/lol-gameflow/v1/gameflow-phase'),request(auth,'/lol-gameflow/v1/session'),request(auth,'/lol-champ-select/v1/session')]);
+  if(phase.status==='rejected')throw phase.reason;
+  if(phase.value!=='ChampSelect')throw Error('已离开选人阶段，请在客户端核对');
+  if(gameRead.status==='rejected')throw gameRead.reason;
+  if(sessionRead.status==='rejected')throw sessionRead.reason;
+  const gameValue=gameRead.value,raw=sessionRead.value;
   const game=sanitizeGame(gameValue),mode=identifyMode(game).id;
   if(mode!==selected.mode||mode!=='rift'&&!(mode==='hex'&&selected.preselectOnly))throw Error('当前模式尚不支持客户端预选并配置');
   const session=sanitizeSession(raw),gameId=champSelectGameId(session,game);
@@ -90,12 +95,14 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  };
  let step='hover';
  try{
-  // Refresh target availability, then recheck this player's game and action.
+  // Refresh target availability while rechecking this player's game and action; the reads are independent, so they share one round trip.
   // Unrelated teammates can select or ban without invalidating this click.
   // Hex bench reselects even after a lock, so the hover write always runs.
   const hexHover=selected.mode==='hex'&&selected.preselectOnly===true;
-  const eligibility=!locked||hexHover?await readEligibility():null;
-  const before=await ensure();
+  const [eligibilityRead,beforeRead]=await Promise.allSettled([!locked||hexHover?readEligibility():null,ensure()]);
+  if(eligibilityRead.status==='rejected')throw eligibilityRead.reason;
+  if(beforeRead.status==='rejected')throw beforeRead.reason;
+  const eligibility=eligibilityRead.value,before=beforeRead.value;
   if(!locked||hexHover){
    assertSelectable(before.session,eligibility);
    if(!hexHover&&(before.action.completed===true||before.timer!=='PLANNING'&&before.action.isInProgress!==true))throw Error('选人轮次已变化，尚未预选');

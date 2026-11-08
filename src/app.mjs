@@ -37,6 +37,7 @@ import {recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,c
 import {adoptedTaskView} from './draft-task-view.mjs';
 import {stateRecoveryView} from './state-recovery-view.mjs';
 import {clientRenderIdentity,normalizePartyIds} from './core/client-party.mjs';
+import {canonicalJSON} from './core/content-fingerprint.mjs';
 import {validPartyCount,markedPartyCount,initialPartyCount,selectionPartyCount,reconcilePartyRange,movePartyMark,savedPartyCount} from './core/party-range.mjs';
 import {pregamePhase,partyWithPregameIntents,restoredRoleClaim} from './core/pregame-intent.mjs';
 import {companionHeroAction} from './core/companion-action.mjs';
@@ -1764,7 +1765,8 @@ async function performSync(manual=true,fresh=false){
      const {automaticPosition,publicIntent,...rest}=s;return {...rest,champion:null,locked:false};
     });
    }
-   changed=changed||JSON.stringify(slots)!==JSON.stringify(merged.slots)||JSON.stringify(unassigned)!==JSON.stringify(merged.unassigned);slots=merged.slots;changed=reconcileCreativePlan({ownIntentChanged})||changed||ownIntentChanged;unassigned=merged.unassigned;{
+   // Merging re-adds client metadata, so key order differs from the saved copy; compare content only or every sync repaints and re-saves.
+   changed=changed||canonicalJSON(slots)!==canonicalJSON(merged.slots)||JSON.stringify(unassigned)!==JSON.stringify(merged.unassigned);slots=merged.slots;changed=reconcileCreativePlan({ownIntentChanged})||changed||ownIntentChanged;unassigned=merged.unassigned;{
     const own=currentPlayerSelection(client.session,data.champions,slots),player=client.session.myTeam.find(p=>p.cellId===client.session.localPlayerCellId);
     // The client declares a lane before the player chooses a champion.
     const role=manualPlayerSlot(slots,client.session.localPlayerCellId)?.role||(saved.draft?.playerPosition?.cellId===client.session.localPlayerCellId?saved.draft.playerPosition.role:null)||(own?.positionKnown?own.role:null)||CLIENT_POSITION_ROLES[String(player?.assignedPosition||'').toUpperCase()];

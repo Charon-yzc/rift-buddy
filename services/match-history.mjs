@@ -131,7 +131,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    const finalPhase=await request(c.auth,'/lol-gameflow/v1/gameflow-phase');if(finalPhase!==phase)fail('对局阶段已变化，正在重新同步');
    if(phase==='ChampSelect'||['None','Lobby','Matchmaking','ReadyCheck'].includes(phase)){
     const finalSnapshot=await safe(phase==='ChampSelect'?'/lol-champ-select/v1/session':'/lol-lobby/v2/lobby'),before=ongoingRoster({phase,own:c.own,lobby,draft,game},sessionId),after=ongoingRoster({phase,own:c.own,lobby:phase==='ChampSelect'?lobby:finalSnapshot,draft:phase==='ChampSelect'?finalSnapshot:draft,game},sessionId);
-    if(!finalSnapshot||before.key!==after.key)fail('当前对局成员已变化，正在重新同步');
+    if(phase==='ChampSelect'&&!finalSnapshot||before.key!==after.key)fail('当前对局成员已变化，正在重新同步');
    }
   if(['GameStart','InProgress','Reconnect'].includes(phase)){const finalGame=await safe('/lol-gameflow/v1/session');if(finalGame?.gameData?.gameId!==game?.gameData?.gameId)fail('当前对局已变化，正在重新同步');}
   await check(c);
