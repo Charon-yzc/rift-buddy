@@ -50,7 +50,7 @@ test('desktop feedback binds chosen screenshots and never follows redirects or a
 });
 
 test('erasing feedback after picking a screenshot cannot revive the previous text',async()=>{
- let html='',value='',sent;const textarea={get value(){return value;},focus(){}},overlay={querySelector:selector=>selector==='.feedback-dialog'?html.includes('feedback-dialog'):selector==='#feedback-text'||selector==='textarea'?textarea:null,get innerHTML(){return html;},set innerHTML(v){html=v;value=/<textarea[^>]*>([^<]*)<\/textarea>/.exec(v)?.[1]||'';}};
+ let html='',value='',sent;const textarea={get value(){return value;},focus(){}},overlay={addEventListener(){},querySelector:selector=>selector==='.feedback-dialog'?html.includes('feedback-dialog'):selector==='#feedback-text'||selector==='textarea'?textarea:null,get innerHTML(){return html;},set innerHTML(v){html=v;value=/<textarea[^>]*>([^<]*)<\/textarea>/.exec(v)?.[1]||'';}};
  const ui=createFeedbackUI({overlay,api:{feedbackClear:async()=>{},feedbackImages:async()=>[{id:'chosen',preview:'data:image/png;base64,'}],feedbackSend:async input=>{sent=input;return {id:'receipt'};}}});
  await ui.action('feedback-open');value='已删除的私人文字';await ui.action('feedback-images');value='';await ui.action('feedback-send');assert.equal(sent.text,'');assert.deepEqual(sent.images,['chosen']);
 });

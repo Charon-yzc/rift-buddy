@@ -6,7 +6,7 @@ const {orderHexCards}=require('../src/core/hex-route-card.mjs');
 const escape=value=>String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 module.exports=function createHexMicroWindows({root,getState,setState,getPayload,getArea,getGameBounds,getScale,isActive,isQuitting,onHide,onChange,diagnostic,getPreferences=()=>({})}){
- const {BrowserWindow,ipcMain,screen}=require('electron'),entries=Object.fromEntries(HEX_WINDOWS.map(kind=>[kind,{win:null,requested:false,ready:false,adjusting:false,last:'',timer:null,payload:null,layout:'full',view:0,regions:[]}]));
+ const {BrowserWindow,ipcMain,screen}=require('electron'),entries=Object.fromEntries(HEX_WINDOWS.map(kind=>[kind,{win:null,requested:false,ready:false,adjusting:false,expectedBounds:null,last:'',timer:null,payload:null,layout:'full',view:0,regions:[]}]));
  let everShown=false,suspended=true,placementWrites=Promise.resolve(),placementEpoch=0,resetting=0,tooltip=null,hoverSerial=0,tipKey='',tipKind=null;
  let routeSession=null,expanded=false,pinned=[];
  const active=()=>isActive();
@@ -15,8 +15,9 @@ module.exports=function createHexMicroWindows({root,getState,setState,getPayload
  const requested=()=>Object.values(entries).some(e=>e.requested);
  for(const kind of HEX_WINDOWS){const e=entries[kind];e.peek=require('./window-peek.cjs')({root,getWindow:()=>e.win,getArea,title:kind==='economy'?'双方经济':'海克斯配置',level:'screen-saver',onRestore:()=>{if(!suspended&&active()&&enabled(kind)&&e.requested&&e.payload?.active&&e.ready){publish();e.win.showInactive();}}});}
  function hideTooltip(){hoverSerial++;tipKey='';tipKind=null;if(tooltip&&!tooltip.isDestroyed())tooltip.hide();}
- function fit(kind){const e=entries[kind];if(!e.win||e.win.isDestroyed()||e.timer)return;const b=hexMicroPlacement(kind,getState()?.hexWindows?.[kind],getArea(),getGameBounds(),getScale(),e.payload?.routes,e.payload?.expanded,e.layout),old=e.win.getBounds();if(['x','y','width','height'].some(k=>Math.abs(old[k]-b[k])>2)){if(tipKind===kind)hideTooltip();const resized=old.width!==b.width||old.height!==b.height;if(resized)e.regions=[];e.adjusting=true;e.win.setBounds(b);e.adjusting=false;if(resized)e.win.webContents.send('hex-micro-measure');}}
+ function fit(kind){const e=entries[kind];if(!e.win||e.win.isDestroyed()||e.timer)return;const b=hexMicroPlacement(kind,getState()?.hexWindows?.[kind],getArea(),getGameBounds(),getScale(),e.payload?.routes,e.payload?.expanded,e.layout),old=e.win.getBounds();e.expectedBounds=b;if(['x','y','width','height'].some(k=>Math.abs(old[k]-b[k])>2)){if(tipKind===kind)hideTooltip();const resized=old.width!==b.width||old.height!==b.height;if(resized)e.regions=[];e.adjusting=true;e.win.setBounds(b);e.adjusting=false;if(resized)e.win.webContents.send('hex-micro-measure');}}
  function remember(kind){const e=entries[kind];clearTimeout(e.timer);e.timer=null;if(resetting||!e.win||e.win.isDestroyed()||!getState())return;const epoch=placementEpoch,offset=hexMicroOffset(e.win.getBounds(),getArea(),getGameBounds());
+  e.expectedBounds=e.win.getBounds();
   placementWrites=placementWrites.then(async()=>{if(epoch!==placementEpoch)return;const state=getState();if(!state)return;await setState({...state,hexWindows:{...state.hexWindows,[kind]:offset}},state);onChange();}).catch(error=>diagnostic('hex micro placement not saved '+error.message));return placementWrites;
  }
  async function reset(clear=()=>{}){resetting++;placementEpoch++;for(const e of Object.values(entries)){clearTimeout(e.timer);e.timer=null;e.layout='full';e.peek.unfold();}expanded=false;hideTooltip();try{await placementWrites;await clear();}finally{resetting--;}}
@@ -35,11 +36,11 @@ module.exports=function createHexMicroWindows({root,getState,setState,getPayload
   }
  }
  function create(kind){const e=entries[kind],bounds=hexMicroPlacement(kind,getState()?.hexWindows?.[kind],getArea(),getGameBounds(),getScale(),e.payload?.routes,e.payload?.expanded,e.layout);
-  const win=new BrowserWindow({...bounds,frame:false,show:false,alwaysOnTop:true,skipTaskbar:true,focusable:false,resizable:false,transparent:true,backgroundColor:'#00000000',title:'开黑搭子 · '+(kind==='economy'?'公开装备价值':'海克斯路线'),icon:path.join(root,'assets/icon.png'),webPreferences:{preload:path.join(root,'electron/hex-micro-preload.cjs'),additionalArguments:['--rift-hex-window='+kind],contextIsolation:true,nodeIntegration:false,sandbox:true}});e.win=win;e.ready=false;
+  e.expectedBounds=bounds;const win=new BrowserWindow({...bounds,frame:false,show:false,alwaysOnTop:true,skipTaskbar:true,focusable:false,resizable:false,transparent:true,backgroundColor:'#00000000',title:'开黑搭子 · '+(kind==='economy'?'公开装备价值':'海克斯路线'),icon:path.join(root,'assets/icon.png'),webPreferences:{preload:path.join(root,'electron/hex-micro-preload.cjs'),additionalArguments:['--rift-hex-window='+kind],contextIsolation:true,nodeIntegration:false,sandbox:true}});e.win=win;e.ready=false;
   win.setAlwaysOnTop(true,'screen-saver');win.setIgnoreMouseEvents(true,{forward:true});win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   const url=pathToFileURL(path.join(root,'src/hex-micro.html')).href;win.webContents.on('will-navigate',(event,next)=>{if(next!==url)event.preventDefault();});
   win.once('ready-to-show',()=>{if(e.win!==win||win.isDestroyed())return;e.ready=true;if(!suspended&&active()&&enabled(kind)&&e.payload?.active&&e.requested&&!e.peek.active())win.showInactive();publish();win.webContents.send('hex-micro-measure');});
-  win.on('move',()=>{hideTooltip();if(e.adjusting||resetting)return;clearTimeout(e.timer);e.timer=setTimeout(()=>remember(kind),350);});
+  win.on('move',()=>{hideTooltip();if(e.adjusting||resetting||!e.ready)return;const bounds=win.getBounds();if(e.expectedBounds&&['x','y'].every(key=>Math.abs(bounds[key]-e.expectedBounds[key])<=2))return;clearTimeout(e.timer);e.timer=setTimeout(()=>remember(kind),350);});
   win.on('close',event=>{if(!isQuitting()){event.preventDefault();close(kind);}});
   win.on('closed',()=>{clearTimeout(e.timer);e.timer=null;e.peek.unfold();e.win=null;e.ready=false;e.last='';e.regions=[];hideTooltip();});win.loadFile(path.join(root,'src/hex-micro.html'));
  }

@@ -25,6 +25,18 @@ function setup(preferences={}){
 }
 const hover={side:'ally',id:'Yasuo',rect:{x:6,y:10,width:18,height:18}};
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
+
+test('initial DPI rounding and programmatic layouts do not save defaults as a manual position',async()=>{
+ const s=setup();s.micro.show();s.ready();const win=s.windows[1],before={...win.bounds};
+ win.bounds={...before,x:before.x+1,y:before.y+1,width:before.width+1};win.emit('move');
+ assert.equal(s.timers.size,0);assert.equal(s.saveCount(),0);
+ const p=s.call('routes','hex-micro-bootstrap');await s.call('routes','hex-micro-control','line',{context:p.context,view:p.view});win.emit('move');
+ assert.equal(s.timers.size,0);assert.equal(s.saveCount(),0);
+ win.setBounds({...win.bounds,x:win.bounds.x-80,y:win.bounds.y+50});
+ for(const fn of [...s.timers.values()])fn();await tick();
+ assert.equal(s.saveCount(),1);assert.equal(s.state().hexWindows.routes.x,win.bounds.x-area.x);assert.equal(s.state().hexWindows.routes.y,win.bounds.y-area.y);
+ s.micro.destroy();
+});
 test('full, one-line and edge controls restore the same non-activating window and reject stale views',async()=>{
  const s=setup();s.value.model.hexMicroRoutes=Array.from({length:4},(_,i)=>({id:'r'+i,augments:[],items:[]}));s.micro.show();s.ready();
  const snapshot=()=>s.call('routes','hex-micro-bootstrap'),control=(action,p=snapshot())=>s.call('routes','hex-micro-control',action,{context:p.context,view:p.view}),win=s.windows[1],old=snapshot();

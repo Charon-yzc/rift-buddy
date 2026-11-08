@@ -56,6 +56,8 @@ async function run(){
  const js=code=>main.webContents.executeJavaScript(code,true),click=async selector=>{await until(()=>js(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e||e.disabled)return false;e.click();return true})()`),'Missing '+selector);};
  await until(()=>js('!!window.buddy&&!!document.querySelector("[data-action=sync]")'),'Renderer missing');
  await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Initial sync missing');
+ await until(()=>js('!!document.querySelector(".page .hex-main-workspace .hex-shared-bench")'),'Full main must use the same Hex bench as sidebar');
+ assert.equal(await js('!!document.querySelector(".page #solo-role,.page .task-roster")'),false,'Mayhem main must not invent Rift lanes');
  await js('window.buddy.companionMode(true)');await until(()=>js('!!document.querySelector(".hex-companion .hex-shared-bench")'),'Shared bench missing');
  const ids=()=>js('[...document.querySelectorAll(".hex-shared-bench [data-action=hex-quick-pick]")].map(e=>e.dataset.id)');
  assert.deepEqual((await ids()).sort(),[...bench].sort());assert.equal(writes.length,0);
@@ -63,8 +65,11 @@ async function run(){
  for(const url of [sourceURL,licenseURL])await js(`window.buddy.openLink(${JSON.stringify(url)})`);
  assert.deepEqual(opened,[sourceURL,licenseURL]);
  assert.equal(await js(`window.buddy.openLink(${JSON.stringify(sourceURL+'?redirect=bad')}).then(()=>false,()=>true)`),true);
+ const expectedAugmentRows=require(path.join(base,'src/core/hex-augment-statistics.mjs')).hexAugmentStatistics(data)?.rows.length||0;
+ if(expectedAugmentRows){
  await js(`(()=>{const row=document.querySelector('.hex-augment-ranking-entry');row.scrollIntoView({block:'center'});const r=row.getBoundingClientRect();row.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,clientX:r.x+3,clientY:r.y+3}));})()`);
  await until(()=>js('document.querySelector(".game-tooltip:popover-open .game-tooltip-condition")?.textContent.includes("结算持有胜率")'),'Compact augment statistics tooltip missing');
+ }else {assert.equal(await js('document.querySelectorAll(".hex-augment-ranking-entry").length'),0);assert.match(await js('document.querySelector(".hex-augment-ranking").textContent'),/暂无当版统计/);}
  await js('document.querySelector(".companion-content").scrollTop=0');
  const screenshot=async name=>{await js('Promise.all([...document.querySelectorAll(".hex-shared-bench img")].map(i=>i.decode().catch(()=>{})))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  const layouts=[];
@@ -97,7 +102,7 @@ async function run(){
  await invokeAction('augment-detail',1004);await until(()=>js('!!document.querySelector(".augment-modal [data-action=own-augment]")'),'Manual augment details missing');assert.equal(await js('document.querySelector(".augment-modal [data-action=own-augment]").disabled'),false,'Live owned state leaked into manual preview');await click('.augment-modal [data-action=close]');
  await invokeAction('companion-current');await invokeAction('augment-detail',1004);await until(()=>js('!!document.querySelector(".augment-modal [data-action=own-augment]")'),'Live augment details missing');assert.equal(await js('document.querySelector(".augment-modal [data-action=own-augment]").disabled'),true,'Returning to live failed to restore owned state');await click('.augment-modal [data-action=close]');await click('[data-action=companion-tab][data-tab=recommend]');
  phase='Lobby';await js('window.buddy.client(true)');await until(()=>js('document.querySelectorAll(".hex-reference-board .hex-bench-hero").length===173'),'Offline hero ranking missing');
- assert.equal(await js('document.querySelectorAll(".hex-augment-ranking-entry").length'),229);
+ assert.equal(await js('document.querySelectorAll(".hex-augment-ranking-entry").length'),expectedAugmentRows);
  await click('.hex-reference-board [data-id=Ahri]');await until(()=>js('document.querySelector(".hex-companion").dataset.tab==="plan"&&!!document.querySelector(".hex-configuration-workspace")'),'Local hero configuration missing');assert.equal(writes.length,count);
  phase='ChampSelect';benchKnown=true;await js('window.buddy.client(true)');await until(()=>js('window.buddy.bootstrap().then(b=>b.client?.phase==="ChampSelect")'),'Return to simulated draft missing');await click('[data-action=companion-tab][data-tab=recommend]');
  const partyLayouts=[];
@@ -108,7 +113,7 @@ async function run(){
   const bounds=await js(`(()=>{const host=document.getElementById('party-fixture'),rows=[...host.querySelectorAll('.hex-party-lineup')],previews=[...host.querySelectorAll('.hex-party-preview')];return {previewBounds:previews.map(e=>{const r=e.getBoundingClientRect();return {width:r.width,height:r.height};}),maxRowHeight:Math.max(...rows.map(e=>e.getBoundingClientRect().height)),rows:rows.length,members:rows[0]?.querySelectorAll('.hex-party-member').length,overflow:document.documentElement.scrollWidth>innerWidth,contained:rows.every(row=>{const r=row.getBoundingClientRect();return [...row.querySelectorAll('.hex-party-member,.hex-party-preview')].every(e=>{const b=e.getBoundingClientRect();return b.left>=r.left-1&&b.right<=r.right+1;});})}})()`);
   await screenshot(`party-five-${width}-${zoom}.png`);assert.equal(bounds.members,5);assert(bounds.rows>0);assert.equal(bounds.overflow,false);assert(bounds.contained,'Five-member avatar actions overflow');assert(bounds.maxRowHeight<72,'Avatar actions became tall text buttons');assert(bounds.previewBounds.every(r=>r.width<=16&&r.height<=16),'Preview corner must stay small');partyLayouts.push({width,zoom,...bounds});
  }
- const proof={passed:true,source,archiveSha256:release?.archiveSha256||null,initialSharedHeroes:12,teammateUpdates:true,swapRefresh:true,staysOnLineup:true,rankingReadOnly:true,emptyPoolCleared:true,mockedBenchSwaps:writes.length,latestClickWins:true,emptyPickActions:true,emptyDraftRankings:true,localConfigurationWithLiveRound:true,manualOwnedIsolation:true,augmentRanking:229,statsTooltip:true,statisticsSourcesExact:true,realClientWrites:0,layouts,partyLayouts};
+ const proof={passed:true,source,archiveSha256:release?.archiveSha256||null,initialSharedHeroes:12,teammateUpdates:true,swapRefresh:true,staysOnLineup:true,rankingReadOnly:true,emptyPoolCleared:true,mockedBenchSwaps:writes.length,latestClickWins:true,emptyPickActions:true,emptyDraftRankings:true,localConfigurationWithLiveRound:true,manualOwnedIsolation:true,augmentRanking:expectedAugmentRows,statsTooltip:expectedAugmentRows>0,missingCurrentStatistics:expectedAugmentRows===0,statisticsSourcesExact:true,realClientWrites:0,layouts,partyLayouts};
  await fs.writeFile(path.join(root,'proof.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify({...proof,root}));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.mkdir(root,{recursive:true});await fs.writeFile(path.join(root,'error.txt'),error.stack);app.exit(1);});

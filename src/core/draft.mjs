@@ -10,6 +10,19 @@ export const effectiveDraftScope=(slots,scope='party')=>scope==='party'&&slots.f
 export const draftTargets=(slots,scope='context',soloRole='')=>slots.filter(s=>(scope==='solo'?(!soloRole||s.role===soloRole):scope==='bot'?['bottom','support'].includes(s.role):s.party)&&(!s.champion||!s.locked&&!s.publicIntent)).map(s=>s.role);
 export const scopeSlots=(slots,scope='context')=>scope==='bot'?slots.filter(s=>['bottom','support'].includes(s.role)):scope==='party'?slots.filter(s=>s.party):slots;
 export const clearDraftPicks=slots=>slots.map(s=>({role:s.role,party:s.party,champion:null,locked:false}));
+// An explicit offline choice constrains local recommendations only. Never turn
+// a remembered public client pick into an editable manual champion.
+export function selectManualChampion(slots,role,champion){
+ const target=slots.find(slot=>slot.role===role),source=slots.find(slot=>slot.champion===champion);
+ if(!target||typeof champion!=='string'||!/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(champion))throw Error('请选择英雄和分路');
+ if([target,source].some(slot=>Number.isInteger(slot?.clientCellId)))throw Error('此英雄或位置仍属于客户端选人，请重新连接后确认');
+ const next=source&&source.role!==role?moveChampion(slots,source.role,role):slots;
+ return next.map(slot=>{
+  if(slot.role!==role)return {...slot};
+  const {automaticPosition,publicIntent,...rest}=slot;
+  return {...rest,champion,locked:true};
+ });
+}
 export function clearClientPicks(slots){
  return slots.map(s=>{
   if(!Number.isInteger(s.clientCellId))return {...s};
