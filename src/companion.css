@@ -402,6 +402,7 @@
 .hex-party-fit{display:inline-flex;align-items:baseline;justify-content:flex-end;gap:4px;color:var(--gold,#d8b96c);font-variant-numeric:tabular-nums;white-space:nowrap}.hex-party-fit>small{font-size:9px;font-weight:400}.hex-party-fit>b{font-size:12px}
 
 .hex-bench-rate{font-size:10px;line-height:14px;font-variant-numeric:tabular-nums}
+.hex-main-workspace{max-width:860px}.hex-main-workspace>.draft-result-actions{justify-content:flex-end}.hex-main-workspace .hex-party-lineup{grid-template-columns:max-content max-content;justify-content:start;column-gap:24px}
 .hex-draft-empty{margin:6px 0;padding:0;color:var(--rb-muted,#9eb4c6);font-size:11px;line-height:1.5}
 
 /* Empty drafts retain useful rankings; each metric stays next to its icon. */

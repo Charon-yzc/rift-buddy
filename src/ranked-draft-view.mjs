@@ -3,7 +3,7 @@ import {ROLES} from './core/rules.mjs';
 import {publicCurveDraft} from './core/ranked-draft.mjs';
 import {resolvedRankedDraft,enemyRoleContext} from './core/enemy-roles.mjs';
 import {publicClientGameId} from './core/draft.mjs';
-import {rankedDurationReference,rankedLaneReferences,teamDurationReference,championDurationReference} from './core/ranked-statistics.mjs';
+import {rankedDurationReference,rankedLaneReferences,teamDurationReference} from './core/ranked-statistics.mjs';
 import {durationChart,statisticsSourceDates} from './duration-chart-view.mjs';
 import {championStatisticsView} from './champion-statistics-view.mjs';
 
@@ -27,16 +27,21 @@ export function rankedCurveReplacesProposals(client,data,{slots=[]}={}){return p
 const noticedCurves=new Set();
 const noticeKey=(client,companion)=>String(client.session?.gameId||client.game?.gameId||'')+':'+companion;
 export function acknowledgeRankedCurve(client,{companion=false}={}){noticedCurves.add(noticeKey(client,companion));if(noticedCurves.size>16)noticedCurves.delete(noticedCurves.values().next().value);}
-export function rankedCurveLink(client,data,{companion=false,slots=[]}={}){
- const draft=publicCurveDraft(client,data.champions,slots);if(!draft.alliesReady)return '';
+function curveReference(draft,data){
+ const options={patch:data.patch,source:data.buildSource};
+ return draft.complete?rankedDurationReference(draft,data.builds,options):teamDurationReference(draft.allies,data.builds,options);
+}
+export function rankedCurveLink(client,data,{companion=false,slots=[],enemyRoles=[]}={}){
+ const raw=publicCurveDraft(client,data.champions,slots),draft={...raw,enemies:resolvedRankedDraft(client,data,enemyRoles).enemies};
+ if(!draft.alliesReady||!curveReference(draft,data))return '';
  const attention=!noticedCurves.has(noticeKey(client,companion));
  return button('ranked-curve',draft.complete?'双方曲线已生成 · 查看':'全队曲线已生成 · 查看','arrow', 'ranked-curve-link small',`aria-label="查看阵容与时长走势" data-companion="${companion}" data-attention="${attention}"`);
 }
 export function rankedCurveView(client,data,{slots=[],enemyRoles=[]}={}){
  const raw=publicCurveDraft(client,data.champions,slots),draft={...raw,enemies:resolvedRankedDraft(client,data,enemyRoles).enemies};if(!draft.alliesReady)return '';
  const personal=draft.own?championStatisticsView(client,data,{id:draft.own.champion,role:draft.own.role||draft.own.displayRole,mode:'rift'}):'';
- const options={patch:data.patch,source:data.buildSource},paired=draft.complete,team=draft.alliesReady;
- const curve=paired?rankedDurationReference(draft,data.builds,options):team?teamDurationReference(draft.allies,data.builds,options):championDurationReference(draft.own.champion,draft.own.role||draft.own.displayRole,data.builds,options);
+ const paired=draft.complete,team=draft.alliesReady;
+ const curve=curveReference(draft,data);
  const title=paired?'双方相对走势':team?'全队时长走势':`${data.champions.find(hero=>hero.id===draft.own.champion)?.name||'我的英雄'}走势`;
  if(!curve)return `<section class="ranked-curve" aria-label="${e(title)}"><div class="ranked-roster-caption"><b>${e(title)}</b><span role="status">暂无完整统计</span></div><p class="ranked-curve-note">当前版本、来源或分路的时长统计不足。</p>${paired?laneReferencesView(draft,data):''}</section>`+personal;
  // Round one side first so the displayed pair also sums to exactly 100.0%.

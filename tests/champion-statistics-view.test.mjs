@@ -29,6 +29,8 @@ test('recommendation page and configuration cue follow personal, matching-team a
  client.session.myTeam.forEach(player=>player.pickState='locked');assert.equal(rankedCurveReady(client,data),true);assert.match(rankedCurveView(client,data),/全队时长走势/);assert.match(rankedCurveView(client,data),/个人英雄胜率曲线/);assert.match(rankedCurveLink(client,data),/全队曲线已生成/);
  client.game.queueId=420;client.session.theirTeam=champions.slice(5).map((hero,i)=>({cellId:i+5,championId:hero.key,pickState:'locked',assignedPosition:positions[i]}));
  const html=rankedCurveView(client,data);assert.match(html,/双方相对走势/);assert.match(html,/相对模型 · 非本场胜率/);assert.match(html,/我方 50.0%，敌方 50.0%/);assert.match(rankedCurveLink(client,data),/data-attention="true"/);
+ assert.equal(rankedCurveLink(client,{...data,builds:{}}),'','A complete roster must not announce a curve when its source statistics are missing');
+ assert.match(rankedCurveView(client,{...data,builds:{}}),/暂无完整统计/);
  acknowledgeRankedCurve(client);assert.match(rankedCurveLink(client,data),/data-attention="false"/);
  client.connected=false;assert.equal(rankedCurveView(client,data),'');assert.equal(rankedCurveLink(client,data),'');
 });
