@@ -970,7 +970,27 @@ function ownTaskPreparation(){return preparationContext().task;}
 function renderTaskMembers(){overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal task-members-dialog" role="dialog" aria-modal="true" aria-label="成员与本人位置"><header class="modal-header"><h3>成员与位置</h3>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="modal-body"><label>你负责的位置<select id="task-own-role" class="select"><option value="">待确认</option>${ROLES.map(r=>`<option value="${r.id}" ${taskOwnRole()===r.id?'selected':''}>${r.name}</option>`).join('')}</select></label><p>${['known','lobby'].includes(client.party?.status)?`游戏组队 ${client.party.lobbyCount||client.party.members?.length||1} 人 · 助手房间 ${room?.mode!=='idle'?room?.members?.length||0:0} 人`:'暂未完整识别组队；下方可手动标记。'}</p><ul class="task-party-list">${(client.party?.members||[]).map((m,i)=>'<li><span>'+e(m.displayName||(m.local?'我':'队友 '+(i+1)))+(m.local?' · 你':'')+'</span><small>'+e(slots.find(s=>Number.isInteger(m.cellId)&&s.clientCellId===m.cellId)?roleName(slots.find(s=>s.clientCellId===m.cellId).role):CLIENT_POSITION_ROLES[m.firstPosition]?roleName(CLIENT_POSITION_ROLES[m.firstPosition]):'位置待定')+'</small></li>').join('')}</ul><div class="task-member-roles">${slots.map(s=>`<div>${roleName(s.role)} · ${e(champ(s.champion)?.name||'等待选择')} ${button('toggle-party',s.party?'我们':'队友','','small',`data-role="${s.role}" aria-pressed="${s.party}"`)}${s.champion?button('move-slot','换位','','quiet small',`data-role="${s.role}"`):''}</div>`).join('')}</div></div></section></div>`;}
 function taskControls(plan=ownTaskPreparation()){if(!plan)return '';return preparationProgressView({data,plan,client,view:'task',available:!!api.prepareSelection,busy:clientPreparing||runeApplying||!!itemSetPending,pendingKey:preparationPendingKey,statuses:clientPreparationStatuses,runeApplied:!!plan&&runeAppliedKeys.has(runeApplicationKey(plan.selection.id,plan.selection.role,plan.build.runePage)),compact:windowLayout.docked});}
 function memberHeroAction(id,role){return companionHeroAction(client,champ(id),saved.preferences.clickPrepare!==false);}
-async function prepareHeroClick(context,expected=null){
+let riftHeroClickRevision=0,riftHeroConfigurationFlight=Promise.resolve();
+async function selectRiftHero(context){
+ const revision=++riftHeroClickRevision,selection=heroClickSelection(data,context),gameId=preparationGameId(client),writeContext=runeWriteContext(client);
+ const current=()=>revision===riftHeroClickRevision&&client.connected&&client.phase==='ChampSelect'&&client.mode?.id==='rift'&&preparationGameId(client)===gameId&&client.session?.localPlayerCellId===writeContext.cellId;
+ // This request contains no build, catalog adoption, rune or equipment work.
+ // It remains available while an older configuration is finishing.
+ const selected=await api.prepareSelection({champion:selection.id,role:selection.role,mode:'rift',preselectOnly:true,sessionGameId:gameId,context:writeContext});
+ if(!current()||selected.superseded||selected.steps?.hover?.status!=='done')return selected;
+ lastTaskSelection=selection;companionPreview=null;closeOverlay();render();
+ const previous=riftHeroConfigurationFlight;
+ const preparing=(async()=>{
+  await previous.catch(()=>{});if(!current())return selected;
+  await sync(false,{fresh:true});if(!current())return selected;
+  if(clientPreparing||runeApplying||itemSetPending){toast('英雄已选好；当前配置完成后可在“我的配置”应用默认方案');return selected;}
+  return prepareHeroClick(selection,null,true);
+ })();
+ riftHeroConfigurationFlight=preparing;
+ return preparing;
+}
+async function prepareHeroClick(context,expected=null,selectedFirst=false){
+ if(!selectedFirst&&context.readOnly!==true&&context.mode==='rift'&&client.connected&&client.phase==='ChampSelect'&&memberHeroAction(context.id,context.role).prepare)return selectRiftHero(context);
  const busy=clientPreparing||runeApplying||itemSetPending,clientMode=client.mode?.id,selectionMode=context.mode||'rift',fastSwitch=busy&&client.connected&&client.phase==='ChampSelect'&&clientMode===selectionMode&&clientMode==='hex';
  if(busy&&!fastSwitch)throw Error('正在应用配置，请稍候');
  if(context.readOnly!==true&&client.connected&&pregamePhase(client.phase)&&(context.mode||'rift')==='rift'){
@@ -1000,6 +1020,7 @@ async function prepareHeroClick(context,expected=null){
  const prior=recallPreparation(preparations,guideSelection,context);
  if(prior&&prior.coreAuto!==true&&context.coreAuto===true&&!context.coreId){delete context.coreAuto;delete context.coreIndex;}
  context=heroClickSelection(data,{...(prior||rememberedPreparation(context)),...context});
+ if(!client.connected&&context.mode==='rift'&&context.readOnly!==true){slots=selectManualChampion(slots,context.role,context.id);soloRole=context.role;lastTaskSelection=context;persist();}
  const selection={...context,...localConfigurationPreview(context,client,taskOwnRole())};
  let reviewStamp=selectionReviewStamp(selection);
  const sourceGuardStamp=selectionReviewStamp(selection,saved,{includeSource:false});
@@ -1076,44 +1097,12 @@ async function adoptResult(index,fromClick=false){
  return result;
 }
 async function prepareCandidate(el){
-  if(candidatePreparing||clientPreparing||runeApplying)throw Error('当前配置正在处理，请等待完成');
-  if(!champ(el.dataset.id))throw Error('英雄资料已变化');
-  const result=results[Number(el.dataset.resultIndex)];
-  if(!el.hasAttribute('data-result-index')||!result||!result.slots.some(s=>s.champion===el.dataset.id&&s.role===el.dataset.role))throw Error('推荐条件已变化，请重新推荐');
-  assertLoadedChoiceResult(result);
-  const plan=resultCreativePlan(result),combo=plan?creativeMemberCombo(plan,el.dataset.id,el.dataset.role):result.trio||result.duo;
-  const action=memberHeroAction(el.dataset.id,el.dataset.role);
-  if(action.blocked)throw Error('英雄已锁定，不能选择其他英雄；仍可推荐、提议和投票');
-  if(action.prepare){
-   const context={id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(combo)},index=Number(el.dataset.resultIndex);
-   const selection=heroClickSelection(data,{...rememberedPreparation(context),...context});
-   const expected={...context,planId:plan?.id||'',fingerprint:clientPreparationPlan(data,{selection,build:getBuild(champ(context.id),context.role,data,selection)})?.fingerprint};
-   const clickGame=preparationGameId(client),clickCell=client.session?.localPlayerCellId,clickMode=client.mode?.id;
-   const previousTarget=preparationTarget;preparationTarget=selection;
-   candidatePreparing=true;try{
-    // Polling normally supplies a fresh, complete eligibility snapshot. Only
-    // recover missing/stale evidence here; the write service always checks live.
-    if(localPickEligibility(client,slots,data.champions,{scope,soloRole,playerPosition:saved.draft?.playerPosition}).status!=='checked')await sync(false,{fresh:true});
-    const key=champ(context.id).key,unavailable=client.eligibility?.disabled?.includes(key)||Array.isArray(client.eligibility?.pickable)&&!client.eligibility.pickable.includes(key);
-    if(!client.connected||client.phase!=='ChampSelect'||clickGame!==preparationGameId(client)||clickCell!==client.session?.localPlayerCellId||clickMode!==client.mode?.id||unavailable||!memberHeroAction(context.id,context.role).prepare)throw Error('选人或可选英雄已变化，尚未操作；请重新选择');
-    // Applying one hero does not require replacing a whole incompatible lineup.
-    // Keep the concrete candidate build even when its reference lane is occupied.
-    const target=slots.find(s=>s.role===context.role),otherPlayer=Number.isInteger(target?.clientCellId)&&target.clientCellId!==client.session?.localPlayerCellId;
-    let adopted=false;
-    if(!otherPlayer&&result.targets?.includes(context.role)&&!result.slots.find(s=>s.role===context.role)?.publicIntent&&(!taskOwnRole()||taskOwnRole()===context.role)&&resultsSignature===recommendationKey(recommendationInput())){
-     const clickGame=preparationGameId(client),clickCell=client.session?.localPlayerCellId,clickMode=client.mode?.id;
-     try{await adoptResult(index,true);adopted=true;}
-     catch(error){
-      const samePlayer=client.connected&&client.phase==='ChampSelect'&&clickGame===preparationGameId(client)&&clickCell===client.session?.localPlayerCellId&&clickMode===client.mode?.id;
-      const key=champ(context.id).key,unavailable=client.eligibility?.disabled?.includes(key)||Array.isArray(client.eligibility?.pickable)&&!client.eligibility.pickable.includes(key);
-      if(!samePlayer||unavailable||!memberHeroAction(context.id,context.role).prepare||!/^候选或选人已变化，尚未采用|^推荐条件已变化|^英雄已有客户端位置/.test(error.message))throw error;
-     }
-    }
-    await prepareHeroClick(selection,adopted?expected:null);
-   }finally{candidatePreparing=false;preparationTarget=previousTarget;drainExternalState();render();}
-  }
-  else{companionPreview={...localConfigurationPreview({id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(combo)},client,taskOwnRole()),...(action.readOnly?{readOnly:true}:{})};if(windowLayout.docked){companionTab='plan';closeOverlay();render();}else showBuild(el.dataset.id,el.dataset.role,'rift',companionPreview);}
-  return;
+ if(!champ(el.dataset.id))throw Error('英雄资料已变化');
+ const action=memberHeroAction(el.dataset.id,el.dataset.role);
+ if(action.blocked)throw Error('英雄已锁定，不能选择其他英雄；仍可查看配置');
+ // An avatar is a hero choice, not adoption of every member in its old row.
+ // The write service verifies live availability even if recommendations moved.
+ return prepareHeroClick({id:el.dataset.id,role:el.dataset.role,mode:'rift',...(action.readOnly?{readOnly:true}:{})});
 }
 
 function readOnlyPreparation(view,plan){return !!plan&&(configurationReadOnly(plan.selection,client,taskOwnRole())||view==='build'&&buildView?.readOnly||view==='companion'&&companionPreview?.readOnly);}

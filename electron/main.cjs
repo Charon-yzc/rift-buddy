@@ -809,6 +809,7 @@ async function boot(){
  // A frozen plan is evidence only while every referenced catalog group still
  // has its current reviewed definition and the public members are confirmed.
  function derivedCatalogState(selection,session=latestClient.session,snapshot=data){
+  if(selection?.loadoutId==='default')return {required:false,current:true};
   const plan=selection?.creativePlan,groups=catalogPlanGroups(plan),catalog=snapshot.catalog,status=snapshot.catalogInfo?.status,patch=snapshot.patch;
   const entries=[...(catalog?.duos||[]),...(catalog?.trios||[])];
   const direct=!plan&&selection?.comboId?entries.find(entry=>entry.id===selection.comboId):null;
@@ -1194,19 +1195,22 @@ async function boot(){
   finally{applyingRunes=false;}
  });
  const {createHexSelectionQueue}=await import('../services/hex-selection-queue.mjs');
+ let heroSelectionRevision=0;
  const hexSelections=createHexSelectionQueue(async(value,control)=>{
+  if(helper.active())return helper.request('selectChampion',{value,baseIdentity:generationBaseIdentity(data)});
   const service=await import('../services/client-preparation.mjs');
   const result=await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath},{isCurrent:control.isCurrent});
   return result;
  });
  guard('prepare-selection',async(value,{sender})=>{
-  if(value?.mode==='hex'&&value?.preselectOnly===true){
+  if(value?.preselectOnly===true&&['hex','rift'].includes(value.mode)){
    const service=await import('../services/client-preparation.mjs');
-   return hexSelections(service.validateClientPreparation(value,data));
+   const selected=service.validateClientPreparation(value,data);heroSelectionRevision++;return hexSelections(selected);
   }
   if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，请稍后');
   const requestSource=value?.buildSource===undefined?normalizeBuildSource(data.buildSource):requireBuildSource(value.buildSource),sourceBinding=noteWindowSource(sender,requestSource,value?.sourceEpoch);
   applyingRunes=true;importingItemSet=true;
+  const selectionRevision=heroSelectionRevision;
   let operation;
   try{
    // A second renderer may have accepted a newer group while this click was
@@ -1220,7 +1224,7 @@ async function boot(){
    if(selection&&value.mode!=='hex'&&(selection.id!==value.champion||selection.role!==value.role||selection.mode!==value.mode))throw Error('准备配置与英雄或位置不一致，请重新点击');
    await saveTask;
    if(!sourceBindingCurrent(sourceBinding)||buildData.flashSlot!==state.preferences.flashSlot||initialStamp!==selectionReviewStamp(stampedSelection,state,requestSource)||typeof reviewStamp==='string'&&reviewStamp!==selectionReviewStamp(stampedSelection,state,requestSource))throw Error('组合或资料复核状态已变化，请重新选择配置');
-   const catalogChoice=state.draft?.catalogChoice,guardedIntent=selection?.comboId&&selection.comboId===catalogChoice?.id?{catalogChoiceToken:catalogChoice.token,role:selection.role}:null;
+   const catalogChoice=state.draft?.catalogChoice,guardedIntent=selection?.loadoutId!=='default'&&selection?.comboId&&selection.comboId===catalogChoice?.id?{catalogChoiceToken:catalogChoice.token,role:selection.role}:null;
    const sourceData=()=>projectPreparationData(requestSource,stampedSelection);
    if(!value.preselectOnly&&guardedIntent&&!stagedCatalogChoice(guardedIntent,selection.id,latestClient.session,sourceData()))throw Error('组合成员尚未确认或资料已变化，请确认后再应用');
    const derived=value.preselectOnly?{required:!!(selection?.comboId||catalogPlanGroups(selection?.creativePlan).length),current:true}:derivedCatalogState(selection,latestClient.session,sourceData());
@@ -1232,7 +1236,7 @@ async function boot(){
    const preparationFingerprint=choice=>clientPreparationPlan(buildData,{selection:choice,build:getBuild(buildData.champions.find(hero=>hero.id===choice.id),choice.role,buildData,choice)})?.fingerprint;
    if(expectedPreparation&&!isDeepStrictEqual(expectedPreparation.value,remembered))throw Error('准备已在其他窗口变化，尚未操作；请重新核对');
    const selectionWriteAtDispatch=selectionWriteRevision,dispatchStamp=selectionReviewStamp(stampedSelection,state,requestSource);
-   const stillCurrent=()=>sourceBindingCurrent(sourceBinding)&&buildData.flashSlot===state.preferences.flashSlot&&(!derived.required||selectionWriteAtDispatch===selectionWriteRevision)&&dispatchStamp===selectionReviewStamp(stampedSelection,state,requestSource)&&(!selection||preparationSnapshotCurrent(remembered,storedPreparation(state.preparations,selection),selection,preparationFingerprint))&&(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id,latestClient.session,sourceData())?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection,latestClient.session,sourceData()).current);
+   const stillCurrent=()=>selectionRevision===heroSelectionRevision&&sourceBindingCurrent(sourceBinding)&&buildData.flashSlot===state.preferences.flashSlot&&(!derived.required||selectionWriteAtDispatch===selectionWriteRevision)&&dispatchStamp===selectionReviewStamp(stampedSelection,state,requestSource)&&(!selection||preparationSnapshotCurrent(remembered,storedPreparation(state.preparations,selection),selection,preparationFingerprint))&&(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id,latestClient.session,sourceData())?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection,latestClient.session,sourceData()).current);
    const guideCurrent=()=>selectionWriteAtDispatch===selectionWriteRevision&&stillCurrent();
    operation=beginPreparation('selection',{value,selection,context:value.context,...(expectedPreparation?{snapshotPreview:true}:{})});
    let written;if(helperReady)setHelperSourceLock(sourceBinding,true,requestSource);try{written=helperReady?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId},{isCurrent:stillCurrent,isCurrentSession:session=>sourceBindingCurrent(sourceBinding)&&(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id,session,sourceData())?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection,session,sourceData()).current)});}finally{if(helperReady)setHelperSourceLock(sourceBinding,false);}

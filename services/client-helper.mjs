@@ -6,6 +6,7 @@ import {clientSnapshot,writeRunePage} from './lcu.mjs';
 import {validateRuneWriteContext} from '../src/core/rune-context.mjs';
 import {importItemSet} from './item-sets.mjs';
 import {prepareClientSelection} from './client-preparation.mjs';
+import {createHexSelectionQueue} from './hex-selection-queue.mjs';
 import {atomicJSON} from './data.mjs';
 import {createAcceptedGameReader} from './active-game.mjs';
 import {readState} from './storage.mjs';
@@ -34,8 +35,12 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
  const config=JSON.parse(await fs.readFile(filename,'utf8'));
  if(!pipePattern.test(config.pipe)||!tokenPattern.test(config.secret)||!Number.isInteger(config.parentPid)||config.parentPid<=0||!Number.isFinite(config.createdAt)||Date.now()-config.createdAt>600000||config.createdAt>Date.now()+5000)throw new Error('连接会话已过期');
  // The helper only serves this app's explicit operations; neither command lines nor credentials leave it.
- let writing=false,itemSetWriting=false,latestNoticeOperation=null;
+ let writing=false,itemSetWriting=false,latestNoticeOperation=null,heroSelectionRevision=0;
  const readCurrentGame=readGame||createAcceptedGameReader({root:path.join(userData,'data'),fallbackRoot:path.join(bundleRoot,'data')});
+ const selectChampion=createHexSelectionQueue(async(payload,control)=>{
+  const data=await readCurrentGame(payload?.baseIdentity??null);
+  return prepareClientSelection({value:payload.value,data,installPath:config.installPath},{isCurrent:control.isCurrent});
+ });
  const matchHistory=createMatchHistoryService({installPath:()=>config.installPath});
   const server=net.createServer(socket=>{
    socket.setEncoding('utf8');let buffer='',handled=false;socket.setTimeout(15000,()=>socket.destroy());
@@ -58,11 +63,15 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
       result=await writeRunePage({page:request.payload.page,context:validateRuneWriteContext(request.payload.context),ownedPageId:state.ownedPageId,installPath:config.installPath,trees:data.runes});
       // The unelevated app is the sole settings writer; avoid racing a preference save.
      }finally{writing=false;}
+    }else if(request.operation==='selectChampion'){
+     if(request.payload?.value?.preselectOnly!==true||!['rift','hex'].includes(request.payload.value.mode))throw Error('此操作仅用于选择英雄');
+     heroSelectionRevision++;result=await selectChampion(request.payload);
     }else if(request.operation==='prepareSelection'){
      latestNoticeOperation=request.payload?.operationId??null;
      if(writing||itemSetWriting)throw Error('客户端配置正在处理，请稍后');writing=true;itemSetWriting=true;socket.setTimeout(60000,()=>socket.destroy());
+     const revision=heroSelectionRevision;
      try{const data=await readCurrentGame(request.payload?.baseIdentity??null),state=await readState(userData);
-      result=await prepareClientSelection({value:request.payload?.value,data,ownedPageId:state.ownedPageId,installPath:config.installPath});
+      result=await prepareClientSelection({value:request.payload?.value,data,ownedPageId:state.ownedPageId,installPath:config.installPath},{isCurrent:()=>revision===heroSelectionRevision});
      }finally{writing=false;itemSetWriting=false;}
     }else if(request.operation==='importItemSet'){
      if(itemSetWriting)throw Error('装备集正在写入，请稍后');itemSetWriting=true;

@@ -40,8 +40,10 @@ function busyContext({busy=true,phase='ChampSelect',mode='rift',selectionMode=nu
  return context;
 }
 
-test('a busy Rift draft retains the existing configuration lock',async()=>{
- const context=busyContext({busy:true});await assert.rejects(context.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'}),/正在应用配置/);
+test('a busy Rift avatar takes the independent hero selection path',async()=>{
+ const context=busyContext({busy:true});let selected;
+ context.selectRiftHero=async value=>{selected=value;return {selected:true};};
+ const result=await context.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'});assert.equal(result.selected,true);assert.equal(selected.id,'Ashe');
 });
 
 test('a busy draft click still throws when the game is locked or not selectable',async()=>{

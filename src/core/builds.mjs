@@ -203,7 +203,9 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const historicStatus=reviewedId&&data.catalogInfo?.status?.[reviewedId];
  const unchangedAutomatic=mode==='rift'&&variant==='default'&&coreAuto===true&&!sharedEquipmentBase&&!coreId&&!sourceOpponent&&!laterIds?.length&&(!loadoutId||loadoutId==='auto')&&historicStatus?.historicalCompatible===true&&historicStatus.historicalPatch===data.patch&&(!creative||catalogPlanCurrent(creativePlan,data.catalog,data.catalogInfo?.status,data.patch));
  const currentReferencePreferred=(creative?.archetype==='curated'||duo?.members?.length>=3)&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&!automaticOptional&&!unchangedAutomatic&&((preferredLoadout.patch||LOADOUT_PATCH)!==data.patch||data.catalogInfo?.loadoutStatus?.[preferredLoadout.id]?.stale||dependencyChanges(preferredLoadout,{runes:runePlans},data).length>0)&&standardRef?.patch===data.patch;
- const requested=!loadoutId||loadoutId==='auto'?currentReferencePreferred?'default':preferred||'default':loadoutId;
+ // A lineup describes cooperation; it must not silently replace the player's
+ // current role's source build. Dedicated gear is an explicit configuration.
+ const requested=!loadoutId||loadoutId==='auto'?mode==='rift'?'default':preferred||'default':loadoutId;
  const config=availableLoadouts.find(c=>c.id===requested);
  const selectionWarnings=[];
  if(unchangedAutomatic&&preferredLoadout&&config===preferredLoadout)selectionWarnings.push('组合整理于旧版；已审技能来源指纹一致。普通装备效果、任务与视野按当前规则核对；原配置不代表当前版本统计。');

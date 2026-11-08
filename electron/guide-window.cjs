@@ -23,8 +23,8 @@ function cursorInBounds(cursor,bounds,margin=2){
 
 module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,showHexSource=()=>{},getReference=()=>null,referenceRevision=()=>0,diagnostic,resetHexRound=()=>undefined,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
- let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
- let gameBounds=null,displayEpoch=0,activeFamily=null,passiveDisplay=false,autoShowGame=null,equipmentRequested=false,hexWasInGame=false,publishedModel=null;
+ let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,hoverHeader=false;
+ let gameBounds=null,displayEpoch=0,activeFamily=null,passiveDisplay=false,autoShowGame=null,autoShowPending=false,equipmentRequested=false,hexWasInGame=false,publishedModel=null;
  const isHex=()=>getState()?.selection?.mode==='hex';
  const inGame=value=>['GameStart','InProgress','Reconnect'].includes(value);
  // Every Hex display uses the same compact route cards, also outside a game.
@@ -39,14 +39,14 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
   const b=compactGuidePlacement(recover?null:getState()?.compactBounds||current,area,gameBounds,stripScale()),l=guideWindowLimits('compact',area,stripScale());adjusting=true;win.setMinimumSize(l.minWidth,l.minHeight);if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>2))win.setBounds(b);adjusting=false;}
  const isBall=()=>false,isStrip=()=>false,isCompact=()=>true;
  const stripScale=()=>[1,1.1,1.25].includes(getPreferences().presentation?.textScale)?getPreferences().presentation.textScale:1;
- const needsAutoShow=()=>autoShowUntil>Date.now()&&getPreferences().guideAutoShow!==false;
+ const needsAutoShow=()=>autoShowPending&&getPreferences().guideAutoShow!==false;
 const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&publishedModel?.live?.matched)&&interactionHotkeyAvailable);
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
 const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough(),focusable=!pass&&!passiveDisplay;win.setIgnoreMouseEvents(ignore,{forward:true});if(win.isFocusable?.()!==focusable)win.setFocusable(focusable);if(ignore&&win.isFocused())win.blur();}};
 const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}publishedModel=model;return {model,referenceRevision:referenceRevision(),phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
 const skill=createSkillWindow({isActive:()=>getState()?.selection?.mode==='rift'&&!usesHexMicro()&&getPreferences().guideSkills!==false,root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish()});
 const jungle=createJungleWindow({isActive:()=>getState()?.selection?.mode==='rift'&&!usesHexMicro()&&getPreferences().guideJungle!==false,root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish()});
-const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,getPreferences,isActive:()=>visibilityRequested&&(usesHexMicro()||usesEconomy()),isQuitting,diagnostic,onChange:()=>publish(),onHide:()=>{displayEpoch++;autoShowUntil=0;if(!micro.requested())visibilityRequested=false;}});
+const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,getPreferences,isActive:()=>visibilityRequested&&(usesHexMicro()||usesEconomy()),isQuitting,diagnostic,onChange:()=>publish(),onHide:()=>{displayEpoch++;autoShowPending=false;if(!micro.requested())visibilityRequested=false;}});
  let previousFeatures={...getPreferences()};
  function suppressLegacy(){peek.unfold();resize.cancel();hoverHeader=false;if(win&&!win.isDestroyed()){if(lastPublished){lastPublished='';win.webContents.send('guide-update',{model:null});}win.hide();}skill.hide();jungle.hide();}
  function publish(){
@@ -116,11 +116,11 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   if(hoverPoll.unref)hoverPoll.unref();
   win.on('closed',()=>{peek.destroy();clearTimeout(boundsTimer);clearInterval(hoverPoll);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
  }
- function hideGear(){displayEpoch++;peek.unfold();resize.cancel();autoShowUntil=0;equipmentRequested=false;hoverHeader=false;win?.hide();}
+ function hideGear(){displayEpoch++;peek.unfold();resize.cancel();autoShowPending=false;equipmentRequested=false;hoverHeader=false;win?.hide();}
  function hide(){hideGear();visibilityRequested=false;skill.hide();jungle.hide();micro.hide();}
  function showEquipment(automatic=false){if(automatic)passiveDisplay=true;if(getPreferences().guideEquipment===false){win?.hide();return;}if(!win)create();else{inputMode();if(!automatic&&win.isMinimized())win.restore();fit();win.showInactive();}}
  function showLegacy(automatic=false){equipmentRequested=true;if(usesEconomy())micro.show(payload());else micro.suspend();skill.show();jungle.show();showEquipment(automatic);}
- function show(automatic=false){displayEpoch++;peek.unfold();autoShowUntil=0;visibilityRequested=true;hoverHeader=false;passiveDisplay=automatic;activeFamily=usesHexMicro()?'hex':'rift';if(usesHexMicro()){suppressLegacy();micro.show(payload());}else{showLegacy(automatic);}publish();return payload();}
+ function show(automatic=false){displayEpoch++;peek.unfold();autoShowPending=false;visibilityRequested=true;hoverHeader=false;passiveDisplay=automatic;activeFamily=usesHexMicro()?'hex':'rift';if(usesHexMicro()){suppressLegacy();micro.show(payload());}else{showLegacy(automatic);}publish();return payload();}
  async function recover(reset=false){const epoch=++displayEpoch,identity=getState()?.selection?.mode,gameId=getState()?.match?.gameId;peek.unfold();resize.cancel();clearTimeout(boundsTimer);boundsTimer=null;const current=getState();
   if(usesHexMicro()){
    await micro.reset(async()=>{if(epoch!==displayEpoch||!usesHexMicro()||gameId!==getState()?.match?.gameId)return;const latest=getState();if(latest)await save({...latest,hexWindows:undefined});});
@@ -211,12 +211,15 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   // Only an unknown-ID round needs a fresh selection phase to reset its token.
   if(autoShowGame==='unknown'&&!id&&next==='ChampSelect'&&previous!=='ChampSelect')autoShowGame=null;
   const autoGame=String(id||'unknown');
-  if(next==='InProgress'&&(newGame||!['InProgress','Reconnect'].includes(previous))&&autoShowGame!==autoGame&&preferences.guideAutoShow!==false){autoShowGame=autoGame;autoShowUntil=Date.now()+30000;}
-  if(!['InProgress','Reconnect'].includes(next))autoShowUntil=0;
+  if(next==='InProgress'&&(newGame||!['InProgress','Reconnect'].includes(previous))&&autoShowGame!==autoGame&&preferences.guideAutoShow!==false){autoShowGame=autoGame;autoShowPending=true;}
+  if(!['InProgress','Reconnect'].includes(next)){autoShowPending=false;}
   if(next===previous&&!newGame&&!needsAutoShow())return;
   if(next==='InProgress'&&needsAutoShow()&&currentSelection()){
    const epoch=displayEpoch,gameId=getState()?.match?.gameId;
-   if(await prepareCurrent()&&epoch===displayEpoch&&gameId===getState()?.match?.gameId&&phase===next&&connected&&needsAutoShow())show(true);
+   // Loading/live data may arrive after thirty seconds, or model construction
+   // may temporarily fail. Consume the one-shot display only for real content.
+   // showInactive remains the sole display; closing it cancels the intent.
+   if(await prepareCurrent()&&epoch===displayEpoch&&gameId===getState()?.match?.gameId&&phase===next&&connected&&needsAutoShow()&&payload().model)show(true);
   }
   if(getState()&&['WaitingForStats','PreEndOfGame','EndOfGame'].includes(next)&&!['WaitingForStats','PreEndOfGame','EndOfGame'].includes(previous)){
    const behavior=preferences.guideAfterGame||'hide';if(behavior==='hide')hide();

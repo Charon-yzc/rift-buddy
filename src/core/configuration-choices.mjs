@@ -33,7 +33,7 @@ export function configurationChoices(data,selection,currentBuild){
  };
  append('current',selection,currentBuild||getBuild(hero,base.role,data,selection),nameOf(currentBuild||ordinary,data));
  append('default',standard,ordinary,nameOf(ordinary,data));
- for(const option of ordinary.loadoutOptions){const s={...base,loadoutId:option.id};append('loadout:'+option.id,s,getBuild(hero,base.role,data,s),option.name);}
+ for(const option of ordinary.loadoutOptions){const s={...base,loadoutId:option.id};append('loadout:'+option.id,s,getBuild(hero,base.role,data,s),(option.id===ordinary.combo?.preferred?'组合配置 · ':'')+option.name);}
  for(const [index,core] of (ordinary.reference?.core||[]).slice(1,4).entries()){
   const s={...standard,coreIndex:index+1,coreId:'core-'+core.items.join('-')};
   const build=getBuild(hero,base.role,data,s);append(s.coreId,s,build,build.sourceCoreChanged?'OP.GG · 来源路线已调整':'OP.GG · '+(data.items[core.items[0]]?.name||'路线')+'路线');
@@ -45,8 +45,10 @@ export function configurationChoices(data,selection,currentBuild){
  return rows;
 }
 
-// A suggested route is resolved by getBuild, not an explicit user choice.
-// Keep an absent loadoutId absent so later source changes can be resolved again.
+// Avatar selection always starts with the ordinary role's source configuration.
 export function heroClickSelection(data,context){
- return context;
+ if(context.mode!=='rift')return context;
+ // A new avatar click is a fresh role default, not an adoption of a lineup's
+ // saved runes/items or an earlier hero's manual overrides.
+ return {id:context.id,role:context.role,mode:'rift',loadoutId:'default',coreIndex:0,coreAuto:true,conditions:[],...(context.readOnly?{readOnly:true}:{}),...(context.localReference?{localReference:true}:{})};
 }
