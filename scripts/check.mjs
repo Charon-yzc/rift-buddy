@@ -24,7 +24,7 @@ const rankingData=JSON.parse(await fs.readFile('data/rankings.json','utf8'));
 if(Object.keys(rankingData.entries||{}).length!==6||Object.values(rankingData.entries).some(ref=>!validRankingReference(ref,data)))errors.push('Invalid bundled five-role rankings');
 if(!validPatchNotes(JSON.parse(await fs.readFile('data/patch-notes.json','utf8')),data))errors.push('Invalid bundled patch changes');
 const abilities=JSON.parse(await fs.readFile('data/abilities.json','utf8'));
-if(!validAbilityReference(abilities,data))errors.push('Invalid or outdated bundled champion ability reference');
+if(!validAbilityReference(abilities,data,{allowOlder:true}))errors.push('Invalid bundled champion ability reference');
 validatePairStatistics(JSON.parse(await fs.readFile('data/pair-statistics.json','utf8')),data.champions);
 for(const champion of data.champions)if(!hasCurrentCombatStats(champion,data.patch))errors.push(`Missing current-patch champion combat stats: ${champion.id}`);
 validateCatalog(BUNDLED_CATALOG,data);

@@ -2,7 +2,7 @@ import net from 'node:net';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {clientSnapshot,writeRunePage} from './lcu.mjs';
+import {clientSnapshot,writeRunePage,liveClientDictionary,discoverClient} from './lcu.mjs';
 import {validateRuneWriteContext} from '../src/core/rune-context.mjs';
 import {importItemSet} from './item-sets.mjs';
 import {prepareClientSelection} from './client-preparation.mjs';
@@ -21,7 +21,7 @@ export function requestHelper(config,operation,payload={},timeout=12000) {
   const socket=net.createConnection(config.pipe);socket.setEncoding('utf8');let buffer='';
   socket.setTimeout(timeout,()=>socket.destroy(new Error('连接助手响应超时，请重试读取')));
   socket.on('connect',()=>socket.write(JSON.stringify({secret:config.secret,operation,payload})+'\n'));
-  socket.on('data',chunk=>{buffer+=chunk;if(buffer.length>(operation==='matchHistory'?4_000_000:150000)){socket.destroy(new Error('连接助手响应过大'));return;}
+  socket.on('data',chunk=>{buffer+=chunk;if(buffer.length>(['matchHistory','liveDictionary'].includes(operation)?4_000_000:150000)){socket.destroy(new Error('连接助手响应过大'));return;}
    if(buffer.includes('\n')){try{const message=JSON.parse(buffer.slice(0,buffer.indexOf('\n')));socket.end();if(message.ok)resolve(message.result);else reject(new Error(message.error||'客户端操作失败'));}catch{socket.destroy(new Error('连接助手返回格式异常'));}}
   });
   socket.on('error',()=>reject(new Error('连接助手已断开，请重试读取')));
@@ -52,6 +52,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
    try{
     let result;
     if(request.operation==='ping')result={ready:true};
+    else if(request.operation==='liveDictionary'){const auth=await discoverClient(config.installPath).catch(()=>null);result=await liveClientDictionary(auth);}
      else if(request.operation==='status')result=await clientSnapshot(config.installPath,{partyIds:request.payload?.partyIds});
      else if(request.operation==='postGame')result=await readPostGame({installPath:config.installPath,own:request.payload?.own,game:request.payload?.game});
      else if(request.operation==='matchHistory'){socket.setTimeout(60000,()=>socket.destroy());result=await matchHistory.execute(request.payload?.operation,request.payload?.payload);}
@@ -167,7 +168,12 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
    }
   })().finally(()=>{opening=null;});return opening;
  }
- return {ensure,active:()=>!!config,history,postGame,statusWithTransport,transportCurrent,
+ async function liveDictionary(installPath=''){
+  if(config){try{return await send(config,'liveDictionary');}catch{}}
+  const auth=await discoverClient(installPath).catch(()=>null);
+  return liveClientDictionary(auth).catch(()=>null);
+ }
+ return {ensure,active:()=>!!config,history,postGame,statusWithTransport,transportCurrent,liveDictionary,
    request:(operation,payload)=>{if(!config)throw new Error('连接助手尚未就绪，请重试读取');return send(config,operation,payload,['prepareSelection','matchHistory'].includes(operation)?60000:12000);},
   status:async(installPath,partyIds=[])=> (await statusWithTransport(installPath,partyIds)).client,
   shutdown:async()=>{closed=true;revokeTransport();if(config){try{await send(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},

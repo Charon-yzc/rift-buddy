@@ -28,6 +28,29 @@ function publishData(keys,replace=false){
  const changes={};for(const key of keys)if(replace||sharedDataFields.get(key)!==data[key]){changes[key]=data[key];sharedDataFields.set(key,data[key]);}
  if(Object.keys(changes).length)publishWindows('data-update',{changes,replace,revision:++dataRevision});
 }
+function mergeLiveGameData(live){
+ if(!live)return;
+ let changed=false;
+ if(Array.isArray(live.champions)&&data?.champions){
+  const existingKeys=new Set(data.champions.map(c=>Number(c.key)));
+  for(const c of live.champions){
+   if(!existingKeys.has(c.key)){
+    data.champions.push(c);
+    existingKeys.add(c.key);
+    changed=true;
+   }
+  }
+ }
+ if(Array.isArray(live.items)&&data?.items){
+  for(const i of live.items){
+   if(!data.items[i.id]){
+    data.items[i.id]=i;
+    changed=true;
+   }
+  }
+ }
+ if(changed)publishData(['champions','items']);
+}
 let importingItemSet=false;
 let mainExplicitInGame=false,mainDismissed=false;
 const mainRequests=new Map(),inGame=()=>latestClient.connected&&['GameStart','InProgress','Reconnect'].includes(latestClient.phase);
@@ -918,6 +941,9 @@ async function boot(){
    usageCollector.observe(latestClient,latestHistoryTransport).catch(()=>{});
    if(!latestClient.connected||postgameTransport!==latestHistoryTransport)postgameOwner=null;
    postgameTransport=latestHistoryTransport;
+   if(latestClient.connected&&!previousClient.connected){
+    helper.liveDictionary(state.preferences?.installPath).then(mergeLiveGameData).catch(()=>{});
+   }
    if(latestClient.connected&&(latestClient.own?.summonerId||latestClient.own?.puuid))postgameOwner={...(latestClient.own.summonerId?{summonerId:latestClient.own.summonerId}:{}),...(latestClient.own.puuid?{puuid:latestClient.own.puuid}:{})};
    postgameLifecycle.observe();
    if(ballotRoundChanged(latestClient))clearRoomBallot();

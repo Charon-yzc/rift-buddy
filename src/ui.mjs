@@ -41,7 +41,12 @@ const roleIcons={
  support:"<path fill-rule=\"evenodd\" d=\"M26,13c3.535,0,8-4,8-4H23l-3,3,2,7,5-2-3-4h2ZM22,5L20.827,3H13.062L12,5l5,6Zm-5,9-1-1L13,28l4,3,4-3L18,13ZM11,9H0s4.465,4,8,4h2L7,17l5,2,2-7Z\" fill=\"currentColor\"/>",
 };
 export const roleIcon=(role,cls='')=>roleIcons[role]?`<svg class="icon role-icon ${escape(cls)}" viewBox="0 0 34 34" aria-hidden="true">${roleIcons[role]}</svg>`:'';
-export const portrait=(c,cls='')=>c?`<img class="portrait ${cls}" src="${escape(localAssets[`champion/${c.id}`]||`../data/images/champion/${c.id}.png`)}" data-fallback="${escape(c.icon)}" alt="${escape(c.name)}" decoding="async" loading="lazy" />`:'<div class="empty-portrait">+</div>';
+export const portrait=(c,cls='')=>{
+ if(!c)return '<div class="empty-portrait">+</div>';
+ const cid=c.id||(c.key?String(c.key):'');
+ const fallback=c.icon||(c.key||c.id?`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${c.key||c.id}.png`:'');
+ return `<img class="portrait ${cls}" src="${escape(localAssets[`champion/${cid}`]||`../data/images/champion/${cid}.png`)}" ${fallback?`data-fallback="${escape(fallback)}"`:''} alt="${escape(c.name||cid)}" decoding="async" loading="lazy" />`;
+};
 export const rosterPortrait=(c,cls='')=>c?portrait(c,cls).replace('<img ','<img draggable="false" '):`<span class="empty-portrait roster-empty" aria-hidden="true">${icon('user')}</span>`;
 let fallbackAssets=new Map(),localAssets={};
 export function prepareAssets(data){
@@ -56,7 +61,12 @@ export function prepareAssets(data){
 }
 export function installAssets(prepared){localAssets=prepared.local;fallbackAssets=prepared.fallback;}
 export function configureAssets(data){installAssets(prepareAssets(data));}
-export const asset=(kind,id,alt='',cls='',tooltip=true)=>`<img class="${cls}" ${tooltip&&['item','rune','spell'].includes(kind)?`data-game-tooltip-kind="${kind}" data-game-tooltip-id="${escape(id)}"`:''} src="${escape(localAssets[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" ${fallbackAssets.get(`${kind}/${id}`)?`data-fallback="${escape(fallbackAssets.get(`${kind}/${id}`))}"`:''} alt="${escape(alt)}" decoding="async" loading="lazy" />`;
+const defaultAssetFallback=(kind,id)=>{
+ if(kind==='item'&&Number(id)>0)return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/items/icons2d/${id}.png`;
+ if(kind==='champion'&&(Number(id)>0||id))return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${id}.png`;
+ return '';
+};
+export const asset=(kind,id,alt='',cls='',tooltip=true)=>{const fallback=fallbackAssets.get(`${kind}/${id}`)||defaultAssetFallback(kind,id);return `<img class="${cls}" ${tooltip&&['item','rune','spell'].includes(kind)?`data-game-tooltip-kind="${kind}" data-game-tooltip-id="${escape(id)}"`:''} src="${escape(localAssets[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" ${fallback?`data-fallback="${escape(fallback)}"`:''} alt="${escape(alt)}" decoding="async" loading="lazy" />`;};
 export const button=(action,label,ico='',cls='',extra='')=>`<button type="button" class="btn ${cls}" data-action="${action}" ${extra}>${ico?icon(ico):''}${label}</button>`;
 // Number#toLocaleString builds a new formatter on every call, and detail tables
 // format thousands of values per render; reuse one formatter per precision.

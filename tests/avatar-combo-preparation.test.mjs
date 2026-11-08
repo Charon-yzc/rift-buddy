@@ -10,16 +10,17 @@ import {selectedBuildFields} from '../src/core/build-favorites.mjs';
 import {createSlots,currentCombo,mergeClientSession} from '../src/core/recommend.mjs';
 import {ROLES} from '../src/core/rules.mjs';
 import {currentPlayerSelection} from '../src/core/guide.mjs';
-import {moveChampion,assignClientChampion,clearManualPlayerPosition,unassignedPublicPicks} from '../src/core/draft.mjs';
+import {moveChampion,assignClientChampion,clearManualPlayerPosition,unassignedPublicPicks,selectManualChampion} from '../src/core/draft.mjs';
 import {creativeComboContext} from '../src/core/creative-plan.mjs';
 import {createPreparationStore,recallPreparation} from '../src/core/preparation.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {localConfigurationPreview} from '../src/core/companion-plan.mjs';
 import {movePartyMark} from '../src/core/party-range.mjs';
 import {BUNDLED_CATALOG,configureCatalog} from '../src/core/catalog.mjs';
+import {catalogContextRevision} from '../src/core/catalog-choice.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
-const functions=source.slice(source.indexOf('async function prepareHeroClick('),source.indexOf('\nfunction refreshClickedResult'))+'\n'+source.slice(source.indexOf('function rememberedPreparation('),source.indexOf('\nfunction editBuildSummoners'))+'\n'+source.slice(source.indexOf('function setCompanionRole('),source.indexOf('\nfunction preservePlayerPosition'));
+const functions=source.slice(source.indexOf('let riftHeroClickRevision=0'),source.indexOf('\nfunction refreshClickedResult'))+'\n'+source.slice(source.indexOf('function rememberedPreparation('),source.indexOf('\nfunction editBuildSummoners'))+'\n'+source.slice(source.indexOf('function setCompanionRole('),source.indexOf('\nfunction preservePlayerPosition'))+'\n'+source.slice(source.indexOf('function selectionReviewStamp('),source.indexOf('\n',source.indexOf('function pendingReviewChanged(')));
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));data.builds={};
 // Exercise a current reviewed lineup without promoting the real legacy entry.
 const reviewed=structuredClone(BUNDLED_CATALOG);reviewed.duos.find(row=>row.id==='rengar-ivern').patch=data.patch;configureCatalog(reviewed);after(()=>configureCatalog(BUNDLED_CATALOG));
@@ -34,7 +35,7 @@ async function click({partner='Ivern',docked=false,connected=false,moving=false,
  const client=connected?{connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:moving?champ('Rengar').key:0,assignedPosition:moving?'MIDDLE':'',championPickIntent:0}]}}:{connected:false};
  let rendered,writes=0,context;
  const render=()=>{const value=context.clickedHeroPreparation?.selection||(docked?context.companionPreview:context.buildView),build=getBuild(champ(value.id),value.role,data,value);value.build=build;rendered=selected(build);store.remember(rendered);};
- context=vm.createContext({prepareHeroWithSource,api:{},clickedHeroPreparation:null,getBuild,localPickLocked,clientPreparing:false,runeApplying:false,itemSetPending:null,heroClickSelection,data,slots,client,saved:{draft:{}},soloRole:'',unassigned:[],pendingIntentPreparation:null,activeCreativePlan:null,guideSelection:solo,preparations:store,detailResult:null,buildReturn:null,picker:null,comboView:null,buildView:null,windowLayout:{docked},companionPreview:null,companionTab:'recommend',companionScroll:new Map(),lastTaskSelection:null,draftComparing:true,positionClaim:null,champ,currentCombo,creativeComboContext,recallPreparation,localConfigurationPreview,ROLES,currentPlayerSelection,moveChampion,assignClientChampion,clearManualPlayerPosition,unassignedPublicPicks,mergeClientSession,movePartyMark,taskOwnRole:()=>context.soloRole,pregamePhase:phase=>['None','Lobby','Matchmaking','ReadyCheck'].includes(phase),memberHeroAction:id=>companionHeroAction(client,champ(id)),invalidate(){},renderBuild:render,render,closeOverlay(){},maybeRefreshBuild(){},useClientPreparation:async()=>{writes++;return true;}});
+ context=vm.createContext({sync:async()=>{},persist:async()=>{},selectManualChampion,catalogContextRevision,externalState:null,stateRevision:0,prepareHeroWithSource,api:{},clickedHeroPreparation:null,getBuild,localPickLocked,clientPreparing:false,runeApplying:false,itemSetPending:null,heroClickSelection,data,slots,client,saved:{draft:{}},soloRole:'',unassigned:[],pendingIntentPreparation:null,activeCreativePlan:null,guideSelection:solo,preparations:store,detailResult:null,buildReturn:null,picker:null,comboView:null,buildView:null,windowLayout:{docked},companionPreview:null,companionTab:'recommend',companionScroll:new Map(),lastTaskSelection:null,draftComparing:true,positionClaim:null,champ,currentCombo,creativeComboContext,recallPreparation,localConfigurationPreview,ROLES,currentPlayerSelection,moveChampion,assignClientChampion,clearManualPlayerPosition,unassignedPublicPicks,mergeClientSession,movePartyMark,taskOwnRole:()=>context.soloRole,pregamePhase:phase=>['None','Lobby','Matchmaking','ReadyCheck'].includes(phase),memberHeroAction:id=>companionHeroAction(client,champ(id)),invalidate(){},renderBuild:render,render,closeOverlay(){},maybeRefreshBuild(){},useClientPreparation:async()=>{writes++;return true;}});
  vm.runInContext(functions,context);
  await context.prepareHeroClick({...base,...explicit});
  return {rendered,store,storedSolo,writes,context};

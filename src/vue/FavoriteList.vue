@@ -10,8 +10,8 @@
    <h3>{{ f.title }}</h3>
    <div style="display:flex;gap:8px;margin-top:12px">
     <template v-for="(cid, position) in heroIds(f)" :key="position">
-     <img v-if="hero(cid)" class="portrait sm" :src="data.imageOverrides?.['champion/'+cid]||'../data/images/champion/'+cid+'.png'"
-      :data-fallback="hero(cid).icon" :alt="hero(cid).name" loading="lazy" />
+     <img v-if="cid" class="portrait sm" :src="data.imageOverrides?.['champion/'+cid]||'../data/images/champion/'+cid+'.png'"
+      :data-fallback="hero(cid)?.icon||'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/'+cid+'.png'" :alt="hero(cid)?.name||cid" loading="lazy" />
      <div v-else class="empty-portrait">+</div>
     </template>
    </div>

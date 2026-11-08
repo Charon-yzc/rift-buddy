@@ -11,7 +11,7 @@ import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-elig
 import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
 import {allowedHistoryRoute} from './match-history-routes.mjs';
-const GET_PATHS=new Set(['/lol-end-of-game/v1/eog-stats-block','/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-chat/v1/conversations','/data-store/v1/install-dir']);
+const GET_PATHS=new Set(['/lol-end-of-game/v1/eog-stats-block','/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-chat/v1/conversations','/data-store/v1/install-dir','/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json']);
 const lcuAgent=new https.Agent({keepAlive:true,maxSockets:16,maxFreeSockets:8,timeout:10000,rejectUnauthorized:false});
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
@@ -169,8 +169,40 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   // They seed a stable fallback nickname; forRenderer strips raw identity.
   const own={...(ownName?{riotId:ownName}:{}),...(nameIdentity.summonerId?{summonerId:nameIdentity.summonerId}:{}),...(nameIdentity.puuid&&!nameIdentity.summonerId?{puuid:nameIdentity.puuid}:{})};
   if(native&&!failedConnections.has(auth)){snapshotAuth=auth;snapshotPath=installPath;snapshotAuthAt=now();}
+  liveClientDictionary(auth,{request}).catch(()=>{});
   return {connected:true,phase,session,eligibility,game,party,...(Object.keys(own).length?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
  }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
+}
+let lastDictionaryAuth=null,cachedDictionary=null;
+export async function liveClientDictionary(auth,{request=lcuRequest,force=false}={}){
+ if(!auth||!Number.isInteger(auth.port))return null;
+ if(!force&&cachedDictionary&&lastDictionaryAuth?.port===auth.port&&lastDictionaryAuth?.password===auth.password)return cachedDictionary;
+ try{
+  const [championsRaw,itemsRaw]=await Promise.all([
+   request(auth,'/lol-game-data/assets/v1/champion-summary.json').catch(()=>null),
+   request(auth,'/lol-game-data/assets/v1/items.json').catch(()=>null)
+  ]);
+  const champions=Array.isArray(championsRaw)?championsRaw.filter(c=>c&&Number.isInteger(c.id)&&c.id>0).map(c=>({
+   id:c.alias||String(c.id),
+   key:c.id,
+   name:cleanDisplayName(c.name||c.alias||`英雄 ${c.id}`),
+   title:cleanDisplayName(c.title||''),
+   tags:Array.isArray(c.roles)?c.roles:[],
+   icon:`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${c.id}.png`
+  })):null;
+  const items=Array.isArray(itemsRaw)?itemsRaw.filter(i=>i&&Number.isInteger(i.id)&&i.id>0).map(i=>({
+   id:i.id,
+   name:cleanDisplayName(i.name||`装备 ${i.id}`),
+   description:typeof i.description==='string'?i.description.slice(0,1000):'',
+   gold:{total:Number(i.price)||0,base:Number(i.price)||0,sell:Math.round((Number(i.price)||0)*0.7)},
+   icon:`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/items/icons2d/${i.id}.png`
+  })):null;
+  lastDictionaryAuth={port:auth.port,password:auth.password};
+  cachedDictionary={champions,items};
+  return cachedDictionary;
+ }catch{
+  return null;
+ }
 }
 export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {
  const {validateRunePage}=await import('../src/core/builds.mjs');

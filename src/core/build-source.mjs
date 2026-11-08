@@ -41,5 +41,7 @@ export function selectBuildSource(data,source){
 export function selectedBuildReference(data,champion,role){
  const selected=normalizeBuildSource(data.buildSource),candidate=data.builds?.[`${champion}:${role}`];
  if(candidate?.scope===undefined&&candidate?.opponent===undefined&&sameBuildSource(candidate,selected))return candidate;
- return projectBuildSources(data.buildSources,selected,data.patch)[`${champion}:${role}`];
+ const fallback=data.builds?.[Object.keys(data.builds||{}).find(k=>k.startsWith(`${champion}:${role}:`))];
+ if(fallback?.scope===undefined&&fallback?.opponent===undefined)return fallback;
+ return projectBuildSources(data.buildSources||{},selected,data.patch)[`${champion}:${role}`];
 }

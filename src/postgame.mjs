@@ -124,6 +124,12 @@ export function render(report) {
 root.addEventListener('error', event => {
   const target = event.target;
   if (target && target.tagName === 'IMG') {
+    if (target.dataset.fallback) {
+      const url = target.dataset.fallback;
+      delete target.dataset.fallback;
+      target.src = url;
+      return;
+    }
     target.style.visibility = 'hidden';
     target.classList.add('postgame-load-failed');
   }
