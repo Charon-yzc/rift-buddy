@@ -32,7 +32,7 @@ export function companionPickIntent(client,champions,slots=[],{scope='solo',solo
  const chosen=playerPosition?.cellId===session.localPlayerCellId&&ROLES.some(r=>r.id===playerPosition.role)?playerPosition.role:null;
  const preferred=ROLES.some(r=>r.id===soloRole)?soloRole:null;
  const role=manual?.role||chosen||planned?.role||assigned||preferred||profile(champion).roles[0];
- const combo=mode==='rift'?currentCombo(slots,champion.id,role,catalogStatus,null,creativePlan,{patch,catalogChoice}):null;
+ const combo=mode==='rift'&&(creativePlan||catalogChoice)?currentCombo(slots,champion.id,role,catalogStatus,null,creativePlan,{patch,catalogChoice}):null;
  return {selection:{id:champion.id,role,mode,...creativeComboContext(combo)},positionKnown:!!(assigned||manual||chosen||planned||preferred)};
 }
 

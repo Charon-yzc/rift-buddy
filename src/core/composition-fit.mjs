@@ -27,7 +27,7 @@ const relationshipKey=m=>memberKey(m)+':'+((m.p.peel?1:0)|(m.p.engage?2:0)|(m.p.
 function relationship(a,b,graph,details,key=null){
  const cache=details?null:graph?.fitCache;
  if(cache?.has(key))return cache.get(key);
- let quality=0,kind='',edge=null,control=0;
+ let quality=0,kind='',edge=null,control=0,mechanism=null;
  const offer=(value,label)=>{if(value>quality){quality=value;kind=label;}};
  for(const [lead,follow] of [[a,b],[b,a]]){
   if(lead.p.peel&&carry(follow))offer(ranged(follow)?.73:.65,'保护接持续输出');
@@ -40,6 +40,11 @@ function relationship(a,b,graph,details,key=null){
  if(sidePressureActors([a,b]))offer(.76,'边线压力与接应');
  if(a.p.engage&&b.p.engage)offer(offensive(a)||offensive(b)?.48:.28,'控制错开接力');
  if(graph){
+  const verified=graph.mechanics?.has?.(a.champion)&&graph.mechanics.has(b.champion)?graph.mechanics.match(a,b,details):null;
+  if(verified){
+   offer(verified.relation.quality,verified.relation.label);
+   mechanism={...verified.tactic,relationshipEvidence:verified.relation.evidence};
+  }
   const authored=graph.edge(a,b);
   if(authored?.current){offer(authored.family.startsWith('pair:')?.95:.9,authored.name);edge=authored;if(authored.control)control=.85;}
   // Skill-only control relays carry less evidence than a reviewed specific
@@ -52,7 +57,7 @@ function relationship(a,b,graph,details,key=null){
    }
   }
  }
- const result={quality,kind,control,...(details?{edge}:{}),a:a.champion,b:b.champion};
+ const result={quality,kind,control,mechanism,...(details?{edge}:{}),a:a.champion,b:b.champion};
  // Search repeatedly grades the same pairs in many different whole teams.
  // The cache belongs to this graph/input only and retains scalar relations,
  // with all profile/range bits used above in the key; displayed details are
@@ -62,12 +67,13 @@ function relationship(a,b,graph,details,key=null){
 }
 
 function connectionQuality(members,graph,details){
- const best=members.map(()=>0),pairs=[],matrix=members.map(()=>members.map(()=>0));let control=0;
+ const best=members.map(()=>0),pairs=[],mechanisms=[],matrix=members.map(()=>members.map(()=>0));let control=0;
  const keys=!details&&graph?.fitCache?members.map(relationshipKey):null;
  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){
   const link=relationship(members[i],members[j],graph,details,keys?keys[i]+'|'+keys[j]:null);
   matrix[i][j]=matrix[j][i]=link.quality;best[i]=Math.max(best[i],link.quality);best[j]=Math.max(best[j],link.quality);
   control=Math.max(control,link.control);
+  if(link.mechanism)mechanisms.push(link.mechanism);
   if(details&&link.quality)pairs.push(link);
  }
  // A maximum spanning tree asks whether everyone can join the partnership.
@@ -78,7 +84,7 @@ function connectionQuality(members,graph,details){
   for(const i of joined)for(let j=0;j<members.length;j++)if(!joined.has(j)&&matrix[i][j]>value){value=matrix[i][j];next=j;}
   joined.add(next);tree+=value;
  }
- return {quality:.65*best.reduce((sum,v)=>sum+v,0)/members.length+.35*tree/(members.length-1),pairs,control};
+ return {quality:.65*best.reduce((sum,v)=>sum+v,0)/members.length+.35*tree/(members.length-1),pairs,control,mechanisms};
 }
 
 function tacticalQuality(members,connections){
@@ -88,11 +94,11 @@ function tacticalQuality(members,connections){
   const rest=members.filter(m=>m!==lead);
   if(lead.p.engage&&rest.some(offensive)){
    const contribution=rest.reduce((sum,m)=>sum+(offensive(m)?(m.p.aoe||m.p.sustain?1:.85):m.p.frontline||m.p.peel?.75:.3),0)/rest.length;
-   offer(.55+.4*contribution,'engage','先手留人，队友接同一目标');
+   offer(.5+.33*contribution,'engage','先手留人，队友接同一目标');
   }
   if(lead.p.peel&&rest.some(carry)){
    const contribution=rest.reduce((sum,m)=>sum+(carry(m)?1:m.p.frontline||m.p.peel?.85:m.p.poke?.7:.45),0)/rest.length;
-   offer(.55+.4*contribution,'protect','保护持续输出，接反打');
+   offer(.5+.33*contribution,'protect','保护持续输出，接反打');
   }
   if(lead.p.frontline&&rest.some(carry)){
    const contribution=rest.reduce((sum,m)=>sum+(carry(m)?1:m.p.peel||m.p.engage?.85:offensive(m)?.65:.3),0)/rest.length;
@@ -113,7 +119,10 @@ function tacticalQuality(members,connections){
   offer(members.length===2?.9:.78+.16*Math.min(1,holding/2),'side-pressure','边线施压，队友接应或守线');
  }
  const sustained=members.filter(carry),protect=members.filter(m=>m.p.peel||m.p.frontline);
- if(sustained.length&&protect.length)offer(.8+.14*Math.min(1,protect.length/Math.max(1,sustained.length)),'sustained','承接压力，持续输出安全目标');
+ if(sustained.length&&protect.length)offer(.7+.12*Math.min(1,protect.length/Math.max(1,sustained.length)),'sustained','承接压力，持续输出安全目标');
+ // A pinned spell interaction competes inside the existing tactic budget.
+ // An isolated pair cannot speak for an otherwise unconnected larger group.
+ for(const mechanism of connections.mechanisms)offer(mechanism.tactic*(2/members.length+(1-2/members.length)*connections.quality),'mechanism',mechanism.label);
  return best;
 }
 
@@ -191,6 +200,6 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  const correction=round(score-breakdown.reduce((sum,row)=>sum+row.points,0));
  if(correction)breakdown.push({key:'confidence',label:'完整度与取整',points:correction,max:0});
  return {score,rawScore,known,size:requested,confidence,breakdown,strengths,gaps,tactic:tactics,
-  relationships:strongest.map(({edge,...link})=>({...link,...(edge?.current?{condition:edge.condition,sourceUrls:edge.sourceUrls}:{} )})),
+  relationships:strongest.map(({edge,mechanism,...link})=>({...link,...(mechanism?.relationshipEvidence?{condition:mechanism.relationshipEvidence.condition,sourceUrls:mechanism.relationshipEvidence.sourceUrls,mechanicEvidence:mechanism.relationshipEvidence}:edge?.current?{condition:edge.condition,sourceUrls:edge.sourceUrls}:{} )})),
   reason:`${known} 人配合：${breakdown.map(row=>`${row.label} ${row.points}${row.max?'/'+row.max:''}`).join(' · ')}。${known<requested?'资料不全已降低分数。':''}规则分，不是胜率。`};
 }

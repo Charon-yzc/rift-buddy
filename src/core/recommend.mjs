@@ -17,10 +17,11 @@ import {createPairStatisticsIndex} from './pair-statistics.mjs';
 import {compositionFit} from './composition-fit.mjs';
 import {comboMembers,comboKey} from './combo-members.mjs';
 import {discoveryLineups,seededFraction} from './recommendation-diversity.mjs';
-import {roleFamiliarityWeights,familiarityLineups,familiarityWinner} from './recommendation-familiarity.mjs';
+import {canonicalFamiliarity,roleFamiliarityWeights,familiarityLineups,familiarityWinner} from './recommendation-familiarity.mjs';
 import {roomChampionUsageWeights} from './champion-usage.mjs';
 import {canonicalRoomFamiliarity} from './room-familiarity.mjs';
 import {recommendationFit,meetsRecommendationFit} from './recommendation-policy.mjs';
+import {applicableCommunityCombinations,communityLineups,communityRecommendation,communityFitException} from './recommendation-community.mjs';
 import {strategyTraits,strategySummary,summarizeEnemyTraits,opponentFit,threatNotes,describeCurve,describeForgiveness,controlChainLabel} from './strategy.mjs';
 
 export function createSlots() {
@@ -205,11 +206,6 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  const isOwnPlan=combo=>!ownCandidate||comboMembers(combo).some(member=>member.role===ownCandidate.role&&member.champion===ownCandidate.champion);
  const duo=catalog.find(c=>comboMembers(c).length===2&&valid(c)&&isOwnPlan(c))||null;
  const trio=catalog.find(c=>comboMembers(c).length===3&&valid(c)&&isOwnPlan(c))||null;
- // Curated difficulty is authored per combination, not a win-rate claim:
- // hard combos cost practice time, easy ones fit a steady style.
- const comboDifficulty=(trio||duo)?.difficulty;
- if(comboDifficulty==='较高'&&style!=='wild')score-=trio?3:2;
- else if(comboDifficulty==='容易'&&style==='balanced')score+=2;
  if(a.members.length>=3&&style==='balanced'&&Number.isFinite(a.avgDifficulty))score-=Math.max(0,a.avgDifficulty-6)*2;
  const scope=context?.scope;
  // Fit is shared with the displayed score. A catalogue entry is evidence for
@@ -228,7 +224,7 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  const pairMembers=slots.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party);
  const pairEvidence=scope==='solo'||scoreOnly?null:context?.pairStatistics?.forMembers(pairMembers);
  score+=(scope==='solo'?0:scoreOnly?context?.pairStatistics?.scoreForMembers(pairMembers):pairEvidence?.bonus)||0;
- if(tempo&&tempo!=='any')score+=Math.min(strategyTraits(a,trio||duo||adaptive)[tempo]||0,8);
+ if(tempo&&tempo!=='any')score+=Math.min(strategyTraits(a,null)[tempo]||0,8);
  for(const m of a.members){
   if(!requestedIds.includes(m.champion))continue;
   if(context?.poolMode==='prefer'&&context.pool.has(m.champion))score+=12;
@@ -237,7 +233,7 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
   if(context?.play?.difficulty==='easy')score-=m.p.difficulty*2;
   const rolePool=context?.rolePools?.[m.role];if(rolePool?.mode==='prefer'&&rolePool.heroes.includes(m.champion))score+=15;
   score+=(roleWeights[`${m.champion}:${m.role}`]||0)*(style==='balanced'?8:style==='fun'?3:0);
-  if(m.role==='support'&&['crit','onhit','meleeCrit','fighter'].includes(m.p.build)&&!catalog.some(c=>comboMembers(c).length===2&&valid(c)&&comboMembers(c).some(member=>member.role===m.role&&member.champion===m.champion)))score-=9;
+  if(m.role==='support'&&['crit','onhit','meleeCrit','fighter'].includes(m.p.build))score-=9;
  }
  if(scoreOnly){if(cacheKey)rememberSearchValue(context.scoreCache,cacheKey,score,8192);return score;}
  // Score the known team, but name the plan around controllable party members.
@@ -292,7 +288,7 @@ function comboIndex(){
  }
  return comboIndexCache;
 }
-export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],rankedDraft=null,sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},linkReviewContext=null,creativePlan=null,clientSession=null,party=null,includePreselected=false,randomSeed='',familiarityByRole={},roomFamiliarity=[],ownRole=soloRole}) {
+export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],rankedDraft=null,sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},linkReviewContext=null,creativePlan=null,clientSession=null,party=null,includePreselected=false,randomSeed='',familiarityByRole={},roomFamiliarity=[],ownRole=soloRole,mode='rift',includeCommunityRecommendations=true}, {communityCandidates=null}={}) {
  if(!catalogStatus||typeof catalogStatus!=='object'||Array.isArray(catalogStatus))catalogStatus={};
  creativePlan=automaticCreativePlan(creativePlan,catalogStatus,patch);
  if(Array.isArray(clientSession?.myTeam)){
@@ -317,14 +313,19 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  limit=Number.isInteger(limit)?Math.max(0,limit):5;
  offset=Number.isInteger(offset)?Math.max(0,offset):0;
  if(scope==='solo'){
-  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,publicAllies,rankedDraft,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,linkReviewContext,creativePlan,clientSession,includePreselected,randomSeed,familiarityByRole,roomFamiliarity};
+  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,publicAllies,rankedDraft,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,linkReviewContext,creativePlan,clientSession,includePreselected,randomSeed,familiarityByRole,roomFamiliarity,mode,includeCommunityRecommendations};
   const targets=soloChampion?[]:draftTargets(slots,'solo',soloRole);
   if(!targets.length){
    return recommend({...options,clientSession:null,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',soloRole:soloRole||slots.find(s=>s.champion===soloChampion)?.role||'',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
   }
   const candidates=[],errors=[];
   for(const role of targets){
-   try{candidates.push(...recommend({...options,slots:slots.map(s=>({...s,party:s.role===role})),limit:offset+limit,offset:0}).map(r=>({...r,scope:'solo',soloRole:role,title:`${ROLES.find(r=>r.id===role).name} · ${champions.find(c=>c.id===r.slots.find(s=>s.role===role).champion)?.name}`,slots:r.slots.map(s=>({...s,party:slots.find(prior=>prior.role===s.role).party}))})));}
+   try{
+    const localCommunity=communityCandidates?[]:null;
+    const results=recommend({...options,slots:slots.map(s=>({...s,party:s.role===role})),limit:offset+limit,offset:0},{communityCandidates:localCommunity});
+    const ownResult=r=>({...r,scope:'solo',soloRole:role,title:`${ROLES.find(r=>r.id===role).name} · ${champions.find(c=>c.id===r.slots.find(s=>s.role===role).champion)?.name}`,slots:r.slots.map(s=>({...s,party:slots.find(prior=>prior.role===s.role).party}))});
+    candidates.push(...results.map(ownResult));if(localCommunity)communityCandidates.push(...localCommunity.map(ownResult));
+   }
    catch(error){errors.push(error);}
   }
   if(!candidates.length&&errors.length)throw errors[0];
@@ -486,20 +487,47 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   }
   chosen.push(pool.splice(winner,1)[0]);
  }
+ const communityCombos=includeCommunityRecommendations?applicableCommunityCombinations({combos:[...DUOS,...TRIOS],slots:fixed,targets,scope,patch:context.patch,catalogStatus,mode}):[];
+ const communityIds=new Set(communityCombos.map(combo=>combo.id));
+ const matchingCommunity=slots=>matchingCombos(slots,context.comboCache).find(combo=>communityIds.has(combo.id));
+ const familiarCommunity=lineup=>targets.every(role=>{
+  const hero=lineup.find(s=>s.role===role).champion,local=familiarityByRole[role],explicit=rolePools[role];
+  if(['only','prefer'].includes(explicit?.mode)&&explicit.heroes?.includes(hero)||['only','prefer'].includes(poolMode)&&heroPool.includes(hero))return true;
+  if(local?.usage?.counts&&Object.keys(local.usage.counts).length)return (local.usage.counts[hero]||0)>0;
+  return shared.some(member=>(member.usage.counts[hero]||0)>0);
+ });
  const sharedBefore=analyzeTeam(scopeSlots(fixed,scope),champions,context);
- return chosen.slice(offset,offset+limit).map(entry=>{
+ const present=entry=>{
+  let source=entry.communityCombo||matchingCommunity(entry.slots);
+  if(source&&!comboMembers(source).every(m=>entry.slots.some(s=>s.role===m.role&&s.champion===m.champion&&!s.publicIntent)))source=null;
+  if(source&&play.tempo&&play.tempo!=='any'&&!strategySummary(entry.analysis,summaryCombo(entry),play.tempo).matched)source=null;
+  if(entry.communityCombo){const {communityCombo,...plain}=entry;entry=plain;}
   entry=completePartyPlan(entry,entry.slots,context);
   const execution=resultCooperation(entry),origin=execution?'adaptive':entry.trio||entry.duo?'curated':entry.creative?'creative':'generated';
   const points=buildReasonPoints(entry,scope);
   return attachPartyCounterplay({
   ...entry,id:signature(entry.slots),targets,scope,origin,
+  ...(source?{communityRecommendation:{...communityRecommendation(source),priority:weighted?(familiarCommunity(entry.slots)?'familiar':'natural'):'reserved'},communityCombinationId:source.id}:{}),
   title:execution?.name||entry.creative?.name||entry.trio?.name||entry.duo?.name||entry.adaptive?.name||'职能搭配参考',
   reason:execution?.why||entry.creative?.why||entry.trio?.why||entry.duo?.why||entry.adaptive?.why||entry.connections[0]?.[2]||`${describeComposition(entry.analysis)}。${entry.analysis.missing.length?`短板是${entry.analysis.missing.join('、')}，具体补充作用见方案详情。`:'具体补充作用见方案详情。'}`,
   reasonPoints:points,
   catalogState:catalogStatus[(entry.trio||entry.duo)?.id]||null,
   strategy:strategySummary(entry.analysis,summaryCombo(entry),play.tempo,context.enemyTraits),
   contributions:explainContributions(scopeSlots(fixed,scope),scopeSlots(entry.slots,scope),targets,champions,context,{before:sharedBefore,after:entry.analysis}),
-  },scope,champions,visibleEnemies,context.patch);});
+  },scope,champions,visibleEnemies,context.patch);
+ };
+ // Community completions never enter the ordinary beam, diversity sampler or
+ // preference population. This side queue is consumed only by display policy.
+ if(communityCandidates){
+  for(const {slots:lineup,combo}of communityLineups({combos:communityCombos,fixed,targets,candidateSets,weights:exploration,randomSeed})){
+   if(!matchingCombos(lineup,context.comboCache).some(value=>value.id===combo.id))continue;
+   const g=grade(lineup,champions,style,lineup.filter(s=>targets.includes(s.role)).map(s=>s.champion),roleWeights,context);
+   const entry={slots:lineup,...g,communityCombo:combo};
+   if(play.tempo&&play.tempo!=='any'&&!strategySummary(g.analysis,summaryCombo(g),play.tempo).matched)continue;
+   const row=present(entry);if(row.communityRecommendation)communityCandidates.push({...row,recommendationSource:'community'});
+  }
+ }
+ return chosen.slice(offset,offset+limit).map(entry=>({...present(entry),recommendationSource:'algorithm'}));
 }
 
 // Keep the worker snapshot boundary, without retaining the later multi-lane
@@ -509,14 +537,31 @@ export function createRecommendationResources(input){
  return {matches:next=>next.champions===champions&&next.builds===builds&&next.pairStatistics===pairStatistics&&next.catalog===catalog&&next.patch===patch&&next.buildSource===buildSource,clearDraftCaches(){}};
 }
 export function createRecommendationSearch(input){
- let rows=null,cursor=0;
+ let rows=null,community=null,cursor=0,communityCursor=0;
+ const prefersHeroes=canonicalFamiliarity(input.familiarityByRole||{}).length>0||canonicalRoomFamiliarity(input.roomFamiliarity||[]).length>0;
  return {retain:true,communityAfter:'',advance({limit=6}={}){
   if(rows===null){
-   rows=recommend({...input,offset:0,limit:240}).map(row=>({...row,recommendationFit:recommendationFit(row,{slots:input.fitSlots||input.slots,champions:input.champions,scope:input.fitScope||input.scope,soloRole:row.soloRole||input.soloRole,clientSession:input.fitSession||input.clientSession,party:input.party,includePreselected:input.includePreselected,patch:input.patch,catalogStatus:input.catalogStatus})}));
-   if(Number.isFinite(input.minimumFitScore))rows=rows.filter(row=>!row.targets.length||meetsRecommendationFit(row.recommendationFit,input.minimumFitScore));
+   const candidates=[];
+   const withFit=row=>({...row,recommendationFit:recommendationFit(row,{slots:input.fitSlots||input.slots,champions:input.champions,scope:input.fitScope||input.scope,soloRole:row.soloRole||input.soloRole,clientSession:input.fitSession||input.clientSession,party:input.party,includePreselected:input.includePreselected,patch:input.patch,catalogStatus:input.catalogStatus})});
+   const allowed=row=>!row.targets.length||!Number.isFinite(input.minimumFitScore)||meetsRecommendationFit(row.recommendationFit,input.minimumFitScore)||communityFitException(row,row.recommendationFit);
+   rows=recommend({...input,offset:0,limit:240},{communityCandidates:candidates}).map(withFit).filter(allowed);
+   const ordinary=new Set(rows.map(row=>row.id)),groups=new Map();
+   for(const row of candidates){const key=row.soloRole||'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);}
+   const bounded=[];
+   for(let i=0;bounded.length<48;i++){
+    let active=false;
+    for(const group of groups.values()){if(group[i]){bounded.push(group[i]);active=true;if(bounded.length===48)break;}}
+    if(!active)break;
+   }
+   community=bounded.filter(row=>!ordinary.has(row.id)).map(withFit).filter(allowed);
+   if(prefersHeroes)community.sort((a,b)=>Number(b.communityRecommendation?.priority==='familiar')-Number(a.communityRecommendation?.priority==='familiar'));
   }
-  const page=rows.slice(cursor,cursor+limit);cursor+=page.length;
-  return {rows:page,complete:true,exhausted:cursor>=rows.length,steps:page.length,preparationSteps:0};
+  // At least half a page remains available to the untouched ordinary queue.
+  const reserved=prefersHeroes?(community[communityCursor]?.communityRecommendation?.priority==='familiar'?Math.min(1,Math.floor(limit/2)):0):Math.floor(limit/2);
+  const page=community.slice(communityCursor,communityCursor+(cursor<rows.length?reserved:limit));communityCursor+=page.length;
+  const regular=rows.slice(cursor,cursor+limit-page.length);cursor+=regular.length;page.push(...regular);
+  if(page.length<limit){const extra=community.slice(communityCursor,communityCursor+limit-page.length);communityCursor+=extra.length;page.push(...extra);}
+  return {rows:page,complete:true,exhausted:cursor>=rows.length&&communityCursor>=community.length,steps:page.length,preparationSteps:0};
  }};
 }
 
@@ -590,7 +635,8 @@ export function buildReasonPoints(entry,scope){
  return points.filter(Boolean).slice(0,5);
 }
 
-export function mergeClientSession(slots, session, champions, {autoArrange=true,autoParty=false,party=null,roleOrder={},ownRole='',creativePlan=null,partyCount}={}) {
+export function mergeClientSession(slots, session, champions, {autoArrange=true,autoParty=false,party=null,roleOrder={},ownRole='',creativePlan=null,partyCount,partyRangeMode}={}) {
+ if(partyRangeMode==='manual')autoParty=false;
  const byKey=new Map(champions.map(c=>[c.key,c])),next=structuredClone(slots),unassigned=[],displaced=[];
  const allEntries=(session?.myTeam||[]).filter((p,i,a)=>Number.isInteger(p.cellId)&&p.cellId>=0&&p.cellId<30&&a.findIndex(q=>q.cellId===p.cellId)===i).slice(0,5);
  const entries=allEntries.filter(p=>byKey.has(Number(p.championId))),placed=new Set();
@@ -701,6 +747,6 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
    for(const slot of next)if(!slot.partyManual)slot.party=used.has(slot.role)||planned.includes(slot.role);
   }
  }
- const ranged=validPartyCount(partyCount)?reconcilePartyRange(next,session,champions,{count:partyCount,party,ownRole,roleOrder}):next;
+ const ranged=validPartyCount(partyCount)?reconcilePartyRange(next,session,champions,{count:partyCount,party,ownRole,roleOrder,mode:partyRangeMode}):next;
  return {slots:ranged,unassigned,displaced,markedLocalRole:localRole||null,markedLocalChanged:changed&&!!ranged.find(slot=>slot.role===localRole)?.party};
 }

@@ -10,12 +10,13 @@ import {rankedClientRoles,getBuild} from '../src/core/builds.mjs';
 import {confirmedClientDraft} from '../src/core/draft-intents.mjs';
 import {comboMembers} from '../src/core/combo-members.mjs';
 import {catalogChoiceCompatible} from '../src/core/catalog-choice.mjs';
+import {partyRangeCount,partyRangeMode} from '../src/core/party-range.mjs';
 
 const main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 const code=main.slice(main.indexOf(' const guideConfirmedSlots='),main.indexOf(' const setGuideState=async'));
-const readSelection=new Function('environment','const {currentGame,latestClient,latestLive,data,state,publicClientGameId,recommendationCore,creativeComboContext,storedPreparation,rankedClientRoles,guideCore,confirmedClientDraft,comboMembers,catalogChoiceCompatible}=environment;let {appliedGuideSelection}=environment;let manualGuideReference=null,detachedGuideSelection=false;'+code+'return currentGuideSelection();');
-const choose=(currentGame,latestClient,latestLive,data,state,publicClientGameId,recommendationCore,creativeComboContext,storedPreparation,rankedClientRoles,guideCore,appliedGuideSelection)=>readSelection({currentGame,latestClient,latestLive,data,state,publicClientGameId,recommendationCore,creativeComboContext,storedPreparation,rankedClientRoles,guideCore,appliedGuideSelection,confirmedClientDraft,comboMembers,catalogChoiceCompatible});
+const readSelection=new Function('environment','const {currentGame,latestClient,latestLive,data,state,publicClientGameId,recommendationCore,creativeComboContext,storedPreparation,rankedClientRoles,guideCore,confirmedClientDraft,comboMembers,catalogChoiceCompatible,partyRangeCount,partyRangeMode}=environment;let {appliedGuideSelection}=environment;let manualGuideReference=null,detachedGuideSelection=false;'+code+'return currentGuideSelection();');
+const choose=(currentGame,latestClient,latestLive,data,state,publicClientGameId,recommendationCore,creativeComboContext,storedPreparation,rankedClientRoles,guideCore,appliedGuideSelection)=>readSelection({currentGame,latestClient,latestLive,data,state,publicClientGameId,recommendationCore,creativeComboContext,storedPreparation,rankedClientRoles,guideCore,appliedGuideSelection,confirmedClientDraft,comboMembers,catalogChoiceCompatible,partyRangeCount,partyRangeMode});
 
 test('the current game guide follows an applied reference build without moving an ally lane',()=>{
  const selection={id:'TahmKench',role:'support',mode:'rift',comboId:'kalista-tahm-rescue',loadoutId:'tank-peel'};
@@ -35,4 +36,17 @@ test('the current game guide follows an applied reference build without moving a
  assert.equal(next.role,'top');assert.notEqual(next.loadoutId,'tank-peel','A next game must not inherit the old applied reference');
  own.id='Garen';client.session.myTeam[0].championId=data.champions.find(c=>c.id===own.id).key;const changed=choose(tracker,client,null,data,state,publicClientGameId,recommendationCore,creativeComboContext,storedPreparation,rankedClientRoles,guideCore,applied);
  assert.equal(changed.id,'Garen');assert.notEqual(changed.loadoutId,'tank-peel');
+});
+
+test('a real public community pairing never replaces the applied or automatic ordinary lane guide',()=>{
+ const slots=recommendationCore.createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='bottom'?{champion:'Jinx',clientCellId:1,locked:true}:s.role==='support'?{champion:'Braum',clientCellId:2,locked:true}:{})}));
+ const own={id:'Jinx',role:'bottom',formalRole:'bottom',positionKnown:true,mode:'rift',comboId:'jinx-braum'},tracker={current:()=>({...own})};
+ const client={connected:true,phase:'ChampSelect',game:{gameId:'123'},session:{gameId:123,localPlayerCellId:1,myTeam:[{cellId:1,championId:222,assignedPosition:'BOTTOM'},{cellId:2,championId:201,assignedPosition:'UTILITY'}]}};
+ const generic={id:'Jinx',role:'bottom',mode:'rift',loadoutId:'default',coreAuto:true,conditions:[]},state={draft:{slots},preferences:{},preparations:[generic,{...generic,comboId:'jinx-braum',loadoutId:'crit-carry'}]};
+ const applied={gameId:'123',selection:generic,choiceToken:null,planId:null,cellId:1,manualRole:null,ownRole:'bottom',ownId:own.id,ownMode:own.mode};
+ for(const remembered of [null,applied]){
+  const current=choose(tracker,client,null,data,state,publicClientGameId,recommendationCore,creativeComboContext,storedPreparation,rankedClientRoles,guideCore,remembered);
+  assert.equal(current.id,'Jinx');assert.equal(current.role,'bottom');assert.equal(current.comboId,undefined);assert.equal(current.loadoutId,'default');
+ }
+ assert.equal(own.comboId,'jinx-braum','The public tracker must not be mutated');
 });

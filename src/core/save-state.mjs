@@ -67,7 +67,7 @@ export function rollbackUnacceptedState(before,failed,current){
    if(value===undefined)latest.delete(role);else latest.set(role,value);
   }
   restored.draft.slots=[...latest.values()];
-  if(dependent.size)for(const field of ['playerPosition','soloRole','partyCount']){if(Object.hasOwn(current.draft,field))restored.draft[field]=structuredClone(current.draft[field]);else delete restored.draft[field];}
+  if(dependent.size)for(const field of ['playerPosition','soloRole','partyCount','partyRangeMode','partyAutoCount']){if(Object.hasOwn(current.draft,field))restored.draft[field]=structuredClone(current.draft[field]);else delete restored.draft[field];}
  }
  const previous=new Map((before.preparations||[]).map(value=>[preparationIdentity(value),value]));
  const rejected=new Map((failed.preparations||[]).map(value=>[preparationIdentity(value),value]));

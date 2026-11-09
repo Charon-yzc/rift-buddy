@@ -127,6 +127,9 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 .candidate-details>summary .candidate-plan-label {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 .candidate-details>summary .candidate-details-label {display:inline-flex;align-items:center;gap:1px;flex-shrink:0;color:var(--rb-subtle);font-size:calc(11px * var(--text-scale))}
 .candidate-details-label .icon {width:12px;height:12px}
+.community-combination-badge {display:inline-flex;align-items:center;flex-shrink:0;border:1px solid #a991da;border-radius:4px;padding:1px 5px;color:#dac9ff;background:#342b48;font-size:calc(10px * var(--text-scale,1));font-weight:600;line-height:1.45;white-space:nowrap}
+.candidate-fit:has(.community-combination-badge) {display:flex;align-items:center;gap:7px}
+.ballot-row-detail:has(.community-combination-badge)>.lineup-fit {margin-left:auto}
 .candidate-details[open]>summary .candidate-details-label .icon {transform:rotate(90deg)}
 .candidate-details>summary::-webkit-details-marker {display:none}
 .recommendation-ui .candidate-details[open]>summary {background:transparent}

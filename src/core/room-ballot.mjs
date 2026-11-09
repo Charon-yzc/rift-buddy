@@ -1,6 +1,7 @@
 import {proposalKey,ballotVotes} from './room.mjs';
 import {CROSS_SYNERGIES,RULES_PATCH,RULES_VERSION} from './rules.mjs';
-import {analyzeTeam,selectedCatalogCombo} from './recommend.mjs';
+import {analyzeTeam,selectedCatalogCombo,currentCombo} from './recommend.mjs';
+import {communityRecommendation} from './recommendation-community.mjs';
 import {createCooperationGraph} from './cooperation.mjs';
 import {compositionFit} from './composition-fit.mjs';
 import {effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
@@ -122,6 +123,12 @@ export function lineupFit(lineup,current,champions,options={}){
 function proposalAvailable(lineup,current,champions,{clientSession,includePreselected=false}={}){
  if(!Array.isArray(clientSession?.myTeam))return true;
  const team=publicDraftTeam(clientSession),byKey=new Map(champions.map(c=>[Number(c.key),c.id]));
+ const bans=Array.isArray(clientSession.bans)?clientSession.bans:[...(clientSession.bans?.myTeamBans||[]),...(clientSession.bans?.theirTeamBans||[])];
+ const blocked=new Set([...bans,...(clientSession.actions||[]).flat().filter(a=>a?.type==='ban'&&a.completed===true).map(a=>a.championId)].map(id=>byKey.get(Number(id))).filter(Boolean));
+ // Mirrored heroes are legal in blind pick. Only a session explicitly
+ // disallowing duplicates turns an enemy lock into an unavailable hero.
+ if(clientSession.allowDuplicatePicks===false)for(const enemy of publicDraftTeam(clientSession,'theirTeam'))if(enemy.pickState==='locked'&&Number.isInteger(enemy.cellId)&&enemy.cellId>=0&&enemy.cellId<30&&clientSession.theirTeam.filter(player=>player.cellId===enemy.cellId).length===1&&byKey.has(Number(enemy.championId)))blocked.add(byKey.get(Number(enemy.championId)));
+ if(lineup.some(slot=>blocked.has(slot.champion)))return false;
  for(const player of team){
   const confirmed=confirmedPlayerPick(player,clientSession);
   if(!confirmed&&!includePreselected)continue;
@@ -142,7 +149,11 @@ function proposalAvailable(lineup,current,champions,{clientSession,includePresel
 export function roomBallotBoard(room,current,champions,options={}){
  const members=(room?.members||[]).filter(m=>m.online!==false),groups=new Map();
  for(const member of members){const proposal=member.share?.ballot?.proposal;if(!proposal||!proposalAvailable(proposal.lineup,current,champions,options))continue;const key=proposalKey(proposal);let row=groups.get(key);
-  if(!row){row={key,proposal,from:member.nick,proposers:[],voters:[],adopters:[],mine:false,fit:lineupFit(proposal.lineup,current,champions,{...options,requireReviewedCatalog:true})};groups.set(key,row);}row.proposers.push(member.nick);
+  if(!row){
+   const ids=[proposal.strategy?.curated?.id,...(proposal.strategy?.shared?.routes||[]).map(route=>route.loadoutGroup?.id)].filter(Boolean);
+   const combo=proposal.mode==='rift'&&(ids.length?ids.map(id=>selectedCatalogCombo(proposal.lineup,id,options.catalogStatus,options.patch)).find(Boolean):currentCombo(proposal.lineup,null,null,options.catalogStatus,null,null,{patch:options.patch}));
+   row={key,proposal,from:member.nick,proposers:[],voters:[],adopters:[],mine:false,fit:lineupFit(proposal.lineup,current,champions,{...options,requireReviewedCatalog:true}),...(combo?{communityRecommendation:communityRecommendation(combo),communityCombinationId:combo.id}:{})};groups.set(key,row);
+  }row.proposers.push(member.nick);
  }
  for(const member of members)for(const key of ballotVotes(member.share?.ballot)){const row=groups.get(key);if(row){if(!row.voters.includes(member.nick))row.voters.push(member.nick);if(member.self)row.mine=true;}}
  for(const row of groups.values()){

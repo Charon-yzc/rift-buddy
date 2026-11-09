@@ -35,20 +35,25 @@ export function publicClientGameId(client){return client?.connected?(client.phas
 // evidence of a new game and must not erase an explicit position choice.
 export function reconcileClientDraft(draft,gameId,previousId=null,{phase='',previousPhase=''}={}){
  const queue=['None','Lobby','Matchmaking','ReadyCheck'];
+ let rangeReset=false;
+ if(draft&&phase==='ChampSelect'&&queue.includes(previousPhase)&&(draft.partyRangeMode==='manual'||draft.slots.some(slot=>slot.partyManual))){
+  draft={...draft,partyRangeMode:'auto',slots:draft.slots.map(({partyManual,...slot})=>slot)};delete draft.partyCount;delete draft.partyAutoCount;rangeReset=true;
+ }
  if(draft&&queue.includes(phase)&&(draft.clientGameId||Number.isInteger(draft.partyCount)||['ChampSelect','GameStart','InProgress','Reconnect','WaitingForStats','PreEndOfGame','EndOfGame'].includes(previousPhase))){
-  const {creativePlan,catalogChoice,playerPosition,partyCount,preselection,referenceQueue,scopeSelection,enemyRoles,clientGameId:oldId,...rest}=draft;
-  return {draft:{...rest,slots:clearDraftPicks(draft.slots).map(s=>({...s,party:false})),soloRole:''},changed:true,newGame:true};
+  const {creativePlan,catalogChoice,playerPosition,partyCount,partyAutoCount,partyRangeMode,preselection,referenceQueue,scopeSelection,enemyRoles,clientGameId:oldId,...rest}=draft;
+  return {draft:{...rest,...(partyRangeMode!==undefined?{partyRangeMode:'auto'}:{}),slots:clearDraftPicks(draft.slots).map(s=>({...s,party:false})),soloRole:''},changed:true,newGame:true};
  }
  if(queue.includes(phase))return {draft,changed:false,newGame:false};
  gameId=clientGameId(gameId);
- if(!draft||!gameId)return {draft,changed:false,newGame:false};
+ if(!draft||!gameId)return {draft,changed:rangeReset,newGame:false};
  const prior=clientGameId(draft.clientGameId)||clientGameId(previousId),newGame=!!prior&&prior!==gameId;
- if(!newGame&&draft.clientGameId===gameId)return {draft,changed:false,newGame:false};
+ if(!newGame&&draft.clientGameId===gameId)return {draft,changed:rangeReset,newGame:false};
  const clearSoloRole=newGame&&(!!clientGameId(draft.clientGameId)||draft.playerPosition?.role===draft.soloRole||draft.slots.some(s=>s.role===draft.soloRole&&Number.isInteger(s.clientCellId)));
  // A manual party range belongs to this game; it must not overrule the next group.
  const next={...draft,clientGameId:gameId,slots:newGame?clearDraftPicks(draft.slots).map(s=>({...s,party:false})):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
  if(newGame){
   delete next.playerPosition;delete next.partyCount;delete next.referenceQueue;delete next.scopeSelection;delete next.enemyRoles;
+  delete next.partyAutoCount;if(next.partyRangeMode!==undefined)next.partyRangeMode='auto';
   // A fresh lobby intent and its explicit catalog choice form one operation.
   // The prior match's saved choice must never hitch a ride into the new game.
   const freshChoice=!draft.clientGameId&&!next.preselection?.attemptedGameId&&next.preselection?.reviewStamp&&next.preselection?.catalogChoiceToken&&next.preselection.catalogChoiceToken===next.catalogChoice?.token&&next.catalogChoice?.members.some(m=>m.role===next.preselection.role&&m.champion===next.preselection.champion);

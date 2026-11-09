@@ -1,5 +1,6 @@
 import {lineupFit} from './room-ballot.mjs';
 import {conventionalRole} from './rules.mjs';
+import {communityFitException} from './recommendation-community.mjs';
 
 // Use the very same public-roster projection as the visible score, including
 // incomplete evidence and fixed-position conflict caps. Never use grade.score.
@@ -34,5 +35,15 @@ export function compareRecommendationFit(a,b){
  return fit(b)-fit(a)||recommendationOpponentScore(b)-recommendationOpponentScore(a)||focus(b)-focus(a);
 }
 export function orderRecommendationPage(rows){
- return [...rows].sort(compareRecommendationFit);
+ const sorted=[...rows].sort(compareRecommendationFit);
+ let familiar=0;
+ const featured=sorted.filter(row=>{
+  const priority=row.communityRecommendation?.priority;
+  if(priority==='natural'||!communityFitException(row,row.recommendationFit))return false;
+  if(priority==='familiar'&&familiar++>=1)return false;
+  return true;
+ }).slice(0,Math.floor(rows.length/2));
+ const selected=new Set(featured);
+ // Source is visible through a badge, never through a fabricated fit value.
+ return [...featured,...sorted.filter(row=>!selected.has(row))];
 }
