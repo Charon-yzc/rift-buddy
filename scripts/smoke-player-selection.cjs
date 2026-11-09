@@ -69,7 +69,10 @@ async function run(){
    assert.equal(await js(window,'window.__pressedHero.isConnected&&window.__pressedHero===document.querySelector('+JSON.stringify(selector)+')'),true,'Refresh replaced the actual pressed hero button before mouseUp');
    pointerChecks.push({surface:window===main?'main':'sidebar',hero:id,statusRefresh:true,dataRevision:changed.dataRevision,sameDomButton:true});
   }
-  mouse(window,'mouseUp',p);
+  const start=performance.now(),before=results.length;mouse(window,'mouseUp',p);
+  await until(()=>results.slice(before).some(value=>value.input.preselectOnly&&value.input.champion===id&&value.result.steps?.hover?.status==='done'),'The real avatar did not successfully select before any configuration');
+  const selectionMs=performance.now()-start;assert(selectionMs<1000,'Isolated avatar selection exceeded one second: '+selectionMs.toFixed(1)+'ms');
+  pointerChecks.push({surface:window===main?'main':'sidebar',hero:id,selectionMs,successfulHeroOnlyRequest:true});
  }
  function samePlan(actual,wanted){assert.equal(actual.champion,wanted.champion);assert.equal(actual.role,wanted.role);assert.deepEqual(actual.page.selectedPerkIds,wanted.page.selectedPerkIds);assert.deepEqual(actual.summoners,wanted.summoners);assert.deepEqual(actual.itemSet.blocks,wanted.itemSet.blocks);}
  async function assertGuide(id){
@@ -80,6 +83,10 @@ async function run(){
  }
  async function assertCompleted(id){
   await until(()=>results.some(value=>!value.input.preselectOnly&&value.input.champion===id&&value.result.complete),'Full default preparation missing for '+id);
+  // The IPC result precedes the renderer's shared-state/guide persistence.
+  // Wait for the new generic choice to replace the intentionally saved custom
+  // choice before asserting either window's displayed payload.
+  await until(async()=>{const saved=await state(),selection=saved.preparations.find(value=>value.id===id&&!value.comboId);if(!selection)return false;const plan=clientPreparationPlan(data,{selection,build:getBuild(hero(id),fixture.role,data,selection)}).value;return JSON.stringify(plan.page.selectedPerkIds)===JSON.stringify(expected[id].page.selectedPerkIds)&&JSON.stringify(plan.summoners)===JSON.stringify(expected[id].summoners);},'The clicked default was not committed to shared preparation state for '+id);
   await control(side,'[data-action=companion-tab][data-tab=plan]');await until(()=>js(side,'!!document.querySelector(".configuration-current [data-client-preparation-fingerprint]")||!!document.querySelector("[data-client-preparation-fingerprint]")'),'Sidebar current configuration missing');
   samePlan(await js(side,'JSON.parse(document.querySelector("[data-client-preparation-fingerprint]").dataset.clientPreparationFingerprint)[0]'),expected[id]);
   await control(main,'[data-action=task-configuration],[data-action=task-edit]');await until(()=>js(main,'!!document.querySelector(".drawer [data-client-preparation-fingerprint]")'),'Main current configuration missing');samePlan(await js(main,'JSON.parse(document.querySelector(".drawer [data-client-preparation-fingerprint]").dataset.clientPreparationFingerprint)[0]'),expected[id]);
@@ -96,8 +103,23 @@ async function run(){
   const actual=results.findLast(value=>!value.input.preselectOnly&&value.input.champion===id&&value.result.complete);samePlan(actual.input,expected[id]);assert.equal(actual.input.selection.comboId,undefined);
   await control(main,'.drawer [data-action=close]');
  }
+ // A checkbox freezes the whole draft range in both windows. Returning to
+ // automatic excludes the already occupied outside teammate lane again.
+ await until(async()=> (await state()).draft.partyRangeMode==='auto','A new draft did not start in automatic mode');
+ await control(main,'[data-action=toggle-party][data-role=top]');
+ await until(async()=>{const s=await state();return s.draft.partyRangeMode==='manual'&&s.draft.slots.find(slot=>slot.role==='top').party;},'Manual range edit was not retained');
+ await until(()=>js(side,'document.querySelector("[data-action=party-range-mode]")?.textContent==="手动"'),'Manual mode did not reach the other window');
+ await control(side,'[data-action=party-range-mode][data-mode=auto]');
+ await until(async()=>{const s=await state();return s.draft.partyRangeMode==='auto'&&s.draft.partyCount===1&&s.draft.slots.filter(slot=>slot.party).every(slot=>slot.role==='bottom');},'Automatic mode did not exclude the outside teammate lane');
  await nativeClick(side,'Ashe',true);await assertCompleted('Ashe');await control(side,'[data-action=companion-tab][data-tab=recommend]');await control(main,'[data-action=task-compare]');
  await nativeClick(main,'Jinx',true);await assertCompleted('Jinx');await control(side,'[data-action=companion-tab][data-tab=recommend]');
+ // An explicit rune configuration switch is outside the avatar queue. It must not
+ // swallow the automatic default for the hero chosen while that write waits.
+ await control(main,'[data-action=task-configuration],[data-action=task-edit]');
+ const asheBeforeManual=results.filter(value=>!value.input.preselectOnly&&value.input.champion==='Ashe'&&value.result.complete).length;
+ holdNextRune=true;await control(main,'.drawer [data-action=configuration-switch][data-config^="rune:"]');await until(()=>heldRune,'Explicit configuration switch did not enter the controlled race');
+ if(await js(main,'!!document.querySelector(".drawer [data-action=close]")'))await control(main,'.drawer [data-action=close]');await nativeClick(main,'Ashe');assert.equal(intent,hero('Ashe').key);
+ heldRune();heldRune=null;await until(()=>results.filter(value=>!value.input.preselectOnly&&value.input.champion==='Ashe'&&value.result.complete).length>asheBeforeManual,'The hero selected during a separate configuration action lost its automatic lane default');await assertCompleted('Ashe');await control(side,'[data-action=companion-tab][data-tab=recommend]');
  // An earlier full configuration is deliberately pending when the player changes hero.
  holdNextRune=true;await nativeClick(side,'Ashe');await until(()=>heldRune,'Earlier rune operation did not enter the controlled race');await nativeClick(side,'Jinx');await until(()=>intent===hero('Jinx').key,'The latest real avatar click did not preselect while an earlier configuration was pending');heldRune();heldRune=null;
  await until(()=>results.filter(value=>!value.input.preselectOnly&&value.input.champion==='Jinx'&&value.result.complete).length>=2,'Latest hero did not finish after the earlier operation');await assertCompleted('Jinx');

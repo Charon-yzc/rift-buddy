@@ -105,7 +105,7 @@ async function boot(){
  const {rankedDraftPolicy}=await import('../src/core/ranked-draft.mjs');
  const {currentEnemyRoles,changeEnemyRole}=await import('../src/core/enemy-roles.mjs');
  const {createSlots}=await import('../src/core/recommend.mjs');
- const {initialPartyCount,selectionPartyCount,validPartyCount,reconcilePartyRange,editPartyRange}=await import('../src/core/party-range.mjs');
+ const {initialPartyCount,selectionPartyCount,validPartyCount,markedPartyCount,partyRangeMode,partyRangeCount,reconcilePartyRange,editPartyRange}=await import('../src/core/party-range.mjs');
  storeRoot=app.getPath('userData');state=await storage.readState(storeRoot);
  // A saved legacy ball must not trap the upgraded app in an icon-only view.
  if(state.guide?.ball){state.guide={...state.guide,ball:false,collapsed:false};if(state.recovery?.backedUp!==false)await saveCurrentState();}
@@ -284,6 +284,10 @@ async function boot(){
   if(!publicClientGameId(latestClient))return null;
   if(manualGuideReference?.gameId&&manualGuideReference.gameId!==publicClientGameId(latestClient)){manualGuideReference=null;detachedGuideSelection=true;}
   const own=actualGuideSelection();if(!own)return null;
+  // A public hero pairing identifies an optional recipe, never the player's
+  // chosen configuration. Only an explicitly applied/reference selection may
+  // carry that recipe identity into the active guide.
+  delete own.comboId;
   if(manualGuideReference?.gameId===publicClientGameId(latestClient)){
    const reference=manualGuideReference,chosen=reference.selection,confirmed=guideConfirmedSlots(),manualRole=guideManualRole(reference.cellId),entry=[...(data.catalog?.duos||[]),...(data.catalog?.trios||[])].find(row=>row.id===chosen.comboId),members=chosen.creativePlan?.members||comboMembers(entry);
    if(!reference.ownId){reference.ownId=own.id;reference.ownMode=own.mode;if(own.positionKnown)reference.ownRole=own.role;reference.manualRole=manualRole;}
@@ -305,13 +309,18 @@ async function boot(){
    appliedGuideSelection=null;
   }
   const prepared=state.guide?.selection,gameId=publicClientGameId(latestClient),preparedMatchesGame=!gameId||!state.guide?.match?.gameId||gameId===String(state.guide.match.gameId);if(!own.positionKnown){const bound=latestClient.phase==='ChampSelect'&&state.draft?.slots.find(s=>s.champion===own.id&&s.clientCellId===latestClient.session?.localPlayerCellId);if(bound)own.role=bound.role;else if(state.draft?.scope==='solo'&&state.draft.soloRole)own.role=state.draft.soloRole;else if(preparedMatchesGame&&prepared?.id===own.id&&prepared.mode===own.mode)own.role=prepared.role;}
-  const draftSlots=state.draft?.slots||[],observedSlots=latestClient.session&&draftSlots.length===5?recommendationCore.mergeClientSession(draftSlots,latestClient.session,data.champions,{autoArrange:state.preferences.autoArrange!==false,autoParty:state.preferences.autoParty!==false,party:latestClient.party,roleOrder:rankedClientRoles(data)}).slots:draftSlots;
+  const draftSlots=state.draft?.slots||[],observedSlots=latestClient.session&&draftSlots.length===5?recommendationCore.mergeClientSession(draftSlots,latestClient.session,data.champions,{autoArrange:state.preferences.autoArrange!==false,autoParty:state.preferences.autoParty!==false,party:latestClient.party,partyCount:partyRangeCount(state.draft),partyRangeMode:partyRangeMode(state.draft?.partyRangeMode),roleOrder:rankedClientRoles(data)}).slots:draftSlots;
   const choice=state.draft?.catalogChoice,found=own.mode==='rift'?recommendationCore.currentCombo(observedSlots,own.id,own.role,data.catalogInfo?.status,null,state.draft?.creativePlan,{patch:data.patch,catalogChoice:choice}):null,combo=choice&&found?.id!==choice.id?null:found;
   const prior=state.guide?.selection,same=prior&&guideCore.guideIdentity(prior)===guideCore.guideIdentity(own),stalePlan=!!prior?.creativePlan&&!recommendationCore.automaticCreativePlan(prior.creativePlan,data.catalogInfo?.status,data.patch),comboKnown=!!choice||!!combo||stalePlan||own.mode!=='rift'||!!(gameId&&state.guide?.match?.gameId&&gameId!==String(state.guide.match.gameId))||recommendationCore.comboContextKnown(observedSlots,own.id,own.role,same?prior.comboId:null,same?prior.creativePlan:null);
-  const context={id:own.id,role:own.role,mode:own.mode,...creativeComboContext(combo)};
+  // A restart loses the in-memory application receipt. A complete saved
+  // configuration bound to this same game and explicit plan is still a real
+  // player choice; an inferred public pairing alone cannot restore one.
+  const boundChoice=same&&own.mode==='rift'&&prior.loadoutId&&prior.comboId===combo?.id&&String(state.guide?.match?.gameId||'')===gameId&&(choice?.id===prior.comboId||state.draft?.creativePlan?.id===prior.comboId)&&storedPreparation(state.preparations,prior);
+  if(boundChoice)return {...own,...prior,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown:false};
+  const context={id:own.id,role:own.role,mode:own.mode};
   const remembered=storedPreparation(state.preparations,context),previousSameHeroRole=prior&&guideCore.guideIdentity(prior)===guideCore.guideIdentity(own);
   const fresh=!remembered&&!previousSameHeroRole&&own.mode==='rift';
-  return {coreIndex:0,conditions:[],...(fresh?{coreAuto:true}:{}),...remembered,...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown,...creativeComboContext(combo)};
+  return {coreIndex:0,conditions:[],...(fresh?{coreAuto:true}:{}),...remembered,...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown};
  };
  const actualGuideSelection=()=>{
   const gameId=publicClientGameId(latestClient);if(!gameId)return null;
@@ -944,7 +953,8 @@ async function boot(){
      if(validPartyCount(current.draft?.partyCount))return current;
      const draft=current.draft||{slots:createSlots(),style:current.preferences.style,soloRole:''};
      const ownRole=draft.playerPosition?.cellId===latestClient.session.localPlayerCellId?draft.playerPosition.role:rankedDraftPolicy(latestClient).ranked?'':draft.preselection?.role||'';
-     current.draft={...draft,slots:reconcilePartyRange(draft.slots,latestClient.session,data.champions,{count,party:latestClient.party,ownRole,initial:true}),partyCount:count,scope:'party',...(gameId?{clientGameId:gameId}:{})};return current;
+     const ranged=reconcilePartyRange(draft.slots,latestClient.session,data.champions,{count,party:latestClient.party,ownRole,initial:true,mode:'auto'});
+     current.draft={...draft,slots:ranged,partyCount:markedPartyCount(ranged),partyAutoCount:count,partyRangeMode:'auto',scope:'party',...(gameId?{clientGameId:gameId}:{})};return current;
     });
    }
    currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);await observeHexRound();
@@ -978,7 +988,9 @@ async function boot(){
   });return {state,revision:stateRevision};
  });
  guard('party-range',async value=>{
-  if(!value||!['top','jungle','mid','bottom','support'].includes(value.role)||typeof value.checked!=='boolean')throw Error('请确认要调整的开黑位置');
+  const modeEdit=value?.mode!==undefined;
+  if(!value||(modeEdit?!['auto','manual'].includes(value.mode):!['top','jungle','mid','bottom','support'].includes(value.role)||typeof value.checked!=='boolean'))throw Error('请确认要调整的开黑位置');
+  if(!modeEdit&&value.selectedRoles!==undefined&&(!Array.isArray(value.selectedRoles)||value.selectedRoles.length>5||new Set(value.selectedRoles).size!==value.selectedRoles.length||value.selectedRoles.some(role=>!['top','jungle','mid','bottom','support'].includes(role))||value.selectedRoles.includes(value.role)!==value.checked))throw Error('请确认要调整的开黑位置');
   await status(true);
   const sameSelection=()=>!!value.gameId&&Number.isInteger(value.cellId)&&value.cellId>=0&&value.cellId<30&&latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===value.gameId&&latestClient.session?.localPlayerCellId===value.cellId;
   if(!sameSelection())throw Error('选人已变化，请按当前页面重新调整开黑位置');
@@ -986,7 +998,15 @@ async function boot(){
    if(!sameSelection()||!validPartyCount(current.draft?.partyCount))throw Error('选人已变化，请按当前页面重新调整开黑位置');
    const ownRole=current.draft.playerPosition?.cellId===value.cellId?current.draft.playerPosition.role:current.draft.soloRole||'';
    const party=rankedDraftPolicy(latestClient).ranked?latestClient.party:partyWithPregameIntents(latestClient.party,roomService?.snapshot(),current.draft.preselection);
-   const edited=editPartyRange(current.draft.slots,value.role,value.checked,{count:current.draft.partyCount,session:latestClient.session,champions:data.champions,party,ownRole,roleOrder:rankedClientRoles(data)});
+   let edited;
+   if(modeEdit){
+    const requested=current.draft.partyAutoCount??current.draft.partyCount,count=requested>0?requested:initialPartyCount(latestClient.party);
+    const ranged=reconcilePartyRange(current.draft.slots,latestClient.session,data.champions,{count,party,ownRole,roleOrder:rankedClientRoles(data),mode:value.mode});
+    edited={slots:ranged,partyCount:markedPartyCount(ranged),partyAutoCount:count,partyRangeMode:value.mode};
+   }else{
+    edited=editPartyRange(current.draft.slots,value.role,value.checked,{count:current.draft.partyCount,session:latestClient.session,champions:data.champions,party,ownRole,roleOrder:rankedClientRoles(data),mode:'manual',selectedRoles:partyRangeMode(current.draft.partyRangeMode)==='auto'?value.selectedRoles:undefined});
+    edited.partyRangeMode='manual';edited.partyAutoCount=edited.partyCount||current.draft.partyAutoCount||initialPartyCount(latestClient.party);
+   }
    current.draft={...current.draft,...edited};
    if(current.draft.scope!=='context'&&edited.partyCount!==1&&current.draft.creativePlan?.members.some(member=>!edited.slots.some(slot=>slot.role===member.role&&slot.party)))delete current.draft.creativePlan;
    return current;
@@ -1004,7 +1024,10 @@ async function boot(){
    if(!sourceBindingCurrent(sourceBinding)||typeof value.reviewStamp==='string'&&value.reviewStamp!==selectionReviewStamp(value.selection,current,requestSource))throw Error('组合或资料复核状态已变化，请重新选择配置');
    if(intent.catalogChoiceToken&&intent.catalogChoiceToken!==current.draft?.catalogChoice?.token)throw Error('预选组合已变化，请重新选择配置');
    const draft=current.draft||{slots:createSlots(),scope:'party',soloRole:'',style:current.preferences.style};
-   draft.slots=reconcilePartyRange(draft.slots,null,data.champions,{count:initialPartyCount(latestClient.party),party:latestClient.party,ownRole:intent.role,initial:true});
+   const count=partyRangeCount(draft)??initialPartyCount(latestClient.party),mode=partyRangeMode(draft.partyRangeMode);
+   draft.slots=reconcilePartyRange(draft.slots,null,data.champions,{count,party:latestClient.party,ownRole:intent.role,initial:true,mode});
+   draft.partyRangeMode=mode;draft.partyAutoCount=draft.partyAutoCount??count;
+   if(validPartyCount(draft.partyCount))draft.partyCount=markedPartyCount(draft.slots);
    if(intent.role||intent.champion)draft.preselection={role:intent.role,champion:intent.champion,...(intent.kind?{kind:intent.kind}:{}),...(intent.selection?{selection:intent.selection}:{}),...(intent.selectionFields?{selectionFields:intent.selectionFields}:{}),...(intent.reviewStamp?{reviewStamp:intent.reviewStamp}:{}),...(intent.buildSource?{buildSource:intent.buildSource}:{}),...(intent.catalogChoiceToken?{catalogChoiceToken:intent.catalogChoiceToken}:{})};else delete draft.preselection;
    current.draft=draft;return current;
   });stagedSourceBinding=sourceBinding;return {state,revision:stateRevision};

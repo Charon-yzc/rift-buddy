@@ -1,7 +1,7 @@
 import {escape as e} from './ui.mjs';
 
 // Keep the comparison compact; the reasons are available by click or keyboard.
-export function lineupFitView(fit,{disclosure='',ranking=false}={}){
+export function lineupFitView(fit,{disclosure='',ranking=false,community=false}={}){
  if(!fit)return '';
  const label=Number.isFinite(fit.score)?`契合 ${fit.score}`:'信息不足';
  const constraint=fit.compatible===false?'已选冲突':fit.exact===false?'需调整位置':'';
@@ -14,5 +14,5 @@ export function lineupFitView(fit,{disclosure='',ranking=false}={}){
  const evidence=breakdown.length?`<dl class="lineup-fit-breakdown" aria-label="契合分构成">${breakdown.map(row=>`<div><dt>${e(row.label)}</dt><dd>${e(row.points)}${row.max?`<span> / ${e(row.max)}</span>`:''}</dd></div>`).join('')}</dl><p class="lineup-fit-note">${e(coverage+cap)}机制规则分，不代表胜率。</p>`:`<p>${e(fit.reason)}</p>`;
  const calculation=breakdown.map(row=>`${row.label} ${row.points}${row.max?' / '+row.max:''}`).join('\n');
  const tip=Number.isFinite(fit.score)?`${calculation}\n合计 ${fit.score} 分\n${coverage}机制规则分，不代表胜率。`:fit.reason;
- return `<details class="lineup-fit"${disclosure?` data-companion-disclosure="${e(disclosure)}"`:''}><summary title="${e(tip)}" aria-label="${e(label)}，查看依据"><span class="lineup-fit-number" tabindex="0" aria-label="${e(tip)}">${e(label)}<span class="lineup-fit-hover" popover="manual" role="tooltip">${breakdown.map(row=>`<span><i>${e(row.label)}</i><b>${e(row.points)}${row.max?' / '+e(row.max):''}</b></span>`).join('')}<strong>合计 ${e(fit.score??'待核对')}</strong><small>机制规则分，不代表胜率</small></span></span>${constraint?`<b>${e(constraint)}</b>`:''}</summary><div class="lineup-fit-explanation">${strengths.map(text=>`<p>${e(text)}</p>`).join('')}${skillDetails}${gaps.map(text=>`<p class="lineup-fit-gap">${e(text)}</p>`).join('')}${evidence}${ranking?'<p class="lineup-fit-note">本批候选按契合分降序；低于60分不推荐。风格与熟悉英雄决定候选范围。</p>':''}</div></details>`;
+ return `<details class="lineup-fit"${disclosure?` data-companion-disclosure="${e(disclosure)}"`:''}><summary title="${e(tip)}" aria-label="${e(label)}，查看依据"><span class="lineup-fit-number" tabindex="0" aria-label="${e(tip)}">${e(label)}<span class="lineup-fit-hover" popover="manual" role="tooltip">${breakdown.map(row=>`<span><i>${e(row.label)}</i><b>${e(row.points)}${row.max?' / '+e(row.max):''}</b></span>`).join('')}<strong>合计 ${e(fit.score??'待核对')}</strong><small>机制规则分，不代表胜率</small></span></span>${constraint?`<b>${e(constraint)}</b>`:''}</summary><div class="lineup-fit-explanation">${strengths.map(text=>`<p>${e(text)}</p>`).join('')}${skillDetails}${gaps.map(text=>`<p class="lineup-fit-gap">${e(text)}</p>`).join('')}${evidence}${ranking?`<p class="lineup-fit-note">${community?'社区玩法可优先展示，低于60分也保留实际契合分。':'普通候选按契合分排序，低于60分不推荐。'}风格与常用英雄影响候选范围。</p>`:''}</div></details>`;
 }

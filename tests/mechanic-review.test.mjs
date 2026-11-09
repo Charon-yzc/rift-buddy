@@ -9,6 +9,7 @@ import {currentCombo,createSlots} from '../src/core/recommend.mjs';
 import {catalogIssues} from '../src/core/catalog.mjs';
 import {BUNDLED_CATALOG} from './fixtures/snapshot-16.20/catalog.mjs';
 import {companionPickIntent} from '../src/core/companion-plan.mjs';
+import {catalogChoiceFor} from '../src/core/catalog-choice.mjs';
 const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
 const builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries;
 const members=[{champion:'Trundle',role:'top'},{champion:'Sejuani',role:'jungle'},{champion:'Seraphine',role:'mid'}];
@@ -35,11 +36,13 @@ test('individually reviewed current combinations remain discoverable beneath an 
  assert.equal(currentCombo(slots,own.champion,own.role,catalogIssues(BUNDLED_CATALOG,data).status,null,null,{patch:'16.21'}),null);
 });
 
-test('companion hover preparation uses the actual data patch before inferring a combination',()=>{
+test('ordinary hover stays generic and an explicit community choice still requires the actual data patch',()=>{
  const duo=BUNDLED_CATALOG.duos.find(row=>row.patch===data.patch),slots=createSlots().map(slot=>({...slot,champion:slot.role==='bottom'?duo.carry:slot.role==='support'?duo.support:null}));
  const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:data.champions.find(hero=>hero.id===duo.carry).key,assignedPosition:'BOTTOM'}]}};
- assert.equal(companionPickIntent(client,data.champions,slots,{patch:data.patch,catalogStatus:catalogIssues(BUNDLED_CATALOG,data).status}).selection.comboId,duo.id);
- assert.equal(companionPickIntent(client,data.champions,slots,{patch:'16.21',catalogStatus:catalogIssues(BUNDLED_CATALOG,data).status}).selection.comboId,undefined);
+ const catalogStatus=catalogIssues(BUNDLED_CATALOG,data).status,catalogChoice=catalogChoiceFor(duo,'11111111-1111-4111-8111-111111111111');
+ assert.equal(companionPickIntent(client,data.champions,slots,{patch:data.patch,catalogStatus}).selection.comboId,undefined,'Matching public heroes are not an explicit configuration choice');
+ assert.equal(companionPickIntent(client,data.champions,slots,{patch:data.patch,catalogStatus,catalogChoice}).selection.comboId,duo.id);
+ assert.equal(companionPickIntent(client,data.champions,slots,{patch:'16.21',catalogStatus,catalogChoice}).selection.comboId,undefined);
 });
 test('an explicitly selected independent skill survives an unavailable gear route with a source build present',()=>{
  const hero=data.champions.find(hero=>hero.id==='Orianna'),plan=BUNDLED_CATALOG.skillPlans.find(plan=>plan.champion===hero.id&&plan.role==='mid'&&plan.loadoutId==='trio-ball'),gear=BUNDLED_CATALOG.loadouts.find(row=>row.id===plan.loadoutId),changed=structuredClone({...data,builds});changed.items[gear.items[0]].requiredChampion='Garen';

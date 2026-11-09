@@ -14,9 +14,9 @@ export function createPreparationContext({data,client,slots,ownRole='',guideSele
  const once=(key,derive)=>{if(!memo.has(key))memo.set(key,derive());return memo.get(key);};
  const buildFor=selection=>{const key=JSON.stringify(selection);if(!builds.has(key))builds.set(key,build(champ(selection.id),selection.role,buildData,selection));return builds.get(key);};
  const plan=selection=>({selection,build:buildFor(selection)});
- const comboFor=(id,role)=>currentCombo(slots,id,role,buildData.catalogInfo?.status,null,activePlan,{patch:buildData.patch,catalogChoice});
+ const comboFor=(id,role)=>activePlan||catalogChoice?currentCombo(slots,id,role,buildData.catalogInfo?.status,null,activePlan,{patch:buildData.patch,catalogChoice}):null;
  const recallChoice=(context,options)=>{const value=recall(context,options);return value?.creativePlan&&!automaticCreativePlan(value.creativePlan,buildData.catalogInfo?.status,buildData.patch)?null:value;};
- const recalled=context=>({...recallChoice(context),...context});
+ const recalled=(context,options)=>({...recallChoice(context,options),...context});
  const chosenFor=context=>[lastTaskSelection,guideSelection].find(value=>value&&['id','role','mode'].every(key=>value[key]===context[key])&&(!value.creativePlan||automaticCreativePlan(value.creativePlan,buildData.catalogInfo?.status,buildData.patch)));
  function own(){return once('own',()=>{
   const player=currentPlayerSelection(client.session,buildData.champions,slots),mode=client.mode?.id;
@@ -33,7 +33,7 @@ export function createPreparationContext({data,client,slots,ownRole='',guideSele
   if(!value&&!intent)return own();
   const context=value?{...value,readOnly:configurationReadOnly(value,client,ownRole)}:intent.selection;
   const pending=!value&&intent&&pendingIntent&&pendingPlanId===(activePlan?.id||'')&&['id','role','mode'].every(field=>pendingIntent[field]===context[field]);
-  const selection=pending?structuredClone(pendingIntent):recalled(context);
+  const selection=pending?structuredClone(pendingIntent):recalled(context,value?undefined:{allowSavedCombo:false});
   return {preview:true,...(!value&&intent?{intent:true,positionKnown:intent.positionKnown}:{}),...plan(selection)};
  }
  function currentOnly(){return once('currentOnly',()=>previewPlan(null));}

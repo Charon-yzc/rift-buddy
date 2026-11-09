@@ -10,7 +10,7 @@ import {publicUnavailableChampions} from './pick-eligibility.mjs';
 export const resultSoloRole=result=>result.soloRole||result.targets?.[0]||'';
 // A saved standalone selection keeps its own identity; an unrelated pending
 // catalog match cannot claim it during restoration.
-const restorableConfiguration=(selection,plan,combo)=>selection.creativePlan?plan?.id===selection.creativePlan.id:!plan&&!selection.comboId?true:(combo?.id||null)===(selection.comboId||null);
+const restorableConfiguration=(selection,plan,combo)=>selection.creativePlan?plan?.id===selection.creativePlan.id:!selection.comboId?true:(combo?.id||null)===(selection.comboId||null);
 export function teamFavoriteId(result,style){return `${result.id}${result.creativePlan?'|'+result.creativePlan.id:''}|${style}|${result.scope}${result.scope==='solo'?'|'+resultSoloRole(result):''}`;}
 export function findSavedTeam(favorites,result,style){
  const id=teamFavoriteId(result,style);
@@ -38,14 +38,18 @@ export function captureTeamConfigurations(result,data,store,guide=null){
  const captured=members.map(slot=>{
   const champion=data.champions.find(c=>c.id===slot.champion);
   if(!champion)throw Error('当前资料没有这位组合成员');
-  const combo=currentCombo(lineup,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan,{patch:data.patch}),context={id:champion.id,role:slot.role,mode:'rift',...creativeComboContext(combo)};
+  const combo=currentCombo(lineup,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan,{patch:data.patch});
   const prior=result.configurations?.find(s=>s.id===champion.id&&s.role===slot.role);
+  const standalone=prior?!prior.comboId&&!prior.creativePlan:guide?.id===champion.id&&guide.role===slot.role&&guide.mode==='rift'&&guide.readOnly!==true&&!guide.comboId&&!guide.creativePlan;
+  // Save the player's explicitly chosen ordinary configuration independently
+  // of an optional recipe that happens to match the recommended members.
+  const context={id:champion.id,role:slot.role,mode:'rift',...(standalone?{}:creativeComboContext(combo))};
   // Older favorites may have only a member comboId, or an orphaned member
   // plan. No current/default configuration is proof of a replacement choice.
   if(prior&&(preparationIdentity(prior)!==preparationIdentity(context)||prior.creativePlan&&prior.creativePlan.id!==creativePlan?.id))throw Error('原成员配置与当前组合身份不同；已有收藏未修改，请重新推荐并确认。');
   const restoredCombo=currentCombo(lineup,champion.id,slot.role,null,null,creativePlan,{allowPending:true});
   if(creativePlan&&(restoredCombo?.id||null)!==(combo?.id||null))throw Error('成员配置与组合身份不一致；已有收藏未修改，请重新推荐并确认。');
-  const recalled=recallPreparation(store,guide,context);
+  const recalled=recallPreparation(store,guide,context,standalone?{allowSavedCombo:false}:undefined);
   // If this identity has no current preparation, keeping the saved snapshot
   // is the only evidence-preserving interpretation of an update.
   if(prior&&!recalled){
@@ -105,11 +109,12 @@ export function restoreTeamFavorite(favorite,current,champions,session=null,{eli
  const merged=session?mergeClientSession(next,session,champions):{slots:next,unassigned:[]};
  const configurations=(favorite.configurations||[]).filter(selection=>{
   if(conflicts.some(c=>c.role===selection.role)||!desired.some(s=>s.role===selection.role&&s.champion===selection.id)||!merged.slots.some(s=>s.role===selection.role&&s.champion===selection.id))return false;
-  // Other preparation entry points infer a current combo from the full draft.
-  // Report any different identity as not loaded; do not count a snapshot
-  // which those entry points would silently replace with another selection.
-  const inferred=currentCombo(merged.slots,selection.id,selection.role,catalogStatus,null,creativePlan,patch?{patch}:{allowPending:true});
-  if((inferred?.id||null)!==(selection.comboId||null))return false;
+  // An explicit recipe still needs its exact identity. An independently
+  // chosen ordinary build must not be rebound to a matching public recipe.
+  if(selection.comboId||selection.creativePlan){
+   const inferred=currentCombo(merged.slots,selection.id,selection.role,catalogStatus,null,creativePlan,patch?{patch}:{allowPending:true});
+   if((inferred?.id||null)!==(selection.comboId||null))return false;
+  }
   const combo=currentCombo(scopeSlots(next,favorite.scope),selection.id,selection.role,null,null,creativePlan,{allowPending:true});
   return restorableConfiguration(selection,creativePlan,combo);
  }).map(s=>structuredClone(s));

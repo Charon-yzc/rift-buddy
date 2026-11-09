@@ -46,7 +46,7 @@ export function rebaseWindowState(base,local,accepted){
  const merged=rebase(base,local,accepted),localGame=String(local.draft?.clientGameId||base.draft?.clientGameId||''),acceptedGame=String(accepted.draft?.clientGameId||'');
  // A queued click made in the old game must not acquire a fresh game ID by
  // rebasing. Independently edited preferences still replay normally.
- if(merged.draft&&localGame&&localGame!==acceptedGame)for(const field of ['scope','scopeSelection','referenceQueue','enemyRoles','catalogChoice']){
+ if(merged.draft&&localGame&&localGame!==acceptedGame)for(const field of ['scope','scopeSelection','referenceQueue','enemyRoles','catalogChoice','partyRangeMode','partyAutoCount']){
   if(accepted.draft?.[field]===undefined)delete merged.draft[field];else merged.draft[field]=structuredClone(accepted.draft[field]);
  }
  if(['party','context'].includes(merged.draft?.scopeSelection))merged.draft.scope=merged.draft.scopeSelection;

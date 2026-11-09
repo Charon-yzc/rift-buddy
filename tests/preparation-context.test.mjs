@@ -9,6 +9,7 @@ import {BUNDLED_CATALOG,catalogIssues} from '../src/core/catalog.mjs';
 import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {createPreparationStore,recallPreparation} from '../src/core/preparation.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
+import {companionPickIntent} from '../src/core/companion-plan.mjs';
 const data=JSON.parse(readFileSync(new URL('../data/game.json',import.meta.url),'utf8'));
 const currentData={...data,catalog:BUNDLED_CATALOG,builds:projectBuildSources(JSON.parse(readFileSync(new URL('../data/builds.json',import.meta.url),'utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch)};
 currentData.catalogInfo=catalogIssues(BUNDLED_CATALOG,currentData);
@@ -24,6 +25,17 @@ function matchingLineup(){
  input.client.session.myTeam=input.slots.map(slot=>({cellId:slot.clientCellId,championId:hero(slot.champion).key,assignedPosition:slot.role.toUpperCase()}));
  return input;
 }
+
+test('a fresh public hover in a matching community pair keeps the ordinary default after transient task state is gone',()=>{
+ const input=fixture({picked:'',hover:'Jinx',role:'bottom',data:currentData});
+ Object.assign(input.slots.find(s=>s.role==='support'),{champion:'Braum',locked:true,clientCellId:2});input.client.session.myTeam.push({cellId:2,championId:hero('Braum').key,assignedPosition:'UTILITY'});
+ const store=createPreparationStore();store.remember({id:'Jinx',role:'bottom',mode:'rift',comboId:'jinx-braum',loadoutId:'crit-carry'});
+ const intent=companionPickIntent(input.client,currentData.champions,input.slots,{soloRole:'bottom',patch:currentData.patch,catalogStatus:currentData.catalogInfo.status});
+ assert.equal(intent.selection.comboId,undefined);
+ const context=createPreparationContext({...input,intent,recall:(s,o)=>recallPreparation(store,null,s,o)});
+ for(const plan of [context.currentOnly,context.task,context.displayPlan]){assert.equal(plan.selection.id,'Jinx');assert.equal(plan.selection.comboId,undefined);assert.equal(plan.build.loadoutId,'default');}
+ assert(store.snapshot().some(s=>s.comboId==='jinx-braum'),'The optional community configuration remains independently available');
+});
 
 for(const [restart,accepted] of [['last task',false],['guide only',false],['preparations only',false],['last task',true],['guide only',true]])test(`current default stays independent of a matching team and saved combo: ${restart}, accepted=${accepted}`,()=>{
  const input=matchingLineup(),generic={id:'Ahri',role:'mid',mode:'rift',loadoutId:'default',coreAuto:true},ordinary=getBuild(hero('Ahri'),'mid',currentData,generic),before=createPreparationStore();

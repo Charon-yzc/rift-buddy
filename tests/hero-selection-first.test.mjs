@@ -5,7 +5,7 @@ const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8')
 const implementation=source.slice(source.indexOf('let riftHeroClickRevision='),source.indexOf('\nasync function prepareHeroClick('));
 function setup({busy=false}={}){
  let manualRole='';const calls=[],champions=[{id:'Ashe',key:22},{id:'Jinx',key:222}],client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:'777',localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:0,assignedPosition:'BOTTOM'}]}},context=vm.createContext({
-  client,data:{champions},champ:id=>champions.find(h=>h.id===id),ownManualRole:()=>manualRole,runeWriteContext,preparationGameId:()=>client.session.gameId,heroClickSelection,
+  client,setTimeout,data:{champions},champ:id=>champions.find(h=>h.id===id),ownManualRole:()=>manualRole,runeWriteContext,preparationGameId:()=>client.session.gameId,heroClickSelection,
   api:{prepareSelection:async value=>{calls.push(value);client.session.myTeam[0].championPickIntent=champions.find(h=>h.id===value.champion).key;return {complete:true,steps:{hover:{status:'done'}}};}},
   clientPreparing:busy,runeApplying:false,itemSetPending:null,lastTaskSelection:null,companionPreview:null,
   closeOverlay(){},render(){},sync:async()=>{},toast(){},prepareHeroClick:async(s,_expected,selectedFirst)=>{calls.push({configuration:s,selectedFirst});return {complete:true};}
@@ -17,8 +17,25 @@ test('avatar chooses a hero before any build or lineup adoption and configures t
  assert.equal(f.calls[1].selectedFirst,true);assert.equal(f.calls[1].configuration.loadoutId,'default');assert.equal(f.calls[1].configuration.comboId,undefined);assert.equal(f.calls[1].configuration.runeId,undefined);
 });
 test('an older busy configuration cannot block a new explicit hero selection',async()=>{
- const f=setup({busy:true});await f.context.selectRiftHero({id:'Jinx',role:'bottom',mode:'rift'});
+ const f=setup({busy:true}),pending=f.context.selectRiftHero({id:'Jinx',role:'bottom',mode:'rift'});await new Promise(done=>setImmediate(done));
  assert.equal(f.calls.length,1);assert.equal(f.calls[0].champion,'Jinx');assert.equal(f.context.lastTaskSelection.id,'Jinx');
+ f.context.clientPreparing=false;await pending;assert.equal(f.calls[1].configuration.id,'Jinx');assert.equal(f.calls[1].configuration.loadoutId,'default');
+});
+
+test('pending rune and item actions finish before the latest already-selected hero receives its default',async()=>{
+ for(const field of ['runeApplying','itemSetPending']){
+  const f=setup();f.context[field]=true;
+  const first=f.context.selectRiftHero({id:'Ashe',role:'bottom',mode:'rift'});await new Promise(done=>setImmediate(done));
+  const latest=f.context.selectRiftHero({id:'Jinx',role:'bottom',mode:'rift'});await new Promise(done=>setImmediate(done));
+  assert.deepEqual(f.calls.map(c=>c.champion),['Ashe','Jinx']);assert.equal(f.context.lastTaskSelection.id,'Jinx');
+  f.context[field]=false;await Promise.all([first,latest]);assert.deepEqual(f.calls.filter(c=>c.configuration).map(c=>c.configuration.id),['Jinx']);
+ }
+});
+
+test('a new game cancels a configuration waiting behind an unrelated operation',async()=>{
+ const f=setup({busy:true}),pending=f.context.selectRiftHero({id:'Ashe',role:'bottom',mode:'rift'});
+ await new Promise(done=>setImmediate(done));f.client.session.gameId='778';
+ await assert.rejects(pending,/选人或配置已变化/);assert.equal(f.calls.length,1);assert.equal(f.context.lastTaskSelection,null);
 });
 
 test('an explicit complete configuration survives the hero-only fast request',async()=>{

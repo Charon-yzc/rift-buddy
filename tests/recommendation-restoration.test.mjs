@@ -31,7 +31,7 @@ test('cached pages preserve personal and room weights without filling exhausted 
 
 test('member replacement uses the same visible fit and minimum score as ordinary recommendation',()=>{
  const picks={top:'Akali',jungle:'Shaco',mid:'Zed',bottom:'Jhin',support:'Lulu'},slots=createSlots().map(s=>({...s,party:s.role==='support',champion:picks[s.role]}));
- const result={slots,scope:'context',targets:['support']},input={slots,champions,patch:game.patch,catalogStatus,scope:'context',rolePools:{support:{mode:'only',heroes:['Brand','Velkoz','Xerath','Senna','Shaco','Zyra','Lux']}},minimumFitScore:60};
+ const result={slots,scope:'context',targets:['support']},input={slots,champions,patch:game.patch,catalogStatus,scope:'context',includeCommunityRecommendations:false,rolePools:{support:{mode:'only',heroes:['Brand','Velkoz','Xerath','Senna','Shaco','Zyra','Lux']}},minimumFitScore:60};
  const unrestricted=replaceMember(result,'support',{...input,minimumFitScore:0});assert(unrestricted.length>0);assert(unrestricted.every(r=>r.recommendationFit&&r.recommendationFit.score<60));
  assert.deepEqual(replaceMember(result,'support',input),[]);
  const valid=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),champion:s.role==='bottom'?'Ashe':s.role==='support'?'Lux':null}));

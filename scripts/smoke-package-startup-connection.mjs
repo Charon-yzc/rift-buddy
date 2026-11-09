@@ -9,7 +9,7 @@ import {selectGuide} from '../src/core/guide.mjs';
 const results=[];
 for(const order of ['client-first','app-first']){
  const root=await fs.mkdtemp(path.resolve('.local/startup-connection-')),state=defaultState();
- Object.assign(state.preferences,{installPath:path.join(root,'client'),autoSync:true,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,roomAuto:false,chatNotice:false});
+ Object.assign(state.preferences,{installPath:path.join(root,'client'),autoSync:true,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,roomAuto:true,chatNotice:false});
  if(order==='client-first')state.guide=selectGuide(null,{id:'Ahri',role:'mid',mode:'rift'});
  await fs.mkdir(state.preferences.installPath);await fs.writeFile(path.join(state.preferences.installPath,'lockfile'),'LeagueClient:0:23456:isolated-startup-only:https');await saveState(root,state);
  const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-startup-connection.cjs')],{windowsHide:true,stdio:'inherit',env:{...process.env,RIFT_BUDDY_USER_DATA:root,RIFT_BUDDY_STARTUP_ORDER:order}}),timer=setTimeout(()=>child.kill(),45000);

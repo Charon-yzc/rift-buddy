@@ -129,11 +129,14 @@ async function run(){
   await click(side,'.companion-candidate .lineup-fit > summary');await until(()=>js(side,'document.querySelector(".companion-candidate .lineup-fit")?.open'),'Candidate fit explanation did not expand');await capture(side,'candidate-fit-expanded.png');await click(side,'.companion-candidate .lineup-fit > summary');
  });
  const candidateIdentity=()=>js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members")].map(el=>[...el.querySelectorAll("[data-id]")].map(h=>[h.dataset.id,h.dataset.role]))');
- const previewBaseline=await candidateIdentity();
  friendIntent=hero('Nami').key;await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===0)?.championPickIntent===friendIntent);
  await checkpoint('preview-visible-but-only-client-lock-constrains-recommendations',async()=>{
   await until(()=>js(side,'!!document.querySelector(".companion-team-now [data-id=Nami]")'),'The teammate preview did not display');
-  assert.deepEqual(await candidateIdentity(),previewBaseline,'A preview changed recommendation members');
+  // Automatic range follows a known member's inferred lane. That can refresh
+  // candidates; the hover still must not become a fixed/locked champion.
+  await until(async()=>{const s=await state(),rows=await candidateIdentity();return s.draft.slots.filter(slot=>slot.party).length===2&&s.draft.slots.some(slot=>slot.role==='support'&&slot.party)&&rows.length>0&&rows.every(row=>row.some(([,role])=>role==='support'));},'The known member hover did not retain our two-person range in the inferred lane');
+  assert.equal((await state()).draft.slots.some(slot=>slot.champion==='Nami'),false,'A public hover was saved as a selected champion');
+  assert.ok((await candidateIdentity()).some(row=>!row.some(([id])=>id==='Nami')),'An unconfirmed hover constrained every candidate');
   assert.equal(await js(side,'document.querySelectorAll(".companion-team-now .companion-roster-row.in-scope").length'),2);
   await capture(side,'preview-without-recommendation-constraint.png');
   friendPicked=friendIntent;friendIntent=0;await fresh(snapshot=>snapshot.session.myTeam.find(p=>p.cellId===0)?.pickState==='locked');
@@ -366,7 +369,8 @@ async function run(){
     const draft=(await state()).draft;assert.equal(draft.slots.filter(slot=>slot.party).length,1);assert.ok(draft.slots.some(slot=>slot.champion==='Garen'&&slot.clientCellId===3),'A checkbox replaced a newer public hero');
     assert.equal(writes.length,writeCount,'Changing recommendation range wrote to the client');
    }finally{heldSideClient=null;side.webContents.send=send;for(const [channel,args]of held)send(channel,...args);}
-   await js(main,'window.buddy.partyRange('+JSON.stringify({role:'jungle',checked:true,gameId:String(gameId),cellId:2})+')');
+   const restoreRole=(await state()).draft.slots.find(slot=>!slot.party&&slot.role!=='top').role;
+   await js(main,'window.buddy.partyRange('+JSON.stringify({role:restoreRole,checked:true,gameId:String(gameId),cellId:2})+')');
    outsidePicked=0;await fresh(snapshot=>snapshot.session?.myTeam.find(player=>player.cellId===3)?.championId===0);
    await until(async()=>(await state()).draft.partyCount===2,'Restoring the test range did not finish');
   });
