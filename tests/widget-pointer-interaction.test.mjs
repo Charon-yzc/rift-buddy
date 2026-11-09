@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import {holdRenderDuringPointer} from '../src/pointer-render.mjs';
 import {guideRenderContext} from '../src/guide-render-context.mjs';
-import {jungleGuidance} from '../src/core/jungle-guidance.mjs';
+import {jungleGuidance,changeJungleNotes} from '../src/core/jungle-guidance.mjs';
 import {jungleRouteMap,routeStepButton} from '../src/jungle-route-view.mjs';
 import {hexEconomyView,hexMicroRoutesView,hexMicroLineView} from '../src/hex-micro-view.mjs';
 
@@ -36,6 +36,35 @@ async function renderer(kind,initial){
 const guideValue=(extra={})=>({referenceRevision:1,model:{champion:{id:'LeeSin'},selection:{id:'LeeSin',role:'jungle',mode:'rift'},mode:'rift',matchId:'100',source:'OP.GG',sourceUrl:'https://example.test/lee',fetchedAt:'2026-11-09',live:{gameTime:209},...extra}});
 const jungleValue=time=>{const value={...guideValue(),time,jungle:jungleGuidance({champion:'LeeSin',role:'jungle',mode:'rift',patch:'16.22',matchId:'100',live:{matched:true,gameTime:time,mapId:11,queueId:420,teamSide:'blue'}})};return {...value,interactionContext:guideRenderContext(value)};};
 const microValue=(extra={})=>({active:true,kind:'routes',layout:'full',expanded:true,context:'same',session:'same',view:1,routes:Array.from({length:4},(_,i)=>({id:'route-'+i,title:'route-'+i,augments:[],items:[]})),...extra});
+
+for(const map of [false,true])for(const change of ['hero','game','source'])test(`jungle ${map?'map':'text'} preference survives ${change} identity changes while old controls are invalidated`,async()=>{
+ const first=jungleValue(120),f=await renderer('jungle',first);
+ if(map)await f.emit('click',f.button('map'));
+ const old=f.button('note');assert.match(old.dataset.value,/^step:/);await f.emit('pointerdown',old);
+ const next=structuredClone(first);
+ if(change==='hero'){
+  next.model.champion.id='Ivern';next.model.selection.id='Ivern';
+  next.jungle=jungleGuidance({champion:'Ivern',role:'jungle',mode:'rift',patch:'16.20',matchId:'100',notes:{start:'blue',stage:'opening',routeProgress:{key:'Ivern-opening-blue',index:5}},live:{matched:true,gameTime:120,mapId:11,queueId:420,teamSide:'red',skills:{Q:1,W:1,E:1,R:0},stats:{hp:600,maxHp:1000,resource:{type:'MANA',value:400,max:500}}}});
+ }else if(change==='game'){
+  next.model.matchId='101';
+  next.jungle=jungleGuidance({champion:'LeeSin',role:'jungle',mode:'rift',patch:'16.20',matchId:'101',live:{matched:true,gameTime:120,mapId:11,queueId:420,teamSide:'blue'}});
+ }else{next.model.source='other';next.model.sourceUrl='https://example.test/new-source';}
+ next.interactionContext=guideRenderContext(next);f.update(next);
+ assert.equal(old.isConnected,false,'The former identity must not keep its pressed DOM');
+ await f.emit('pointerup',old);await f.emit('click',old);f.flush();assert.equal(f.calls.length,0,'A stale pressed control must not dispatch under the new identity');
+ assert.equal(/<svg class="jungle-map"/.test(f.html()),map);
+ assert.match(f.html(),new RegExp('data-action="map" aria-pressed="'+map+'"'));
+ assert.ok(f.html().includes('step:'+next.jungle.route.actionKey+'.'),'Controls must belong to the newest route');
+ if(change!=='source')assert.throws(()=>changeJungleNotes(undefined,'step',old.dataset.value.slice(5),120,next.jungle.route),/路线已变化/);
+ if(change==='hero'){
+  assert.equal(next.jungle.route.current.action,'release');
+  if(map){assert.match(f.html(),/红色方己方营地成熟后回收顺序示意/);assert.match(f.html(),/>6<\/text>/);}else assert.match(f.html(),/蓝BUFF · 成熟后回收/);
+  const previousPoints=f.html().match(/<polyline points="([^"]*)"/)?.[1],flipped=structuredClone(next);
+  flipped.jungle=jungleGuidance({champion:'Ivern',role:'jungle',mode:'rift',patch:'16.20',matchId:'100',notes:{start:'blue',stage:'opening',routeProgress:{key:'Ivern-opening-blue',index:5}},live:{matched:true,gameTime:120,mapId:11,queueId:420,teamSide:'blue',skills:{Q:1,W:1,E:1,R:0},stats:{hp:600,maxHp:1000,resource:{type:'MANA',value:400,max:500}}}});
+  f.update(flipped);assert.equal(/<svg class="jungle-map"/.test(f.html()),map);
+  if(map){assert.match(f.html(),/蓝色方己方营地成熟后回收顺序示意/);assert.notEqual(f.html().match(/<polyline points="([^"]*)"/)?.[1],previousPoints,'A side update must repaint the new model points');}
+ }
+});
 
 for(const kind of ['guide','skill','jungle'])test(`${kind}: same-identity refresh preserves the pressed control through pointerup and delivers one immediate action`,async()=>{
  const first=kind==='jungle'?jungleValue(209):guideValue(),f=await renderer(kind,first),button=f.button('fold');

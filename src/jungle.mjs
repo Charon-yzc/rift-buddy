@@ -10,7 +10,7 @@ const interaction=holdRenderDuringPointer({document,root,render:()=>render(lates
 function render(value){
  latest=value;
  const nextContext=value?.interactionContext??guideRenderContext(value);
- if(context!==nextContext){interaction.invalidate();last='';showMap=false;message='';}else if(interaction.defer())return;context=nextContext;
+ if(context!==nextContext){interaction.invalidate();last='';message='';}else if(interaction.defer())return;context=nextContext;
  applyPresentation(value?.presentation);
  const m=value?.model,j=value?.jungle||m?.jungle,time=value?.time??m?.live?.gameTime;
  const early=j?.routeStage?j.routeStage==='opening':!Number.isFinite(time)||time<210,recovering=!!j?.recoveryRoute?.length,route=recovering?j.recoveryRoute:early?j?.compactRoute:j?.rotationRoute;
