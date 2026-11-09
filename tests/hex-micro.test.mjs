@@ -1,4 +1,4 @@
-// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
+// Payload, geometry and privacy contracts use source-independent presentation rows.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {hexEconomyCells,hexEconomyView,hexMicroRoutesView,hexMicroLineView} from '../src/hex-micro-view.mjs';
@@ -6,7 +6,7 @@ import {publicEquipment} from '../src/core/scoreboard.mjs';
 import fs from 'node:fs/promises';
 import {hexMicroPayload,hexMicroPlacement,hexMicroOffset,validateHexWindows} from '../src/core/hex-micro.mjs';
 import {hexMicroRoutes} from '../src/core/hex-micro-routes.mjs';
-import {validateGuideState,selectGuide,createGuideModel} from '../src/core/guide.mjs';
+import {validateGuideState,selectGuide} from '../src/core/guide.mjs';
 
 const data={champions:[{id:'Ashe',name:'艾希'},{id:'Jhin',name:'烬'}],items:{'1001':{name:'鞋',gold:{total:300}},'2003':{name:'药',gold:{total:50}}}};
 const image=(kind,id)=>`<img src="${kind}/${id}.png" alt="">`;
@@ -60,59 +60,4 @@ test('micro payloads ignore timers, wallets and unrelated combat changes so stab
  value.model.equipment.ally.players[0].value=350;assert.notDeepEqual(hexMicroPayload(value,'economy'),before);
  assert.equal(hexMicroPayload({model:{mode:'rift'}},'routes').active,false);
  value.model.hexMicroRoutes=[{id:'old-hero'}];value.model.live={kind:'champion'};assert.deepEqual(hexMicroPayload(value,'routes').routes,[]);assert.match(hexMicroPayload(value,'routes').pending,/不符/);
-});
-
-const bundled=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
-bundled.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url))).entries;
-test('withdrawn hero reviews retain the prepared configuration as distinct non-core references',()=>{
- const unreviewed=structuredClone(bundled);
- for(const hero of ['Ahri','Ashe','Garen'])unreviewed.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64);
- for(const hero of ['Ahri','Ashe','Garen']){
-  const model=createGuideModel(unreviewed,selectGuide(null,{id:hero,role:'mid',mode:'hex'})),fallback=model.hexMicroRoutes;
-  assert.equal(fallback.length,1,hero);assert.equal(fallback[0].kind,'reference');assert.match(fallback[0].title,/非配套/);
-  assert(fallback[0].augments.length>0);assert(fallback[0].items.length>0);assert(fallback[0].items.every(i=>model.route.some(r=>r.id===i.id)));assert(fallback[0].items.every(i=>!i.core));
-  assert(fallback[0].augments.every(a=>!a.core&&a.brief.includes('单项')));
- }
-});
-
-test('reviewed hero mechanism routes reach the micro guide with conditions and provenance intact',()=>{
- const pairs=[['Gwen',1129],['Kayle',1129],['Teemo',1129],['Sona',1141],['Soraka',1141],['Jax',1058],['Volibear',1058],['Brand',1045],['Jinx',1328],['Caitlyn',1328],['Veigar',1048],['Lux',1048]];
- for(const [hero,core] of pairs){
-  const state=selectGuide(null,{id:hero,role:'mid',mode:'hex',ownedAugmentIds:[core]}),before=JSON.stringify(state),model=createGuideModel(bundled,state),[micro]=model.hexMicroRoutes,[full]=model.hexRoutes;
-  assert.equal(micro.kind,'mechanism',hero);assert.equal(micro.id,full.id);assert.equal(micro.augments.length,['Sona','Soraka'].includes(hero)?2:1);assert.equal(micro.augments[0].id,core);assert(micro.augments[0].owned&&micro.augments[0].core);
-  assert.deepEqual(micro.sources,full.sources);assert.match(micro.basis,/不是胜率/);assert(micro.items.length>0);assert(micro.items.every(i=>!i.core));
-  assert.deepEqual(micro.items,micro.gearGroups[0].items,'The compact row shows one conditional group rather than merging alternatives');assert.equal(micro.gearGroups.length,full.gear.length);
-  for(const [index,group]of full.gear.entries()){const projected=micro.gearGroups[index];assert.equal(projected.when,group.when);assert.equal(projected.why,group.why);assert.deepEqual(projected.items.map(i=>i.id),group.items.map(i=>i.id));for(const [itemIndex,item]of group.items.entries())assert.equal(projected.items[itemIndex].brief,(item.required?'玩法必需。':'')+group.when+'。'+group.why);}
-  assert.equal(JSON.stringify(state),before,'References never change the prepared configuration');
- }
- const sona=createGuideModel(bundled,selectGuide(null,{id:'Sona',mode:'hex',role:'support',ownedAugmentIds:[1141]}));
- assert.match(sona.hexMicroRoutes[0].gearGroups.flatMap(group=>group.items).find(i=>i.id===3504).brief,/^队友靠普攻/);
- const lux=createGuideModel(bundled,selectGuide(null,{id:'Lux',mode:'hex',role:'mid',ownedAugmentIds:[1048,1004]}));
- assert(lux.hexRoutes[0].ultimateUnavailable);assert.match(lux.hexMicroRoutes[0].augments[0].brief,/^终极技能不可使用/);assert.doesNotMatch(lux.hexMicroRoutes[0].augments[0].brief,/Q 命中后衔接 E、R/);
-});
-
-test('micro pairing withdraws changed prerequisites as whole groups and never upgrades fallback references',()=>{
- for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(h=>h.id==='Gwen').mechanicSource.character.sha256='0'.repeat(64)]){
-  const changed=structuredClone(bundled);mutate(changed);const model=createGuideModel(changed,selectGuide(null,{id:'Gwen',role:'top',mode:'hex',ownedAugmentIds:[1129]}));assert(model.hexMicroRoutes.every(r=>['reference','item-synergy'].includes(r.kind)),'A changed hero kit withdraws hero routes; separately reviewed item/augment links need no kit claims');
- }
- const changedAugment=structuredClone(bundled);changedAugment.augments.find(a=>a.id===1129).description+=' changed';
- const remaining=createGuideModel(changedAugment,selectGuide(null,{id:'Gwen',role:'top',mode:'hex',ownedAugmentIds:[1129]})).hexMicroRoutes;
- assert(remaining.every(r=>!r.augments.some(a=>a.id===1129)),'Changed augment withdraws its own dependencies, not unrelated valid routes');
- const changed=structuredClone(bundled);changed.items[3115].description+=' changed';const [micro]=createGuideModel(changed,selectGuide(null,{id:'Gwen',role:'top',mode:'hex',ownedAugmentIds:[1129]})).hexMicroRoutes;
- const remainingItems=micro.gearGroups.flatMap(group=>group.items);assert.equal(micro.kind,'mechanism');assert.equal(micro.pendingItems,1);assert(!remainingItems.some(i=>i.id===3115||i.id===3089));assert(!remainingItems.some(i=>i.brief.includes('纳什')));assert.equal(micro.augments[0].brief,'部分装备组待核对；请查看当前强化原文。');
-});
-
-test('current source route is prioritized only for its actual core and old recipes never fill missing choices',()=>{
- const model=selection=>createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex',...selection}));
- for(const selection of [{},{ownedAugmentIds:[3078]},{compareIds:[3078]}]){const rows=model(selection).hexMicroRoutes;assert.equal(rows[0].id,'Yasuo-3078');assert(rows.every(r=>r.patch===bundled.patch));assert(rows.flatMap(r=>r.augments).filter(a=>a.core&&a.id!==3078).every(a=>!a.owned));}
- const selected=model({ownedAugmentIds:[3078]});assert.equal(selected.hexMicroRoutes[0].augments.find(a=>a.id===3078).owned,true);
- for(const selection of [{compareIds:[1315]},{ownedAugmentIds:[1058],compareIds:[1315]}])assert(model(selection).hexMicroRoutes.every(r=>!r.source?.includes('arammayhem.com')));
-});
-
-test('previous-patch community recipes stay out of current recommendations even when their mechanics still match',async()=>{
- const recipe=JSON.parse(await fs.readFile(new URL('../src/core/hex-community-routes.json',import.meta.url))).routes.find(r=>r.hero==='Yasuo'&&r.augment===3078);
- assert.deepEqual(hexMicroRoutes({data:bundled,hero:'Yasuo'}),[]);
- const shown=createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex'})).hexMicroRoutes;
- const original=shown.find(r=>r.id==='Yasuo-3078');assert(original);assert.equal(original.communitySource.author,recipe.communitySource.author);assert.equal(original.card.sourceUrl,recipe.communitySource.url);assert.equal(original.patch,bundled.patch);assert(shown.every(r=>r.patch===bundled.patch));
- for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(c=>c.id==='Yasuo').mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===3078).key='Changed',d=>d.items[recipe.coreItems[0]].maps['12']=false]){const changed=structuredClone(bundled);mutate(changed);const routes=createGuideModel(changed,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex'})).hexMicroRoutes;assert(routes.every(r=>r.id!=='Yasuo-3078'&&!r.source?.includes('arammayhem.com')));}
 });

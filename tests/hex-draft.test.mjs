@@ -1,4 +1,4 @@
-// Frozen 16.21 acceptance contract; tests/hex-live-bundle.test.mjs covers the actual current bundle.
+// Current public bench contracts; no archived hero coverage is adopted.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -7,11 +7,11 @@ import {hexDraft} from '../src/core/hex-draft.mjs';
 import {pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {hexDraftView} from '../src/hex-draft-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
-const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url),'utf8')),key=id=>data.champions.find(c=>c.id===id).key;
+const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8')),key=id=>data.champions.find(c=>c.id===id).key;
 const client=()=>({connected:true,phase:'ChampSelect',mode:{id:'hex'},session:sanitizeSession({localPlayerCellId:0,myTeam:['Lux','Ashe','Veigar','Sona','Jinx'].map((id,cellId)=>({cellId,championId:key(id)})),benchEnabled:true,benchChampions:['Malphite','Xerath','Lux'].map(id=>({championId:key(id),puuid:'private'}))})});
 test('Hex team alternatives use only public bench, retain teammates and explain coverage changes without lanes',()=>{
  const c=client(),before=structuredClone(c),model=hexDraft({data,client:c});
- assert.equal(model.team.length,5);assert.equal(model.candidates[0].hero.id,'Malphite');assert.deepEqual(model.candidates[0].added,['补承伤手段']);assert.equal(model.candidates.length,2);
+ assert.equal(model.team.length,5);assert.equal(model.candidates[0].hero.id,'Malphite');assert.deepEqual(model.candidates[0].added,[]);assert.equal(model.reviewed,false);assert.equal(model.candidates.length,2);
  for(const row of model.candidates){assert.equal(row.lineup[0].hero.id,row.hero.id);assert.deepEqual(row.lineup.slice(1).map(p=>p.hero.id),['Ashe','Veigar','Sona','Jinx']);}
  assert.deepEqual(c,before);assert(!JSON.stringify(c).includes('private'));
  const html=hexDraftView({data,client:c});assert.match(html,/我 · 墨菲特，点击直接切换/);assert.doesNotMatch(html,/上路|中路|打野|data-action="(?:client-prepare|preselect)/); assert.doesNotMatch(html, /data-action="hex-quick-pick"[^>]+data-id="Hecarim"/);

@@ -1,4 +1,4 @@
-// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
+// Current ephemeral notes and explicit storage/export compatibility.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,21 +6,16 @@ import os from 'node:os';
 import path from 'node:path';
 import {HEX_OWNED_LIMIT} from '../src/core/hex-note-limits.mjs';
 import {createHexRoundStore,hexRoundSelection} from '../src/core/hex-round.mjs';
-import {hexAugmentAcquisition} from '../src/core/hex-acquisition.mjs';
+import {hexManualAugments} from '../src/core/hex-acquisition.mjs';
 import {hexDecision} from '../src/core/hex-decisions.mjs';
-import {hexEquipmentImpact} from '../src/core/hex-recommendations.mjs';
-import {hexItemSynergies} from '../src/core/hex-item-synergies.mjs';
 import {createGuideModel,selectGuide,validateGuideSelection} from '../src/core/guide.mjs';
 import {validatePreparation,createPreparationStore} from '../src/core/preparation.mjs';
 import {captureRoomConfigurations} from '../src/core/room-configuration.mjs';
 import {renderHexComparison} from '../src/hex-view.mjs';
 import {renderGuide} from '../src/guide-view.mjs';
 import {defaultState,saveState,readState,createBackup,validateState} from '../services/storage.mjs';
-const base=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
-const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-item-synergies-16.21.json',import.meta.url)));
-const data={...base,...fixture,champions:base.champions,items:{...base.items,...fixture.items},augments:base.augments.map(a=>fixture.augments.find(row=>row.id===a.id)||a)};
-data.hexBuilds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/hex-builds.json',import.meta.url))).entries;
-const ordinary=data.augments.filter(a=>hexAugmentAcquisition(data,a).ordinaryOption).map(a=>a.id);
+const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
+const ordinary=hexManualAugments(data).map(a=>a.id);
 const marks=(last,length)=>[...ordinary.filter(id=>![last,1011,1349,2134,1047,1048].includes(id)).slice(0,length-1),last];
 const selection=owned=>({id:'Sona',role:'support',mode:'hex',ownedAugmentIds:owned,compareIds:[1011,1349,2134]});
 
@@ -40,29 +35,10 @@ test('extra acquisition notes accept the seventh and 32nd distinct mark; overflo
  assert.deepEqual(store.snapshot().live.owned,[]);assert.throws(()=>store.change({...old,operation:'own',id:1004},data),/已变化/);
 });
 
-test('late marks affect conflicts, reroll, equipment and set analysis across the roster',()=>{
- for(const length of [7,HEX_OWNED_LIMIT])for(const {id:hero}of data.champions){
-  const owned=marks(1004,length),result=hexDecision({data,hero,owned,options:[1011,1349,2134]});
-  assert(result.rows.every(row=>row.level==='conflict'),hero+' '+length);assert.equal(result.reroll.recommended,true);
-  assert.equal(result.set.count,length);assert(hexEquipmentImpact({data,hero,owned}).some(row=>row.augment===1004));
-  const rows=hexItemSynergies({data,hero,owned:marks(3150,length),preparedItems:[]});
-  assert(rows.some(row=>row.augment.id===3150&&row.state==='owned'&&row.gear.some(g=>g.items.some(i=>i.id===4646))),hero);
- }
-});
-
-test('late crit marks contribute actual next-card links, but changed effects withdraw them',()=>{
- for(const length of [7,HEX_OWNED_LIMIT]){
-  const owned=marks(1048,length),result=hexDecision({data,hero:'Sona',owned,options:[1047]});
-  assert(result.rows[0].interactions.length);assert(result.set.next.some(row=>row.id===1047));
-  const changed=structuredClone(data);changed.augments.find(a=>a.id===1048).description+=' changed';
-  assert.deepEqual(hexDecision({data:changed,hero:'Sona',owned,options:[1047]}).rows[0].interactions,[]);
- }
-});
-
 test('guide projection accepts all notes, preserves independent limits and strips reusable round context',()=>{
  const owned=marks(3150,HEX_OWNED_LIMIT),value=selection(owned),projected=hexRoundSelection(value,{hero:'Sona',owned,options:value.compareIds});
  const state=selectGuide(null,projected),model=createGuideModel(data,state);
- assert.equal(model.ownedAugments.length,HEX_OWNED_LIMIT);assert(model.hexRoutes.some(r=>r.augment.id===3150));assert.equal(model.hexDecision.set.count,HEX_OWNED_LIMIT);
+ assert.equal(model.ownedAugments.length,HEX_OWNED_LIMIT);assert.deepEqual(model.hexRoutes,[]);assert.equal(model.hexDecision,null);assert.equal(hexDecision({data,hero:'Sona',owned}).set.count,HEX_OWNED_LIMIT);
  const html=renderHexComparison({data,hero:'Sona',owned,options:value.compareIds});
  assert.match(html,/<details class="hex-owned-details"[^>]*><summary>本局已选 · 32<\/summary>/);
  assert.equal((html.match(/data-action="remove-owned"/g)||[]).length,HEX_OWNED_LIMIT);

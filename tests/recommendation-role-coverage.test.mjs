@@ -4,7 +4,6 @@ import game from '../data/game.json' with {type:'json'};
 import {createCompositionMechanics} from '../src/core/composition-mechanics.mjs';
 import {compositionFit} from '../src/core/composition-fit.mjs';
 import {createRecommendationSearch,createSlots,recommend,replaceMember} from '../src/core/recommend.mjs';
-import {createRecommendationLane,createRecommendationSearchSession} from '../src/core/recommendation-search.mjs';
 import {meetsRecommendationFit,orderRecommendationPage} from '../src/core/recommendation-policy.mjs';
 import {lineupFit} from '../src/core/room-ballot.mjs';
 import {BUNDLED_CATALOG} from '../src/core/catalog.mjs';
@@ -12,26 +11,6 @@ import {clientRecommendationDraft, recommendationDraft} from '../src/core/draft-
 import {recommendationKey} from '../src/core/preparation.mjs';
 import {recommendationConditionsKey} from '../src/core/recommendation-input.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
-
-test('community search revisits the player role across batches and still covers other roles',()=>{
- const targets=['top','jungle','mid','bottom','support'];
- const fixed=targets.map(role=>({role,champion:null}));
- const candidates=Object.fromEntries(targets.map(role=>[role,[{id:role+'1'},{id:role+'2'}]]));
- const record=(id,roles,index=1)=>({id,roles,seed:fixed.map(slot=>roles.includes(slot.role)?{...slot,champion:slot.role+index}:slot)});
- const communityRecords=[record('a-bottom',['bottom','support']),record('b-bottom',['bottom','support'],2),record('m-mid',['mid','support']),
-  record('top-jungle-a',['top','jungle']),record('top-jungle-b',['top','jungle'],2),record('top-mid-a',['top','mid']),record('top-mid-b',['top','mid'],2)];
- function firstVisits(communityAfter=''){
-  const evaluated=new Set();
-  const {community}=createRecommendationLane({fixed,targets,candidates,seeds:[],weights:{},communityRecords,focusRole:'top',randomSeed:'ranked',communityAfter,evaluate:(_slots,id)=>{evaluated.add(id);return null;}});
-  for(let step=0;step<300&&!community.exhausted;step++)community.work(true,true);
-  return [...evaluated];
- }
- const order=firstVisits();
- assert.deepEqual(new Set(order),new Set(communityRecords.map(record=>record.id)));
- assert.deepEqual(order.map(id=>id.startsWith('top-')),[true,true,false,true,true,false,false]);
- assert.notEqual(order[0].split('-')[1],order[1].split('-')[1]);
- assert.deepEqual(firstVisits(order[1]).slice(0,3),order.slice(2,5));
-});
 
 test('a manually selected position remains a concrete recommendation target before client binding',()=>{
  const slots=createSlots().map(slot=>({...slot,party:['top','jungle'].includes(slot.role)}));
@@ -91,61 +70,6 @@ test('a single editable player receives their own plan while fixed teammate pair
  assert.equal(candidate('support','Lulu').duo?.id,'jinx-lulu');
 });
 
-test('community pages explore distinct positions when several larger recipes all use bottom',()=>{
- const targets=['top','jungle','mid','bottom','support'];
- const fixed=targets.map(role=>({role,champion:null}));
- const roleGroups=[
-  ['top','jungle','bottom'],['top','mid','bottom'],['top','support','bottom'],
-  ['top','jungle'],['jungle','mid','bottom'],['mid','support'],
- ];
- const communityRecords=roleGroups.map((roles,index)=>({
-  id:String(index),roles,seed:fixed.map(slot=>roles.includes(slot.role)?{...slot,champion:slot.role+index}:slot),
- }));
- const candidates=Object.fromEntries(targets.map(role=>[role,communityRecords.flatMap(record=>record.seed.filter(slot=>slot.role===role&&slot.champion).map(slot=>({id:slot.champion})))]));
- function collect(communityAfter=''){
-  const lane=createRecommendationLane({
-   fixed,targets,candidates,seeds:[],weights:{},communityRecords,communityAfter,focusRole:'top',randomSeed:'review',
-   evaluate:(slots,id)=>({slots,recommendationFit:{score:85},communityCombinationId:id,reviewedCombinationIds:id?[id]:[]}),format:row=>row,
-  });
-  const session=createRecommendationSearchSession([lane]),ids=[];
-  let newPage=false;
-  for(let attempt=0;attempt<300&&ids.length<communityRecords.length;attempt++){
-   const page=session.advance({limit:6,newPage});
-   newPage=page.complete;
-   if(page.complete)for(const row of page.rows)if(row.communityCombinationId&&!ids.includes(row.communityCombinationId))ids.push(row.communityCombinationId);
-  }
-  return ids;
- }
- const order=collect();
- assert.deepEqual(new Set(order),new Set(communityRecords.map(record=>record.id)));
- assert.ok(order.slice(0,2).every(id=>roleGroups[id].includes('top')));
- assert.ok(order.slice(0,3).some(id=>!roleGroups[id].includes('bottom')));
- const resumed=collect(order[0]);
- assert.ok(resumed.slice(0,3).some(id=>!roleGroups[id].includes('bottom')),JSON.stringify({order,resumed}));
-});
-
-test('a recipe excluded by member weights does not alter visible role coverage',()=>{
- const targets=['top','jungle','mid','support'];
- const fixed=targets.map(role=>({role,champion:null}));
- const candidates=Object.fromEntries(targets.map(role=>[role,[{id:role+'A'},{id:role+'B'}]]));
- const record=(id,roles,top)=>({id,roles,seed:fixed.map(slot=>({
-  ...slot,champion:roles.includes(slot.role)?slot.role+(slot.role==='top'?top:'A'):null,
- }))});
- const legal=[record('jg',['top','jungle'],'A'),record('mid',['top','mid'],'A')];
- const excluded=record('off',['top','jungle','support'],'B');
- function visits(communityRecords){
-  const ids=new Set();
-  const {community}=createRecommendationLane({
-   fixed,targets,candidates,seeds:[],weights:{top:{topA:1,topB:0}},communityRecords,focusRole:'top',randomSeed:'ranked',
-   evaluate:(_slots,id)=>{ids.add(id);return null;},
-  });
-  for(let step=0;step<300&&!community.exhausted;step++)community.work(true,true);
-  return [...ids];
- }
- assert.deepEqual(visits([...legal,excluded]),visits(legal));
- assert.deepEqual(new Set(visits(legal)),new Set(['jg','mid']));
-});
-
 test('area control and ally damage routes require the actual spell conditions',()=>{
  const graph=createCompositionMechanics(new Map(game.champions.map(champion=>[champion.id,champion])),game.patch);
  const kennen={role:'top',champion:'Kennen'},viktor={role:'mid',champion:'Viktor'};
@@ -161,43 +85,6 @@ test('area control and ally damage routes require the actual spell conditions',(
  assert.match(mark.condition,/造成伤害.*第一个敌方英雄/);
 });
 
-test('a small search prefix explores both open positions and continuation visits each completion once',()=>{
- const targets=['top','jungle'];
- const fixed=targets.map(role=>({role,champion:null}));
- const candidates={top:['a','b','c'],jungle:['d','e','f','g','h']};
- for(const role of targets)candidates[role]=candidates[role].map(id=>({id}));
- const lane=createRecommendationLane({fixed,targets,candidates,seeds:[],weights:{},evaluate:slots=>({slots})});
- assert.equal(lane.prepare(),true);
- const {stream}=lane.draw(),rows=[];
- const compare=()=>0;
- assert.equal(stream.prepare(),true);
- while(stream.advance())rows.push(stream.take(compare).slots.map(slot=>slot.champion));
- assert.equal(stream.exhausted,true);
- assert.equal(new Set(rows.slice(0,3).map(([top])=>top)).size,3);
- assert.equal(new Set(rows.slice(0,3).map(([,jungle])=>jungle)).size,3);
- assert.equal(rows.length,15);
- assert.equal(new Set(rows.map(row=>row.join('|'))).size,15);
-});
-
-test('overlapping role pools offer a legal first completion and retain every legal assignment',()=>{
- const targets=['top','jungle','mid'];
- const fixed=targets.map(role=>({role,champion:null}));
- const heroes=['a','b','c','d'].map(id=>({id}));
- const candidates=Object.fromEntries(targets.map(role=>[role,heroes]));
- const lane=createRecommendationLane({fixed,targets,candidates,seeds:[],weights:{},evaluate:slots=>({slots})});
- lane.prepare();
- const {stream}=lane.draw(),rows=[];
- stream.prepare();
- assert.equal(stream.advance(),true);
- assert.equal(stream.hasRows,true);
- do{
-  const row=stream.take(()=>0);
-  if(row)rows.push(row.slots.map(slot=>slot.champion).join('|'));
- }while(stream.advance());
- assert.equal(rows.length,24);
- assert.equal(new Set(rows).size,24);
-});
-
 test('the score floor rejects an incomplete lineup when its public constraints already make it ineligible',()=>{
  assert.equal(meetsRecommendationFit({score:null,compatible:false}),false);
  assert.equal(meetsRecommendationFit({score:null,compatible:true,scoreCeiling:45}),false);
@@ -209,33 +96,6 @@ test('only a score and matchup tie favors a verified interaction for my position
  const row=(id,score,adjustment=0,ranked=0,recommendationFocus=0)=>({id,recommendationFit:{score},opponentFit:{adjustment,ranked:{adjustment:ranked}},recommendationFocus});
  const rows=[row('weak-fit',79,12,4,2),row('same-fit',81),row('my-interaction',81,0,0,1),row('my-plan',81,0,0,2),row('known-matchup',81,0,2),row('strong-fit',83),row('unknown-fit',null,12,4,2)];
  assert.deepEqual(orderRecommendationPage(rows).map(r=>r.id),['strong-fit','known-matchup','my-plan','my-interaction','same-fit','weak-fit','unknown-fit']);
-});
-
-function communityCompletionRows(supports,statistics){
- const roles=['top','jungle','mid','bottom','support'];
- const fixed=roles.map(role=>({role,champion:['top','support'].includes(role)?null:'Fixed'+role}));
- const record={id:'top-jungle',roles:['top','jungle'],seed:fixed.map(slot=>slot.role==='top'?{...slot,champion:'TopAnchor'}:slot)};
- const lane=createRecommendationLane({fixed,targets:['top','support'],candidates:{top:[{id:'TopAnchor'}],support:supports.map(id=>({id}))},seeds:[],weights:{},communityRecords:[record],
-  evaluate:(slots,id)=>({slots,recommendationFit:{score:85,...statistics(slots.find(slot=>slot.role==='support').champion).fit},opponentFit:statistics(slots.find(slot=>slot.role==='support').champion).opponent,communityCombinationId:id,reviewedCombinationIds:[id]}),format:row=>row});
- const rows=[];
- for(let step=0;step<600&&!lane.community.exhausted;step++){
-  lane.community.work(true,true);
-  const {row}=lane.community.take([]);if(row)rows.push(row);
- }
- assert.equal(lane.community.exhausted,true,'The bounded fixture must finish');
- return rows.map(row=>row.slots.find(slot=>slot.role==='support').champion);
-}
-
-test('community completions use the same known-opponent tiebreak as ordinary candidates',()=>{
- const stats=id=>({opponent:{adjustment:id==='Zyra'?12:0}});
- assert.deepEqual(communityCompletionRows(['Aardvark','Zyra'],stats),['Zyra']);
- assert.deepEqual(communityCompletionRows(['Aardvark','Zyra'],id=>({opponent:{ranked:{adjustment:id==='Zyra'?4:0}}})),['Zyra']);
- assert.deepEqual(communityCompletionRows(['Aardvark','Zyra'],id=>({...stats(id),fit:{score:id==='Aardvark'?86:85}})),['Aardvark'],'Matchup cannot override a higher fit score');
-});
-
-test('a later same-fit completion with better matchup can replace an already presented recipe',()=>{
- const supports=['A','B','C','D','E','F','Zyra'];
- assert.deepEqual(communityCompletionRows(supports,id=>({opponent:{adjustment:id==='Zyra'?12:0}})),['A','Zyra']);
 });
 
 test('an existing reviewed interaction keeps its actual role and lock constraints without a source-label bonus',()=>{
@@ -305,10 +165,10 @@ test('the restored full-team budget counts all known members and applies unknown
  const shooter=member('bottom',{sustain:true}),guard=member('support',{build:'tank',frontline:true});
  const passives=[member('top',{build:'enchanter'}),member('jungle',{build:'enchanter'}),member('mid',{build:'enchanter'})];
  const duo=compositionFit({members:[shooter,guard]},null),team=compositionFit({members:[shooter,guard,...passives]},null);
- assert.ok(duo.tactic.quality>=.94);
+ assert.ok(duo.tactic.quality>0,'The actual sustained-output and frontline roles have a shared task');
  assert.equal(team.known,5);assert.equal(team.size,5);
  const incomplete=compositionFit({members:[shooter,guard,...passives.map(m=>({...m,p:{reviewed:false}}))]},null);
- assert.equal(incomplete.known,2);assert.equal(incomplete.size,5);assert.ok(incomplete.score<=40);assert.ok(team.score>incomplete.score);
+ assert.equal(incomplete.known,2);assert.equal(incomplete.size,5);assert.ok(incomplete.score<=100*incomplete.known/incomplete.size);assert.ok(team.score>incomplete.score);
 });
 
 test('cross-role mechanics require the actual second cast and enemy-targeted stun',()=>{

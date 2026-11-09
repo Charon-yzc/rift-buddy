@@ -101,25 +101,29 @@ test('source and patch keyed snapshots keep other filters and older versions on 
 });
 
 test('partial, mismatched and failed requests preserve all previously valid filtered snapshots',async()=>{
- const root=await temp(),existing=makeRef(kr),fixture={...data,buildSource:kr,builds:{'Ashe:bottom':existing},buildSources:{[buildSourceKey('Ashe','bottom',DEFAULT_BUILD_SOURCE,base.patch)]:base}};
- const before=collectBuildSources(fixture);
- for(const fetchRift of [async()=>makeRef(kr,{core:[]}),async()=>makeRef(kr,{runePage:null}),async()=>makeRef(DEFAULT_BUILD_SOURCE),async()=>{throw Error('离线');}]){
-  const visible=fixture.builds,stored=fixture.buildSources,refresh=createBuildCache({root,getData:()=>fixture,interval:0,fetchRift});await assert.rejects(refresh('Ashe','bottom',kr));assert.equal(fixture.builds,visible);assert.equal(fixture.buildSources,stored);assert.deepEqual(collectBuildSources(fixture),before);
+ for(const source of [DEFAULT_BUILD_SOURCE,kr]){
+  const root=await temp(),other=source===kr?DEFAULT_BUILD_SOURCE:kr,existing=makeRef(source),fixture={...data,buildSource:source,builds:{'Ashe:bottom':existing},buildSources:{[buildSourceKey('Ashe','bottom',other,base.patch)]:makeRef(other)}};
+  const before=collectBuildSources(fixture),file=path.join(root,'builds.json');await fs.writeFile(file,JSON.stringify({schema:2,entries:before}));const bytes=await fs.readFile(file,'utf8');
+  for(const fetchRift of [async()=>makeRef(source,{start:[null]}),async()=>makeRef(source,{core:[]}),async()=>makeRef(source,{runePage:null}),async()=>makeRef(other),async()=>{throw Error('离线');}]){
+   const visible=fixture.builds,stored=fixture.buildSources,refresh=createBuildCache({root,getData:()=>fixture,interval:0,fetchRift});await assert.rejects(refresh('Ashe','bottom',source));assert.equal(fixture.builds,visible);assert.equal(fixture.buildSources,stored);assert.deepEqual(collectBuildSources(fixture),before);assert.equal(await fs.readFile(file,'utf8'),bytes);
+  }
  }
- assert.deepEqual(await fs.readdir(root),[]);
 });
 
 test('failed persistence and patch changes leave the visible and full caches intact',async()=>{
- const root=await temp();await fs.mkdir(path.join(root,'builds.json'));
- const fixture={...data,buildSource:kr,builds:{'Ashe:bottom':makeRef(kr)},buildSources:{}};
- const visible=fixture.builds,stored=fixture.buildSources,refresh=createBuildCache({root,getData:()=>fixture,interval:0,fetchRift:async()=>makeRef(kr,{fetchedAt:new Date().toISOString()})});await assert.rejects(refresh('Ashe','bottom',kr));assert.equal(fixture.builds,visible);assert.equal(fixture.buildSources,stored);
- const lateRoot=await temp(),late=createBuildCache({root:lateRoot,getData:()=>fixture,interval:0,fetchRift:async()=>{fixture.patch='99.1';return makeRef(kr);}});await assert.rejects(late('Ashe','bottom',kr),/版本已更新/);assert.equal(fixture.builds,visible);assert.deepEqual(await fs.readdir(lateRoot),[]);
+ for(const source of [DEFAULT_BUILD_SOURCE,kr]){
+  const root=await temp();await fs.mkdir(path.join(root,'builds.json'));
+  const fixture={...data,buildSource:source,builds:{'Ashe:bottom':makeRef(source)},buildSources:{}};
+  const visible=fixture.builds,stored=fixture.buildSources,refresh=createBuildCache({root,getData:()=>fixture,interval:0,fetchRift:async()=>makeRef(source,{fetchedAt:new Date().toISOString()})});await assert.rejects(refresh('Ashe','bottom',source));assert.equal(fixture.builds,visible);assert.equal(fixture.buildSources,stored);
+  const lateRoot=await temp(),late=createBuildCache({root:lateRoot,getData:()=>fixture,interval:0,fetchRift:async()=>{fixture.patch='99.1';return makeRef(source);}});await assert.rejects(late('Ashe','bottom',source),/版本已更新/);assert.equal(fixture.builds,visible);assert.equal(fixture.buildSources,stored);assert.deepEqual(await fs.readdir(lateRoot),[]);
+ }
 });
 
 test('legacy offline caches migrate without relabeling and settings preserve the last source across restart and backup merge',async()=>{
- const root=await temp(),ref=makeRef(kr,{patch:previousPatch(data.patch)});
- await fs.writeFile(path.join(root,'builds.json'),JSON.stringify({schema:1,entries:{'Ashe:bottom':base,[buildSourceKey('Ashe','bottom',kr,ref.patch)]:ref,'Ashe:top:kr:diamond_plus:16.1':ref}}));
+ const root=await temp(),ref=makeRef(kr,{patch:previousPatch(data.patch)}),historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries['Ashe:bottom'];
+ await fs.writeFile(path.join(root,'builds.json'),JSON.stringify({schema:1,entries:{'Ashe:bottom':historical,[buildSourceKey('Ashe','bottom',kr,ref.patch)]:ref,'Ashe:top:kr:diamond_plus:16.1':ref}}));
  const sources=await loadBuildSources([root],data);assert.equal(Object.keys(sources).length,2);
+ assert.deepEqual(sources[buildSourceKey('Ashe','bottom',DEFAULT_BUILD_SOURCE,historical.patch)],historical,'A real schema1 source keeps its original patch and bytes');
  const state=defaultState();state.preferences.buildSource=kr;await saveState(root,state);const loaded=await readState(root);assert.deepEqual(loaded.preferences.buildSource,kr);
  const fixture={...data,buildSources:sources};selectBuildSource(fixture,loaded.preferences.buildSource);assert.equal(fixture.builds['Ashe:bottom'].region,'kr');assert.equal(fixture.builds['Ashe:bottom'].patch,ref.patch);
  const backup=defaultState();delete backup.preferences.buildSource;assert.deepEqual(mergeState(loaded,backup,data.champions).preferences.buildSource,kr);

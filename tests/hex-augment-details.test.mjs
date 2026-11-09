@@ -1,4 +1,4 @@
-// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
+// Frozen raw parser/migration inputs; these do not grant current recommendation authority.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {buildAugmentDescriptions,AUGMENT_TOOLTIP_PARSER_REVISION} from '../services/augments.mjs';
 import {pureGameSnapshot,validateGenerationGame} from '../services/data-generation.mjs';
@@ -6,7 +6,7 @@ import {collectSnapshot} from '../services/data.mjs';
 import {hexAugmentDetail} from '../src/core/hex-augment-detail.mjs';
 const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-augment-details-16.21.json',import.meta.url))),render=()=>buildAugmentDescriptions(fixture.catalog,fixture.bin,fixture.entries);
 
-test('full current source tooltips expose static coefficients without changing the independent summaries',()=>{
+test('frozen raw source tooltips expose static coefficients without changing the independent summaries',()=>{
  const [bonk,basics,sheen]=render();assert.doesNotMatch(bonk.description,/30%/);assert.equal(bonk.descriptionStatus,'partial');assert.match(bonk.tooltip.description,/30%/);assert.match(bonk.tooltip.description,/适用技能/);assert.match(bonk.tooltip.description,/〔动态数值〕/);assert.deepEqual(bonk.tooltip.unresolved,['SpellName','f1']);assert.equal(bonk.tooltip.status,'partial');
  assert.doesNotMatch(basics.description,/35%|70/);assert.match(basics.tooltip.description,/35%.*70技能急速/);assert.equal(basics.tooltip.status,'complete');assert.equal(basics.descriptionStatus,'complete');assert.deepEqual(basics.unresolved,[]);
  assert.match(sheen.tooltip.description,/4%生命值/);assert.match(sheen.tooltip.description,/3\.5%生命值/);assert.equal(sheen.tooltip.status,'partial');assert.deepEqual(sheen.tooltip.unresolved,['f1','f2']);assert.equal(sheen.descriptionStatus,'complete','Runtime counters do not make the independent summary incomplete');
@@ -60,4 +60,19 @@ test('old parsed tooltips migrate atomically once, retry incomplete sources and 
  calls.length=0;const repaired=await collectSnapshot(()=>{},mixed,{clock:()=>now,readJSON});assert.equal(calls.length,4);assert.equal(repaired.contentRevision,20);assert.deepEqual(repaired.augments[0],mixed.augments[0]);assert.equal(repaired.augments[1].tooltipParserRevision,AUGMENT_TOOLTIP_PARSER_REVISION);assert.deepEqual(repaired.augments[2],mixed.augments[2]);assert.deepEqual(mixed,originalMixed);
  calls.length=0;const mixedWarm=await collectSnapshot(()=>{},repaired,{clock:()=>now,readJSON});assert.equal(calls.length,2);assert.deepEqual(mixedWarm.augments,repaired.augments);
  const missingHash=structuredClone(migrated);delete missingHash.augments[0].effectSourceHash;calls.length=0;const hashRepaired=await collectSnapshot(()=>{},missingHash,{clock:()=>now,readJSON});assert.equal(calls.length,4);assert.deepEqual(hashRepaired.augments,migrated.augments);calls.length=0;await collectSnapshot(()=>{},hashRepaired,{clock:()=>now,readJSON});assert.equal(calls.length,2);
+});
+
+
+// A frozen raw parser input is not permission to recommend its old mechanics.
+import conversionFixture from './fixtures/hex-item-conversions-16.21.json' with {type:'json'};
+test('raw effect hash withdraws on missing input and detects coefficients hidden by display rounding',()=>{
+ const before=structuredClone(conversionFixture),rows=buildAugmentDescriptions(conversionFixture.catalog,conversionFixture.bin,conversionFixture.entries),original=rows.find(a=>a.id===3058);
+ assert.match(original.effectSourceHash,/^[a-f0-9]{64}$/);
+ const bin=structuredClone(conversionFixture.bin),augment=Object.values(bin).find(a=>a?.AugmentNameId==='TickleMonster');
+ const coefficient=bin[augment.RootSpell].mSpell.DataValues.find(v=>v.name==='CalcASVal');coefficient.values=coefficient.values.map(()=>.0176);
+ const changed=buildAugmentDescriptions(conversionFixture.catalog,bin,conversionFixture.entries).find(a=>a.id===3058);
+ assert.equal(changed.tooltip.description,original.tooltip.description);assert.notEqual(changed.effectSourceHash,original.effectSourceHash);
+ delete bin[augment.RootSpell];
+ const missing=buildAugmentDescriptions(rows,bin,conversionFixture.entries).find(a=>a.id===3058);assert.equal(missing.effectSourceHash,undefined);
+ assert.deepEqual(conversionFixture,before);
 });

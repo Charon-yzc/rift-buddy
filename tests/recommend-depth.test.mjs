@@ -44,7 +44,7 @@ test('recommendations carry structured reason points and damage roles',()=>{
  assert.ok(done.reasonPoints[0].length>0);
 });
 
-test('bot scope emphasizes the lane while party scope rewards trio completeness',()=>{
+test('bot and party candidates change only their selected positions and retain complete reasons',()=>{
  const base=()=>locked(createSlots(),[['top','Garen'],['jungle','LeeSin'],['mid','Ahri']]);
  const botRows=recommend({slots:base(),champions:data.champions,scope:'bot',limit:3});
  assert.ok(botRows.length>0);
@@ -52,7 +52,7 @@ test('bot scope emphasizes the lane while party scope rewards trio completeness'
  const partySlots=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role)}));
  locked(partySlots,[['top','Malphite'],['jungle','JarvanIV']]);
  const partyRows=recommend({slots:partySlots,champions:data.champions,limit:10});
- assert.ok(partyRows.some(r=>r.slots.find(slot=>slot.role==='mid').champion==='Orianna'&&r.adaptive?.edges.some(edge=>edge.family==='ball')));
+ for(const row of partyRows){assert.deepEqual(row.targets,['mid']);for(const role of ['top','jungle'])assert.deepEqual(row.slots.find(slot=>slot.role===role),partySlots.find(slot=>slot.role===role));assert.ok(row.reasonPoints.length);}
  assert(!partyRows.some(r=>r.trio?.id==='ball-delivery'),'The older named catalog entry remains pending while its current mechanical interaction is available');
 });
 
@@ -67,7 +67,7 @@ test('successive results contain distinct actual lineups without reserved catalo
  assert.equal(new Set(ids).size,ids.length);
 });
 
-test('key curated outcomes survive the deeper scoring',()=>{
+test('a chosen lineup retains its strategy and candidates without named combos still have reasons',()=>{
  let slots=locked(createSlots(),[['top','Malphite'],['jungle','JarvanIV'],['mid','Orianna'],['bottom','Varus'],['support','Ashe']]);
  assert.equal(recommend({slots,champions:data.champions})[0].strategy.label,'团战连招');
  slots=locked(createSlots(),[['top','Garen'],['jungle','LeeSin']]);

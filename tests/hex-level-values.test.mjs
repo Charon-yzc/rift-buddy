@@ -1,4 +1,4 @@
-// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
+// Frozen raw parser/migration inputs; these do not grant current recommendation authority.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {buildAugmentDescriptions,AUGMENT_TOOLTIP_PARSER_REVISION} from '../services/augments.mjs';
 const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-level-values-16.21.json',import.meta.url))),game=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
@@ -7,7 +7,7 @@ function render(parts,{text='@Amount@',values=[],...calculation}={}){
 }
 const step={__type:'ByCharLevelBreakpointsCalculationPart',mLevel1Value:1,mBreakpoints:[{__type:'Breakpoint',mLevel:7,mAdditionalBonusAtThisLevel:1},{__type:'Breakpoint',mLevel:11,mAdditionalBonusAtThisLevel:1}]};
 
-test('exact current Hex sources expose step levels and magic resistance without replacing live counters or skill choices',()=>{
+test('frozen raw Hex sources expose step levels and magic resistance without replacing live counters or skill choices',()=>{
  const before=structuredClone(fixture),rows=buildAugmentDescriptions(fixture.catalog,fixture.bin,fixture.entries),by=id=>rows.find(a=>a.id===id);
  assert.equal(fixture.source.binSha256,'e1ed4bfa49ae574f9ea27e9261587e363f2ac3b0f2299a78b5ca42e518053351');assert.equal(fixture.source.stringsSha256,'5fca25e067fa2b83701bb407f9c68707fd50056785cbb22fee7790b697b985d7');
  assert.match(by(2076).description,/1\/2\/3（1\/7\/11级起）护甲和魔法抗性/);assert.deepEqual(by(2076).tooltip.unresolved,['SpellName','f1','f2']);assert.equal(by(2076).descriptionStatus,'partial');
@@ -32,7 +32,7 @@ test('bounded additive steps show precise thresholds, including levels above eig
  for(const part of invalid){const row=render([{__type:'NumberCalculationPart',mNumber:999},part]);assert.equal(row.description,'〔动态数值〕');assert.equal(row.descriptionStatus,'partial');}
 });
 
-test('current champion BIN anchors and official explanations distinguish total and bonus magic resistance',()=>{
+test('frozen champion BIN anchors and official explanations distinguish total and bonus magic resistance',()=>{
  for(const anchor of fixture.primaryAnchors){assert.match(anchor.url,/^https:\/\/raw\.communitydragon\.org\/16\.21\/game\/data\/characters\//);assert.match(anchor.sha256,/^[a-f0-9]{64}$/);assert.match(anchor.officialUrl,/^https:\/\/www\.leagueoflegends\.com\//);assert.deepEqual(anchor.calculation.mFormulaParts[1],anchor.part);assert.equal(render([anchor.part],{values:anchor.values}).description,anchor.expected);}
  for(const part of [{__type:'StatByCoefficientCalculationPart',mStat:6,mStatFormula:1,mCoefficient:.5},{__type:'StatByCoefficientCalculationPart',mStat:6,mCoefficient:.5,OutputType:0}])assert.equal(render([part]).descriptionStatus,'partial');
 });

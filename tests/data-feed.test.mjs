@@ -182,7 +182,7 @@ test('a restarted app restores verified local cache offline without downloading'
  await cache.check();const restored=data();
  const again=await createDataFeedCache({root,getData:()=>restored,restoreAtStartup:true,download:()=>{throw Error('offline');},keys,clock:()=>now+1});
  assert.equal(Object.keys(restored.rankings).length,6);assert.equal(again.summary().phase,'ready');
- assert.equal((await again.check()).phase,'offline');assert.equal(Object.keys(restored.hexBuilds).length,173);
+ assert.equal((await again.check()).phase,'offline');assert.deepEqual(Object.keys(restored.hexBuilds).sort(),Object.keys(seed['hex-builds'].entries).sort());
 });
 test('unchanged manifest reuses files; lower sequence and modified payload retain accepted data',async t=>{
  const root=await temporary(t),f=fixture(),game=data();let incoming=f;

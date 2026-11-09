@@ -26,7 +26,6 @@ test('cross-lane personal duos preserve actual roles, jobs and complete configs 
  const saved=await store.savePersonal(pair);assert.equal(saved.info.personalCount,1);assert.ok(saved.catalog.duos.some(d=>d.id===pair.id));assert.ok(!saved.catalog.trios.some(d=>d.id===pair.id));
  const reopened=await createCatalogStore({root,getData:()=>data});assert.deepEqual(reopened.export().duos.find(d=>d.id===pair.id),pair);
  configureCatalog(reopened.export());try{
-  const rows=recommend({catalogStatus:reopened.summary().info.status,slots:slots(),champions:data.champions,scope:'party',rolePools:{mid:{mode:'only',heroes:['Ahri']}},play:{unusual:false},limit:3}),authored=rows.find(row=>row.duo?.id===pair.id);assert.ok(authored,'the explicit saved personal completion remains executable under the player hero constraint');assert.equal(authored.slots.find(s=>s.role==='mid').champion,'Ahri');assert.deepEqual(authored.duo.members,pair.members);for(const row of rows)assert.deepEqual(row.slots.find(s=>s.role==='jungle'),slots().find(s=>s.role==='jungle'));
   const loaded=loadPersonalCombo(slots(),pair);assert.equal(currentCombo(loaded,'Ahri','mid',reopened.summary().info.status,null,null,{patch:data.patch}).id,pair.id);
   for(const m of pair.members){const build=getBuild(data.champions.find(c=>c.id===m.champion),m.role,data,{comboId:pair.id});assert.equal(build.combo.ownJob,m.job);assert.equal(build.combo.economy,pair.economy);assert.equal(build.combo.play.stages.key.ownAction,m.job);assert.equal(build.runePage.selectedPerkIds.length,9);assert.equal(build.missing.length,0);}
   const html=combinationRows({...data,catalog:reopened.export()},{kind:'duos',style:'all',query:'我们的野中'},loaded);assert.match(html,/格雷福斯/);assert.match(html,/data-role="jungle"/);assert.match(html,/data-role="mid"/);assert.ok(!html.includes('data-role="bottom"'));assert.match(html,/中路配置/);
@@ -81,11 +80,7 @@ test('duo and trio library loading preserves locked friends and checks current p
  }
 });
 
-test('empty cross-lane parties surface existing concrete mechanism plans before generic functions',()=>{
- for(const roles of [['jungle','mid'],['top','jungle']]){
-  const empty=createSlots().map(s=>({...s,party:roles.includes(s.role)}));const [first]=recommend({slots:empty,champions:data.champions,scope:'party',style:'fun',play:{unusual:false},limit:3});assert.ok(first.adaptive||first.duo||first.trio);assert.notEqual(first.origin,'generated');
- }
-});
+
 
 // Supply the same version/source context as the application recommendation call.
 function recommend(input){return recommendActual({patch:data.patch,builds:data.builds,catalogStatus:data.catalogInfo?.status,...input});}

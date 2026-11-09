@@ -25,7 +25,7 @@ test('retired augment records, the internal placeholder and old hero-pool eviden
  for(const id of retired){assert(!game.augments.some(a=>a.id===id));assert(!handbook.some(a=>a.id===id));}
  assert(!handbook.some(a=>a.id===3176));for(const id of [3170,3171,3172,3173])assert(!ordinary.some(a=>a.id===id));
  assert.equal(observations.patch,'16.21');assert.notEqual(observations.patch,game.patch);assert.deepEqual(observations.entries,{});
- for(const c of game.champions){const pool=hexHeroPool({data,hero:c.id});assert.equal(pool.complete,false);assert.equal(pool.roundsComplete,false);if(pool.rows.some(r=>r.status==='observed')){assert.match(pool.evidence.sourceUrl,/\?patch=16\.22$/);assert.ok(pool.rows.filter(r=>r.status==='observed').every(r=>r.games>0));}const old={...data,hexBuilds:{[c.id]:{...hex.entries[c.id],poolEvidence:{...hex.entries[c.id].poolEvidence,patch:'16.20'}}}};assert(!hexHeroPool({data:old,hero:c.id}).rows.some(r=>r.status==='observed'));}
+ for(const c of game.champions){const pool=hexHeroPool({data,hero:c.id});assert.equal(pool.complete,false);assert.equal(pool.roundsComplete,false);assert.equal(pool.evidence,null,'No qualified current hero selection evidence is bundled');assert.equal(pool.counts.observed,0);assert.equal(pool.counts.unobserved,0);const old={...data,hexBuilds:{[c.id]:{...hex.entries[c.id],poolEvidence:{...hex.entries[c.id].poolEvidence,patch:'16.20'}}}};assert(!hexHeroPool({data:old,hero:c.id}).rows.some(r=>r.status==='observed'));}
 });
 
 test('newer installer data wins over a valid old local cache without changing saved personal bytes',async t=>{

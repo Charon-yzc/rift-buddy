@@ -70,14 +70,16 @@ async function run(){
   const teamContext=(await state()).favorites[0].configurations.find(s=>s.id==='Aphelios');assert.ok(teamContext.comboId&&teamContext.creativePlan);assert.equal(teamContext.loadoutId,'default');
   await click('[data-action=favorite-result][data-index="0"]');assert.equal((await state()).favorites.length,0);
   await open('Aphelios','bottom',teamContext);await click('[data-action=build-core][data-index="1"]');await selectRune(await differentRune());
-  const teamChoice=await read();await click('[data-action=close]');await click('[data-action=favorite-result][data-index="0"]');
+  const teamChoice=await read();assert.equal(teamChoice.core,'1');assert.deepEqual(teamChoice.conditions,[]);assert.notDeepEqual(teamChoice,expected.aphelios);await click('[data-action=close]');await click('[data-action=favorite-result][data-index="0"]');
   await until(()=>js('document.querySelector("[data-action=favorite-result][data-index=\\"0\\"]").classList.contains("active")'),'Favorite star did not light');
   const favorite=(await state()).favorites[0];assert.equal(favorite.type,'team');assert.equal(favorite.configurations.length,2);
   const member=favorite.configurations.find(s=>s.id==='Aphelios');assert.equal(member.runeId,teamChoice.rune);assert.equal(member.coreIndex,Number(teamChoice.core));assert.ok(member.comboId);
   await open('Aphelios','bottom',member);await click('[data-action=build-core][data-index="0"]');await selectRune(await differentRune());await click('[data-action=close]');
   await click('[data-action=navigate][data-route=favorites]');await click('[data-action=open-favorite][data-index="0"]');
   await until(async()=>{const s=await state();return s.preparations.some(p=>p.id==='Aphelios'&&p.comboId===member.comboId&&p.runeId===member.runeId&&p.coreId===member.coreId);},'Team load did not restore saved member choices');
-  await open('Aphelios');assert.deepEqual(await read(),teamChoice);
+  // A generic reopen retains the independent personal page, not the loaded group's page.
+  await open('Aphelios');assert.deepEqual(await read(),expected.aphelios);await click('[data-action=close]');
+  await open('Aphelios','bottom',member);assert.deepEqual(await read(),teamChoice);
   await click('[data-action=build-core][data-index="0"]');await selectRune(await differentRune());const latestChoice=await read();assert.notEqual(latestChoice.rune,teamChoice.rune);
   await persisted('Aphelios',latestChoice.rune,member.comboId);
   const unchanged=(await state()).favorites[0];assert.deepEqual(unchanged.configurations,favorite.configurations);
@@ -85,8 +87,12 @@ async function run(){
  }else if(phase==='team-restore'){
   const expected=JSON.parse(await fs.readFile(expectedFile,'utf8')),before=await state();
   assert.deepEqual(before.favorites[0].configurations,expected.favorite.configurations);
-  await open('Aphelios');assert.deepEqual(await read(),expected.latestChoice);await click('[data-action=close]');
-  await click('[data-action=navigate][data-route=favorites]');await click('[data-action=open-favorite][data-index="0"]');await open('Aphelios');assert.deepEqual(await read(),expected.teamChoice);await click('[data-action=close]');
+  const savedAphelios=expected.favorite.configurations.find(p=>p.id==='Aphelios'&&p.role==='bottom'&&p.mode==='rift'),latestAphelios=before.preparations.find(p=>p.id==='Aphelios'&&p.role==='bottom'&&p.mode==='rift'&&p.comboId===savedAphelios.comboId);assert.ok(latestAphelios);assert.deepEqual(latestAphelios.creativePlan,savedAphelios.creativePlan);
+  await open('Aphelios');assert.deepEqual(await read(),expected.aphelios);await click('[data-action=close]');
+  await open('Aphelios','bottom',latestAphelios);assert.deepEqual(await read(),expected.latestChoice);await click('[data-action=close]');
+  await click('[data-action=navigate][data-route=favorites]');await click('[data-action=open-favorite][data-index="0"]');
+  await until(async()=>(await state()).preparations.some(p=>p.id==='Aphelios'&&p.role==='bottom'&&p.comboId===savedAphelios.comboId&&p.runeId===savedAphelios.runeId&&p.coreId===savedAphelios.coreId),'Restarted team load did not restore saved member choices');
+  await open('Aphelios','bottom',savedAphelios);assert.deepEqual(await read(),expected.teamChoice);await click('[data-action=close]');
   await click('[data-action=navigate][data-route=favorites]');
   await js('document.querySelector(".favorite-team-configurations").open=true');
   await click('[data-action=open-team-build][data-index="0"][data-member="0"]');

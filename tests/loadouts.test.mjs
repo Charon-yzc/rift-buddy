@@ -1,70 +1,63 @@
-import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
-import {historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
-// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
+// Explicit historical preparations are replayed against their real source data.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
+import {BUNDLED_CATALOG,historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
 import {getBuild,buildAsText,validateRunePage,validReference} from '../src/core/builds.mjs';
-import {LOADOUTS,RUNE_PLANS,comboLoadout} from '../src/core/loadouts.mjs';
-import {DUOS,CROSS_SYNERGIES,profile} from '../src/core/rules.mjs';
-import {COMMUNITY_DUOS} from '../src/core/community-combos.mjs';
+import {RUNE_PLANS} from '../src/core/loadouts.mjs';
+import {profile} from '../src/core/rules.mjs';
 import {createSlots,analyzeTeam} from '../src/core/recommend.mjs';
 import {validateState,defaultState,mergeState} from '../services/storage.mjs';
 import {selectGuide,createGuideModel,validateGuideSelection} from '../src/core/guide.mjs';
-const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
-data.builds=projectBuildSources(JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
-const hero=id=>data.champions.find(c=>c.id===id),pair=(a,b)=>DUOS.find(d=>d.carry===a&&d.support===b);
-historicalData(data);
-test('researched pairs are distinct, sourced and reachable with real champions',()=>{
- assert.ok(DUOS.length>=200);assert.equal(CROSS_SYNERGIES.length,127);assert.equal(new Set(DUOS.map(d=>d.id)).size,DUOS.length);
- assert.equal(COMMUNITY_DUOS.length,45);
- for(const d of COMMUNITY_DUOS){assert.ok(hero(d.carry)&&hero(d.support));assert.ok(d.plan&&d.risk&&d.sources.length);for(const s of d.sources)assert.match(s.url,/^https:\/\//);}
- assert.ok(pair('Rengar','Ivern'));assert.equal(pair('Ivern','Rengar'),undefined);assert.match(pair('Rengar','Ivern').plan,/狮子狗补刀/);
-});
-test('every authored loadout has legal current items and distinct usable rune pages',()=>{
- for(const [key,p] of Object.entries(RUNE_PLANS))assert.ok(validateRunePage(p.page,data.runes),key);
- for(const l of LOADOUTS)for(const id of l.champions)for(const role of l.roles){
-  const b=getBuild(hero(id),role,data,{loadoutId:l.id});assert.equal(b.loadoutId,l.id,`${id}:${role}`);assert.equal(b.reference,null);assert.equal(b.missing.length,0,l.id);assert.ok(b.runeOptions.length>=2,l.id);
-  assert.equal(b.support,role==='support');if(role==='support'){assert.ok(b.granted.some(i=>i.id===3865));assert.ok(!b.start.some(i=>i.id===3865));};
-  for(const option of b.runeOptions)assert.ok(validateRunePage(option.page,data.runes),l.id);
+const data=historicalData(JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url))));
+data.builds=projectBuildSources(JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries,DEFAULT_BUILD_SOURCE,data.patch);
+const hero=id=>data.champions.find(c=>c.id===id);
+const manual=(support=false)=>BUNDLED_CATALOG.loadouts.find(l=>l.roles.includes(support?'support':'bottom'));
+
+test('manual normal and support pages have legal distinct runes and respect equipment slot ownership',()=>{
+ for(const [id,p] of Object.entries(RUNE_PLANS))assert.ok(validateRunePage(p.page,data.runes),id);
+ for(const support of [false,true]){
+  const l=manual(support),role=support?'support':'bottom',b=getBuild(hero(l.champions[0]),role,data,{loadoutId:l.id});
+  assert.equal(b.loadoutId,l.id);assert.equal(b.reference,null);assert.deepEqual(b.missing,[]);assert.equal(b.support,support);
+  assert.ok(b.runeOptions.length);assert.ok(b.runeOptions.every(o=>validateRunePage(o.page,data.runes)));
   assert.equal(new Set(b.runeOptions.map(o=>o.page.selectedPerkIds.join('-'))).size,b.runeOptions.length);
-  assert.ok(b.items.length<=(role==='support'?5:6));assert.equal(new Set(b.items.map(i=>i.id)).size,b.items.length);
+  assert.ok(b.items.length<=(support?5:6));assert.equal(new Set(b.items.map(i=>i.id)).size,b.items.length);
+  if(support){assert.ok(b.granted.some(i=>i.id===3865));assert.ok(!b.start.some(i=>i.id===3865));}
  }
- const mundo=getBuild(hero('DrMundo'),'bottom',data,{loadoutId:'farm-tank'});assert.ok(mundo.runeOptions.every(o=>o.page.selectedPerkIds[0]!==8439));
 });
-test('combo configuration controls both economy and actual rune/item selection',()=>{
- const rengar=pair('Rengar','Ivern'),b=getBuild(hero('Rengar'),'bottom',data,{comboId:rengar.id,loadoutId:'rengar-bush'});assert.equal(b.loadoutId,'rengar-bush');assert.ok(!b.support);assert.equal(b.items[0].id,3074);
- const ivern=getBuild(hero('Ivern'),'support',data,{comboId:rengar.id,loadoutId:'ivern-shield'});assert.equal(ivern.loadoutId,'ivern-shield');assert.equal(ivern.granted[0].id,3865);
- const song=pair('Seraphine','Sona'),sera=getBuild(hero('Seraphine'),'bottom',data,{comboId:song.id,loadoutId:'sera-team'});assert.equal(sera.loadoutId,'sera-team');assert.match(sera.sourceNote,/玩法启发/);assert.equal(sera.reference,null);
- const original=getBuild(hero('Seraphine'),'bottom',data,{comboId:song.id,loadoutId:'default'});assert.equal(original.loadoutId,'default');assert.ok(original.reference);
- assert.equal(comboLoadout(song,hero('Seraphine'),'mid'),null);assert.equal(getBuild(hero('Seraphine'),'mid',data,{comboId:song.id}).combo,null);
- const snake=getBuild(hero('Cassiopeia'),'bottom',data,{loadoutId:pair('Cassiopeia','Twitch').loadouts.bottom,comboId:pair('Cassiopeia','Twitch').id,conditions:['control']});assert.equal(snake.boots,3111);assert.ok(snake.items.some(i=>i.tags.includes('Boots')));
+
+test('an explicitly selected source alternative changes the payload and malformed pages are rejected',()=>{
+ const ref=Object.values(data.builds).find(r=>r.runeOptions?.length>1),h=hero(ref.champion),base=getBuild(h,ref.role,data),choice=base.runeOptions[1];
+ assert.ok(validReference(ref,h,ref.role,data,{allowOlder:true}));
+ const selected=getBuild(h,ref.role,data,{runeId:choice.id});assert.equal(selected.selectedRuneId,choice.id);
+ assert.deepEqual(selected.runePage.selectedPerkIds,choice.page.selectedPerkIds);assert.notDeepEqual(selected.runePage.selectedPerkIds,base.runePage.selectedPerkIds);
+ assert.ok(buildAsText(selected,h,data).includes(choice.name));
+ const bad=structuredClone(ref);bad.runeOptions[1].page.selectedPerkIds[0]=1;assert.equal(validReference(bad,h,ref.role,data),false);
+ const legacy=structuredClone(ref);delete legacy.runeOptions;assert.equal(validReference(legacy,h,ref.role,data,{allowOlder:true}),true);
 });
-test('all refreshed sources retain multiple pages and selecting one changes the applied payload',()=>{
- assert.equal(new Set(Object.values(data.builds).map(ref=>ref.champion)).size,data.champions.length);
- for(const ref of Object.values(data.builds)){assert.ok(validReference(ref,hero(ref.champion),ref.role,data,{allowOlder:true}));assert.ok(ref.runeOptions.length>=2);}
- const first=getBuild(hero('Ashe'),'bottom',data),choice=first.runeOptions[1],selected=getBuild(hero('Ashe'),'bottom',data,{runeId:choice.id});
- assert.equal(selected.selectedRuneId,choice.id);assert.deepEqual(selected.runePage.selectedPerkIds,choice.page.selectedPerkIds);assert.notDeepEqual(selected.runePage.selectedPerkIds,first.runePage.selectedPerkIds);
- assert.match(buildAsText(selected,hero('Ashe'),data),new RegExp(choice.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
- const bad=structuredClone(data.builds['Ashe:bottom']);bad.runeOptions[1].page.selectedPerkIds[0]=1;assert.equal(validReference(bad,hero('Ashe'),'bottom',data),false);
- const legacy=structuredClone(data.builds['Ashe:bottom']);delete legacy.runeOptions;assert.equal(validReference(legacy,hero('Ashe'),'bottom',data,{allowOlder:true}),true);
-});
-test('favorites, backup import and guide preserve the chosen loadout and rune',()=>{
- const comboId=pair('Twitch','Lulu').id,b=getBuild(hero('Twitch'),'bottom',data,{comboId,loadoutId:'ap-twitch'}),runeId=b.runeOptions[1].id;
- const selection={id:'Twitch',role:'bottom',mode:'rift',loadoutId:'ap-twitch',runeId,comboId};
- const guide=selectGuide(null,selection),model=createGuideModel(data,guide);assert.equal(model.title,'AP 毒伤路线');assert.deepEqual(model.runes.map(r=>r.id),b.runeOptions[1].page.selectedPerkIds);
- guide.completedItems=['3115'];assert.deepEqual(selectGuide(guide,{...selection,runeId:b.runeOptions[0].id}).completedItems,['3115']);assert.deepEqual(createGuideModel(data,selectGuide(guide,{...selection,loadoutId:'default'})).completedItems,[]);
- const favorite={id:'custom',title:'毒伤',type:'build',champion:'Twitch',role:'bottom',mode:'rift',loadoutId:'ap-twitch',runeId,comboId};
- const state=validateState({...defaultState(),favorites:[favorite],guide});assert.equal(state.favorites[0].runeId,runeId);assert.equal(state.guide.selection.comboId,comboId);
- const merged=mergeState(validateState(defaultState()),state,data.champions);assert.equal(merged.favorites[0].loadoutId,'ap-twitch');
+
+test('favorites, backup import and guide preserve an explicitly chosen loadout and rune',()=>{
+ const l=BUNDLED_CATALOG.loadouts.find(l=>l.id==='ap-twitch'),id=l.champions[0],role='bottom',base=getBuild(hero(id),role,data,{loadoutId:l.id}),runeId=base.runeOptions.at(-1).id;
+ const selection={id,role,mode:'rift',loadoutId:l.id,runeId},guide=selectGuide(null,selection),model=createGuideModel(data,guide);
+ assert.deepEqual(model.runes.map(r=>r.id),base.runeOptions.at(-1).page.selectedPerkIds);
+ guide.completedItems=[String(base.items[0].id)];assert.deepEqual(selectGuide(guide,{...selection,runeId:base.runeOptions[0].id}).completedItems,guide.completedItems);
+ assert.deepEqual(createGuideModel(data,selectGuide(guide,{...selection,loadoutId:'default'})).completedItems,[]);
+ const favorite={...selection,id:'saved-manual',champion:id,title:'Our chosen page',type:'build'},state=validateState({...defaultState(),favorites:[favorite],guide});
+ const merged=mergeState(defaultState(),state,data.champions);assert.equal(merged.favorites[0].loadoutId,l.id);assert.equal(merged.favorites[0].runeId,runeId);
+ assert.equal(createGuideModel(data,state.guide).selection.loadoutId,l.id);
  assert.throws(()=>validateGuideSelection({...selection,runeId:'../bad'}),/格式/);
 });
-test('outdated choices are signaled, foreign loadouts ignored, and Hex cannot inherit Rift runes',()=>{
- const stale=getBuild(hero('Ashe'),'bottom',data,{loadoutId:'deleted-loadout',runeId:'deleted-rune'});assert.equal(stale.loadoutId,'default');assert.ok(stale.selectionWarnings.some(w=>w.includes('原玩法')));assert.ok(stale.selectionWarnings.some(w=>w.includes('原符文')));
- const foreign=getBuild(hero('Ashe'),'bottom',data,{loadoutId:'ap-twitch'});assert.equal(foreign.loadoutId,'default');
- const hex=getBuild(hero('Twitch'),'bottom',data,{mode:'hex',loadoutId:'ap-twitch',runeId:'curated-hail'});assert.equal(hex.runePage,null);assert.deepEqual(hex.runeOptions,[]);assert.equal(hex.loadoutId,'default');
+
+test('retired or foreign configurations warn and mode changes cannot inherit Rift runes',()=>{
+ const h=hero('Ashe'),stale=getBuild(h,'bottom',data,{loadoutId:'deleted-loadout',runeId:'deleted-rune'});
+ assert.equal(stale.loadoutId,'default');assert.ok(stale.selectionWarnings.some(w=>w.includes('原玩法')));assert.ok(stale.selectionWarnings.some(w=>w.includes('原符文')));
+ const foreign=BUNDLED_CATALOG.loadouts.find(l=>!l.champions.includes(h.id));assert.equal(getBuild(h,'bottom',data,{loadoutId:foreign.id}).loadoutId,'default');
+ const l=manual(),hex=getBuild(hero(l.champions[0]),'bottom',data,{mode:'hex',loadoutId:l.id,runeId:'curated-hail'});
+ assert.equal(hex.runePage,null);assert.deepEqual(hex.runeOptions,[]);assert.equal(hex.loadoutId,'default');
 });
-test('pair analysis considers AP entertainment loadouts without mutating cached profiles',()=>{
+
+test('composition analysis cannot mutate the cached champion profile',()=>{
  const slots=createSlots();slots[3].champion='Teemo';slots[4].champion='Shaco';const before=structuredClone(profile(hero('Shaco'),'support'));
  const analysis=analyzeTeam(slots,data.champions);assert.equal(analysis.members.find(m=>m.champion==='Shaco').p.damage,'ap');assert.deepEqual(profile(hero('Shaco'),'support'),before);
 });

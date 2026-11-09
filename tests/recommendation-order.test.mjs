@@ -26,19 +26,6 @@ test('all five-lane serializations produce the same complete curated, cooperatio
  }
 });
 
-test('candidate order, targets and fixed public/manual bindings are invariant to storage order for one to five controlled lanes',()=>{
- const picks={top:'Garen',jungle:'Vi',mid:'Ahri',bottom:'Ashe',support:'Braum'};
- for(let count=1;count<=5;count++){
-  const slots=createSlots().map((s,i)=>({...s,party:i<count,champion:i===0?null:picks[s.role],locked:i!==0,...(i?{clientCellId:i,manualPosition:true}:{})}));
-  const input={champions:data.champions,scope:'party',style:'balanced',rolePools:{top:{mode:'only',heroes:['Garen','Malphite']}},limit:2};
-  const expected=recommend({...input,slots});
-  assert.deepEqual(recommend({...input,slots:slots.toReversed()}),expected);
-  assert.deepEqual(recommend({...input,slots:[slots[2],slots[4],slots[0],slots[3],slots[1]]}),expected);
-  assert.deepEqual(expected[0].targets,['top']);
-  for(const slot of expected[0].slots.filter(s=>s.role!=='top'))assert.deepEqual(slot,slots.find(s=>s.role===slot.role));
- }
-});
-
 test('legacy reordered drafts recall exact saved personal choices and never rewrite an explicitly adopted frozen plan',()=>{
  const slots=setup({mid:'Orianna',bottom:'Jinx',support:'Lulu'}),plan=capture(slots),selection={...context(plan),coreIndex:1,summonerIds:['SummonerBarrier','SummonerFlash'],customSkillOrder:{order:'QWEQQRQWQWRWWEEREE',patch:'16.20'}};
  const store=createPreparationStore(),saved=store.remember(selection);

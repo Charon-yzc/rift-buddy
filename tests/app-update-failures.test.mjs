@@ -8,8 +8,9 @@ import crypto from 'node:crypto';
 import vm from 'node:vm';
 import {EventEmitter,once} from 'node:events';
 import {createAppUpdateService} from '../services/app-update.mjs';
-import {BUNDLED_CATALOG,validateCatalog,safeSourceURL} from '../src/core/catalog.mjs';
-import {isReleaseNotesUrl} from '../src/core/app-update.mjs';
+import {safeSourceURL} from '../src/core/catalog.mjs';
+import {isReleaseNotesUrl,deltaManifestName,deltaFileName} from '../src/core/app-update.mjs';
+import {payloadManifest,installManifestText,INSTALL_MANIFEST} from '../scripts/installer-payload.mjs';
 
 const bin=Buffer.alloc(32768,42),sha=crypto.createHash('sha256').update(bin).digest('hex');
 const release={version:'99.0.0',tag:'v99.0.0'};
@@ -24,6 +25,27 @@ async function fixture(t,respond){
  return {dir,hits,options,service:createAppUpdateService(options)};
 }
 const normalResponse=(req,res)=>res.end(req.url.endsWith('.txt')?checksum:bin);
+
+for(const stage of ['metadata','payload'])test(`failure of every incremental ${stage} channel never requests the full installer`,async t=>{
+ const digest=bytes=>crypto.createHash('sha256').update(bytes).digest('hex'),name=deltaManifestName(release.version),deltaName=deltaFileName('0.45.0',release.version),attempts=[];
+ let manifest;
+ const f=await fixture(t,(req,res)=>{
+  if(stage==='metadata'||req.url.endsWith(deltaName)){res.writeHead(503);res.end('isolated unavailable');}
+  else if(req.url.endsWith(name))res.end(manifest);
+  else if(req.url.endsWith('.txt'))res.end(`${digest(manifest)}  ${name}\n`);
+  else {res.writeHead(500);res.end('Unexpected full installer request');}
+ });
+ const installDir=path.join(f.dir,'installed');await fs.mkdir(installDir);await fs.writeFile(path.join(installDir,'app.bin'),'unchanged installed runtime');
+ const base=await payloadManifest(installDir,'0.45.0');await fs.writeFile(path.join(installDir,INSTALL_MANIFEST),installManifestText(base));
+ manifest=Buffer.from(JSON.stringify({schema:1,version:release.version,packages:[{from:'0.45.0',baseManifestSha256:digest(installManifestText(base)),file:deltaName,bytes:3,sha256:digest('new')}]}));
+ const request=(url,options,callback)=>{attempts.push([url.hostname,path.basename(url.pathname)]);return f.options.request(url,options,callback);};
+ const service=createAppUpdateService({...f.options,installDir,request,mirrorBase:'https://mirror.smoke',insecureHosts:['github.com','mirror.smoke','gitee.com']});
+ await assert.rejects(service.download({...release,giteeAvailable:true}),/503/);
+ const requested=attempts.filter(([,file])=>file===(stage==='metadata'?name:deltaName)).map(([host])=>host);
+ assert.deepEqual(requested,stage==='metadata'?['github.com','gitee.com']:['mirror.smoke','github.com','gitee.com']);
+ assert.ok(!attempts.some(([,file])=>file.endsWith('-Setup.exe')));assert.equal(await service.pending(),null);
+ assert.equal(await fs.readFile(path.join(installDir,'app.bin'),'utf8'),'unchanged installed runtime');
+});
 test('cancelling a stalled DNS lookup releases the main update lock and removes partial files',{timeout:3000},async t=>{
  const {options,dir}=await fixture(t,normalResponse),started=Promise.withResolvers(),late=Promise.withResolvers();
  let requests=0,lookups=0;
@@ -60,12 +82,11 @@ test('redirect responses are closed before following Location even when their bo
  assert.equal((await service.pending()).file,record.file);
 });
 test('release links preserve validated custom catalog sources without opening arbitrary GitHub pages',async()=>{
- const url='https://github.com/Legender134/rift-buddy/blob/main/README.md',catalog=structuredClone(BUNDLED_CATALOG);
- catalog.trios[0].sources=[{name:'自定义组合依据',url}];
- const game=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
- game.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
- const validated=validateCatalog(catalog,game),source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),opened=[];
- vm.runInNewContext(source.slice(source.indexOf(" guard('open-link'"),source.indexOf(" guard('export-preparation'")),{URL,Error,data:{catalog:validated},catalogCore:{safeSourceURL},isReleaseNotesUrl,guard:(name,handler)=>handlers.set(name,handler),shell:{openExternal:async value=>opened.push(value)}});
+ const url='https://github.com/Legender134/rift-buddy/blob/main/README.md',catalog={duos:[],trios:[{sources:[{name:'自定义组合依据',url}]}]};
+ // This handler consumes already accepted source URLs; catalog validation has
+ // its own tests and this permission boundary does not need game/build assets.
+ const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),opened=[];
+ vm.runInNewContext(source.slice(source.indexOf(" guard('open-link'"),source.indexOf(" guard('export-preparation'")),{URL,Error,data:{catalog},catalogCore:{safeSourceURL},isReleaseNotesUrl,guard:(name,handler)=>handlers.set(name,handler),shell:{openExternal:async value=>opened.push(value)}});
  await handlers.get('open-link')(url);
  await handlers.get('open-link')('https://github.com/Legender134/rift-buddy/releases/tag/v0.46.0');
  assert.equal(opened.length,2);assert.equal(opened[0],url);

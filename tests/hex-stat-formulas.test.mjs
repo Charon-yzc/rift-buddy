@@ -1,4 +1,4 @@
-// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
+// Frozen raw parser/migration inputs; these do not grant current recommendation authority.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,7 +11,7 @@ function render(parts,values=[]){
  return buildAugmentDescriptions([{key:'Example'}],{a:{__type:'AugmentData',AugmentNameId:'Example',RootSpell:'spell',DescriptionTra:'description'},spell:{mSpell:{DataValues:values,mSpellCalculations:{Amount:{__type:'GameCalculation',mFormulaParts:parts}}}}},{description:'@Amount@'})[0];
 }
 
-test('current primary BIN parts distinguish total and bonus attack damage and armor',()=>{
+test('primary BIN parser anchors distinguish total and bonus attack damage and armor',()=>{
  assert.equal(proof.scannedCurrentFiles,145);assert.equal(proof.unscannedHeroes,28);
  for(const anchor of proof.anchors){
   assert.match(anchor.url,/^https:\/\/raw\.communitydragon\.org\/16\.21\/game\/data\/characters\//);assert.match(anchor.officialUrl,/^https:\/\/www\.leagueoflegends\.com\//);assert.match(anchor.sha256,/^[a-f0-9]{64}$/);
@@ -23,7 +23,7 @@ test('current primary BIN parts distinguish total and bonus attack damage and ar
  assert.equal(render([{...coefficient,mStat:1}]).description,'100%总护甲');assert.equal(render([{...coefficient,mStat:1,mStatFormula:2}]).description,'100%额外护甲');
 });
 
-test('exact current augment source yields complete sums with original triggers, units and unknown counters',()=>{
+test('frozen raw augment source yields complete sums with original triggers, units and unknown counters',()=>{
  const before=structuredClone(fixture),rows=buildAugmentDescriptions(fixture.catalog,fixture.bin,fixture.entries),by=id=>rows.find(a=>a.id===id);
  assert.equal(fixture.source.binSha256,'e1ed4bfa49ae574f9ea27e9261587e363f2ac3b0f2299a78b5ca42e518053351');
  assert.equal(fixture.source.stringsSha256,'5fca25e067fa2b83701bb407f9c68707fd50056785cbb22fee7790b697b985d7');

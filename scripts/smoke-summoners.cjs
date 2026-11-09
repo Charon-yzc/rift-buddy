@@ -35,7 +35,12 @@ async function run(){
   await js('window.buddy.openGuide('+JSON.stringify({...favorite,id:target.champion,summonerIds:ids})+')');
   await until(async()=>JSON.stringify(await read(true))===JSON.stringify(ids),'Imported personal D/F did not reach whole configuration');
  };
- const open=async(id='Ashe',role='bottom',mode='rift')=>{main.webContents.send('open-build',{id,role,mode});await until(()=>js('!!document.querySelector("[data-build-summoner]")'),'Configuration missing');await delay(100);};
+ const open=async(id='Ashe',role='bottom',mode='rift',selection={})=>{main.webContents.send('open-build',{...selection,id,role,mode});await until(()=>js('!!document.querySelector("[data-build-summoner]")'),'Configuration missing');await delay(100);};
+ const openGroup=async favorite=>{
+  const member=favorite.configurations.find(value=>value.id==='Aphelios'&&value.role==='bottom');assert.ok(member?.comboId&&member.creativePlan,'The saved group member must retain its explicit identity');
+  const selected=(await state()).preparations.find(value=>value.id===member.id&&value.role===member.role&&value.mode===member.mode&&value.comboId===member.comboId);
+  assert.ok(selected&&selected.creativePlan?.id===member.creativePlan.id,'The exact saved group preparation is missing');await open(selected.id,selected.role,selected.mode,selected);
+ };
  const guidePair=async ids=>{await until(async()=>{const s=await state();return JSON.stringify(s.guide?.selection.summonerIds)===JSON.stringify(ids);},'Guide selection lost spells');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');const gjs=code=>guide.webContents.executeJavaScript(code,true);await until(()=>gjs('window.guide.bootstrap().then(b=>JSON.stringify(b.model?.summoners.map(s=>s.id))==='+JSON.stringify(JSON.stringify(ids))+')'),'Guide model lost D/F');assert.equal(await gjs('!!document.querySelector("[data-tab]")'),false);assert.deepEqual(await read(!!await js('document.querySelector(".configuration-current")')),ids);};
  const capture=async(name)=>{await js('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  await until(()=>js('!!document.querySelector("[data-action=navigate]")'),'UI missing');
@@ -63,13 +68,13 @@ async function run(){
   await click('[data-action=favorite-result][data-index="0"]');main.webContents.send('open-build',member);await until(()=>js('!!document.querySelector("[data-build-summoner]")'),'Explicit member configuration missing');await preparePair(pair);await click('[data-action=close]');
   await click('[data-action=favorite-result][data-index="0"]');const favorite=(await state()).favorites.find(f=>f.type==='team');assert.deepEqual(favorite.configurations.find(m=>m.id==='Aphelios').summonerIds,pair);
   await click('[data-action=result-detail][data-index="0"]');await click('[data-action=use-result][data-index="0"]');await until(()=>js('!!document.querySelector(".adopted-task")'),'Accepted plan missing');
-  await open('Aphelios');assert.deepEqual(await read(),pair);await click('[data-action=open-guide]');await guidePair(pair);await click('[data-action=close]');
+  await openGroup(favorite);assert.deepEqual(await read(),pair);await click('[data-action=open-guide]');await guidePair(pair);await click('[data-action=close]');
   await fs.writeFile(path.join(root,'expected.json'),JSON.stringify({favorite,defaults},null,2));
  }else{
   const expected=JSON.parse(await fs.readFile(path.join(root,'expected.json'))),saved=await state();
   assert.deepEqual(saved.favorites.find(f=>f.type==='team').configurations,expected.favorite.configurations);
-  await open('Aphelios');assert.deepEqual(await read(),pair);await click('[data-action=build-summoner][data-field=summoner-reset]');await click('[data-action=close]');
-  await click('[data-action=navigate][data-route=favorites]');const team=(await state()).favorites.findIndex(f=>f.type==='team');await click('[data-action=open-favorite][data-index="'+team+'"]');await open('Aphelios');assert.deepEqual(await read(),pair,'Team snapshot must restore manual spells');await click('[data-action=open-guide]');await guidePair(pair);await click('[data-action=close]');
+  await openGroup(expected.favorite);assert.deepEqual(await read(),pair);await click('[data-action=build-summoner][data-field=summoner-reset]');await click('[data-action=close]');
+  await click('[data-action=navigate][data-route=favorites]');const team=(await state()).favorites.findIndex(f=>f.type==='team');await click('[data-action=open-favorite][data-index="'+team+'"]');await openGroup(expected.favorite);assert.deepEqual(await read(),pair,'Team snapshot must restore manual spells');await click('[data-action=open-guide]');await guidePair(pair);await click('[data-action=close]');
   await click('[data-action=navigate][data-route=favorites]');let favorites=(await state()).favorites;const ashe=favorites.findIndex(f=>f.type==='build'&&f.champion==='Ashe'&&f.mode==='rift'&&f.summonerIds);await click('[data-action=open-favorite][data-index="'+ashe+'"]');assert.deepEqual(await read(),pair);await click('[data-action=close]');
   await click('[data-action=navigate][data-route=favorites]');favorites=(await state()).favorites;const sourceDefault=favorites.findIndex(f=>f.type==='build'&&f.champion==='Ashe'&&f.mode==='rift'&&!f.summonerIds);await click('[data-action=open-favorite][data-index="'+sourceDefault+'"]');assert.deepEqual(await read(),expected.defaults,'Source-following favorite must clear a later manual choice');assert.equal(await js('document.querySelector("[data-action=build-summoner][data-field=summoner-reset]").disabled'),true);await click('[data-action=close]');
   await capture('restored-rift-summoners.png');

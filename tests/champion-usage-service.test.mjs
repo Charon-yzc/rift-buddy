@@ -23,7 +23,7 @@ test('500 LCU counts require five list reads, zero per-game/detail reads, and no
 test('SGP publishes the first20 immediately, then reaches500 in six bounded concurrent batches',async()=>{
   const f=fixture({region:true}),first=await f.service.execute('own-summary-page');assert.equal(first.identified,20);assert.equal(first.complete,false);assert.equal(f.remoteCalls.length,1);
   let result=first,calls=1;while(!result.complete){result=await f.service.execute('own-summary-page',{cursor:result.cursor});assert.ok(++calls<=7);}
-  assert.equal(result.identified,500);assert.deepEqual(result.counts,{22:500});assert.equal(f.remoteCalls.length,25,'the same 25 backend pages, read in 7 concurrent batches');assert.ok(f.remoteCalls.every(c=>c.server==='TENCENT_HN10'&&c.token==='mock-entitlement'&&!c.common&&c.route.includes('/player/'+own.puuid+'/SUMMARY')));assert.equal(f.calls.some(c=>c.route.includes('/matches?')),false);
+  assert.equal(result.scanned,500);assert.equal(result.identified,500);assert.equal(result.complete,true);assert.deepEqual(result.counts,{22:500});assert.equal(f.remoteCalls.length,25,'the same 25 backend pages, read in 7 concurrent batches');assert.ok(f.remoteCalls.every(c=>c.server==='TENCENT_HN10'&&c.token==='mock-entitlement'&&!c.common&&c.route.includes('/player/'+own.puuid+'/SUMMARY')));assert.equal(f.calls.some(c=>c.route.includes('/matches?')),false);
 });
 test('short/no history terminates at the real source boundary without inventing500 games',async()=>{
  for(const games of [0,7,50]){const {result,pages}=await scan(fixture({games}).service);assert.equal(result.scanned,games);assert.equal(result.identified,games);assert.equal(pages,1);assert.equal(Object.values(result.counts).reduce((a,b)=>a+b,0),games);}

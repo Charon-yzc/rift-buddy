@@ -8,53 +8,48 @@ const member=(role,champion,p={},range=550)=>({role,champion,c:{id:champion,name
 const guard=()=>member('support','Guard',{build:'enchanter',peel:true});
 const damagePoints=fit=>fit.breakdown.find(row=>row.key==='damage').points;
 
-// v0.59.0 responsibilities: range or a protector alone does not manufacture sustain.
-test('a short-window mage keeps its original profile without a synthetic covered-window bonus',()=>{
+// Range or a protector alone does not manufacture sustained output.
+test('range and a protector cannot create sustained output that the member does not have',()=>{
  const output=member('mid','WindowMage'),protector=guard();
+ const before=structuredClone(output);
  const fit=compositionFit({members:[output,protector]});
- assert.equal(fit.tactic.id,'none');
- assert.equal(fit.rawScore,28.5);
- assert.deepEqual(fit.relationships,[]);
- assert.equal(output.p.sustain,undefined);
- assert.ok(fit.score<60);
+ assert.deepEqual(output,before);
+ assert.deepEqual(compositionFit({members:[{...output,c:{...output.c,stats:{attackrange:125}}},protector]}),fit);
  assert.ok(compositionFit({members:[{...output,p:{...output.p,sustain:true}},protector]}).score>fit.score);
 });
 
-test('the restored damage budget uses the original member damage mix without rewriting sustain',()=>{
+test('changing only a member damage mix changes the damage budget without rewriting sustained-output evidence',()=>{
  const protector=guard(),physical=member('mid','Physical',{sustain:true,damageWeights:{ad:1,ap:0}});
  const magical={...physical,p:{...physical.p,damageWeights:{ad:0,ap:1}}};
  const a=compositionFit({members:[physical,protector]}),b=compositionFit({members:[magical,protector]});
- assert.equal(damagePoints(a),10);
- assert.equal(damagePoints(b),0);
- assert.equal(a.rawScore-b.rawScore,10);
+ assert.ok(damagePoints(a)>damagePoints(b));
+ assert.equal(a.rawScore-b.rawScore,damagePoints(a)-damagePoints(b));
  assert.equal(a.tactic.id,b.tactic.id);
  const tank=member('top','Tank',{build:'tank',frontline:true},125);
  const noOutput=compositionFit({members:[tank,protector]});
  assert.equal(damagePoints(noOutput),0);
- assert.notEqual(noOutput.tactic.id,'covered-window');
  assert.ok(noOutput.gaps.some(gap=>gap.includes('缺少能接控制兑现伤害')));
 });
 
-test('real Viktor and Zilean profiles retain their original roles and unboosted window',()=>{
+test('real short-window profiles retain their reviewed roles and cannot acquire unproved mechanism evidence',()=>{
  const members=[['mid','Viktor'],['support','Zilean']].map(([role,id])=>{
   const c=game.champions.find(hero=>hero.id===id);return {role,champion:id,c,p:profile(c,role)};
  });
  const fit=compositionFit({members});
- assert.equal(fit.tactic.id,'none');
- assert.ok(fit.score<60);
  assert.ok(members.every(m=>!m.p.sustain));
  assert.ok(fit.relationships.every(link=>!link.sourceUrls),'generic jobs must not acquire authored-mechanism evidence');
+ assert.deepEqual(members.map(m=>m.p),members.map(m=>profile(m.c,m.role)),'Scoring cannot rewrite the underlying reviewed profiles');
 });
 
 test('an assassin is neither excluded by class nor granted entry by a protector',()=>{
  const melee=member('jungle','MeleeAssassin',{build:'apAssassin'},125);
- assert.notEqual(compositionFit({members:[melee,guard()]}).tactic.id,'covered-window');
+ const before=structuredClone(melee);
  for(const output of [{...melee,p:{...melee.p,engage:true}},{...melee,c:{...melee.c,stats:{attackrange:550}}}]){
   const fit=compositionFit({members:[output,guard()]});
-  assert.equal(fit.tactic.id,'none');
-  assert.ok(!fit.relationships.some(link=>link.kind==='短轮输出与接应'));
+  assert.ok(fit.relationships.every(link=>!link.sourceUrls),'A class or range change is not reviewed interaction evidence');
   assert.equal(output.p.sustain,undefined);
  }
+ assert.deepEqual(melee,before);
 });
 
 test('extra teammates contribute by their jobs and a single guard cannot cover a whole damage stack',()=>{
@@ -68,7 +63,7 @@ test('extra teammates contribute by their jobs and a single guard cannot cover a
  assert.ok(crowded.gaps.some(gap=>gap.includes('持续输出缺口')));
  const full=[output,support,extra,member('jungle','Fourth'),member('bottom','Fifth')];
  const fit=compositionFit({members:full});
- assert.ok(fit.tactic.quality<.6);
+ assert.equal(fit.tactic.quality,crowded.tactic.quality,'Adding more short-window members cannot manufacture the missing sustained-output task');
  assert.ok(fit.gaps.some(gap=>gap.includes('持续输出缺口')));
 });
 
@@ -77,8 +72,7 @@ test('unsupported graph annotations do not manufacture scoring evidence',()=>{
  const tacticEvidence={mechanicLabel:'控制接驻留力场',step:'实际禁锢后，目标仍须驻留足够时间。'};
  const graph={edge:()=>null,mechanics:{match:()=>({relation:{quality:.79,label:'控制接驻留力场',evidence:{}},tactic:{tactic:.49,evidence:tacticEvidence}})}};
  const fit=compositionFit({members},graph);
- assert.equal(fit.tactic.id,'none');
- assert.equal(fit.tactic.quality,0);
+ assert.deepEqual(fit,compositionFit({members},{edge:()=>null}),'Unsupported annotations cannot change the score or its explanation');
  assert.equal(fit.tacticEvidence,undefined);
  assert.ok(!fit.reason.includes(tacticEvidence.mechanicLabel));
  assert.equal(fit.rawScore,compositionFit({members},graph,{details:false}).rawScore);

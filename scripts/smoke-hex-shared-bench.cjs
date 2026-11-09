@@ -60,7 +60,9 @@ async function run(){
  assert.equal(await js('!!document.querySelector(".page #solo-role,.page .task-roster")'),false,'Mayhem main must not invent Rift lanes');
  await js('window.buddy.companionMode(true)');await until(()=>js('!!document.querySelector(".hex-companion .hex-shared-bench")'),'Shared bench missing');
  const ids=()=>js('[...document.querySelectorAll(".hex-shared-bench [data-action=hex-quick-pick]")].map(e=>e.dataset.id)');
- assert.deepEqual((await ids()).sort(),[...bench].sort());assert.equal(writes.length,0);
+ const heroStats=require(path.join(base,'src/core/hex-champion-statistics.mjs')).hexChampionStatistics(data),rates=new Map((heroStats?.rows||[]).map(row=>[row.hero,row.winRate]));
+ const expectedPool=()=>[...bench].sort((a,b)=>(rates.get(b)??-1)-(rates.get(a)??-1)||key(a)-key(b));
+ assert.deepEqual(await ids(),expectedPool(),'Bench must retain descending win-rate order, with hero key as a stable unknown-rate tie break');assert.equal(writes.length,0);
  const sourceURL='https://github.com/czgreat/aramhex-data',licenseURL=sourceURL+'/blob/f4d80d48110951b7319ab74ffaa2c351bc7c8652/LICENSE';
  for(const url of [sourceURL,licenseURL])await js(`window.buddy.openLink(${JSON.stringify(url)})`);
  assert.deepEqual(opened,[sourceURL,licenseURL]);
@@ -81,7 +83,7 @@ async function run(){
  main.webContents.setZoomFactor(1);main.setContentSize(440,820);
  bench.push('Hecarim');bench=bench.filter(id=>id!=='Xerath');
  await js('window.buddy.client(true)');await until(async()=>(await ids()).includes('Hecarim')&&!(await ids()).includes('Xerath'),'Teammate bench update missing');
- assert.deepEqual((await ids()).sort(),[...bench].sort());
+ assert.deepEqual(await ids(),expectedPool(),'A teammate update must preserve the actual visible ranking order');
  await click('.hex-shared-bench [data-id=Hecarim]');await until(()=>ownHero==='Hecarim','Shared hero click never reached bench swap');
  await until(async()=>{const pool=await ids();return pool.includes('Lux')&&!pool.includes('Hecarim');},'Swap did not refresh the shared pool');
  await until(()=>js('!document.body.textContent.includes("正在预选并配置")'),'Preparation did not settle');

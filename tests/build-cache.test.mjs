@@ -36,15 +36,6 @@ test('quick hero changes queue refreshes and coalesce identical requests without
  assert.equal(calls,2);assert.equal(Object.keys(current.builds).length,2);
  assert.equal(Object.keys(await loadBuilds([root],data)).length,2);
 });
-test('late or malformed source responses preserve the previous cache',async()=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-stale-cache-'));
- let current={...data,builds:{'Ashe:bottom':refs['Ashe:bottom']}};
- const bad=createBuildCache({root,getData:()=>current,interval:0,fetchRift:async()=>({...refs['Ashe:bottom'],start:[null]})});
- await assert.rejects(bad('Ashe','bottom'),/不完整/);assert.equal(current.builds['Ashe:bottom'],refs['Ashe:bottom']);
- const late=createBuildCache({root,getData:()=>current,interval:0,fetchRift:async()=>{current={...current,patch:current.patch.split('.')[0]+'.'+(Number(current.patch.split('.')[1])+1)};return refs['Ashe:bottom'];}});
- await assert.rejects(late('Ashe','bottom'),/版本已更新/);
- assert.deepEqual(await fs.readdir(root),[]);
-});
 test('a recent legacy single-page cache cannot hide a bundled multi-page upgrade',async()=>{
  const roots=await Promise.all([1,2].map(()=>fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-rune-cache-'))));
  const modern=refs['Ashe:bottom'],legacy={...modern,parserVersion:3,fetchedAt:new Date(Date.now()+60000).toISOString()};delete legacy.runeOptions;

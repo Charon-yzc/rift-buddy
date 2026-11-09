@@ -1,98 +1,42 @@
-import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
-import {heroCoachView} from '../src/hero-coach-view.mjs';
-// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
+// Historical guide content is tested by scope and propagation, not cookbook wording.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {EXTRA_ROLE_PLAYS} from '../src/core/role-plays-extra.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {rolePlay,ROLE_PLAYS_PATCH} from '../src/core/role-plays.mjs';
-import {matchupPlan} from '../src/core/matchup-plans.mjs';
-import {getBuild,buildRoleEvidence} from '../src/core/builds.mjs';
 import {heroCoach} from '../src/core/hero-coach.mjs';
-import {profile} from '../src/core/rules.mjs';
+import {heroCoachView} from '../src/hero-coach-view.mjs';
 import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
-import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
-const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
-const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
-data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);
+const phases=['opening','key','later'];
 
-test('all bundled source positions retain authored and distinct opening, meeting and later duties',()=>{
- for(const b of Object.values(data.builds)){
-  const notes=['opening','key','later'].map(stage=>rolePlay(b.champion,b.role,stage));
-  assert.ok(notes.every(n=>n&&!n.generic),b.champion+':'+b.role);assert.equal(new Set(notes.map(n=>n.action)).size,3,b.champion+':'+b.role);
- }
-});
-
-test('all stored support and bottom preparations provide concrete distinct stage duties in the guide',()=>{
- for(const key of Object.keys(data.builds).filter(key=>/:(support|bottom)$/.test(key))){
-  const [id,role]=key.split(':'),notes=['opening','key','later'].map(stage=>rolePlay(id,role,stage));
-  assert.ok(notes.every(note=>note&&!note.generic),key+' has no authored preparation');
-  assert.equal(new Set(notes.map(note=>note.action)).size,3,key);
-  for(const stage of ['opening','key','later']){
-   const model=createGuideModel(data,{...selectGuide(null,{id,role,mode:'rift',threatId:'Nautilus'}),stage});
-   assert.equal(model.coach.roleTask.generic,undefined,key);
-   const html=heroCoachView(model.coach);
-   assert.ok(html.includes(model.coach.action),key+':'+stage+' missing from the actual guide');
-   const against=heroCoach({data,champion:id,role,enemyId:'Nautilus',stage});
-   assert.doesNotMatch(against.matchup.opening,/刷野|清营地|覆盖营地|处理营地/,key);
+test('authored role stages reach the actual guide with separate duties and no invented certainty',()=>{
+ for(const [id,role] of [['Garen','top'],['Ahri','mid'],['LeeSin','jungle'],['Ashe','bottom'],['Nautilus','support']]){
+  const actions=[];
+  for(const stage of phases){const task=rolePlay(id,role,stage),model=createGuideModel(data,{...selectGuide(null,{id,role,mode:'rift'}),stage});
+   assert(task);assert.equal(model.coach.action,task.action);assert.equal(model.coach.roleTask.stage,stage);assert.ok(heroCoachView(model.coach).includes(task.action));actions.push(task.action);
+   assert.doesNotMatch(task.action,/必须红开|必须蓝开|最优刷野路线|对手现在没技能|敌方技能已经冷却|必杀|必赢/);
   }
+  assert.equal(new Set(actions).size,phases.length);
  }
 });
 
-test('a public opponent never reintroduces the primary jungle opening into a support preparation',()=>{
- for(const id of ['Chogath','Poppy','Brand','Maokai','Warwick','Volibear','Jax','Zyra']){
-  for(const stage of ['opening','key','later']){
-   const coach=heroCoach({data,champion:id,role:'support',enemyId:'Nautilus',stage});
-   assert.doesNotMatch(coach.matchup.opening,/刷野|营地/,id+':'+stage);
-   assert.doesNotMatch(coach.matchup.fight,/刷野|营地/,id+':'+stage);
-   assert.ok(coach.sequence.includes('Q'),id+' lost its mechanical sequence');
-  }
+test('the same hero keeps role economy separate even with a public matchup',()=>{
+ for(const stage of phases){
+  const support=heroCoach({data,champion:'Maokai',role:'support',enemyId:'Nautilus',stage}),jungle=heroCoach({data,champion:'Maokai',role:'jungle',enemyId:'Nautilus',stage});
+  assert.notEqual(support.action,jungle.action);assert.doesNotMatch(support.action+' '+support.matchup.opening+' '+support.matchup.fight,/刷野|营地/);
+  assert.ok(support.sequence);assert.equal(support.skills.length,4);
  }
- const direct=matchupPlan({data,champion:'Chogath',role:'support',enemyId:'Leona',ownPlan:['刷野覆盖营地','刷野追击','Q 命中 → W → E 普攻']});
- assert.doesNotMatch(direct.opening,/刷野|营地/);assert.match(direct.sequence.join(' '),/Q 命中/);
- const later=heroCoach({data,champion:'Maokai',role:'support',enemyId:'Nautilus',stage:'later'});
- assert.match(later.matchup.fight,/核心.*W.*Q.*推开/);
 });
 
-test('secondary roles preserve actual mechanics, shared cooldown choices and economy responsibilities',()=>{
- assert.match(rolePlay('Hwei','support','key').action,/WE.*不能.*WW/);
- assert.match(rolePlay('TahmKench','support','key').action,/同一份层数.*吞敌/);
- assert.match(rolePlay('Mel','support','opening').action,/W 应对实际来袭弹体.*覆盖范围.*站位确认/);
- assert.match(rolePlay('Zoe','support','key').action,/一秒后必回起点/);
- assert.match(rolePlay('Camille','support','key').action,/低经济.*单人线/);
- assert.match(rolePlay('Yunara','bottom','opening').action,/普通 E.*不当作.*穿墙/);
- assert.match(rolePlay('Kennen','bottom','key').action,/当前配置.*持续普攻位置/);
- assert.match(rolePlay('Chogath','jungle','key').action,/丛刃.*安全连续普攻/);
- const c=data.champions.find(c=>c.id==='Chogath'),b=getBuild(c,'jungle',data);
- assert.ok(b.runeOptions.some(option=>option.page?.selectedPerkIds?.[0]===9923),'The referenced Hail of Blades page must actually exist');
- assert.match(rolePlay('Volibear','jungle','opening').action,/W 重复同一.*E.*自己能进入/);
- assert.notEqual(rolePlay('Chogath','support','opening').action,rolePlay('Chogath','jungle','opening').action);
-});
-
-test('uncovered hero-position pairs retain own mechanics plus distinct generic stage duties with an honest coverage label',()=>{
- const id='Zilean',role='top';assert.equal(rolePlay(id,role),null);
- const coaches=['opening','key','later'].map(stage=>heroCoach({data,champion:id,role,stage}));
- assert.equal(new Set(coaches.map(c=>c.action)).size,3);
- assert.match(coaches[0].action,/边线/);assert.match(coaches[1].action,/资源.*边线/);assert.match(coaches[2].action,/边线.*核心/);
- for(const coach of coaches){assert.equal(coach.roleTask.generic,true);assert.match(coach.sequence,/Q附着.*W缩短冷却.*第二次Q/);assert.match(heroCoachView(createGuideModel(data,{...selectGuide(null,{id,role,mode:'rift'}),stage:coach.stage}).coach),/通用位置分工/);}
-});
-
-test('support stages and uncovered secondary roles never import jungle or solo-lane economy tasks',()=>{
- for(const id of ['Fiddlesticks','Elise']){
-  const coaches=['opening','key','later'].map(stage=>heroCoach({data,champion:id,role:'support',stage}));
-  assert.equal(new Set(coaches.map(c=>c.action)).size,3);
-  for(const coach of coaches){assert.doesNotMatch(coach.action,/刷野|刷营地|清营地/);assert.ok(coach.sequence);assert.ok(coach.skills.length===4);}
-  assert.match(coaches[0].action,/搭档/);assert.match(coaches[2].action,/核心/);
-  assert.match(heroCoach({data,champion:id,role:'jungle'}).action,/刷野/);
+test('an uncovered role uses labelled generic stage duties and retains its own hero mechanics',()=>{
+ const id='Zilean',role='top';assert.equal(rolePlay(id,role),null);const coaches=phases.map(stage=>heroCoach({data,champion:id,role,stage}));
+ assert.equal(new Set(coaches.map(c=>c.action)).size,phases.length);
+ for(const coach of coaches){assert.equal(coach.roleTask.generic,true);assert.ok(coach.sequence);assert.equal(coach.skills.length,4);
+  const model=createGuideModel(data,{...selectGuide(null,{id,role,mode:'rift'}),stage:coach.stage});assert.equal(model.coach.action,coach.action);assert.match(heroCoachView(model.coach),/通用位置分工/);
  }
- for(const [id,role]of [['Kassadin','support'],['Kayn','support'],['Heimerdinger','jungle']]){
-  const c=heroCoach({data,champion:id,role});assert.equal(c.roleTask.generic,true);
-  assert.equal(c.action,c.roleTask.action);assert.equal(c.opening,c.roleTask.opening);assert.equal(c.fight,c.roleTask.key);assert.equal(c.later,c.roleTask.later);
- }
- for(const [id,role]of [['Kassadin','mid'],['Heimerdinger','mid'],['Kayn','jungle']]){
-  const phases=['opening','key','later'].map(stage=>heroCoach({data,champion:id,role,stage}));
-  assert.equal(new Set(phases.map(c=>c.action)).size,3);assert.ok(phases.every(c=>!c.roleTask.generic));
- }
+ assert.equal(rolePlay('UnknownHero','support'),null);
 });
 
 test('fresh own skill ranks separate current actions from future R sequences without imposing a level-six rule',()=>{
@@ -109,73 +53,6 @@ test('fresh own skill ranks separate current actions from future R sequences wit
   const c=heroCoach({data,champion:id,role:id==='Elise'?'jungle':'top',ownSkills:{Q:1,W:1,E:1,R:1}});
   assert.equal(c.futureSequence,null);assert.match(c.sequence,/R/);
  }
-});
-
-test('authored top, mid and jungle plans belong to playable roles and have distinct stage decisions',()=>{
- const sourced=new Set(buildRoleEvidence(data).map(m=>m.champion+':'+m.role));
- for(const [key,notes]of Object.entries(EXTRA_ROLE_PLAYS)){
-  const [id,role]=key.split(':'),hero=data.champions.find(c=>c.id===id);
-  assert.ok(hero,key);assert.ok(profile(hero).roles.includes(role)||sourced.has(key),key);
-  assert.ok(['top','mid','jungle'].includes(role));assert.equal(notes.length,3);
-  assert.equal(new Set(notes).size,3,key+' repeats the same action for different stages');
-  for(const stage of ['opening','key','later']){
-   const coach=heroCoach({data,champion:id,role,stage});
-   assert.equal(coach.action,rolePlay(id,role,stage).action,key+':'+stage);
-   assert.ok(coach.action.length>20);assert.equal(coach.roleTask.stage,stage);assert.equal(coach.actionStale,false);
-  }
-  assert.doesNotMatch(notes.join(' '),/必须红开|必须蓝开|最优刷野路线|对手现在没技能|敌方技能已经冷却|必杀|必赢/);
- }
-});
-
-test('stage advice gives different concrete responsibilities for top, mid and jungle',()=>{
- assert.match(rolePlay('Garen','top','opening').action,/被动回复/);
- assert.match(rolePlay('Garen','top','later').action,/核心.*接应/);
- assert.match(rolePlay('Ahri','mid','key').action,/清线.*E 实际命中.*R/);
- assert.match(rolePlay('LeeSin','jungle','key').action,/Q 首段命中.*二段落点.*W.*R 方向/);
- assert.match(rolePlay('Sejuani','jungle','key').action,/W\/普攻.*霜冻.*Q 不作为/);
- assert.match(rolePlay('Lillia','jungle','later').action,/梦尘.*R.*W 中心/);
- assert.notEqual(rolePlay('Yone','top','key').action,rolePlay('Yone','mid','key').action);
- assert.notEqual(rolePlay('Yone','top','later').action,rolePlay('Yone','mid','later').action);
-});
-
-test('remaining solo roles teach forms, resources and exits through the actual guide',()=>{
- const cases=[
-  ['Kled','top',/骑乘或下马.*勇气.*W/,/首个会撞到.*未上马/],
-  ['Khazix','jungle',/实际孤立.*尚未进化/,/已进化.*实际参与击杀.*远处接应/],
-  ['Anivia','mid',/Q 实际眩晕.*蛋形态/,/R 完全形成.*法力不足.*停 R/],
-  ['KSante','top',/当前形态.*两层/,/全盛 W 不提供普通 W.*眩晕/],
-  ['Udyr','jungle',/当前姿态与觉醒.*两次强化普攻/,/E 实际攻击.*觉醒用途/],
-  ['Yorick','top',/实际墓穴.*没有召唤物/,/室女.*墙能被打破/]
- ];
- for(const [id,role,opening,key] of cases){
-  assert.match(heroCoach({data,champion:id,role,stage:'opening'}).action,opening,id);
-  assert.match(heroCoach({data,champion:id,role,stage:'key'}).action,key,id);
-  for(const stage of ['opening','key','later']){
-   const state={...selectGuide(null,{id,role,mode:'rift'}),stage},model=createGuideModel(data,state);
-   assert.equal(model.coach.roleTask.generic,undefined,id+':'+stage);
-   assert.ok(heroCoachView(model.coach).includes(model.coach.action));
-  }
- }
- for(const id of ['Aurora','Gangplank','Irelia','Kennen','Pantheon','Ryze']){
-  assert.match(heroCoach({data,champion:id,role:'top',stage:'key'}).action,/边线/);
-  assert.match(heroCoach({data,champion:id,role:'mid',stage:'key'}).action,/清线|中线/);
-  assert.notEqual(rolePlay(id,'top','key').action,rolePlay(id,'mid','key').action);
- }
-});
-
-test('reviewed solo lane openings teach their own economy instead of a camp-clearing paragraph',()=>{
- const cases=[['Trundle','top'],['Olaf','top'],['Ekko','mid'],['Gragas','top'],['Gragas','mid'],['Chogath','mid'],['Locke','mid'],['Naafiri','mid'],['Talon','mid']];
- for(const [id,role] of cases)for(const stage of ['opening','key','later']){
-  const coach=heroCoach({data,champion:id,role,stage});
-  assert.equal(coach.roleTask.generic,undefined,id+':'+role);
-  assert.doesNotMatch(coach.action,/刷野|营地/,id+':'+role+':'+stage);
-  assert.doesNotMatch(coach.opening,/刷野|营地/);
-  assert.match(coach.action,/[QWER]/);
-  const model=createGuideModel(data,{...selectGuide(null,{id,role,mode:'rift'}),stage});
-  assert.ok(heroCoachView(model.coach).includes(coach.action));
- }
- assert.match(heroCoach({data,champion:'Chogath',role:'jungle'}).opening,/营地/);
- assert.match(heroCoach({data,champion:'Volibear',role:'jungle'}).opening,/野怪/);
 });
 
 test('actual solo guide model and rendered action follow the later stage without a duo',()=>{

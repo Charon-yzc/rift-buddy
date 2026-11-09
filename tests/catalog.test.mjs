@@ -10,7 +10,7 @@ import {BUNDLED_CATALOG,validateCatalog,CATALOG_LIMIT,configureCatalog,catalogIs
 import {createCatalogStore,downloadCatalog,publicAddress} from '../services/catalog-store.mjs';
 import {createSlots,recommend as recommendActual,replaceMember} from '../src/core/recommend.mjs';
 import {getBuild,validateRunePage} from '../src/core/builds.mjs';
-import {DUOS,TRIOS} from '../src/core/rules.mjs';
+import {TRIOS} from '../src/core/rules.mjs';
 import {validateState,defaultState,mergeState} from '../services/storage.mjs';
 import {comboSourceLinks} from '../src/build-options-view.mjs';
 import {combinationDialog} from '../src/draft-library-view.mjs';
@@ -18,17 +18,28 @@ const data=JSON.parse(await fs.readFile('data/game.json','utf8')),clone=()=>stru
 data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 data.catalog=BUNDLED_CATALOG;data.catalogInfo=catalogIssues(BUNDLED_CATALOG,data);
 const store=async options=>createCatalogStore({root:await fs.mkdtemp(path.join(os.tmpdir(),'buddy-catalog-')),getData:()=>data,...options});
-test('bundled pack has validated independent content and complete playable trio configs',()=>{
- const c=validateCatalog(clone(),data);assert.ok(c.duos.length>=200);assert.ok(c.trios.length>=68);
- for(const t of c.trios)for(const m of t.members){const b=getBuild(hero(m.champion),m.role,data,{comboId:t.id,loadoutId:m.loadoutId});assert.equal(b.combo.id,t.id);assert.equal(b.loadoutId,m.loadoutId);assert.equal(b.missing.length,0);assert.ok(b.runeOptions.every(o=>validateRunePage(o.page,data.runes)));assert.ok(b.runeOptions.length>=(c.loadouts.find(l=>l.id===m.loadoutId)?.runes.length||1),`${t.id}:${m.champion}`);}
+test('the bundled pack validates without prescribing collection sizes or automatic authored configurations',()=>{
+ const c=validateCatalog(clone(),data);assert.deepEqual(catalogIssues(c,data).errors,[]);
+ for(const trio of c.trios)for(const member of trio.members){
+  const b=getBuild(hero(member.champion),member.role,data,{comboId:trio.id,loadoutId:member.loadoutId});
+  assert.equal(b.combo.id,trio.id);assert.equal(b.loadoutId,member.loadoutId);assert.deepEqual(b.missing,[],trio.id+':'+member.champion);
+  assert.ok(b.runeOptions.length>0);assert.ok(b.runeOptions.every(o=>validateRunePage(o.page,data.runes)));
+ }
 });
+
 test('pack rejects duplicate heroes, incompatible configs, bad items, rune pages and unsafe sources',()=>{
  for(const edit of [c=>c.duos.push(c.duos[0]),c=>c.trios[0].members[1].role=c.trios[0].members[0].role,c=>c.trios[0].members[0].loadoutId='trio-ball',c=>c.loadouts[0].items[0]=123456789,c=>c.runes.lethal.page.selectedPerkIds[0]=999,c=>c.duos[0].sources=[{name:'x',url:'javascript:alert(1)'}],c=>c.links.push(c.links[0])]){const c=clone();edit(c);assert.throws(()=>validateCatalog(c,data),/组合库/);}
  assert.equal(safeSourceURL('https://user:secret@site.example/file.json'),false);
 });
 test('patch review is per combo and invalid equipment marks only affected configs',async()=>{
- const old=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),next={...old,items:{...old.items}};delete next.items[3142];const historical=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/catalog.json'));const combo=historical.duos.find(d=>comboMembers(d).some(m=>m.champion==='Varus'&&m.role==='bottom')&&comboMembers(d).some(m=>m.champion==='Ashe'&&m.role==='support'));const issues=catalogIssues(historical,next);assert.equal(issues.status[combo.id].stale,true);assert.equal(issues.status['galio-nilah-rakan'].stale,false);assert.equal(issues.status['camille-galio-vi'].stale,false);assert.ok(issues.status[combo.id].invalid);assert.equal(issues.status['jarvan-galio-mf'].invalid,false);assert.ok(issues.errors.length);
- configureCatalog(historical);try{const b=getBuild(hero('Varus'),'bottom',next,{comboId:combo.id,loadoutId:comboMembers(combo).find(m=>m.champion==='Varus').loadoutId});assert.equal(b.loadoutId,'default');assert.ok(b.selectionWarnings.length);}finally{configureCatalog(BUNDLED_CATALOG);}
+ const old=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),historical=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/catalog.json')),before=catalogIssues(historical,old),combos=[...historical.duos,...historical.trios];
+ const combo=combos.find(c=>!before.status[c.id].stale&&comboMembers(c).some(m=>m.loadoutId!=='default'));
+ const member=comboMembers(combo).find(m=>m.loadoutId!=='default'),loadout=historical.loadouts.find(l=>l.id===member.loadoutId),item=loadout.items[0];
+ const usesItem=c=>Object.hasOwn(c.reviewBaseline||{},'item:'+item)||comboMembers(c).some(m=>{const l=historical.loadouts.find(l=>l.id===m.loadoutId);return [...(l?.items||[]),...(l?.late||[])].includes(item);});
+ const unaffected=combos.find(c=>!before.status[c.id].stale&&!usesItem(c));assert(unaffected);
+ const next=structuredClone(old);delete next.items[item];const issues=catalogIssues(historical,next);
+ assert.equal(issues.status[combo.id].stale,true);assert.equal(issues.status[combo.id].invalid,true);assert.deepEqual(issues.status[unaffected.id],before.status[unaffected.id]);assert.ok(issues.errors.length);
+ configureCatalog(historical);try{const b=getBuild(old.champions.find(h=>h.id===member.champion),member.role,next,{comboId:combo.id,loadoutId:member.loadoutId});assert.equal(b.loadoutId,'default');assert.ok(b.selectionWarnings.length);}finally{configureCatalog(BUNDLED_CATALOG);}
 });
 test('preview is inert, apply/rollback survive restart and retain custom combos',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-pack-')),s=await store({root});const local={...clone().trios[0],id:'local-mine',name:'自己练的接力'};await s.savePersonal(local);
@@ -52,12 +63,16 @@ test('downloads reject loopback, private/reserved DNS, credentials, redirects an
  const request=(status,body)=>(url,options,callback)=>{const req=new EventEmitter();req.end=()=>queueMicrotask(()=>{const res=new EventEmitter();res.statusCode=status;res.resume=()=>{};callback(res);res.emit('data',Buffer.from(body));res.emit('end');req.emit('close');});req.destroy=e=>{req.emit('error',e);req.emit('close');};return req;};
  const lookup=async()=>[{address:'8.8.8.8',family:4}];await assert.rejects(downloadCatalog('https://a.example/x',{lookup,request:request(302,'{}')}),/跳转/);await assert.rejects(downloadCatalog('https://a.example/x',{lookup,request:request(200,'x'.repeat(CATALOG_LIMIT+1))}),/8 MB/);assert.deepEqual(await downloadCatalog('https://a.example/x',{lookup,request:request(200,'{"schema":1}')}),{schema:1});
 });
-test('a newly applied pack changes recommendation and member builds in the same process',()=>{
- const c=clone();c.trios[0].name='新名称';c.trios[0].patch=data.patch;configureCatalog(c);try{assert.equal(TRIOS[0].name,'新名称');const slots=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role)}));for(const m of TRIOS[0].members)Object.assign(slots.find(s=>s.role===m.role),{champion:m.champion,locked:true});const r=recommend({slots,champions:data.champions});assert.equal(r[0].title,'新名称');assert.equal(getBuild(hero('Orianna'),'mid',data,{comboId:TRIOS[0].id}).combo.title,'新名称');}finally{configureCatalog(BUNDLED_CATALOG);}
+test('an applied catalog edit is immediately visible to explicit plan lookup without a ranking privilege',()=>{
+ const c=clone(),trio=c.trios.find(t=>t.members.some(m=>m.role==='mid')),member=trio.members.find(m=>m.role==='mid');
+ const originalPatch=trio.patch;trio.name='Explicitly edited plan';configureCatalog(c);
+ try{const live=TRIOS.find(t=>t.id===trio.id);assert.equal(live.name,trio.name);assert.equal(live.patch,originalPatch);
+  const b=getBuild(hero(member.champion),member.role,data,{comboId:trio.id,loadoutId:member.loadoutId});assert.equal(b.combo.title,trio.name);
+ }finally{configureCatalog(BUNDLED_CATALOG);}
 });
-test('two fixed friends anchor a curated trio while the other two teammates stay fixed',()=>{
- const c=clone();c.trios.find(row=>row.id==='ball-delivery').patch=data.patch;configureCatalog(c);try{const slots=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role)}));for(const [role,id] of [['top','Malphite'],['jungle','JarvanIV'],['bottom','Ashe'],['support','Nami']])Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});const list=recommend({slots,champions:data.champions,limit:30});const match=list.find(r=>r.trio?.id==='ball-delivery');assert.ok(match);assert.equal(match.targets.join(','),'mid');assert.equal(match.slots.find(s=>s.role==='bottom').champion,'Ashe');assert.equal(match.slots.find(s=>s.role==='support').champion,'Nami');}finally{configureCatalog(BUNDLED_CATALOG);}
-});
+
+
+
 test('role pools and unconventional-role preference constrain seeds as well as generated candidates',()=>{
  const slots=createSlots().map(s=>({...s,party:['mid','bottom','support'].includes(s.role)}));for(const [role,id] of [['top','Garen'],['jungle','LeeSin'],['mid','Ahri']])Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});const results=recommend({slots,champions:data.champions,scope:'bot',rolePools:{bottom:{mode:'only',heroes:['Jhin']},support:{mode:'only',heroes:['Nami','Lux']}}});assert.ok(results.length);for(const r of results){assert.equal(r.slots.find(s=>s.role==='bottom').champion,'Jhin');assert.ok(['Nami','Lux'].includes(r.slots.find(s=>s.role==='support').champion));}
  const conventional=recommend({slots,champions:data.champions,scope:'bot',play:{unusual:false},limit:40});assert.ok(conventional.every(r=>!['Rengar','Teemo','Katarina'].includes(r.slots.find(s=>s.role==='bottom').champion)));

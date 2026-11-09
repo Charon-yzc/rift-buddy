@@ -13,14 +13,14 @@ async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(c=>c.id===id);
- let observer,picked='',assigned='',phase='ChampSelect',requests=0,writes=0,sourceFetches=0,holdRune=false,resumeRune=null,page={id:44,name:'Mock page',isEditable:true,isActive:true,current:true};
+ let observer,picked='',assigned='',teammate=false,phase='ChampSelect',requests=0,writes=0,sourceFetches=0,holdRune=false,resumeRune=null,page={id:44,name:'Mock page',isEditable:true,isActive:true,current:true};
  global.fetch=async()=>{sourceFetches++;throw Error('External source requests disabled in dual-window fixture');};
  const output=options=>{
   requests++;assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId:'4701',mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离同步玩家',tagLine:'TEST'};
-  if(options.path==='/lol-champ-select/v1/session')return {gameId:4701,localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:0,assignedPosition:assigned}],theirTeam:[{cellId:6,championId:hero('Malphite').key}],actions:[],bans:{myTeamBans:[],theirTeamBans:[]}};
+  if(options.path==='/lol-champ-select/v1/session')return {gameId:4701,localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:0,assignedPosition:assigned},...(teammate?[{cellId:2,championId:hero('Garen').key,assignedPosition:'TOP'}]:[])],theirTeam:[{cellId:6,championId:hero('Malphite').key}],actions:[],bans:{myTeamBans:[],theirTeamBans:[]}};
   if(options.path.endsWith('/pickable-champion-ids'))return data.champions.map(c=>c.key);if(options.path.endsWith('/disabled-champion-ids'))return [];
   if(options.path==='/lol-perks/v1/pages')return [page];
   assert.equal(options.path,'/lol-perks/v1/pages/44');assert.equal(options.method,'PUT');writes++;page={...JSON.parse(options.body),id:44,isEditable:true};return page;
@@ -134,6 +134,21 @@ async function run(){
  const conflict=handlers.get('save-state'),event=window=>({sender:window.webContents,senderFrame:window.webContents.mainFrame}),a=structuredClone(accepted),b=structuredClone(accepted);a.draft.soloRole='top';b.draft.soloRole='support';await conflict(event(main),a,accepted,undefined,undefined);await assert.rejects(conflict(event(side),b,accepted,undefined,undefined),/同时发生变化/);
  await js(main,'window.buddy.bootstrap().then(b=>{const next=structuredClone(b.state);next.draft.soloRole="mid";return window.buddy.saveState(next,b.state);})');await until(()=>js(side,'document.querySelector("#solo-role")?.value==="mid"'),'Conflict recovery did not sync');
  await assert.rejects(handlers.get('bootstrap')({sender:main.webContents,senderFrame:{}}),/不允许/);await assert.rejects(handlers.get('bootstrap')({sender:{},senderFrame:{}}),/不允许/);
+ // Drive actual renderer drag handlers, then re-read the unchanged public
+ // client position repeatedly. Membership belongs to the player, not a lane.
+ teammate=true;await js(main,'window.buddy.client(true)');await click(side,'[data-action=sync]');
+ await until(()=>js(side,'!!document.querySelector("[data-drag-role=top][data-id=Garen]")'),'Public teammate missing from current roster');
+ await click(side,'[data-action=task-members]');
+ const partyButton='[data-action=toggle-party][data-role=top]';
+ const topWasParty=await js(side,'window.buddy.bootstrap().then(b=>b.state.draft.slots.find(s=>s.role==="top").party)');
+ if(topWasParty)await click(side,partyButton);await click(side,partyButton);await click(side,'[data-action=close]');
+ await until(()=>js(main,'window.buddy.bootstrap().then(b=>b.state.draft.slots.some(s=>s.clientCellId===2&&s.party&&s.partyManual))'),'Explicit us mark did not persist');
+ await js(side,'(()=>{const source=document.querySelector("[data-drag-role=top][data-id=Garen]"),target=document.querySelector("[data-drop-role=bottom]"),transfer=new DataTransfer();if(!source||!target)throw Error("Missing drag endpoints");source.dispatchEvent(new DragEvent("dragstart",{bubbles:true,dataTransfer:transfer}));if(!transfer.getData("application/x-rift-buddy-champion"))throw Error("Drag did not capture the actual public player");target.dispatchEvent(new DragEvent("dragover",{bubbles:true,cancelable:true,dataTransfer:transfer}));target.dispatchEvent(new DragEvent("drop",{bubbles:true,cancelable:true,dataTransfer:transfer}));source.dispatchEvent(new DragEvent("dragend",{bubbles:true,dataTransfer:transfer}));})()');
+ const movedPlayer='window.buddy.bootstrap().then(b=>{const s=b.state.draft.slots.find(s=>s.clientCellId===2);return s?.role==="bottom"&&s.champion==="Garen"&&s.party&&s.partyManual&&s.manualPosition;})';
+ await until(()=>js(main,movedPlayer),'Dragged teammate and us mark did not reach main');
+ for(const win of [main,side,main]){await js(win,'window.buddy.client(true)');await click(win,'[data-action=sync]');await until(()=>js(win,movedPlayer),'Fresh client synchronization overwrote manual position or membership');}
+ assert.equal(await js(side,'!!document.querySelector("[data-drag-role=bottom][data-id=Garen]")'),true,'Sidebar rendered the old teammate lane');
+ assert.equal(await js(main,movedPlayer),true);assert.equal(writes,0,'Drag and party marks must never write client selection or runes');
  // One explicit simulated UI click reaches only the mock LCU. The shared guard
  // also rejects the other window while that same rune operation is in flight.
  // Windows keep independent navigation. Explicitly show the main preparation
@@ -158,6 +173,7 @@ async function run(){
  const report={passed:true,source,archiveSha256:release?.archiveSha256||null,autoSync:savedBeforeGame.preferences.autoSync,dualSurfacesLoaded:true,fixedWidth:440,heightMatchesClient:true,stableRounding:true,mainBoundsPreserved:true,mutualLaneSync:true,concurrentUnrelatedSaveMerged:true,conflictingDraftRejected:true,topFrameGuard:true,explicitRuneClickOnly:true,crossWindowRuneConfirmation:true,sidebarRendererReleasedInGame:true,mainRendererReleasedInGame:true,inFlightOperationPreventsRelease:true,trayAndHotkeyRecreateMain:true,explicitReopenNotAutoHidden:true,savedStateRetainedAfterRecreate:true,lobbyRecreatesMain:true,noTickBootstrap:true,noTickRequests:true,actualRuneWrites:false,loopbackSocketsMocked:true,windowGeometryMocked:true,testWindowsHidden:true,memory:{mainOnly,both,afterGC,heaps,gameBeforeMainRelease,game}};
  report.startupBufferedCatalogRevision=startupCatalogRevision;report.startupRuleIndexCurrent=true;report.initialCandidatesWithoutExtraRead=true;report.sidebarNavigationToMain=true;report.backgroundInferencePreservesExplicitLane=true;report.independentFoldAndRestore=true;report.restoredPeekRenderersReleased=true;report.restoreTabRecreatedOnNextFold=true;
  report.footerConnectionAction=true;report.footerReconnectEnablesSync=true;report.footerHeight=footerHeight;report.connectionClickRuneWrites=0;
+ report.actualDragKeepsPlayerAndUsMarkAcrossRepeatedSync=true;
  await fs.writeFile(path.join(root,'dual-windows.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'dual-windows-error.txt'),error.stack).catch(()=>{});for(const window of windows.filter(w=>!w.isDestroyed()))await fs.writeFile(path.join(root,'failure-'+window.webContents.id+'.html'),await window.webContents.executeJavaScript('document.documentElement.outerHTML').catch(()=>''));app.exit(1);});

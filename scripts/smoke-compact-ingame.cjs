@@ -59,7 +59,12 @@ async function run(){
 
  for(const kind of ['augment','item']){
   const rect=await j(routes,`(()=>{const r=document.querySelector('[data-micro-kind="${kind}"]').getBoundingClientRect();return {x:r.x,y:r.y};})()`),b=routes.getBounds();cursor={x:Math.ceil(b.x+rect.x+4),y:Math.ceil(b.y+rect.y+4)};
-  const tip=await until(()=>windows.find(w=>!w.isDestroyed()&&w.isVisible()&&w.webContents.getURL().startsWith('data:text/html;charset=utf-8,')),'Native hover absent');assert(tip.getBounds().width<=192,'190 DIP tooltip plus native fractional-scale rounding');assert.equal(tip.__createdFocusable,false);await capture('hover-'+kind+'.png',tip);cursor={x:-1000,y:-1000};await until(()=>!tip.isVisible(),'Hover did not hide');
+  const tip=await until(()=>windows.find(w=>!w.isDestroyed()&&w.isVisible()&&w.webContents.getURL().startsWith('data:text/html;charset=utf-8,')),'Native hover absent');
+  const tipBounds=tip.getBounds(),tipArea=screen.getDisplayMatching(tipBounds).workArea;
+  assert(tipBounds.width<=192,'190 DIP tooltip plus native fractional-scale rounding');assert.equal(tip.__createdFocusable,false);
+  assert(cursor.x<tipBounds.x||cursor.x>=tipBounds.x+tipBounds.width||cursor.y<tipBounds.y||cursor.y>=tipBounds.y+tipBounds.height,'Tooltip covers the hovered cursor');
+  assert(tipBounds.x>=tipArea.x-1&&tipBounds.y>=tipArea.y-1&&tipBounds.x+tipBounds.width<=tipArea.x+tipArea.width+1&&tipBounds.y+tipBounds.height<=tipArea.y+tipArea.height+1,'Tooltip is clipped by the work area');
+  await capture('hover-'+kind+'.png',tip);cursor={x:-1000,y:-1000};await until(()=>!tip.isVisible(),'Hover did not hide');
  }
 
  // A short, narrow work area clips the one complete current reference. Its

@@ -27,22 +27,17 @@ function fixture(combo){
 }
 
 historicalData(data);
-test('every curated duo and trio can retain its own ordered instructions and loadout bindings',()=>{
- for(const combo of [...DUOS,...TRIOS]){
-  // Future-patch entries cannot be captured with this historical game fixture.
-  const numericPatch=p=>p.split('.').map(Number).reduce((a,n)=>a*1000+n,0);
-  if(numericPatch(combo.patch)>numericPatch(data.patch))continue;
-  const result=fixture(combo),plan=captureCreativePlan(result,data,'2026-10-10T08:00:00.000Z');
-  assert.equal(plan?.archetype,'curated',combo.id);
-  assert.deepEqual(plan.members,comboMembers(combo).map(({role,champion})=>({role,champion})));
-  assert.deepEqual(validateCreativePlan(plan,result.slots),plan);
-  assert.equal(plan.curated.id,combo.id);assert.equal(plan.patch,combo.patch);
+test('an explicitly accepted duo and trio retain instructions, member scopes and loadout bindings',()=>{
+ for(const combo of [DUOS.find(d=>d.members),TRIOS.find(t=>t.patch===data.patch)]){
+  assert(combo);const result=fixture(combo),plan=captureCreativePlan(result,data);
+  assert.equal(plan.archetype,'curated');assert.deepEqual(plan.members,comboMembers(combo).map(({role,champion})=>({role,champion})));
+  assert.deepEqual(validateCreativePlan(plan,result.slots),plan);assert.equal(plan.curated.id,combo.id);assert.equal(plan.patch,combo.patch);
  }
 });
 
-test('a saved Galio/Nilah/Rakan plan survives same-ID catalog edits, restart and all member pages without reversing the authored lead',async()=>{
+test('a saved authored plan survives same-ID source edits and restart without changing any member instructions',async()=>{
  const combo=TRIOS.find(t=>t.id==='galio-nilah-rakan'),result=fixture(combo),plan=captureCreativePlan(result,data),store=createPreparationStore();
- assert.match(plan.steps.join(' '),/洛/);assert.match(plan.ordered.find(m=>m.champion==='Rakan').job,/W|R/);
+ assert.deepEqual(plan.steps,combo.steps);assert.deepEqual(plan.ordered.map(m=>m.job),combo.members.map(m=>m.job));
  const configs=captureTeamConfigurations({...result,creativePlan:plan},data,store),favorite={...result,id:'saved-curated',type:'team',style:'fun',version:data.version,createdAt:plan.createdAt,creativePlan:plan,configurations:configs};
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-curated-'));
  await saveState(root,{...defaultState(),favorites:[favorite],draft:{slots:result.slots,scope:'party',style:'fun',creativePlan:plan}});
@@ -85,6 +80,7 @@ test('curated identity includes sources and loadout bindings; malformed or misma
   const bad=structuredClone(plan);change(bad);bad.id=creativePlanId(bad);assert.throws(()=>validateCreativePlan(bad));
  }
  const revision=structuredClone(plan);revision.curated.members[0].loadoutId='default';revision.id=creativePlanId(revision);assert.notEqual(revision.id,plan.id);assert.ok(validateCreativePlan(revision));
+ const sourceRevision=structuredClone(plan);sourceRevision.curated.sources[0].url='https://example.com/independent-new-source';sourceRevision.id=creativePlanId(sourceRevision);assert.notEqual(sourceRevision.id,plan.id);assert.ok(validateCreativePlan(sourceRevision));
  assert.equal(captureCreativePlan({...result,scope:'solo'},data),null);
 });
 

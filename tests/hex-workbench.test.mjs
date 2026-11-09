@@ -1,25 +1,11 @@
-// Archived 16.21 mechanism contract. Current-bundle acceptance is tested separately.
+// Current drawer ownership and asynchronous context contracts.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import vm from 'node:vm';
-import {renderHexComparison} from '../src/hex-view.mjs';
-import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {createHexRoundStore,hexRoundForHero} from '../src/core/hex-round.mjs';
 import {readOnlyConfigurationMarkup,readOnlyConfigurationAction} from '../src/companion-view.mjs';
-const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
+const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const plan=(hero,items)=>({selection:{id:hero,mode:'hex'},build:{champion:hero,mode:'hex',items:items.map(id=>data.items[id])}});
 const input={data,hero:'Ahri',options:[],owned:[1318]};
-test('workbench exposes the same named upgrade as the guide without inventing ownership or changing a plan',()=>{
- const selection={id:'Ahri',role:'mid',mode:'hex',ownedAugmentIds:[1318]},before=JSON.stringify(data),guide=createGuideModel(data,selectGuide(null,selection)),route=guide.hexRoutes.find(r=>r.id==='Ahri-item-1318');assert(route);assert.equal(route.equipmentState,'suggested');
- const html=renderHexComparison(input);assert.match(html,/data-hex-route="Ahri-item-1318"/);assert.match(html,/关联装备 · 若购买/);assert.match(html,/中娅/);assert.doesNotMatch(html,/本人已装备/);assert.equal(JSON.stringify(data),before);
- assert.doesNotMatch(renderHexComparison({...input,owned:[]}),/data-hex-route="Ahri-item-1318"/);
- const changed=structuredClone(data);changed.items[3157].description+=' changed';assert.doesNotMatch(renderHexComparison({...input,data:changed}),/data-hex-route="Ahri-item-1318"/);
-});
-test('generic equipment effects require a hero-bound Hex plan, while offered and owned remain separate',()=>{
- const state={...input,owned:[],options:[1002]},valid=plan('Ahri',[3157]),before=JSON.stringify(valid);
- for(const wrong of [null,plan('Ashe',[3157]),{...valid,build:{...valid.build,mode:'rift'}},{...valid,selection:{id:'Ahri',mode:'rift'}},{...valid,build:{...valid.build,champion:'Ashe'}}])assert.doesNotMatch(renderHexComparison({...state,plan:wrong}),/data-hex-route="Ahri-item-1002"/);
- const offered=renderHexComparison({...state,plan:valid});assert.match(offered,/data-hex-route="Ahri-item-1002"/);assert.match(offered,/本轮选项 · 条件联动/);assert.match(offered,/当前方案 · 若购买/);assert.doesNotMatch(offered,/本人已装备/);assert.equal(JSON.stringify(valid),before);
- assert.doesNotMatch(renderHexComparison({...state,options:[],plan:valid}),/data-hex-route="Ahri-item-1002"/);
- const page=renderHexComparison({...input,surface:'page'}),drawer=renderHexComparison({...input,surface:'build'});assert.match(page,/list="hex-option-list-page"/);assert.match(drawer,/list="hex-option-list-build"/);
-});
+
 function extract(name,next){return source.slice(source.indexOf(name),source.indexOf(next,source.indexOf(name)));}
 test('opening the actual drawer workbench keeps the view and rejects ownership changes during the await',async()=>{
  const original={id:'Ahri',role:'mid',mode:'hex',coreId:'chosen-core',laterIds:[3157]},ctx=vm.createContext({buildView:original,client:{},taskOwnRole:()=>'',configurationReadOnly:v=>!!v.readOnly,chooseHexHero:async id=>{assert.equal(id,'Ahri');},renderBuild:()=>{}});

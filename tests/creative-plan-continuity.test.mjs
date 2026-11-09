@@ -1,10 +1,10 @@
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {generateCreativeTrios} from '../src/core/creative-trios.mjs';
 import {captureCreativePlan,validateCreativePlan,creativePlanId,creativePlanMatches,creativePlanCompatible,creativeComboContext} from '../src/core/creative-plan.mjs';
 import {createSlots,currentCombo,comboContextKnown,recommend,replaceMember,mergeClientSession} from '../src/core/recommend.mjs';
 import {reconcileClientDraft} from '../src/core/draft.mjs';
@@ -16,11 +16,14 @@ import {createGuideModel,selectGuide,validateGuideSelection,currentPlayerSelecti
 import {defaultState,saveState,readState,validateState} from '../services/storage.mjs';
 import {favoriteTeamSummary} from '../src/favorites-view.mjs';
 
-const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const hero=id=>data.champions.find(c=>c.id===id),roles=['mid','bottom','support'],ids=['Annie','Ashe','Rell'];
 function fixture(){
- const creative=generateCreativeTrios({targets:roles,candidateSets:Object.fromEntries(roles.map((r,i)=>[r,[hero(ids[i])]])),champions:data.champions}).find(c=>c.archetype==='chain');
- assert.ok(creative,'Concrete control-chain idea missing');
+ const members=roles.map((role,i)=>({role,champion:ids[i]}));
+ const creative={archetype:'chain',archetypeName:'Accepted relay',name:'Our saved plan',tempo:'teamfight',members,
+  ordered:members.map((m,i)=>({...m,job:'Saved member action '+i})),why:'A personally accepted conditional plan',plan:'Wait until all members confirm the same target',
+  steps:['Confirm arrival','Follow only after the first action succeeds','Withdraw when the shared condition fails'],window:'All members confirm readiness and an exit',
+  caution:'Cancel when any member cannot follow',feasibility:'Personal plan without match statistics'};
  const slots=createSlots().map(s=>roles.includes(s.role)?{...s,champion:ids[roles.indexOf(s.role)],locked:true}:s),plan=captureCreativePlan({creative,slots},data,'2026-10-09T00:00:00.000Z');
  return {creative,slots,plan,result:{id:'creative-fixture',title:creative.name,scope:'party',slots,creative,creativePlan:plan,targets:roles}};
 }

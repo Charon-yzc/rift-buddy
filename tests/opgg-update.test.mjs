@@ -19,9 +19,17 @@ data.builds=projectBuildSources(snapshot.entries,DEFAULT_BUILD_SOURCE,data.patch
 const hero=id=>data.champions.find(c=>c.id===id);
 const leaf=(page,play)=>({primary_page_id:page.primaryStyleId,secondary_page_id:page.subStyleId,primary_rune_ids:page.selectedPerkIds.slice(0,4),secondary_rune_ids:page.selectedPerkIds.slice(4,6),stat_mod_ids:page.selectedPerkIds.slice(6),play,win:Math.floor(play/2),pick_rate:.5});
 const raw=(patch,pages)=>({meta:{version:patch},data:{summary:{id:22,positions:[{name:'ADC'}]},core_items:[{ids:[6672,3031,3046],play:1000,win:500}],boots:[],starter_items:[],last_items:[],rune_pages:[{builds:pages}],runes:[],skills:[],summoner_spells:[]}});
+// Version-ordering examples are generated vendor responses, not current
+// production samples relabeled as evidence from an older patch.
+function syntheticReference(patch,id='Ashe',role='bottom',page=RUNE_PLANS.lethal.page){
+ const champion=hero(id),payload=raw(patch,[leaf(page,1000)]),position=role==='bottom'?'adc':role;
+ payload.data.summary={id:Number(champion.key),positions:[{name:position.toUpperCase()}]};payload.data.boots=[{ids:[3111],play:1000,win:500}];
+ const ref=parseBuildJSON(payload,{champion,role,data:{patch,items:data.items,runes:data.runes,spells:data.spells,champions:data.champions},url:`https://op.gg/lol/champions/${id.toLowerCase()}/build/${position}?patch=${patch}`});
+ ref.fetchedAt='2026-10-01T00:00:00Z';return ref;
+}
 
-test('new base data retains older Cho jungle Hail pages across multiple patches and seasons with a visible version label',()=>{
- const ref={...data.builds['Chogath:jungle'],patch:previousPatch(data.patch)},fixture={...data,builds:{'Chogath:jungle':ref}};
+test('synthetic older Cho jungle Hail pages retain their actual source patch and visible version label',()=>{
+ const ref=syntheticReference(previousPatch(data.patch),'Chogath','jungle',RUNE_PLANS.hail.page),fixture={...data,builds:{'Chogath:jungle':ref}};
  assert.equal(validReference(ref,hero('Chogath'),'jungle',fixture),false);
  const build=getBuild(hero('Chogath'),'jungle',fixture);
  assert.equal(build.reference,ref);assert.equal(build.referenceStale,true);assert.equal(build.runePage.selectedPerkIds[0],9923);
@@ -29,18 +37,18 @@ test('new base data retains older Cho jungle Hail pages across multiple patches 
  const html=companionPlanView(fixture,{build,selection:{id:'Chogath',role:'jungle',mode:'rift'}});
  assert.match(html,/基础资料.*旧版本参考/);assert.match(html,/丛刃/);
  for(const patch of ['16.18','16.9','15.24']){
-  const saved={...ref,patch},olderData={...fixture,builds:{'Chogath:jungle':saved}},older=getBuild(hero('Chogath'),'jungle',olderData);
+  const saved=syntheticReference(patch,'Chogath','jungle',RUNE_PLANS.hail.page),olderData={...fixture,builds:{'Chogath:jungle':saved}},older=getBuild(hero('Chogath'),'jungle',olderData);
   assert.equal(older.reference,saved);assert.equal(older.runePage.selectedPerkIds[0],9923);assert.equal(older.rulesPatch,patch);
   assert.match(companionPlanView(olderData,{build:older,selection:{id:'Chogath',role:'jungle',mode:'rift'}}),new RegExp(patch.replace('.','\\.')+' 旧版本参考'));
  }
  const [season,patchNumber]=data.patch.split('.').map(Number);
- assert.equal(validReference({...ref,patch:data.patch},hero('Chogath'),'jungle',fixture,{allowOlder:true}),true);
+ assert.equal(validReference(syntheticReference(data.patch,'Chogath','jungle',RUNE_PLANS.hail.page),hero('Chogath'),'jungle',fixture,{allowOlder:true}),true);
  for(const patch of [`${season}.${patchNumber+1}`,`${season+1}.1`,'unknown','16.-1'])assert.equal(validReference({...ref,patch},hero('Chogath'),'jungle',fixture,{allowOlder:true}),false);
 });
 
 test('current patch beats a newer previous-patch cache and illegal previous items cannot enter the build',async()=>{
  const roots=await Promise.all([1,2].map(()=>fs.mkdtemp(path.join(os.tmpdir(),'buddy-patch-preference-'))));
- const ref=data.builds['Ashe:bottom'],current={...ref,patch:data.patch,fetchedAt:'2026-10-01T00:00:00Z'},old={...ref,patch:previousPatch(data.patch),parserVersion:999,fetchedAt:'2026-10-08T00:00:00Z'};
+ const current=syntheticReference(data.patch),old={...syntheticReference(previousPatch(data.patch)),parserVersion:999,fetchedAt:'2026-10-08T00:00:00Z'};
  for(const [i,entry]of[current,old].entries())await fs.writeFile(path.join(roots[i],'builds.json'),JSON.stringify({entries:{'Ashe:bottom':entry}}));
  for(const order of[roots,[...roots].reverse()])assert.equal((await loadBuilds(order,data))['Ashe:bottom'].patch,data.patch);
  const malformed={...old,core:[{items:[6672,3031,9999999],samples:1}]};
@@ -64,7 +72,7 @@ test('an unpublished source patch falls back explicitly without relabeling its s
 
 test('old cache selection prefers the latest source patch and never downgrades on refresh',async()=>{
  const roots=await Promise.all([1,2].map(()=>fs.mkdtemp(path.join(os.tmpdir(),'buddy-history-preference-'))));
- const base=data.builds['Ashe:bottom'],newer={...base,patch:'16.18',parserVersion:6,fetchedAt:'2026-10-01T00:00:00Z'},older={...base,patch:'15.24',parserVersion:999,fetchedAt:'2026-10-08T00:00:00Z'};
+ const newer={...syntheticReference('16.18'),parserVersion:6},older={...syntheticReference('15.24'),parserVersion:999,fetchedAt:'2026-10-08T00:00:00Z'};
  for(const [i,entry] of [newer,older].entries())await fs.writeFile(path.join(roots[i],'builds.json'),JSON.stringify({entries:{'Ashe:bottom':entry}}));
  for(const order of [roots,[...roots].reverse()])assert.equal((await loadBuilds(order,data))['Ashe:bottom'].patch,'16.18');
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-old-refresh-')),cache={...data,builds:{'Ashe:bottom':newer}};
@@ -75,7 +83,7 @@ test('old cache selection prefers the latest source patch and never downgrades o
 });
 
 test('an obsolete source rune does not erase the source equipment or enable an invalid client page',()=>{
- const saved=structuredClone(data.builds['Chogath:jungle']);saved.patch='15.24';
+ const saved=syntheticReference('15.24','Chogath','jungle',RUNE_PLANS.hail.page);
  for(const page of [saved.runePage,...saved.runeOptions.map(o=>o.page)])page.selectedPerkIds[0]=999999;
  const fixture={...data,builds:{'Chogath:jungle':saved}},build=getBuild(hero('Chogath'),'jungle',fixture);
  assert.equal(build.reference,saved);assert.equal(build.items.length,4);assert.equal(build.runeValid,true);
@@ -86,13 +94,13 @@ test('an obsolete source rune does not erase the source equipment or enable an i
 });
 
 test('older Hex source data cannot survive into current automatic builds, cache or hero references',async()=>{
- const snapshot=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))),ref={...snapshot.entries.Chogath,patch:'15.24'};
+ const historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/hex-builds.json',import.meta.url))),ref=historical.entries.Chogath;
  assert.equal(validHexReference(ref,hero('Chogath'),data,{allowOlder:true}),false);
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-old-hex-'));await fs.writeFile(path.join(root,'hex-builds.json'),JSON.stringify({entries:{Chogath:ref}}));
  const hexBuilds=await loadHexBuilds([root],data),build=getBuild(hero('Chogath'),'top',{...data,hexBuilds},{mode:'hex'});
  assert.equal(hexBuilds.Chogath,undefined);assert.equal(build.reference,null);assert.equal(build.referenceStale,false);assert.equal(build.unavailable,true);assert.deepEqual(build.items,[]);
  const html=renderHexSourceReference({data:{...data,hexBuilds},hero:'Chogath'});
- assert.match(html,/海克斯4\.0资料尚未就绪，旧版建议已停用/);assert.doesNotMatch(html,/data-action="augment-detail"|15\.24/);
+ assert.match(html,/海克斯4\.0资料尚未就绪，旧版建议已停用/);assert.doesNotMatch(html,/data-action="augment-detail"/);assert.ok(!html.includes(ref.patch));
  const partial=renderHexSourceReference({data:{...data,hexBuilds:{Chogath:{...ref,augmentIds:[ref.augmentIds[0],999999]}}},hero:'Chogath'});
  assert.match(partial,/海克斯4\.0资料尚未就绪，旧版建议已停用/);assert.doesNotMatch(partial,/data-id="999999"/);
  const invalid=renderHexSourceReference({data:{...data,hexBuilds:{Chogath:{...ref,patch:'99.1'}}},hero:'Chogath'});

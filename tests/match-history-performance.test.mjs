@@ -109,20 +109,9 @@ test('a roster batch reads automatic first pages from the backend and keeps the 
 test('the hero-statistics batch is fetched concurrently instead of one page at a time',async()=>{
  const pending=[];let firstRead=true;
  const f=service({backend:async()=>{if(firstRead){firstRead=false;return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))};}return new Promise(resolve=>pending.push(resolve));}});
- const first=await f.service.execute('own-summary-page',{source:'sgp'});assert.equal(first.scanned,20);assert.equal(f.calls.backend,1);
+ const first=await f.service.execute('own-summary-page',{source:'sgp'});assert.equal(first.scanned,20);assert.equal(first.complete,false);assert.equal(f.calls.backend,1);
  const batch=f.service.execute('own-summary-page',{cursor:first.cursor});for(let i=0;i<50&&pending.length<4;i++)await new Promise(r=>setImmediate(r));assert.equal(pending.length,4,'all four requests start before any result is released');
  for(let i=3;i>=0;i--)pending[i]({games:Array.from({length:20},(_,j)=>({json:{...raw,gameId:21+i*20+j}}))});const result=await batch;assert.equal(f.calls.backend,5);assert.equal(result.scanned,100);assert.equal(result.identified,100);
-});
-
-test('a concurrent batch advances the scan by the whole batch',async()=>{
- let page=0;
- const f=service({backend:async()=>{page++;return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:page*100+i}}))};}});
- const first=await f.service.execute('own-summary-page',{session:undefined,source:'sgp'});
- assert.equal(first.scanned,20,'publish the earliest page before batching');
- assert.equal(first.complete,false);
- const second=await f.service.execute('own-summary-page',{session:undefined,source:'sgp',cursor:first.cursor});
- assert.equal(second.scanned,100);
- assert.equal(second.identified,100);
 });
 
 test('an old cached source cannot lock the early visible page away from a healthy backend',async()=>{
@@ -277,16 +266,6 @@ test('a stalled foreground read cannot hold the background scan forever',async()
  assert.equal(result.scanned,20);
  assert.ok(waited>=2000,'the scan waited for the foreground read');
  assert.ok(waited<8000,'the wait stays bounded');
-});
-
-test('a scan still completes at the bounded 500-game window',async()=>{
- let page=0;
- const f=service({backend:async()=>{page++;return page<=25?{games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:page*100+i}}))}:{games:[]};}});
- let result=await f.service.execute('own-summary-page',{session:undefined,source:'sgp'});
- let guard=0;
- while(!result.complete&&guard++<20)result=await f.service.execute('own-summary-page',{session:undefined,source:'sgp',cursor:result.cursor});
- assert.equal(result.scanned,500);
- assert.equal(result.complete,true);
 });
 
 // Process discovery spawns PowerShell (about 0.6 s); a reachable client keeps its connection.

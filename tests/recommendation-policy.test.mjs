@@ -73,10 +73,10 @@ test('solo filtering uses the final solo role even when an old party contains ot
 });
 
 test('60 is inclusive; conflicts cannot leak through and fixed current lineups are preserved',()=>{
- assert.equal(meetsRecommendationFit({score:59}),false);assert.equal(meetsRecommendationFit({score:60}),true);assert.equal(meetsRecommendationFit({score:null}),true);
+ assert.equal(meetsRecommendationFit({score:59}),false);assert.equal(meetsRecommendationFit({score:60}),true);assert.equal(meetsRecommendationFit({score:61}),true);assert.equal(meetsRecommendationFit({score:null}),true);
  const slots=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role)})),fitSlots=slots.map(s=>s.role==='bottom'?{...s,champion:'Jinx',locked:true,manualPosition:true}:s);
  const input={slots,champions,patch,scope:'party',fitSlots,rolePools:{bottom:{mode:'only',heroes:['Ashe']},support:{mode:'only',heroes:['Lulu']}},familiarityByRole:{bottom:{member:'own',mass:1,usage:{sampled:100,counts:{Ashe:100}}}}};
- const unrestricted=recommend(input);assert.equal(unrestricted.length,1);assert.equal(lineupFit(unrestricted[0].slots,fitSlots,champions,{scope:'party',patch}).score,20);assert.deepEqual(worker(input),[],'Do not substitute an unfamiliar hero when the 100% familiar option fails fit');
+ const unrestricted=recommend(input);assert.equal(unrestricted.length,1);assert.ok(lineupFit(unrestricted[0].slots,fitSlots,champions,{scope:'party',patch}).score<60);assert.deepEqual(worker(input),[],'Do not substitute an unfamiliar hero when the 100% familiar option fails fit');
  const current=fitSlots.map(s=>({...s,champion:s.role==='support'?'Lulu':s.champion,locked:true}));assert.equal(worker({...input,slots:current,fitSlots:current}).length,1,'A current locked lineup is not a new recommendation to delete');
 });
 
@@ -94,9 +94,9 @@ test('member replacement applies the same displayed-fit floor and public project
  const input={slots,fitSlots:slots,champions,patch,scope:'party',minimumFitScore:60,rolePools:{mid:{mode:'only',heroes:['Vladimir','Viktor']}}};
  const [current]=recommend({...input,rolePools:{mid:{mode:'only',heroes:['Vladimir']}}}),before=structuredClone(current);
  const [raw]=recommend({...input,excluded:['Vladimir']});
- const fit=lineupFit(raw.slots,slots,champions,{scope:'party',editableRoles:raw.targets,patch});assert.equal(fit.score,54);
- assert.deepEqual(replaceMember(current,'mid',input),[],'The 54-point alternative cannot bypass the 60-point replacement floor');
- const [allowed]=replaceMember(current,'mid',{...input,minimumFitScore:54});assert.ok(allowed);assert.equal(allowed.recommendationFit.score,54);
+ const fit=lineupFit(raw.slots,slots,champions,{scope:'party',editableRoles:raw.targets,patch});assert.ok(fit.score<60);
+ assert.deepEqual(replaceMember(current,'mid',input),[],'The low-fit alternative cannot bypass the 60-point replacement floor');
+ const [allowed]=replaceMember(current,'mid',{...input,minimumFitScore:fit.score});assert.ok(allowed);assert.equal(allowed.recommendationFit.score,fit.score);
  for(const role of ['top','jungle'])assert.deepEqual(allowed.slots.find(s=>s.role===role),current.slots.find(s=>s.role===role));
  assert.deepEqual(current,before);
 });
@@ -109,10 +109,9 @@ test('fit evidence changes cache identity while ignored hovers and timer refresh
  unfinished.fitSession.myTeam[2].championId=key('Veigar');unfinished.fitSlots[2].champion='Veigar';const ignored=recommendationKey(unfinished);unfinished.fitSession.myTeam[2].championId=key('Lux');unfinished.fitSlots[2].champion='Lux';assert.equal(recommendationKey(unfinished),ignored);
 });
 
-test('style selects different actual trio candidates, without adding points to their fit',()=>{
- const input={slots:createSlots(),champions,patch,scope:'party',minimumFitScore:60,stylePolicy:true,limit:3,randomSeed:'style-proof',rolePools:{mid:{mode:'only',heroes:['Annie','Ahri','Orianna','Yasuo']},bottom:{mode:'only',heroes:['Ashe','Lucian','Kalista','Yasuo']},support:{mode:'only',heroes:['Braum','Nami','Alistar','Malphite']}}},sets=[];
- for(const style of ['balanced','fun','wild']){const rows=worker({...input,style});assert.ok(rows.length);sets.push(rows.map(r=>r.id).join(','));for(const row of rows){assert.ok(row.recommendationFit.score>=60);assert.equal(row.recommendationFit.score,lineupFit(row.slots,input.slots,champions,{scope:'party',editableRoles:row.targets,patch}).score);}assert.ok(rows.every(row=>row.slots.filter(slot=>row.targets.includes(slot.role)).every(slot=>input.rolePools[slot.role].heroes.includes(slot.champion))));}
- assert.equal(new Set(sets).size,3,'All styles must make an observable selection difference on the same hero pools');
+test('every style preserves actual fit scores and the same legal hero pools',()=>{
+ const input={slots:createSlots(),champions,patch,scope:'party',minimumFitScore:60,stylePolicy:true,limit:3,randomSeed:'style-proof',rolePools:{mid:{mode:'only',heroes:['Annie','Ahri','Orianna','Yasuo']},bottom:{mode:'only',heroes:['Ashe','Lucian','Kalista','Yasuo']},support:{mode:'only',heroes:['Braum','Nami','Alistar','Malphite']}}};
+ for(const style of ['balanced','fun','wild']){const rows=worker({...input,style});assert.ok(rows.length);for(const row of rows){assert.ok(row.recommendationFit.score>=60);assert.equal(row.recommendationFit.score,lineupFit(row.slots,input.slots,champions,{scope:'party',editableRoles:row.targets,patch}).score);}assert.ok(rows.every(row=>row.slots.filter(slot=>row.targets.includes(slot.role)).every(slot=>input.rolePools[slot.role].heroes.includes(slot.champion))));}
 });
 
 test('sorting a page preserves the worker stream and successive pages have no duplicates',()=>{

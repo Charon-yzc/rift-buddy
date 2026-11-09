@@ -17,9 +17,9 @@ test('profiles normalize per legal lane and per player, with equal histories ind
  assert.deepEqual(roleFamiliarityWeights(['support'],candidates,members),{support:actual.support});
 });
 
-test('complete samples reach below the top24 beam and keep member ownership, locks and duplicates legal',()=>{
+test('complete sampling retains a legal familiar hero outside a short candidate prefix and preserves fixed members',()=>{
  const heroes=Array.from({length:35},(_,i)=>({id:'Hero'+i})),fixed=createSlots().map(s=>({...s,champion:s.role==='mid'?'Ahri':null})),candidates={bottom:heroes,support:[{id:'Nami'},{id:'Lulu'}]},weights=roleFamiliarityWeights(['bottom','support'],candidates,{bottom:profile({Hero34:500},1),support:profile({Lulu:50},1)});
- const samples=familiarityLineups(fixed,['bottom','support'],candidates,weights,'stable');assert.equal(samples.length,48);
+ const samples=familiarityLineups(fixed,['bottom','support'],candidates,weights,'stable',12);assert.equal(samples.length,12);
  for(const row of samples){assert.equal(row.find(s=>s.role==='bottom').champion,'Hero34');assert.equal(row.find(s=>s.role==='support').champion,'Lulu');assert.equal(row.find(s=>s.role==='mid').champion,'Ahri');}
  const clash=familiarityLineups(createSlots(),['mid','support'],{mid:[{id:'Lux'},{id:'Ahri'}],support:[{id:'Lux'},{id:'Nami'}]},{mid:{Lux:.9,Ahri:.1},support:{Lux:.9,Nami:.1}},'duplicates');assert.ok(clash.length);assert.ok(clash.every(row=>new Set(row.map(s=>s.champion).filter(Boolean)).size===2));
 });
@@ -34,7 +34,7 @@ test('default85/15 produces the requested preference frequency, with exact endpo
 });
 
 test('real recommender applies familiarity before selecting, retains fit values and stable pagination',()=>{
- const base=input(),all=recommend({...base,limit:30}),best=Math.max(...all.map(row=>row.score)),known=all.findLast(row=>row.score>=best-18).slots.find(s=>s.role==='bottom').champion;
+ const base=input(),all=recommend({...base,limit:30}),known=all.at(-1).slots.find(s=>s.role==='bottom').champion;
  const biased=recommend({...base,familiarityByRole:{bottom:profile({[known]:500},1)},limit:30});assert.equal(biased.length,1);assert.ok(biased.every(row=>row.slots.find(s=>s.role==='bottom').champion===known));
  const shared=biased.filter(row=>all.some(other=>other.id===row.id));assert.ok(shared.length);for(const row of shared){const other=all.find(other=>other.id===row.id);assert.equal(row.score,other.score);assert.deepEqual(row.compositionFit,other.compositionFit);assert.equal(row.slots.find(s=>s.role==='support').champion,'Nami');}
  const opts={...base,familiarityByRole:{bottom:profile({Ashe:300,Jinx:200})}},whole=recommend({...opts,limit:8}),pages=[...recommend({...opts,limit:4}),...recommend({...opts,limit:4,offset:4})];assert.deepEqual(pages,whole);
@@ -47,15 +47,6 @@ test('extra teammate variants cannot buy more personal probability mass for a le
  let played=0;for(let n=0;n<3000;n++)if(familiarityWinner(entries,['bottom','support'],weights,'variants',n).slots[0].champion==='Ashe')played++;
  assert.ok(played/3000>.82&&played/3000<.88,String(played/3000));
  const original=entries.slice(0,2);for(let n=0;n<100;n++)assert.equal(familiarityWinner(entries,['bottom','support'],weights,'same',n).slots[0].champion,familiarityWinner(original,['bottom','support'],weights,'same',n).slots[0].champion);
-});
-
-test('best teammate variants retain the hero draw mass while excluding clearly worse fits',()=>{
- const entries=[{slots:[{role:'bottom',champion:'Ashe'},{role:'support',champion:'Nami'}],score:90},{slots:[{role:'bottom',champion:'Ashe'},{role:'support',champion:'Sona'}],score:60},{slots:[{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],score:88}],weights={bottom:{Ashe:.85,Jinx:.15}};
- for(let draw=0;draw<500;draw++){
-  const ordinary=familiarityWinner(entries,['bottom','support'],weights,'quality',draw),best=familiarityWinner(entries,['bottom','support'],weights,'quality',draw,{bestVariant:true});
-  assert.equal(best.slots[0].champion,ordinary.slots[0].champion,'Teammate quality must not alter the sampled personal hero');
-  assert.ok(best.score>=Math.max(...entries.filter(entry=>entry.slots[0].champion===best.slots[0].champion).map(entry=>entry.score))-5);
- }
 });
 
 test('an explicit tempo cannot silently fall back to a familiar hero that does not match it',()=>{

@@ -10,6 +10,8 @@ import {parseArgs} from 'node:util';
 import {loadServerSeed,serverBuildJobs} from '../services/server-data-collector.mjs';
 import {feedHash,verifyFeedEnvelope,validateFeedBundle} from '../services/data-feed.mjs';
 import {defaultBuildJobs} from '../src/core/default-build-jobs.mjs';
+import {BUILD_REGIONS,BUILD_TIERS} from '../src/core/build-source.mjs';
+import {rankingKey} from '../src/core/rankings.mjs';
 import {stageServerData} from '../services/server-data-store.mjs';
 import {publishServerData} from '../services/server-data-publish.mjs';
 import {GENERATION_NAMES,validateGenerationGame,createGenerationRecipe,projectGenerationBundle,validateGenerationBundle,packGenerationBundle,generationRelease,validateGenerationManifest,verifyGenerationEnvelope,decodeGenerationAssets} from '../services/data-generation.mjs';
@@ -19,26 +21,32 @@ const pair=generateKeyPairSync('ed25519'),keys={test:pair.publicKey.export({type
 const base={schema:2,version:seed.game.version,patch:seed.game.patch,sequence:1,publishedAt:'2026-10-19T00:00:00Z',checkedAt:'2026-10-18T22:00:00Z',files:packed.files,recipe};
 const manifest=value=>{const next=structuredClone(value);next.release=generationRelease(next);return next;};
 const envelope=value=>{const payload=Buffer.from(JSON.stringify(value));return {keyId:'test',payload:payload.toString('base64'),signature:sign(null,payload,pair.privateKey).toString('base64')};};
+// Protocol-only examples make no claim to contain an activatable game snapshot.
+// Real base validation, decompression and publication below retain original fixtures.
+function protocolBase(){
+ const patch='77.1',files=Object.fromEntries(GENERATION_NAMES.map(name=>{const hash=feedHash('synthetic '+name);return [name,{file:hash+'.json.gz',sha256:hash,bytes:1,rawSha256:hash,rawBytes:1}];}));
+ return {schema:2,version:patch+'.1',patch,sequence:1,publishedAt:'2026-10-19T00:00:00Z',checkedAt:'2026-10-19T00:00:00Z',files,recipe:{schema:1,baseSha256:files.game.rawSha256,builds:['Ashe:bottom:global:emerald_plus:'+patch],rankings:BUILD_REGIONS.flatMap(region=>BUILD_TIERS.map(tier=>rankingKey(patch,{region:region.id,tier:tier.id}))).sort(),hex:['Ashe']}};
+}
 
 test('signed global generation round-trips all four assets independently of the old client patch',async()=>{
  const signed=verifyGenerationEnvelope(envelope(manifest(base)),{keys});assert.deepEqual(Object.keys(signed.files),GENERATION_NAMES);
- assert.equal(signed.recipe.builds.length,314);assert.equal(signed.recipe.rankings.length,6);assert.equal(signed.recipe.hex.length,173);
+ assert.deepEqual(signed.recipe.builds,Object.keys(bundle.builds.entries).sort());assert.equal(signed.recipe.rankings.length,6);assert.deepEqual(signed.recipe.hex,seed.game.champions.map(c=>c.id).sort());
  assert.deepEqual(await decodeGenerationAssets(signed,packed.assets),bundle);
  assert.throws(()=>verifyFeedEnvelope(envelope(signed),{keys}),/清单/,'Legacy three-file protocol must remain distinct');
 });
 test('signature verification rejects tampering, unknown keys, ambiguous fields and noncanonical encoding',()=>{
- const original=envelope(manifest(base));
+ const value=manifest(protocolBase());assert.equal(validateGenerationManifest(value),value);const original=envelope(value);
  for(const bad of [{...original,keyId:'untrusted'},{...original,signature:'A'.repeat(86)+'=='},{...original,payload:original.payload+'\n'},{...original,redirect:'https://other.example/'}])assert.throws(()=>verifyGenerationEnvelope(bad,{keys}));
- assert.throws(()=>verifyGenerationEnvelope(envelope({...manifest(base),schema:1}),{keys}),/清单/);
+ assert.throws(()=>verifyGenerationEnvelope(envelope({...value,schema:1}),{keys}),/清单/);
 });
 test('missing or extra files, path injection and stale release identity cannot become a manifest',()=>{
  for(const change of [v=>delete v.files.game,v=>v.files.extra=v.files.game,v=>v.files.game.file='../game.json.gz',v=>v.recipe.baseSha256='a'.repeat(64),v=>v.recipe.builds.push(v.recipe.builds[0]),v=>v.recipe.rankings.pop(),v=>v.version='16.19.1',v=>v.unknown=true]){
-  const value=structuredClone(base);change(value);assert.throws(()=>validateGenerationManifest(manifest(value)));
+  const value=protocolBase();change(value);assert.throws(()=>validateGenerationManifest(manifest(value)));
  }
- const value=manifest(base);value.files.builds.rawSha256='a'.repeat(64);assert.throws(()=>validateGenerationManifest(value),/身份/);
+ const value=manifest(protocolBase());value.files.builds.rawSha256='a'.repeat(64);assert.throws(()=>validateGenerationManifest(value),/身份/);
 });
 test('aggregate compressed and expanded budgets apply even when each asset is individually bounded',()=>{
- for(const [key,size] of [['bytes',7*1024*1024],['rawBytes',13*1024*1024]]){const value=structuredClone(base);for(const file of Object.values(value.files))file[key]=size;assert.throws(()=>validateGenerationManifest(manifest(value)),/总大小/);}
+ for(const [key,size] of [['bytes',7*1024*1024],['rawBytes',13*1024*1024]]){const value=protocolBase();for(const file of Object.values(value.files))file[key]=size;assert.throws(()=>validateGenerationManifest(manifest(value)),/总大小/);}
 });
 test('coverage is bound to the frozen recipe, including saved-only roles absent from the default boards',()=>{
  const withoutSaved=new Set(defaultBuildJobs(seed.game,seed.rankings.entries,{}).map(job=>job.champion.id+':'+job.role)),extra=serverBuildJobs(seed).find(job=>!withoutSaved.has(job.champion.id+':'+job.role));assert.ok(extra);
@@ -94,7 +102,7 @@ test('lost frozen saved-role coverage prevents publication of either channel',as
 
 test('optional Hex pool failures do not block a complete signed generation',async t=>{
  const f=await publication(t),status=await f.candidate(seed);
- status.datasets['hex-pools']={optional:true,state:'partial',total:173,checked:173,failed:173,skipped:0,checkedAt:status.checkedAt};
+ status.datasets['hex-pools']={optional:true,state:'partial',total:recipe.hex.length,checked:recipe.hex.length,failed:recipe.hex.length,skipped:0,checkedAt:status.checkedAt};
  await fs.writeFile(path.join(f.root,'status.json'),JSON.stringify(status));const result=await f.publish();
  assert.equal(result.generation.manifest.recipe.builds.length,recipe.builds.length);
  const current=verifyGenerationEnvelope(JSON.parse(await f.latest()),{keys}),assets={};for(const file of Object.values(current.files))assets[file.sha256]=await fs.readFile(path.join(f.publicRoot,'v2/assets',file.file));
