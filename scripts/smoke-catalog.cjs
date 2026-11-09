@@ -19,7 +19,17 @@ async function run(){
  const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=code=>bounded(main.webContents.executeJavaScript(code,true),'Main script timeout: '+code).catch(error=>{throw Error('Renderer expression: '+code,{cause:error});});
  const reload=()=>new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.webContents.reload();});
  await until(()=>js('!!document.querySelector("#solo-role")'),'Draft missing');
- const click=async selector=>{selector=await revealDraftAction(js,selector);if(/data-action=(recommend|reroll)/.test(selector)){await until(()=>js('document.querySelector("[data-action=recommend],[data-action=reroll]")?.disabled===false'),'Recommendation worker did not become ready');selector=await js('document.querySelector("[data-action=recommend]")?"[data-action=recommend]":"[data-action=reroll]"');}assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);assert.equal(await js(`document.querySelector(${JSON.stringify(selector)}).disabled`),false,selector+' disabled');await js(`document.querySelector(${JSON.stringify(selector)}).click()`);await delay(70);};
+ const click=async selector=>{
+  selector=await revealDraftAction(js,selector);
+  if(/data-action=(recommend|reroll)/.test(selector)){
+   // Automatic recommendation can start between two renderer IPC reads. Test
+   // readiness and dispatch the real click together on the current button.
+   const clicked=await until(()=>js(`(()=>{const el=document.querySelector("[data-action=recommend],[data-action=reroll]");if(!el||el.disabled)return null;const result={selector:"[data-action="+el.dataset.action+"]",exists:true,ready:!el.disabled,clicked:false};el.addEventListener("click",()=>{result.clicked=true;},{once:true});el.click();return result;})()`),'Recommendation worker did not become ready');
+   selector=clicked.selector;assert.ok(clicked.exists,selector);assert.equal(clicked.ready,true,selector+' disabled');assert.equal(clicked.clicked,true,selector+' click not dispatched');
+   await delay(70);return;
+  }
+  assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);assert.equal(await js(`document.querySelector(${JSON.stringify(selector)}).disabled`),false,selector+' disabled');await js(`document.querySelector(${JSON.stringify(selector)}).click()`);await delay(70);
+ };
  const set=async(selector,value,event='input')=>js(`{const el=document.querySelector(${JSON.stringify(selector)});el.value=${JSON.stringify(value)};el.dispatchEvent(new Event(${JSON.stringify(event)},{bubbles:true}));}`);
  const pointerClick=async selector=>{
   const point=await js(`{const el=document.querySelector(${JSON.stringify(selector)}),r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;({x,y,visible:r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth,hit:el.contains(document.elementFromPoint(x,y))});}`);
