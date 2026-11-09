@@ -37,7 +37,13 @@ async function run(){
  };
  const open=async(id='Ashe',role='bottom',mode='rift',selection={})=>{main.webContents.send('open-build',{...selection,id,role,mode});await until(()=>js('!!document.querySelector("[data-build-summoner]")'),'Configuration missing');await delay(100);};
  const openGroup=async favorite=>{
-  const member=favorite.configurations.find(value=>value.id==='Aphelios'&&value.role==='bottom');assert.ok(member?.comboId&&member.creativePlan,'The saved group member must retain its explicit identity');
+  const member=favorite.configurations.find(value=>value.id==='Aphelios'&&value.role==='bottom');assert.ok(member,'The saved ordinary group member is missing');assert.equal(member.comboId,undefined,'An ordinary avatar must not adopt the matching community identity');assert.equal(member.creativePlan,undefined);
+  const peer=favorite.configurations.find(value=>value.id==='Thresh'&&value.role==='support');assert.equal(peer?.comboId,favorite.creativePlan.id,'The ordinary member must not erase the explicitly saved peer plan');assert.deepEqual(peer.creativePlan,favorite.creativePlan);
+  const selected=(await state()).preparations.find(value=>value.id===member.id&&value.role===member.role&&value.mode===member.mode&&!value.comboId&&!value.creativePlan);
+  assert.ok(selected,'The independent ordinary group preparation is missing');await open(selected.id,selected.role,selected.mode,selected);
+ };
+ const openExplicitGroup=async member=>{
+  assert.ok(member?.comboId&&member.creativePlan,'The saved group member must retain its explicit identity');
   const selected=(await state()).preparations.find(value=>value.id===member.id&&value.role===member.role&&value.mode===member.mode&&value.comboId===member.comboId);
   assert.ok(selected&&selected.creativePlan?.id===member.creativePlan.id,'The exact saved group preparation is missing');await open(selected.id,selected.role,selected.mode,selected);
  };
@@ -69,7 +75,16 @@ async function run(){
   await click('[data-action=favorite-result][data-index="0"]');const favorite=(await state()).favorites.find(f=>f.type==='team');assert.deepEqual(favorite.configurations.find(m=>m.id==='Aphelios').summonerIds,pair);
   await click('[data-action=result-detail][data-index="0"]');await click('[data-action=use-result][data-index="0"]');await until(()=>js('!!document.querySelector(".adopted-task")'),'Accepted plan missing');
   await openGroup(favorite);assert.deepEqual(await read(),pair);await click('[data-action=open-guide]');await guidePair(pair);await click('[data-action=close]');
-  await fs.writeFile(path.join(root,'expected.json'),JSON.stringify({favorite,defaults},null,2));
+  // Explicitly open the saved community plan separately from the ordinary
+  // avatar. Its different D/F choice must retain its exact identity on restart.
+  const explicitChoice={...favorite.configurations.find(value=>value.id==='Aphelios'&&value.role==='bottom'),comboId:favorite.creativePlan.id,creativePlan:favorite.creativePlan};
+  await open(explicitChoice.id,explicitChoice.role,explicitChoice.mode,explicitChoice);await preparePair([...pair].reverse());await click('[data-action=open-guide]');await guidePair([...pair].reverse());await click('[data-action=close]');
+  const explicit=(await state()).preparations.find(value=>value.id===explicitChoice.id&&value.role===explicitChoice.role&&value.mode===explicitChoice.mode&&value.comboId===explicitChoice.comboId);
+  await openExplicitGroup(explicit);assert.deepEqual(await read(),[...pair].reverse());await click('[data-action=close]');
+  await openGroup(favorite);await preparePair(pair);await click('[data-action=close]');
+  assert.deepEqual((await state()).preparations.find(value=>value.id===explicit.id&&value.role===explicit.role&&value.comboId===explicit.comboId).summonerIds,[...pair].reverse(),'Restoring the ordinary Flash preference must not rewrite the explicit configuration');
+  assert.deepEqual((await state()).favorites.find(value=>value.type==='team').configurations,favorite.configurations,'Choosing a community reference must not rewrite the saved ordinary member');
+  await fs.writeFile(path.join(root,'expected.json'),JSON.stringify({favorite,defaults,explicit},null,2));
  }else{
   const expected=JSON.parse(await fs.readFile(path.join(root,'expected.json'))),saved=await state();
   assert.deepEqual(saved.favorites.find(f=>f.type==='team').configurations,expected.favorite.configurations);
@@ -77,6 +92,7 @@ async function run(){
   await click('[data-action=navigate][data-route=favorites]');const team=(await state()).favorites.findIndex(f=>f.type==='team');await click('[data-action=open-favorite][data-index="'+team+'"]');await openGroup(expected.favorite);assert.deepEqual(await read(),pair,'Team snapshot must restore manual spells');await click('[data-action=open-guide]');await guidePair(pair);await click('[data-action=close]');
   await click('[data-action=navigate][data-route=favorites]');let favorites=(await state()).favorites;const ashe=favorites.findIndex(f=>f.type==='build'&&f.champion==='Ashe'&&f.mode==='rift'&&f.summonerIds);await click('[data-action=open-favorite][data-index="'+ashe+'"]');assert.deepEqual(await read(),pair);await click('[data-action=close]');
   await click('[data-action=navigate][data-route=favorites]');favorites=(await state()).favorites;const sourceDefault=favorites.findIndex(f=>f.type==='build'&&f.champion==='Ashe'&&f.mode==='rift'&&!f.summonerIds);await click('[data-action=open-favorite][data-index="'+sourceDefault+'"]');assert.deepEqual(await read(),expected.defaults,'Source-following favorite must clear a later manual choice');assert.equal(await js('document.querySelector("[data-action=build-summoner][data-field=summoner-reset]").disabled'),true);await click('[data-action=close]');
+  await openExplicitGroup(expected.explicit);assert.deepEqual(await read(),[...pair].reverse(),'The separate explicit community preparation must retain its own D/F');await click('[data-action=open-guide]');await guidePair([...pair].reverse());await click('[data-action=close]');
   await capture('restored-rift-summoners.png');
  }
  assert.equal(runeWrites,0);await fs.writeFile(path.join(root,phase+'.json'),JSON.stringify({passed:true,phase,version,archiveSha256,actualRuneWrites:runeWrites,manualDAndF:true,hexModeChecks:'separate-current-package',guideAndFavorites:true,offlineRestart:phase==='restore'},null,2));console.log('Summoner preparation '+phase+' passed');app.quit();
