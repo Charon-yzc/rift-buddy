@@ -22,6 +22,7 @@ async function run(){
  const output=options=>{
   requests++;assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);const method=options.method||'GET',route=options.path,body=options.body===undefined?undefined:JSON.parse(options.body);
   if(method==='GET'){
+   if(['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(route))return [{id:999999,name:'隔离字典'}];
    if(route==='/lol-summoner/v1/current-summoner')return {gameName:'隔离鼠标玩家',tagLine:'TEST'};
    if(route==='/lol-gameflow/v1/gameflow-phase')return 'ChampSelect';
    if(route==='/lol-gameflow/v1/session')return {gameData:{gameId:540001,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
