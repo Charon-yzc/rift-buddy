@@ -990,6 +990,7 @@ async function boot(){
  guard('party-range',async value=>{
   const modeEdit=value?.mode!==undefined;
   if(!value||(modeEdit?!['auto','manual'].includes(value.mode):!['top','jungle','mid','bottom','support'].includes(value.role)||typeof value.checked!=='boolean'))throw Error('请确认要调整的开黑位置');
+  if(!modeEdit&&value.selectedRoles!==undefined&&(!Array.isArray(value.selectedRoles)||value.selectedRoles.length>5||new Set(value.selectedRoles).size!==value.selectedRoles.length||value.selectedRoles.some(role=>!['top','jungle','mid','bottom','support'].includes(role))||value.selectedRoles.includes(value.role)!==value.checked))throw Error('请确认要调整的开黑位置');
   await status(true);
   const sameSelection=()=>!!value.gameId&&Number.isInteger(value.cellId)&&value.cellId>=0&&value.cellId<30&&latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===value.gameId&&latestClient.session?.localPlayerCellId===value.cellId;
   if(!sameSelection())throw Error('选人已变化，请按当前页面重新调整开黑位置');
@@ -1003,7 +1004,7 @@ async function boot(){
     const ranged=reconcilePartyRange(current.draft.slots,latestClient.session,data.champions,{count,party,ownRole,roleOrder:rankedClientRoles(data),mode:value.mode});
     edited={slots:ranged,partyCount:markedPartyCount(ranged),partyAutoCount:count,partyRangeMode:value.mode};
    }else{
-    edited=editPartyRange(current.draft.slots,value.role,value.checked,{count:current.draft.partyCount,session:latestClient.session,champions:data.champions,party,ownRole,roleOrder:rankedClientRoles(data),mode:'manual'});
+    edited=editPartyRange(current.draft.slots,value.role,value.checked,{count:current.draft.partyCount,session:latestClient.session,champions:data.champions,party,ownRole,roleOrder:rankedClientRoles(data),mode:'manual',selectedRoles:partyRangeMode(current.draft.partyRangeMode)==='auto'?value.selectedRoles:undefined});
     edited.partyRangeMode='manual';edited.partyAutoCount=edited.partyCount||current.draft.partyAutoCount||initialPartyCount(latestClient.party);
    }
    current.draft={...current.draft,...edited};

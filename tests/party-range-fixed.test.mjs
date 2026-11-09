@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import {createSlots,mergeClientSession,recommend} from '../src/core/recommend.mjs';
-import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,partyRoleConflicts,movePartyMark,editPartyRange,partyRangeCount} from '../src/core/party-range.mjs';
+import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,partyRoleConflicts,movePartyMark,editPartyRange,partyRangeCount,partyRangeMode} from '../src/core/party-range.mjs';
 import {reconcileClientDraft,moveChampion,moveDisplayedChampion,publicClientGameId} from '../src/core/draft.mjs';
 import {companionRosterDraft} from '../src/core/draft-intents.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
@@ -263,7 +263,7 @@ test('main range handler changes only this draft, preserves newer champions, and
  const from=source.indexOf(" guard('party-range',"),to=source.indexOf(" guard('stage-selection',",from);assert.ok(from>=0&&to>from);
  const s=session(),p=party(2);s.myTeam[2].championId=key('Garen');s.myTeam[2].assignedPosition='TOP';
  const board=merge(createSlots(),s,2,p),current=validateState({...defaultState(),draft:{slots:board,partyCount:2,clientGameId:'101',scope:'party',soloRole:''}});
- let handler;const context=vm.createContext({state:current,stateRevision:1,data,validPartyCount,initialPartyCount,markedPartyCount,reconcilePartyRange,partyRangeCount,editPartyRange,partyWithPregameIntents,rankedDraftPolicy,roomService:null,publicClientGameId,rankedClientRoles:()=>({}),
+ let handler;const context=vm.createContext({state:current,stateRevision:1,data,validPartyCount,initialPartyCount,markedPartyCount,reconcilePartyRange,partyRangeCount,partyRangeMode,editPartyRange,partyWithPregameIntents,rankedDraftPolicy,roomService:null,publicClientGameId,rankedClientRoles:()=>({}),
   latestClient:{connected:true,phase:'ChampSelect',mode:{id:'rift'},session:s,party:p},status:async()=>{},guard:(name,run)=>{assert.equal(name,'party-range');handler=run;},
   saveCurrentState:async update=>{context.state=validateState(update(structuredClone(context.state)));context.stateRevision++;}});
  vm.runInContext(source.slice(from,to),context);
@@ -277,6 +277,10 @@ test('main range handler changes only this draft, preserves newer champions, and
  context.state=validateState({...defaultState(),draft:{slots:createSlots().map(slot=>({...slot,party:['top','jungle'].includes(slot.role)})),partyCount:2,clientGameId:'101',scope:'party',soloRole:'bottom'}});
  const shared=await handler({...value,role:'bottom'});assert.equal(shared.state.draft.partyCount,3);assert.equal(shared.state.draft.partyRangeMode,'manual');assert.equal(shared.state.draft.slots[2].party,false,'A manual range click must keep the visible choice instead of following a newer shared lane hint');assert.equal(shared.state.draft.slots[1].party,true);assert.equal(shared.state.draft.slots[4].party,false);
  const automatic=await handler({mode:'auto',gameId:'101',cellId:0});assert.equal(automatic.state.draft.partyRangeMode,'auto');assert.equal(automatic.state.draft.slots[2].party,true,'Returning to auto follows the shared member lane again');
+ context.state=validateState({...defaultState(),draft:{slots:createSlots().map(slot=>({...slot,party:['jungle','mid'].includes(slot.role),...(slot.role==='top'?{champion:'Garen',locked:true,clientCellId:2}:{})})),partyCount:2,partyRangeMode:'auto',clientGameId:'101',scope:'party'}});
+ const frozen=await handler({role:'top',checked:false,selectedRoles:['jungle'],gameId:'101',cellId:0});assert.equal(frozen.state.draft.partyCount,1);assert.equal(frozen.state.draft.slots[0].champion,'Garen');assert.equal(frozen.state.draft.partyRangeMode,'manual');
+ const concurrent=await handler({role:'support',checked:true,selectedRoles:['mid','support'],gameId:'101',cellId:0});assert.deepEqual(concurrent.state.draft.slots.filter(slot=>slot.party).map(slot=>slot.role),['jungle','support'],'A second window stale full range must not overwrite the first explicit edit');
+ await assert.rejects(handler({role:'top',checked:false,selectedRoles:['top'],gameId:'101',cellId:0}));
  const currentState=structuredClone(context.state);
  delete context.latestClient.session.gameId;
  await assert.rejects(handler({...value,gameId:null}),'Missing public game identity cannot establish the same selection');

@@ -48,6 +48,13 @@ test('the first manual confirmation of an automatic mark is idempotent and saves
  assert.doesNotThrow(()=>validateState({...defaultState(),draft:{...edited,scope:'party',partyRangeMode:'manual'}}));
 });
 
+test('the first manual click freezes visible roles after an automatic collision without overwriting new public heroes',()=>{
+ const newer=board().map(slot=>({...slot,party:['jungle','mid'].includes(slot.role),...(slot.role==='top'?{champion:'Garen',locked:true,clientCellId:3}:{})})),before=structuredClone(newer);
+ const result=editPartyRange(newer,'top',false,{count:2,mode:'manual',selectedRoles:['jungle']});
+ assert.equal(result.partyCount,1);assert.deepEqual(marked(result.slots),['jungle']);assert.equal(result.slots[0].champion,'Garen');assert.equal(result.slots[0].clientCellId,3);assert.deepEqual(newer,before);
+ for(const selectedRoles of [['top'],['jungle','jungle'],['unknown'],Array(6).fill('jungle')])assert.throws(()=>editPartyRange(newer,'top',false,{count:2,mode:'manual',selectedRoles}));
+});
+
 test('both automatic and manual range controls stay available while configuration is busy, as does hero selection',()=>{
  for(const mode of ['auto','manual']){
   const markup=pregameControls({slots:board(),partyRangeMode:mode,busy:true,compact:true});

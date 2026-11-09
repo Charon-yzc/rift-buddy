@@ -60,9 +60,15 @@ export function movePartyMark(slots,role,previousRole=''){
 
 // A checkbox is an explicit range edit, independent of public champion/lane
 // updates arriving from the other window. Apply it to the current board.
-export function editPartyRange(slots,role,checked,{count,session,champions,party,ownRole='',roleOrder={},mode}={}){
+export function editPartyRange(slots,role,checked,{count,session,champions,party,ownRole='',roleOrder={},mode,selectedRoles}={}){
  const target=slots.find(slot=>slot.role===role);
  if(!target||typeof checked!=='boolean'||!validPartyCount(count))throw Error('请按当前选人重新调整开黑位置');
+ if(mode==='manual'&&selectedRoles!==undefined){
+  if(!Array.isArray(selectedRoles)||selectedRoles.length>5||new Set(selectedRoles).size!==selectedRoles.length||selectedRoles.some(role=>!ROLES.some(value=>value.id===role))||selectedRoles.includes(role)!==checked)throw Error('请按当前选人重新调整开黑位置');
+  // The first manual click freezes what this window actually showed, even
+  // if automatic observation moved its mark before the click reached main.
+  return {slots:slots.map(slot=>({...slot,party:selectedRoles.includes(slot.role),...(slot===target?{partyManual:true}:{})})),partyCount:selectedRoles.length};
+ }
  // Two windows may submit the same visible choice. It is one mark, not two.
  const delta=(mode==='manual'||target.partyManual)&&target.party===checked?0:checked?1:-1;
  const partyCount=Math.max(0,Math.min(5,count+delta));

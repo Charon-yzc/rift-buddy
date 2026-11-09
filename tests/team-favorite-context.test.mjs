@@ -18,6 +18,16 @@ historicalData(data);
 const key=id=>champions.find(c=>c.id===id).key;
 const favorite={scope:'context',slots:createSlots().map((s,i)=>({...s,champion:['Garen','LeeSin','Ahri','Ashe','Nami'][i],locked:true})),configurations:[{id:'Ahri',role:'mid',mode:'rift',runeId:'selected-page'},{id:'Garen',role:'top',mode:'rift'}]};
 const session={localPlayerCellId:1,myTeam:[{cellId:2,championId:key('Darius'),assignedPosition:'TOP'},{cellId:1,championId:key('Vi'),assignedPosition:'JUNGLE'}]};
+
+test('a favorite retains the explicitly chosen ordinary opponent configuration without claiming the matching community identity',()=>{
+ const lineup=createSlots().map(s=>({...s,party:['mid','bottom','support'].includes(s.role),champion:({mid:'Galio',bottom:'Samira',support:'Rakan'})[s.role]||null}));
+ const result={slots:lineup,scope:'party',adaptive:cooperationPlan(lineup.filter(s=>s.champion),createCooperationGraph(champions))},store=createPreparationStore(),chosen=store.remember({id:'Galio',role:'mid',mode:'rift',loadoutId:'default',sourceOpponent:'Ahri',coreIndex:1});
+ const configurations=captureTeamConfigurations(result,data,store,chosen),own=configurations.find(s=>s.id==='Galio');
+ assert.equal(own.sourceOpponent,'Ahri');assert.equal(own.comboId,undefined);assert.equal(own.creativePlan,undefined);
+ const creativePlan=captureCreativePlan(result,data),restored=restoreTeamFavorite({...result,creativePlan,configurations},createSlots(),champions);
+ assert.equal(restored.configurations.find(s=>s.id==='Galio')?.sourceOpponent,'Ahri');
+ const updated=captureTeamConfigurations({...result,configurations},data,store,null);assert.equal(updated.find(s=>s.id==='Galio').sourceOpponent,'Ahri');
+});
 test('saved non-party context cannot replace this games public picks or revive after two syncs',()=>{
  const before=JSON.stringify(favorite),result=restoreTeamFavorite(favorite,createSlots(),champions,session);
  assert.deepEqual(result.slots.map(s=>s.champion),['Darius','Vi','Ahri','Ashe','Nami']);assert.deepEqual(result.unassigned,[]);
