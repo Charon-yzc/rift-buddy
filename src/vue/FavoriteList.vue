@@ -10,8 +10,8 @@
    <h3>{{ f.title }}</h3>
    <div style="display:flex;gap:8px;margin-top:12px">
     <template v-for="(cid, position) in heroIds(f)" :key="position">
-     <img v-if="hero(cid)" class="portrait sm" :src="data.imageOverrides?.['champion/'+cid]||'../data/images/champion/'+cid+'.png'"
-      :data-fallback="hero(cid).icon" :alt="hero(cid).name" loading="lazy" />
+     <img v-if="cid" class="portrait sm" :src="data.imageOverrides?.['champion/'+cid]||'../data/images/champion/'+cid+'.png'"
+      :data-fallback="hero(cid)?.icon||''" :alt="hero(cid)?.name||cid" loading="lazy" />
      <div v-else class="empty-portrait">+</div>
     </template>
    </div>
@@ -50,6 +50,7 @@
 </template>
 <script>
 import {favoriteBuildSummary, favoriteTeamSummary} from '../favorites-view.mjs';
+import {clientChampion} from '../core/client-dictionary.mjs';
 import {ROLES} from '../core/rules.mjs';
 import {hexFavoriteIsCurrent} from '../core/hex-acquisition.mjs';
 export default {
@@ -60,7 +61,7 @@ export default {
  },
  methods: {
   heroIds(f) { return (f.type==='team'?(f.slots||[]).filter(s=>s.party).map(s=>s.champion):[f.champion]).filter(Boolean).slice(0,5); },
-  hero(id) { return this.data?.champions?.find(c=>c.id===id); },
+  hero(id) { return clientChampion(this.data,id); },
   roleName(id) { return ROLES.find(role=>role.id===id)?.name||''; },
   augmentText(f) { return (f.augments||[]).map(id=>(this.data?.augments||[]).find(a=>a.id===id)?.name||'旧版强化').join(' · '); },
   dateLabel(v) { return v?new Date(v).toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'}):'未知'; },

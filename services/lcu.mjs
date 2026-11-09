@@ -11,7 +11,8 @@ import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-elig
 import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
 import {allowedHistoryRoute} from './match-history-routes.mjs';
-const GET_PATHS=new Set(['/lol-end-of-game/v1/eog-stats-block','/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-chat/v1/conversations','/data-store/v1/install-dir']);
+import {normalizeClientDictionary} from '../src/core/client-dictionary.mjs';
+const GET_PATHS=new Set(['/lol-end-of-game/v1/eog-stats-block','/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-chat/v1/conversations','/data-store/v1/install-dir','/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json']);
 const lcuAgent=new https.Agent({keepAlive:true,maxSockets:16,maxFreeSockets:8,timeout:10000,rejectUnauthorized:false});
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
@@ -171,6 +172,22 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   if(native&&!failedConnections.has(auth)){snapshotAuth=auth;snapshotPath=installPath;snapshotAuthAt=now();}
   return {connected:true,phase,session,eligibility,game,party,...(Object.keys(own).length?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
  }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
+}
+const dictionaryCaches=new WeakMap();
+export async function liveClientDictionary(auth,{request=lcuRequest,force=false,now=Date.now}={}){
+ if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||typeof auth.password!=='string'||!auth.password)return null;
+ const previous=dictionaryCaches.get(request),same=previous?.port===auth.port&&previous?.password===auth.password;
+ if(same&&previous.pending)return previous.pending;
+ if(same&&!force&&now()>=previous.at&&now()-previous.at<previous.ttl)return previous.value;
+ const entry={port:auth.port,password:auth.password,at:now(),value:null,ttl:2000};dictionaryCaches.set(request,entry);
+ entry.pending=Promise.allSettled([
+  Promise.resolve().then(()=>request(auth,'/lol-game-data/assets/v1/champion-summary.json')),
+  Promise.resolve().then(()=>request(auth,'/lol-game-data/assets/v1/items.json'))
+ ]).then(results=>{
+  if(dictionaryCaches.get(request)!==entry)return null;
+  const values=results.map(result=>result.status==='fulfilled'?result.value:null),value=normalizeClientDictionary(...values);
+  entry.value=value;entry.at=now();entry.ttl=value?.champions.length&&value?.items.length?300000:value?5000:2000;return value;
+ }).finally(()=>{entry.pending=null;});return entry.pending;
 }
 export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {
  const {validateRunePage}=await import('../src/core/builds.mjs');

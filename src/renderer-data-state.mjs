@@ -5,7 +5,7 @@ import {projectCatalogAvailability} from './core/catalog-availability.mjs';
 import {linkReviewStatuses} from './core/catalog-link-review.mjs';
 
 const baseFields=['champions','items','runes','spells','abilityReference','historicalAbilityReference','spellbook','patch','version','mechanicSourceRevision'];
-const imageFields=['imageOverrides','items','augments','abilityReference','spells','runes','version'];
+const imageFields=['clientDictionary','imageOverrides','items','augments','abilityReference','spells','runes','version'];
 const sourceFields=['builds','buildSources','buildSource','patch'];
 const revision=value=>Number.isSafeInteger(value)&&value>=0;
 const fields=value=>value&&typeof value==='object'&&!Array.isArray(value);

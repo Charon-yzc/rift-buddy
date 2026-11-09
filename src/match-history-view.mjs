@@ -1,3 +1,4 @@
+import {clientChampion} from './core/client-dictionary.mjs';
 import {escape as e,button,portrait,roleIcon,icon,formatNumber} from './ui.mjs';
 import {championUsageView} from './champion-usage-view.mjs';
 import {filterMatches,queueName,QUEUES} from './core/match-history/model.mjs';
@@ -19,7 +20,7 @@ const positions={TOP:'上路',JUNGLE:'打野',MIDDLE:'中路',BOTTOM:'下路',UT
 const roles={TOP:'top',JUNGLE:'jungle',MIDDLE:'mid',BOTTOM:'bottom',UTILITY:'support'};
 const options=(values,selected)=>values.map(([v,label])=>`<option value="${e(v)}" ${String(selected??'')===String(v)?'selected':''}>${e(label)}</option>`).join('');
 const select=(name,label,values,value)=>`<label>${label}<select data-history-field="${name}">${options(values,value)}</select></label>`;
-const hero=(data,id)=>(data.champions||[]).find(c=>Number(c.key)===id);
+const hero=(data,id)=>clientChampion(data,id);
 const participantResult=p=>(resultName[p?.result||'unknown']||resultName.unknown)+(p?.surrender===true?' · 投降':'');
 const context=(p,game)=>({participant:p,game});
 function playerHero(data,p,game,tip=true){const c=hero(data,p?.champion);return c?`<span class="history-champion-tip" ${tip?historyTipAttributes('champion',p.champion,context(p,game)):''}>${portrait(c)}${Number.isFinite(p.level)?`<small class="history-level">${p.level}</small>`:''}</span>`:'<span class="history-empty-icon">?</span>';}
@@ -90,7 +91,7 @@ function profileView(tab,page,state,data){
 function masteryView(tab,data){
  if(!tab.profile)return '';
  const all=tab.profile.mastery||[];
- return `<section class="history-mastery-panel"><header><h3>英雄点数</h3><small>${all.length} 位英雄</small></header>${all.slice(0,8).map(p=>`<div class="history-mastery-row">${playerHero(data,p)}<span><b>${e(hero(data,p.champion)?.name||p.champion)}</b><small>${num(p.level)} 级</small></span><span>${num(p.points)}<small>英雄点数</small></span></div>`).join('')||'<p class="muted">暂未读取</p>'}${tab.profile.notice?`<small>${e(tab.profile.notice)}</small>`:''}</section>`;
+ return `<section class="history-mastery-panel"><header><h3>英雄点数</h3><small>${all.length} 位英雄</small></header>${all.slice(0,8).map(p=>`<div class="history-mastery-row">${playerHero(data,p)}<span><b>${e(hero(data,p.champion)?.name||(Number(p.champion)>0?`英雄 ${p.champion}`:p.champion))}</b><small>${num(p.level)} 级</small></span><span>${num(p.points)}<small>英雄点数</small></span></div>`).join('')||'<p class="muted">暂未读取</p>'}${tab.profile.notice?`<small>${e(tab.profile.notice)}</small>`:''}</section>`;
 }
 export function matchHistorySearchView(state){return `<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="玩家搜索结果"><header class="modal-header"><h2>选择玩家</h2>${button('close','','close','quiet icon-only')}</header><div class="panel-body">${state.searchResults.map(p=>`<button class="history-related" data-action="history-player" data-puuid="${e(p.puuid)}" data-server="${e(p.server)}">${e(p.name)}<small>查看战绩</small></button>`).join('')}</div></section></div>`;}
 // Every detail update lists all cards again, and an expanded events or builds
