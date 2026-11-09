@@ -20,7 +20,8 @@ export function createFeedbackClient({chooseFiles,encodeImage,version,request=ht
     const {bytes,preview}=await encodeImage(original);validateFeedbackPng(bytes);total+=bytes.length;if(total>L.imageBytes)throw Error('图片合计不超过10MB');
     const id=randomUUID();next.set(id,bytes);views.push({id,preview});
    }
-   if(generation!==epoch)return null;clearTimeout(expiry);pending=next;expiry=setTimeout(clear,600000);expiry.unref?.();return views;
+   // Expiring old bytes must not cancel a chooser already replacing them.
+   if(generation!==epoch)return null;clearTimeout(expiry);pending=next;expiry=setTimeout(()=>{if(pending===next)pending.clear();},600000);expiry.unref?.();return views;
   }finally{picking=false;}
  }
  async function send(input){

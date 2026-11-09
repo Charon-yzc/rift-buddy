@@ -141,6 +141,7 @@ export function mergeState(current,backup,champions){
   excluded:[...new Set([...current.excluded,...incoming.excluded])].filter(id=>champions.some(c=>c.id===id)),
   preferences:{...current.preferences,style,...(explicit('buildSource')?{buildSource:incoming.preferences.buildSource}:{}),...(explicit('presentation')?{presentation:incoming.preferences.presentation}:{}),...(explicit('autoCheck')?{autoCheck:incoming.preferences.autoCheck}:{}),...(explicit('appUpdateCheck')?{appUpdateCheck:incoming.preferences.appUpdateCheck}:{}),...(explicit('autoSync')?{autoSync:incoming.preferences.autoSync}:{}),
    ...(explicit('familiarityMass')?{familiarityMass:incoming.preferences.familiarityMass}:{}),
+   ...(explicit('flashSlot')?{flashSlot:incoming.preferences.flashSlot}:{}),
    ...(Object.hasOwn(backup.preferences||{},'play')?{play:incoming.preferences.play}:{}),
    ...(Object.hasOwn(backup.preferences||{},'rolePools')?{rolePools:incoming.preferences.rolePools}:{}),
    ...(Object.hasOwn(backup.preferences||{},'autoLive')?{autoLive:incoming.preferences.autoLive}:{}),

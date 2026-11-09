@@ -38,3 +38,19 @@ test('backup import restores an explicit familiarity mass and preserves local ma
  const local=defaultState();local.preferences.familiarityMass=.4;delete backup.preferences.familiarityMass;
  assert.equal(mergeState(local,backup,[]).preferences.familiarityMass,.4);
 });
+
+test('validated backup files restore explicit Flash keys but omitted legacy keys retain the local preference and privacy boundaries',async t=>{
+ const files=new Map(),reads=[];
+ t.mock.method(fs,'stat',async filename=>{assert(files.has(filename));return {size:Buffer.byteLength(files.get(filename),'utf8')};});
+ t.mock.method(fs,'readFile',async(filename,encoding)=>{assert(files.has(filename));assert.equal(encoding,'utf8');reads.push(filename);return files.get(filename);});
+ for(const slot of ['d','f','current']){
+  const source={...defaultState(),...raw,championUsage:summary};Object.assign(source.preferences,{flashSlot:slot,installPath:'mock-source-game',launchPath:'mock-source.exe',roomAuto:true,championUsage:summary});
+  const filename='mock-explicit-'+slot+'.json',bytes=createBackup(source);assertNoHistory(bytes);files.set(filename,bytes);
+  const incoming=await readBackup(filename);assert.equal(incoming.preferences.flashSlot,slot);
+  const target=defaultState();Object.assign(target.preferences,{flashSlot:slot==='f'?'d':'f',installPath:'mock-local-game',launchPath:'mock-local.exe',roomAuto:false});
+  const merged=mergeState(target,incoming,[]);assert.equal(merged.preferences.flashSlot,slot);assert.equal(merged.preferences.installPath,'mock-local-game');assert.equal(merged.preferences.launchPath,'mock-local.exe');assert.equal(merged.preferences.roomAuto,false);assertNoHistory(merged);
+  const legacy=JSON.parse(bytes);delete legacy.preferences.flashSlot;const legacyFile='mock-legacy-'+slot+'.json';files.set(legacyFile,JSON.stringify(legacy));
+  const old=await readBackup(legacyFile);assert.equal(Object.hasOwn(old.preferences,'flashSlot'),false);assert.equal(mergeState(target,old,[]).preferences.flashSlot,target.preferences.flashSlot);
+ }
+ assert.equal(reads.length,6,'Every explicit and legacy case passes the real backup reader and validator');
+});

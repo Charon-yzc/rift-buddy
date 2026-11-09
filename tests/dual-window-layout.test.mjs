@@ -47,3 +47,33 @@ test('the same sidebar follows lobby, matchmaking, ready check and selection wit
  for(const phase of ['Matchmaking','ReadyCheck','ChampSelect']){f.setClient({connected:true,phase});f.companion.sync();assert.equal(f.companion.getWindow(),side);assert.ok(side.isVisible());assert.deepEqual(f.main.getBounds(),f.before);}
  f.setClient({connected:true,phase:'InProgress'});f.companion.sync();assert.equal(side.isDestroyed(),true);f.companion.destroy();
 });
+
+test('a manually opened sidebar follows the whole pregame flow without enabling automatic opening',async()=>{
+ const f=fixture();f.preferences.clientCompanion=false;f.setClient({connected:true,phase:'Lobby',game:{gameId:50}});f.companion.observe(anchor);await Promise.resolve();assert.equal(f.companion.getWindow(),null);
+ assert.equal(f.companion.setMode(true).docked,true);await Promise.resolve();const side=f.companion.getWindow();assert.ok(side.isVisible());
+ for(const phase of ['Matchmaking','ReadyCheck','ChampSelect']){f.setClient({connected:true,phase,game:{gameId:50},...(phase==='ChampSelect'?{session:{gameId:101}}:{})});f.companion.sync();assert.equal(f.companion.getWindow(),side);assert.ok(side.isVisible());assert.deepEqual(f.main.getBounds(),f.before);}
+ f.companion.observe({...anchor,minimized:true});assert.equal(side.isVisible(),false);f.companion.observe({...anchor,foreground:false});assert.ok(side.isVisible());assert.equal(side.isAlwaysOnTop(),false);
+ assert.equal(f.preferences.clientCompanion,false);assert.equal(f.saved.length,0);f.companion.destroy();
+});
+
+test('closing or dismissing a manually opened sidebar does not reopen it in the next pregame phase',async()=>{
+ for(const close of [f=>{const side=f.companion.getWindow();side.emit('close');side.destroy();},f=>f.companion.dismiss()]){
+  const f=fixture();f.preferences.clientCompanion=false;f.setClient({connected:true,phase:'Lobby'});f.companion.observe(anchor);f.companion.setMode(true);await Promise.resolve();close(f);
+  f.setClient({connected:true,phase:'Matchmaking'});f.companion.sync();assert.equal(f.companion.getWindow(),null);assert.equal(f.preferences.clientCompanion,false);f.companion.destroy();
+ }
+});
+
+test('leaving pregame, disconnecting or returning from selection clears only the temporary open request',async()=>{
+ for(const boundary of [{connected:true,phase:'InProgress'},{connected:false,phase:'Offline'},{connected:true,phase:'Lobby'}]){
+  const f=fixture();f.preferences.clientCompanion=false;f.setClient({connected:true,phase:'ChampSelect',session:{gameId:101}});f.companion.observe(anchor);f.companion.setMode(true);await Promise.resolve();const side=f.companion.getWindow();
+  f.setClient(boundary);f.companion.sync();assert.equal(side.isDestroyed(),true);
+  f.setClient({connected:true,phase:'Lobby'});f.companion.sync();assert.equal(f.companion.getWindow(),null);
+  assert.equal(f.companion.setMode(true).docked,true);await Promise.resolve();assert.ok(f.companion.getWindow().isVisible());assert.equal(f.preferences.clientCompanion,false);f.companion.destroy();
+ }
+});
+
+test('unknown game IDs preserve the manual request but a confirmed replacement game clears it',async()=>{
+ const f=fixture();f.preferences.clientCompanion=false;f.setClient({connected:true,phase:'ChampSelect',session:{gameId:101}});f.companion.observe(anchor);f.companion.setMode(true);await Promise.resolve();const side=f.companion.getWindow();
+ for(const gameId of [undefined,101]){f.setClient({connected:true,phase:'ChampSelect',session:{gameId}});f.companion.sync();assert.equal(f.companion.getWindow(),side);assert.ok(side.isVisible());}
+ f.setClient({connected:true,phase:'ChampSelect',session:{gameId:202}});f.companion.sync();assert.equal(side.isDestroyed(),true);assert.equal(f.companion.getWindow(),null);assert.equal(f.preferences.clientCompanion,false);f.companion.destroy();
+});

@@ -894,7 +894,7 @@ function render(){
  selectionUiReset=false;
  document.body.classList.toggle('companion-mode',windowLayout.docked);
  const lockedNavigation=localPickLocked(client.session)?preparationGameId(client)+':'+client.session.myTeam.find(p=>p.cellId===client.session.localPlayerCellId)?.championId:'';
- if(!windowLayout.docked&&lockedNavigation!==lastCompanionLocked){lastCompanionLocked=lockedNavigation;if(lockedNavigation&&client.mode?.id!=='hex'){const plan=ownTaskPreparation();if(plan)queueMicrotask(()=>{if(!buildView?.snapshotPreview)showBuild(plan.selection.id,plan.selection.role,plan.selection.mode,{...plan.selection,quickConfiguration:true});});}}
+ if(!windowLayout.docked&&lockedNavigation!==lastCompanionLocked){lastCompanionLocked=lockedNavigation;if(lockedNavigation&&client.mode?.id!=='hex'){const plan=ownTaskPreparation();if(plan)queueMicrotask(()=>{if(!buildView?.snapshotPreview)showBuild(plan.selection.id,plan.selection.role,plan.selection.mode,{...plan.selection,quickConfiguration:true},{followOwn:true});});}}
  if(windowLayout.docked){
   vueRoutes.unmount();
   const focused=document.activeElement,focus=app.contains(focused)&&['INPUT','SELECT'].includes(focused.tagName)?{id:focused.id,tag:focused.tagName,data:{...focused.dataset}}:null;
@@ -997,7 +997,7 @@ function reflectSwitchedConfiguration(selection){
   for(const field of CONFIGURATION_FIELDS)delete buildView[field];
   Object.assign(buildView,{coreIndex:0,conditions:[]},selection);
  }
- if(windowLayout.docked&&companionTab==='plan'&&(!companionPreview||same(companionPreview)))companionPreview=structuredClone(selection);
+ if(windowLayout.docked&&companionTab==='plan'&&(same(companionPreview)||!companionPreview&&selection.mode!=='hex'))companionPreview=structuredClone(selection);
 }
 async function selectRiftHero(context,{preserveConfiguration=false}={}){
  const revision=++riftHeroClickRevision,selection=preserveConfiguration?{...context,mode:'rift'}:heroClickSelection(data,context),gameId=preparationGameId(client),writeContext=runeWriteContext(client),manualRole=ownManualRole();
@@ -1095,7 +1095,8 @@ async function prepareHeroClick(context,expected=null,selectedFirst=false,presel
     rebuild:()=>getBuild(champ(selection.id),selection.role,data,selection)});
   }finally{clickedHeroPreparation=null;}
  }
- if(windowLayout.docked){companionPreview=selection;companionTab='plan';companionScroll.delete('plan');closeOverlay();render();}
+ if(preserveConfiguration){render();if(buildView)renderBuild();}
+ else if(windowLayout.docked){companionPreview=selection;companionTab='plan';companionScroll.delete('plan');closeOverlay();render();}
  else{showBuild(context.id,context.role,context.mode||'rift',{...selection,quickConfiguration:true});}
  if(action.prepare)return useClientPreparation({dataset:{preparationView:windowLayout.docked?'companion':'build'}},true,expected?{...expected,planId:activeCreativePlan?.id||''}:null);
 }
@@ -1245,7 +1246,8 @@ async function useClientPreparation(el,directClick=false,expected=null,preselect
   const own=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId),target=data.champions.find(c=>c.id===selection.id)?.key;
   if(result.steps?.runes?.status==='done'&&client.connected&&client.phase==='ChampSelect'&&client.mode?.id==='rift'&&preparationGameId(client)===gameId&&(own?.championId||own?.championPickIntent)===target)runeAppliedKeys.confirm(runeAppliedKeys.begin(runeApplicationKey(selection.id,selection.role,prepared.value.page)));
   if(result.steps?.hover?.status==='done'&&preparationGameId(client)===gameId&&(own?.championId||own?.championPickIntent)===target){lastTaskSelection=selection;returnToTeamAfterPreparation(selection,true);}
-  toast(selection.mode==='hex'?'已切换英雄':preselectOnly?'只换了英雄，符文/召唤师技能/装备稍后需手动补应用':result.complete?'预选与配置已完成，锁定请在客户端确认':'部分步骤未完成，请查看操作结果',!result.complete);return result;
+  const appliedLocked=result.steps?.hover?.locked===true||localPickLocked(client.session)&&own?.championId===target;
+  toast(selection.mode==='hex'?'已切换英雄':preselectOnly?'只换了英雄，符文/召唤师技能/装备稍后需手动补应用':result.complete?(appliedLocked?'配置已应用':'预选与配置已完成，锁定请在客户端确认'):'部分步骤未完成，请查看操作结果',!result.complete);return result;
  }catch(error){let message=String(error.message||'操作未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');if(snapshotView&&clientDispatched&&(clientResult||!/尚未操作/.test(message)))message='客户端可能已执行部分或全部操作，请核对客户端；'+message;const completed=clientPreparationStatuses.get(key);clientPreparationStatuses.set(key,completed?{...completed,followUpError:message}:{message});throw Error(message);}
  finally{clientPreparing=false;preparationTarget=null;preparationPendingKey='';while(clientPreparationStatuses.size>30)clientPreparationStatuses.delete(clientPreparationStatuses.keys().next().value);render();if(buildView)renderBuild();}
 }
@@ -1534,7 +1536,26 @@ function showSnapshotPartner(id,role,reference={}){
  const conflict=favoriteSnapshotConflict(snapshotSource);
  showBuild(id,role,'rift',{...selection,...(!savedSelection||conflict?{readOnly:true}:{})},{exactSelection:true,snapshotSource});return true;
 }
-function showBuild(id,role,mode='rift',selection={},{exactSelection=false,snapshotSource=null}={}){if(!champ(id))throw Error('当前资料没有这位英雄');const context={id,role,mode,...selection};if(!exactSelection&&selection.readOnly===undefined&&buildView?.readOnly)context.readOnly=true;if(detailResult)buildReturn={index:results.indexOf(detailResult),id:detailResult.id,signature:resultDraftSignature,scroll:overlay.querySelector('.drawer-content')?.scrollTop||0};picker=null;comboView=null;detailResult=null;buildView={variant:'default',conditions:[],coreIndex:0,...(exactSelection?{}:rememberedPreparation(context,{allowSavedCombo:slots.every(s=>!s.champion)&&!client.session?.myTeam?.some(p=>p.championId)})),...context};if(selection.coreId||selection.coreIndex!==undefined&&selection.coreAuto!==true)delete buildView.coreAuto;if(exactSelection){buildView.snapshotPreview=true;buildView.snapshotKey=buildChoiceKey(buildView);buildView.snapshotSource=structuredClone(snapshotSource);}renderBuild();maybeRefreshBuild(id,role,mode);}
+function showBuild(id,role,mode='rift',selection={},{exactSelection=false,snapshotSource=null,followOwn=false}={}){if(!champ(id))throw Error('当前资料没有这位英雄');const context={id,role,mode,...selection};if(!exactSelection&&selection.readOnly===undefined&&buildView?.readOnly)context.readOnly=true;if(detailResult)buildReturn={index:results.indexOf(detailResult),id:detailResult.id,signature:resultDraftSignature,scroll:overlay.querySelector('.drawer-content')?.scrollTop||0};picker=null;comboView=null;detailResult=null;buildView={variant:'default',conditions:[],coreIndex:0,...(exactSelection?{}:rememberedPreparation(context,{allowSavedCombo:slots.every(s=>!s.champion)&&!client.session?.myTeam?.some(p=>p.championId)})),...context};if(selection.coreId||selection.coreIndex!==undefined&&selection.coreAuto!==true)delete buildView.coreAuto;if(exactSelection){buildView.snapshotPreview=true;buildView.snapshotKey=buildChoiceKey(buildView);buildView.snapshotSource=structuredClone(snapshotSource);}if(followOwn&&!exactSelection&&selection.quickConfiguration&&selection.readOnly!==true){const own=ownQuickBuildIdentity();if(own&&own.id===id&&own.role===role&&own.mode===mode)Object.defineProperty(buildView,'ownQuickBinding',{value:{gameId:own.gameId,cellId:own.cellId,mode:own.mode},configurable:true});}renderBuild();maybeRefreshBuild(id,role,mode);}
+// Only explicit own-task drawers follow accepted public state in this same draft.
+// The non-enumerable binding never becomes a preparation, export or IPC field.
+function ownQuickBuildIdentity(){
+ const session=client.session,cellId=session?.localPlayerCellId,gameId=preparationGameId(client),mode=client.mode?.id;
+ if(!client.connected||client.phase!=='ChampSelect'||mode!=='rift'||!Number.isInteger(cellId)||!gameId)return null;
+ const player=session.myTeam?.find(value=>value.cellId===cellId),hero=data.champions.find(value=>value.key===Number(player?.championId||player?.championPickIntent));
+ const role=ownManualRole()||CLIENT_POSITION_ROLES[String(player?.assignedPosition||'').toUpperCase()];
+ return hero&&role?{gameId,cellId,mode,id:hero.id,role}:null;
+}
+function followOwnQuickBuild(){
+ const binding=buildView?.ownQuickBinding;if(!binding||!buildView.quickConfiguration||buildView.snapshotPreview||buildView.readOnly)return false;
+ const gameId=preparationGameId(client),cellId=client.session?.localPlayerCellId;
+ if(client.connected&&(client.phase!=='ChampSelect'||client.mode?.id!==binding.mode||gameId&&gameId!==binding.gameId||Number.isInteger(cellId)&&cellId!==binding.cellId)){delete buildView.ownQuickBinding;buildView.readOnly=true;return false;}
+ const own=ownQuickBuildIdentity();if(!own||own.gameId!==binding.gameId||own.cellId!==binding.cellId||own.mode!==binding.mode)return false;
+ if(buildView.id===own.id&&buildView.role===own.role&&buildView.mode===own.mode)return false;
+ const selection=ownTaskPreparation()?.selection;if(!selection||selection.readOnly||!['id','role','mode'].every(field=>selection[field]===own[field]))return false;
+ buildView={variant:'default',conditions:[],coreIndex:0,...structuredClone(selection),quickConfiguration:true,readOnly:false};
+ Object.defineProperty(buildView,'ownQuickBinding',{value:binding,configurable:true});buildReturn=null;activeOverlaySelect=null;pendingBuildRender=false;renderedBuildContext=null;return true;
+}
 function editBuildSummoners(el,field,value){
  if(!buildView||el.dataset.plan!==[buildView.id,buildView.role,buildView.mode].join(':'))throw Error('英雄或位置已变化，请重新确认召唤师技能');
  const next=changeCompanionPlan(data,buildSelection(),field,value);delete buildView.summonerIds;
@@ -1542,7 +1563,7 @@ function editBuildSummoners(el,field,value){
  if(next.summonerIds)buildView.summonerIds=[...next.summonerIds];renderBuild();
 }
 function buildSelection(){return {readOnly:configurationReadOnly(buildView,client,taskOwnRole()),id:buildView.id,role:buildView.role,mode:buildView.mode,coreIndex:buildView.coreIndex,conditions:[...buildView.conditions],...selectedBuildFields(buildView,{preserveUnavailable:true,preparation:true}),...(buildView.mode==='hex'?{augmentIds:buildView.augmentIds||[],compareIds:buildView.compareIds||[],ownedAugmentIds:buildView.ownedAugmentIds||[]}:{})};}
-function buildSelectionContext(build){const own=currentPlayerSelection(client.session,data.champions,slots);return JSON.stringify([buildChoiceKey(buildSelection()),buildView.augmentIds||[],buildView.compareIds||[],buildView.ownedAugmentIds||[],data.patch,data.buildSource,build?.reference?.fetchedAt,client.connected,client.phase,client.game?.gameId,client.mode?.id,own?.id,own?.formalRole,own?.role,runeAppliedKeys.has(runeApplicationKey(build?.champion,build?.role,build?.runePage))]);}
+function buildSelectionContext(build){const own=currentPlayerSelection(client.session,data.champions,slots);return JSON.stringify([buildChoiceKey(buildSelection()),buildView.augmentIds||[],buildView.compareIds||[],buildView.ownedAugmentIds||[],data.patch,data.buildSource,build?.reference?.fetchedAt,client.connected,client.phase,client.game?.gameId,client.mode?.id,own?.id,own?.formalRole,own?.role,buildView.ownQuickBinding?ownQuickBuildIdentity():null,runeAppliedKeys.has(runeApplicationKey(build?.champion,build?.role,build?.runePage))]);}
 function acceptGuideSelection(selection){if(!selection)return;rememberPreparation(selection);guideSyncBase=selection;lastGuideSyncKey=buildChoiceKey(selection);if(buildView&&!buildView.snapshotPreview&&selection.id===buildView.id&&selection.role===buildView.role&&selection.mode===buildView.mode){for(const field of [...CONFIGURATION_FIELDS,'compareIds','ownedAugmentIds'])delete buildView[field];Object.assign(buildView,selection);renderBuild();}if(windowLayout.docked)render();}
 function receiveGuideSelection(selection,revision=0){
  if(revision&&revision<=guideRevision)return;
@@ -1638,6 +1659,15 @@ async function openBuildHexWorkbench(){
 function finishHexWorkbenchChange(){if(buildView?.hexWorkbench){renderBuild();return;}closeOverlay();if(!windowLayout.docked)route='hex';render();}
 function renderBuild(){
  if(!buildView)return;
+ const binding=buildView.ownQuickBinding,own=binding&&ownQuickBuildIdentity();
+ const ownChanged=binding&&(!own||own.gameId!==binding.gameId||own.cellId!==binding.cellId||['id','role','mode'].some(field=>buildView[field]!==own[field]));
+ if(ownChanged)buildRenderInteraction.invalidate();
+ const followedOwn=buildView.ownQuickBinding&&followOwnQuickBuild();
+ if(ownChanged&&buildView.ownQuickBinding&&!followedOwn){
+  activeOverlaySelect=null;pendingBuildRender=false;renderedBuildContext=null;
+  overlay.innerHTML=`<div class="modal-backdrop drawer-backdrop" data-backdrop="true"><section class="modal drawer" role="dialog" aria-modal="true" aria-label="英雄配置"><header class="modal-header"><h3>我的配置</h3>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><p class="callout">本人选人已变化，正在同步当前配置；也可关闭后重新打开。</p></section></div>`;
+  return;
+ }
  if(buildRenderInteraction.defer())return;
  if(buildView.snapshotPreview&&buildView.snapshotSource){
   const conflict=favoriteSnapshotConflict(buildView.snapshotSource),changed=buildChoiceKey(buildView)!==buildView.snapshotKey;
@@ -1650,7 +1680,7 @@ function renderBuild(){
  if(activeOverlaySelect?.isConnected&&overlay.contains(activeOverlaySelect)&&renderedBuildContext===buildSelectionContext(b)&&currentMatchupSelect(activeOverlaySelect)){pendingBuildRender=true;return;}
  activeOverlaySelect=null;pendingBuildRender=false;
  const restoreOverlay=preserveOverlay(overlay),refreshing=refreshingBuilds.has(buildKey(buildView.id,buildView.role,buildView.mode));
- buildView.build=b;maybeRefreshBuild(b.champion,b.role,b.mode);if(!buildView.snapshotPreview&&!b.unavailable&&(!buildView.coreId||buildView.coreId===b.selectedCoreId)){buildView.coreIndex=b.selectedCoreIndex;if(buildView.coreAuto!==true&&!(buildView.mode==='rift'&&buildView.comboId&&(buildView.loadoutId===undefined||buildView.loadoutId==='auto')))buildView.coreId=b.selectedCoreId||undefined;}renderedBuildContext=buildSelectionContext(b);if(!buildView.readOnly&&!buildView.snapshotPreview&&!b.unavailable){rememberPreparation(buildSelection());syncPreparedGuide(buildSelection());}
+ buildView.build=b;maybeRefreshBuild(b.champion,b.role,b.mode);if(!buildView.snapshotPreview&&!b.unavailable&&(!buildView.coreId||buildView.coreId===b.selectedCoreId)){buildView.coreIndex=b.selectedCoreIndex;if(buildView.coreAuto!==true&&!(buildView.mode==='rift'&&buildView.comboId&&(buildView.loadoutId===undefined||buildView.loadoutId==='auto')))buildView.coreId=b.selectedCoreId||undefined;}renderedBuildContext=buildSelectionContext(b);if(!followedOwn&&!buildView.readOnly&&!buildView.snapshotPreview&&!b.unavailable){rememberPreparation(buildSelection());syncPreparedGuide(buildSelection());}
  if(b.unavailable){
   overlay.innerHTML=`<div class="modal-backdrop drawer-backdrop" data-backdrop="true"><section class="modal drawer configuration-drawer recommendation-ui" role="dialog" aria-modal="true" aria-label="英雄配置"><header class="modal-header"><h3>我的配置 · ${e(c.name)}</h3>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="drawer-content">${companionPlanView(data,{selection:buildSelection(),build:b},saved.favorites,{surface:'build'})}</div></section></div>`;
   if(buildView.savedSnapshotConflict)overlay.querySelector('.drawer-content')?.insertAdjacentHTML('afterbegin','<p class="callout warning">收藏身份与当前阵容不一致，仅供查看；原配置未修改。</p>');if(buildView.savedSnapshotMissing)overlay.querySelector('.drawer-content')?.insertAdjacentHTML('afterbegin','<p class="callout">收藏未保存该成员的配置；这里展示当前资料参考，仅供查看。</p>');restoreOverlay();reflectRunePending();return;
@@ -2048,13 +2078,13 @@ document.addEventListener('click',async event=>{
   await prepareHeroClick({id,role,mode:'rift',...creativeComboContext(combo)});
   return;
  }
- if(action==='task-configuration'){const plan=ownTaskPreparation();if(!plan)throw Error('请先选择英雄');if(windowLayout.docked){companionTab='plan';render();}else showBuild(plan.selection.id,plan.selection.role,plan.selection.mode,{...plan.selection,quickConfiguration:true});return;}
+ if(action==='task-configuration'){const plan=ownTaskPreparation();if(!plan)throw Error('请先选择英雄');if(windowLayout.docked){companionTab='plan';render();}else showBuild(plan.selection.id,plan.selection.role,plan.selection.mode,{...plan.selection,quickConfiguration:true},{followOwn:true});return;}
  if(action==='task-compare'){if(clientPreparing||runeApplying||candidatePreparing)throw Error('当前配置进行中，请等待完成后换方案');draftComparing=true;companionTab='recommend';cancelRecommendation();results=[];offset=0;await generate();return;}
  if(action==='task-return'){draftComparing=false;cancelRecommendation();results=[];offset=0;render();return;}
  if(action==='task-members'){renderTaskMembers();return;}
  if(action==='draft-filters'){overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="推荐偏好"><header class="modal-header"><h3>推荐偏好</h3>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="modal-body"><details class="draft-preferences" open><summary>${e(restrictionSummary())}</summary>${playControls(saved.preferences)}</details><div class="segmented">${Object.entries(STYLES).map(([id,s])=>`<button class="segment ${style===id?'active':''}" data-action="style" data-style="${id}">${s.name}</button>`).join('')}</div>${button('combination-library','浏览组合库','','small')}${button('hero-pool','英雄池','','small')}${button('role-pools','各位置英雄池','','small')}${button('exclusions','排除英雄','','small')}${button('reset-draft','清空未选英雄','','quiet small')}${pairRefreshView(data,currentPairTargets(),pairRefreshStatus())}${button('example','载入空阵容示例','','quiet small')}</div></section></div>`;return;}
  if(action==='task-rankings'){rankingRole=taskOwnRole()||'top';if(windowLayout.docked)companionTab='rankings';else route='rankings';render();return;}
- if(action==='task-edit'){const plan=ownTaskPreparation();if(!plan)throw Error('请先确认本人英雄与位置');if(windowLayout.docked){companionPreview=structuredClone(plan.selection);companionTab='plan';render();}else showBuild(plan.selection.id,plan.selection.role,plan.selection.mode,{...plan.selection,readOnly:false,quickConfiguration:true});return;}
+ if(action==='task-edit'){const plan=ownTaskPreparation();if(!plan)throw Error('请先确认本人英雄与位置');if(windowLayout.docked){companionPreview=structuredClone(plan.selection);companionTab='plan';render();}else showBuild(plan.selection.id,plan.selection.role,plan.selection.mode,{...plan.selection,readOnly:false,quickConfiguration:true},{followOwn:true});return;}
  if(action==='companion-tab'){if(el.dataset.tab==='plan'&&companionPreview?.readOnly)companionPreview=null;companionTab=el.dataset.tab;closeOverlay();render();return;}
  if(action==='hex-quick-pick'){const hero=champ(el.dataset.id);if(!hero)throw Error('英雄资料已变化');await prepareHeroClick({id:hero.id,role:profile(hero).roles[0],mode:'hex',quickSwitch:true});return;}
  if(action==='hex-local-pick'){const hero=champ(el.dataset.id);if(!hero)throw Error('英雄资料已变化');await chooseHexHero(hero.id);const selection=heroClickSelection(data,{id:hero.id,role:profile(hero).roles[0],mode:'hex',readOnly:false,localReference:true});if(windowLayout.docked){companionPreview=selection;companionTab='plan';companionScroll.delete('plan');closeOverlay();render();}else showBuild(hero.id,selection.role,'hex',selection);return;}
@@ -2063,6 +2093,9 @@ document.addEventListener('click',async event=>{
  if(action==='companion-current'){companionPreview=null;companionTab='plan';closeOverlay();render();return;}
  if(action==='companion-preview'){await prepareCandidate(el);return;}
  if(action==='configuration-switch'){
+  if(el.isConnected===false)throw Error('英雄已变化，请重新选择配置');
+  const binding=overlay.contains(el)&&buildView?.ownQuickBinding,own=binding&&ownQuickBuildIdentity();
+  if(binding&&(!own||own.gameId!==binding.gameId||own.cellId!==binding.cellId||['id','role','mode'].some(field=>buildView[field]!==own[field])))throw Error('本人选人已变化，请等待当前配置同步');
   const plan=overlay.contains(el)&&buildView?{selection:buildSelection(),build:buildView.build}:companionPreparation();
   if(!plan||el.dataset.plan!==[plan.selection.id,plan.selection.role,plan.selection.mode].join(':'))throw Error('英雄已变化，请重新选择配置');
   assertConfigurationEditable(plan.selection);
@@ -2070,13 +2103,14 @@ document.addEventListener('click',async event=>{
   if(!choice)throw Error('配置已更新，请重新选择');
   if(clientPreparing||runeApplying||itemSetPending)throw Error('正在应用配置，请稍候');
   const selected=structuredClone(choice.selection);if(choice.id!=='default'){delete selected.coreAuto;if(choice.build.reference&&choice.build.selectedCoreId){selected.coreId=choice.build.selectedCoreId;selected.coreIndex=choice.build.selectedCoreIndex;}}
-  const revision=++riftHeroClickRevision,context=selectionRequestContext(),manualRole=ownManualRole(),ownRole=taskOwnRole();
-  const assigned=()=>String(client.session?.myTeam?.find(player=>player.cellId===client.session?.localPlayerCellId)?.assignedPosition||'').toUpperCase(),assignedRole=assigned();
-  const current=()=>revision===riftHeroClickRevision&&context===selectionRequestContext()&&manualRole===ownManualRole()&&ownRole===taskOwnRole()&&assignedRole===assigned();
+  const revision=++riftHeroClickRevision,context=selectionRequestContext(),manualRole=ownManualRole(),ownRole=taskOwnRole(),sourceEpoch=buildSourceEpoch,sourceSnapshot=JSON.stringify(normalizeBuildSource(data.buildSource));
+  const ownPlayer=()=>client.session?.myTeam?.find(player=>player.cellId===client.session?.localPlayerCellId),assigned=()=>String(ownPlayer()?.assignedPosition||'').toUpperCase(),assignedRole=assigned();
+  const publicHero=()=>{const player=ownPlayer(),picked=player?.championId||0,intent=player?.championPickIntent||0;return picked&&intent&&picked!==intent?null:picked||intent;},clickedPublicHero=publicHero();
+  const current=()=>revision===riftHeroClickRevision&&context===selectionRequestContext()&&manualRole===ownManualRole()&&ownRole===taskOwnRole()&&assignedRole===assigned()&&clickedPublicHero!==null&&clickedPublicHero===publicHero()&&sourceEpoch===buildSourceEpoch&&sourceSnapshot===JSON.stringify(normalizeBuildSource(data.buildSource));
   reflectSwitchedConfiguration(selected);
   const next=rememberPreparation(selected);render();if(buildView)renderBuild();
   await saveChain;if(!current())throw Error('选人已变化，请重新选择配置');
-  syncPreparedGuide(next);await guideSyncChain;if(!current())throw Error('选人已变化，请重新选择配置');
+  syncPreparedGuide(next,current);await guideSyncChain;if(!current())throw Error('选人已变化，请重新选择配置');
   await prepareHeroClick(next,null,false,null,{preserveConfiguration:true});return;
  }
  if(action==='companion-jump'){const section=document.querySelector(`[data-companion-section="${el.dataset.section}"]`);if(section){if(section.tagName==='DETAILS')section.open=true;section.scrollIntoView({block:'start'});}return;}
@@ -2421,10 +2455,17 @@ document.addEventListener('change',event=>{
   else{const next=changeCompanionPlan(data,buildSelection(),field,el.value);Object.assign(buildView,next);renderBuild();}
  }catch(error){toast(error.message,true);if(el.dataset.runeSurface==='companion')render();else renderBuild();}
 },true);
-function positionFitTooltip(event){const number=event.target.closest?.('.lineup-fit-number'),tip=number?.querySelector('.lineup-fit-hover');if(!tip)return;for(const open of document.querySelectorAll('.lineup-fit-hover:popover-open'))if(open!==tip)open.hidePopover();if(!tip.matches(':popover-open'))tip.showPopover();const bounds=number.getBoundingClientRect(),width=tip.offsetWidth||230,height=tip.offsetHeight||230;tip.style.left=Math.max(8,Math.min(innerWidth-width-8,bounds.right-width))+'px';tip.style.top=Math.max(8,Math.min(innerHeight-height-8,bounds.bottom+6))+'px';}
+function positionFitTooltip(event){const number=event.target.closest?.('.lineup-fit-number'),tip=number?.querySelector('.lineup-fit-hover');if(!tip||dismissedFitTooltip===number)return;dismissedFitTooltip=null;for(const open of document.querySelectorAll('.lineup-fit-hover:popover-open'))if(open!==tip)open.hidePopover();if(!tip.matches(':popover-open'))tip.showPopover();const bounds=number.getBoundingClientRect(),width=tip.offsetWidth||230,height=tip.offsetHeight||230;tip.style.left=Math.max(8,Math.min(innerWidth-width-8,bounds.right-width))+'px';tip.style.top=Math.max(8,Math.min(innerHeight-height-8,bounds.bottom+6))+'px';}
+let dismissedFitTooltip=null;
 document.addEventListener('pointerover',positionFitTooltip);document.addEventListener('pointermove',positionFitTooltip);document.addEventListener('focusin',positionFitTooltip);
-function hideFitTooltip(event){const number=event.target.closest?.('.lineup-fit-number');if(number&&!number.contains(event.relatedTarget))number.querySelector('.lineup-fit-hover')?.hidePopover();}
+function hideFitTooltip(event){const number=event.target.closest?.('.lineup-fit-number');if(number&&!number.contains(event.relatedTarget)){if(dismissedFitTooltip===number)dismissedFitTooltip=null;number.querySelector('.lineup-fit-hover')?.hidePopover();}}
 document.addEventListener('pointerout',hideFitTooltip);document.addEventListener('focusout',hideFitTooltip);
+document.addEventListener('keydown',event=>{
+ if(event.key!=='Escape'||event.defaultPrevented)return;
+ const tips=document.querySelectorAll('.lineup-fit-hover:popover-open');if(!tips.length)return;
+ for(const tip of tips){dismissedFitTooltip=tip.closest('.lineup-fit-number');tip.hidePopover();}
+ event.preventDefault();
+},true);
 document.addEventListener('change',event=>{
  if(event.target.id==='patch-version'){patchVersion=event.target.value;render();return;}
  const field=event.target.dataset.rankingFilter;if(!field)return;

@@ -8,7 +8,8 @@ import {prepareHeroWithSource} from '../src/core/hero-source-preparation.mjs';
 import {localConfigurationPreview,assertConfigurationEditable} from '../src/core/companion-plan.mjs';
 import {pregamePhase} from '../src/core/pregame-intent.mjs';
 import {holdRenderDuringPointer} from '../src/pointer-render.mjs';
-import {CONFIGURATION_FIELDS} from '../src/core/preparation.mjs';
+import {CONFIGURATION_FIELDS,configurationPatch,configurationKey} from '../src/core/preparation.mjs';
+import {normalizeBuildSource,requireBuildSource,selectBuildSource} from '../src/core/build-source.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 function extract(from,to){
@@ -28,7 +29,7 @@ function configurationFixture(docked,choice){
  const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:'777',localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:22,assignedPosition:'BOTTOM'}]}};
  const previous={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,runeId:'old-rune',customRunePage:{old:true},startId:'old-start',laterIds:[123]};
  const context=vm.createContext({
-  client,data:{champions:[{id:'Ashe',key:22}]},setTimeout,structuredClone,CONFIGURATION_FIELDS,heroClickSelection,runeWriteContext,prepareHeroWithSource,localConfigurationPreview,pregamePhase,assertConfigurationEditable,
+  client,data:{champions:[{id:'Ashe',key:22}],buildSource:normalizeBuildSource()},buildSourceEpoch:0,normalizeBuildSource,setTimeout,structuredClone,CONFIGURATION_FIELDS,heroClickSelection,runeWriteContext,prepareHeroWithSource,localConfigurationPreview,pregamePhase,assertConfigurationEditable,
   preparationGameId:()=> '777',champ:()=>({id:'Ashe',key:22}),ownManualRole:()=> 'bottom',taskOwnRole:()=> 'bottom',
   slots:[{role:'bottom',champion:'Ashe',clientCellId:1}],windowLayout:{docked},companionTab:'plan',
   companionPreview:structuredClone(previous),buildView:docked?null:{...structuredClone(previous),quickConfiguration:true,build:{}},overlay:{contains:()=>!docked},
@@ -69,13 +70,27 @@ for(const docked of [true,false])test(`explicit configuration switching keeps th
  else assert.equal(f.drawerOpen,true);
 });
 
-function queuedConfiguration(){
+function queuedConfiguration({sourceSwitch=false}={}){
  const f=configurationFixture(false,{id:'Ashe',role:'bottom',mode:'rift',loadoutId:'default',runeId:'older-rune'}),guide=Promise.withResolvers();
  Object.assign(f.context,{guideSyncChain:guide.promise,currentCombo:()=>null,creativeComboContext:()=>({}),activeCreativePlan:null,recallPreparation:()=>null,preparations:{},guideSelection:null,rememberedPreparation:()=>null});
  f.context.champ=id=>({id,key:id==='Ahri'?103:22});f.context.data.champions.push({id:'Ahri',key:103});
  f.context.api.prepareSelection=async value=>{f.hovered.push(value);f.context.client.session.myTeam[0].championPickIntent=value.champion==='Ahri'?103:22;return {complete:true,steps:{hover:{status:'done'}}};};
+ const guideUpdates=[];
+ if(sourceSwitch){
+  const c=f.context;c.saved.preferences.buildSource=normalizeBuildSource();
+  Object.assign(c,{pendingBuildSourceEpoch:null,buildSourceDraft:null,drainExternalState(){},toast(){},
+   dataState:{baseGeneration:()=>1,selectSource:()=>selectBuildSource(c.data,c.saved.preferences.buildSource)},
+   preservePlayerPosition(){},reconcileCreativePlan(){},currentPlayerSelection:()=>null,scope:'party',markResultStale(){},cancelRecommendation(){},persist(){},queueCompanionRecommendation(){},
+   recommendationError:'',results:[],offset:0,autoRecommendationKey:'',restoringSave:false,guideRevision:1,guideSyncPending:0,
+   guideSelection:structuredClone(c.buildView),guideSyncBase:structuredClone(c.buildView),lastGuideSyncKey:configurationKey(c.buildView),
+   buildChoiceKey:configurationKey,configurationPatch,preparations:{recall:selection=>selection},acceptGuideSelection(){},
+  });
+  c.api.updateGuide=async value=>{guideUpdates.push(value);return {};};
+  vm.runInContext(extract('async function changeWindowBuildSource(','const historyRequest=')+
+   extract('function invalidate(','function candidateScrollPosition(')+extract('function syncPreparedGuide(','async function openPreparedGuide('),c);
+ }
  const pending=f.context.switchConfiguration({dataset:{plan:'Ashe:bottom:rift',config:'alternative'}}).then(value=>({value}),error=>({error}));
- return {...f,guide,pending};
+ return {...f,guide,pending,guideUpdates};
 }
 const turn=()=>new Promise(resolve=>setImmediate(resolve));
 
@@ -99,6 +114,20 @@ for(const changed of ['role','assigned role','game'])test(`a ${changed} change d
  try{f.guide.resolve();await turn();assert.equal(f.hovered.length,0);assert.equal(f.configured.length,0);}
  finally{f.guide.resolve();f.finish();await f.pending;}
  assert.match((await f.pending).error?.message||'',/选人已变化/);
+});
+
+for(const roundTrip of [false,true])test(`a queued configuration is cancelled after a real source ${roundTrip?'round trip with a newer epoch':'change'} and a fresh click succeeds`,async()=>{
+ const f=queuedConfiguration({sourceSwitch:true}),c=f.context;await turn();assert.equal(f.hovered.length,0);
+ const change=region=>c.changeWindowBuildSource(requireBuildSource({region,tier:'emerald_plus'}));
+ assert.equal(await change('kr'),true);if(roundTrip)assert.equal(await change('global'),true);
+ assert.equal(c.dataState.baseGeneration(),1,'Source-only changes must be detected even without a new base snapshot');
+ f.guide.resolve();f.finish();const old=await f.pending;
+ assert.match(old.error?.message||'',/选人已变化/);assert.equal(f.hovered.length,0);assert.equal(f.configured.length,0);
+ assert.equal(f.guideUpdates.length,0,'The old queued guide edit must also be cancelled before dispatch');
+ c.configurationChoices=()=>[{id:'fresh-source',selection:{id:'Ashe',role:'bottom',mode:'rift',loadoutId:'default',runeId:'fresh-source-rune'},build:{reference:{},selectedCoreId:'fresh-core',selectedCoreIndex:2}}];
+ await c.switchConfiguration({dataset:{plan:'Ashe:bottom:rift',config:'fresh-source'}});
+ assert.deepEqual(f.hovered.map(value=>value.champion),['Ashe']);assert.deepEqual(f.configured.map(value=>value.runeId),['fresh-source-rune']);
+ assert.equal(f.guideUpdates.length,1,'An explicit click in the new source still synchronizes its guide');
 });
 
 function pointerFixture({initialize=true}={}){

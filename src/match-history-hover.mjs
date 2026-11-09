@@ -66,6 +66,15 @@ export function bindHistoryTooltips({document:doc,attribute='data-history-tip',r
  function position(){
   if(!target?.isConnected||!tip)return close();
   const bounds=target.getBoundingClientRect(),view=doc.defaultView,width=tip.offsetWidth,height=tip.offsetHeight;
+  const clip={left:0,top:0,right:view.innerWidth,bottom:view.innerHeight};
+  for(let parent=target.parentElement;parent;parent=parent.parentElement){
+   const style=view.getComputedStyle(parent),clipX=/^(auto|scroll|hidden|clip)$/.test(style.overflowX),clipY=/^(auto|scroll|hidden|clip)$/.test(style.overflowY);
+   if(!clipX&&!clipY)continue;
+   const box=parent.getBoundingClientRect(),left=box.left+parent.clientLeft,top=box.top+parent.clientTop;
+   if(clipX){clip.left=Math.max(clip.left,left);clip.right=Math.min(clip.right,left+parent.clientWidth);}
+   if(clipY){clip.top=Math.max(clip.top,top);clip.bottom=Math.min(clip.bottom,top+parent.clientHeight);}
+  }
+  if(!bounds.width||!bounds.height||clip.left>=clip.right||clip.top>=clip.bottom||bounds.right<=clip.left||bounds.left>=clip.right||bounds.bottom<=clip.top||bounds.top>=clip.bottom)return close();
   const left=Math.max(8,Math.min(view.innerWidth-width-8,bounds.right+width+12<=view.innerWidth?bounds.right+10:bounds.left-width-10));
   const top=Math.max(8,Math.min(view.innerHeight-height-8,bounds.top));tip.style.left=left+'px';tip.style.top=top+'px';
  }
@@ -75,8 +84,9 @@ export function bindHistoryTooltips({document:doc,attribute='data-history-tip',r
   if(!html)return close();
   tip=doc.createElement('div');tip.id=tooltipId;tip.className='history-hover';tip.setAttribute('role','tooltip');tip.setAttribute('popover','manual');
   const theme=doc.defaultView.getComputedStyle(next);for(const [key,source] of [['bg','--rb-panel'],['ink','--rb-ink'],['line','--rb-line'],['accent','--rb-accent']]){const value=theme.getPropertyValue(source);if(value.trim())tip.style.setProperty('--history-tip-'+key,value);}
-  tip.innerHTML=html;doc.body.append(tip);tip.showPopover();next.setAttribute('aria-describedby',tip.id);position();
+  tip.innerHTML=html;doc.body.append(tip);tip.showPopover();next.setAttribute('aria-describedby',tip.id);
   tip.addEventListener('pointerenter',()=>clearTimer(hideTimer));tip.addEventListener('pointerleave',()=>{hideTimer=setTimer(close,100);});
+  position();
  }
  function enter(event){const next=event.target.closest?.(selector);if(!next||event.relatedTarget&&next.contains(event.relatedTarget))return;cancel();if(next===target)return;showTimer=setTimer(()=>show(next),180);}
  function leave(event){const old=event.target.closest?.(selector);if(!old||old.contains(event.relatedTarget))return;clearTimer(showTimer);if(tip?.contains(event.relatedTarget))return;clearTimer(hideTimer);hideTimer=setTimer(close,120);}
@@ -84,6 +94,6 @@ export function bindHistoryTooltips({document:doc,attribute='data-history-tip',r
  doc.addEventListener('focusin',event=>{const next=event.target.closest?.(selector);if(next)show(next);});
  doc.addEventListener('focusout',leave);doc.addEventListener('keydown',event=>{if(event.key==='Escape')close();});
  doc.addEventListener('pointerdown',event=>{if(!target?.contains(event.target)&&!tip?.contains(event.target))close();});
- doc.addEventListener('scroll',()=>{if(tip)position();},true);doc.defaultView.addEventListener('resize',close);
+ doc.addEventListener('scroll',event=>{if(tip&&!tip.contains(event.target))position();},true);doc.defaultView.addEventListener('resize',close);
  return {close};
 }
