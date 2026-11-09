@@ -623,6 +623,10 @@ function acceptSavedState(accepted,revision,base=savedBase){
  // open views before rendering; rendering an old drawer must not save its
  // stale defaults over a change accepted from the other window.
  if(viewed&&buildView&&!buildView.snapshotPreview){const currentGuide=saved.guide?.selection,guideChanged=!guideSyncPending&&guideBefore!==JSON.stringify(currentGuide)&&['id','role','mode'].every(field=>currentGuide?.[field]===viewed[field]);const next=guideChanged?currentGuide:saved.preparations.find(value=>preparationIdentity(value)===preparationIdentity(viewed));for(const field of [...CONFIGURATION_FIELDS,'augmentIds','compareIds','ownedAugmentIds'])delete buildView[field];Object.assign(buildView,{conditions:[],coreIndex:0},next||{id:viewed.id,role:viewed.role,mode:viewed.mode,...(viewed.comboId?{comboId:viewed.comboId,creativePlan:viewed.creativePlan}:{})});}
+ if(companionPreview&&!companionPreview.readOnly&&!companionPreview.localReference){
+  const next=saved.preparations.find(value=>preparationIdentity(value)===preparationIdentity(companionPreview));
+  if(next)companionPreview={...structuredClone(next),readOnly:false};
+ }
  if(pendingIntentPreparation){if(pendingIntentPlanId!==(activeCreativePlan?.id||'')){pendingIntentPreparation=null;pendingIntentPlanId='';}else pendingIntentPreparation=preparations.recall(pendingIntentPreparation);}
  if(!guideSyncPending){guideSelection=saved.guide?.selection||null;guideSyncBase=guideSelection;lastGuideSyncKey=guideSelection?buildChoiceKey(guideSelection):'';}
  if(sourceBefore!==JSON.stringify(saved.preferences.buildSource))dataState.selectSource();
