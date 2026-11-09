@@ -33,6 +33,7 @@ async function run(){
  let picked='',hovered='',teammatePicked='',assigned='',enemyPicked='Malphite',observer,phase='ChampSelect',gameId='1501',offline=false,holdRuneWrite=false,resumeRuneWrite=null,writes=[];
  let page={...getBuild(hero('Ashe'),'bottom',data).runePage,id:44,isEditable:true},preparationAction=null,spells={spell1Id:4,spell2Id:7},hoverWrites=0,spellWrites=0;
  const output=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;

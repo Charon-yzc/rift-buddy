@@ -20,6 +20,7 @@ https.request=(options,callback)=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);assert.equal(options.auth,'riot:isolated-user-flow');
   const route=options.path,champion=syntheticClient.session.myTeam[0];
   const value=
+   ['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(route)?[{id:999999,name:'隔离字典'}]:
    route==='/lol-gameflow/v1/gameflow-phase'?'ChampSelect':
    route==='/lol-gameflow/v1/session'?{map:{id:11,gameMode:'CLASSIC'},gameData:{gameId:Number(syntheticClient.session.gameId)||0,mapId:11,queue:{id:420,gameMode:'CLASSIC'}}}:
    route==='/lol-champ-select/v1/session'?{gameId:syntheticClient.session.gameId,localPlayerCellId:syntheticClient.session.localPlayerCellId,myTeam:syntheticClient.session.myTeam,theirTeam:[],bans:{myTeamBans:[],theirTeamBans:[]},actions:syntheticClient.session.actions,timer:{phase:'PLANNING',adjustedTimeLeftInPhase:45000},allowDuplicatePicks:false}:

@@ -1,3 +1,4 @@
+import {clientChampion} from './core/client-dictionary.mjs';
 // Player-card rules adapted from League Akari 60f1584c (MIT, Copyright 2026 Hanxven).
 // Card anatomy follows Akari's ongoing-game panel: 240px cards in a fixed
 // column grid, avatar + level, one rank strip, one win-rate / KDA / position
@@ -18,9 +19,9 @@ import {ongoingTipAttributes} from './ongoing-game-hover.mjs';
 const finite=Number.isFinite;
 const num=(v,d=0)=>finite(v)?formatNumber(v,d):'未读取';
 const pct=v=>finite(v)?`${(v*100).toFixed(0)}%`:'未读取';
-const champion=(data,id)=>(data?.champions||[]).find(c=>Number(c.key)===Number(id));
-const heroName=(data,id)=>champion(data,id)?.name||(id>0?`英雄 ${id}`:'英雄未选择');
-const heroPortrait=(data,id)=>champion(data,id)?portrait(champion(data,id)):'<span class="ongoing-empty-icon" aria-label="英雄未读取">?</span>';
+const champion=(data,id)=>clientChampion(data,id);
+const heroName=(data,id)=>champion(data,id)?.name||(Number(id)>0?`英雄 ${id}`:'英雄未选择');
+const heroPortrait=(data,id)=>{const c=champion(data,id);if(c)return portrait(c);return '<span class="ongoing-empty-icon" aria-label="英雄未读取">?</span>';};
 const RESULT={win:'胜',loss:'负',remake:'重开',abort:'中止',unknown:'未知'};
 const PHASES={lobby:'组队大厅','champ-select':'英雄选择','in-game':'对局进行中',draft:'已保留的对局',unavailable:'等待客户端'};
 const POSITION_ORDER={TOP:1,JUNGLE:2,MIDDLE:3,MID:3,BOTTOM:4,UTILITY:5,SUPPORT:5};

@@ -8,6 +8,7 @@ async function run(){
  // Exercise real discoverClient, sanitizeSession, clientSnapshot and liveSnapshot,
  // replacing only the HTTPS sockets. No real client port is opened or contacted.
  const response=options=>{assert.equal(options.hostname,'127.0.0.1');const p=options.path;
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return {value:[{id:999999,name:'隔离字典'}]};}
   if(options.port===2999){liveRequests++;if(!liveAvailable)return {status:503,value:{}};
    if(p==='/liveclientdata/activeplayer')return {value:{riotId:'isolated-player',currentGold:1250,level:8,abilities:Object.fromEntries(['Q','W','E','R'].map(k=>[k,{abilityLevel:k==='Q'?4:1}]))}};
    if(p==='/liveclientdata/playerlist')return {value:[{riotId:'isolated-player',rawChampionName:'game_character_displayname_'+hero,items:[]}]};

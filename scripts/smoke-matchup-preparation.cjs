@@ -10,6 +10,7 @@ async function run(){
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'))).version;global.fetch=async()=>{throw Error('Isolated matchup smoke: external network disabled');};
  let picked=mechanics?'Garen':restart?'Nautilus':'Ahri',assigned=mechanics?'TOP':restart?'UTILITY':'MIDDLE',enemy=mechanics?'Jax':restart?'Morgana':'Zed',gameId='1520';
  const output=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);if(options.method&&options.method!=='GET'){writes++;throw Error('Rune writes prohibited in matchup selection smoke');}
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return 'ChampSelect';
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};

@@ -23,6 +23,7 @@ async function run(){
   if(options.path==='/lol-champ-select/v1/session')return {value:{localPlayerCellId:1,myTeam:[{cellId:1,championId:ownChampion,assignedPosition:'top'}],theirTeam:[],actions:[],bans:{}}};
   if(['/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids'].includes(options.path)){assert.ok(!options.method||options.method==='GET');return {status:404,value:{message:'Optional selection scope unavailable in this fixture'}};}
   if(!options.method||options.method==='GET'){
+   if(['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path))return {value:[{id:999999,name:'隔离字典'}]};
    assert.equal(options.path,'/lol-perks/v1/pages');const value=structuredClone(pages);
    if(changeOnPages==='phase')phase='GameStart';else if(changeOnPages==='game')gameId='1402';else if(changeOnPages==='hero')ownChampion=data.champions.find(c=>c.id==='Zed').key;
    changeOnPages='';return {value};

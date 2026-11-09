@@ -17,6 +17,8 @@ async function run(){
  global.fetch=async()=>{sourceFetches++;throw Error('External source requests disabled in dual-window fixture');};
  const output=options=>{
   requests++;assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
+  if(options.path==='/lol-game-data/assets/v1/champion-summary.json')return [{id:999999,alias:'FutureHero',name:'测试新英雄'}];
+  if(options.path==='/lol-game-data/assets/v1/items.json')return [{id:999998,name:'测试新装备',price:1500,description:'客户端公开说明',iconPath:'/lol-game-data/assets/ASSETS/Items/Icons2D/fixture_item.png'}];
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId:'4701',mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离同步玩家',tagLine:'TEST'};
@@ -52,6 +54,12 @@ async function run(){
  assert.deepEqual(main.getBounds(),normal);assert.equal(await js(main,'window.buddy.bootstrap().then(b=>b.surface)'),'main');assert.equal(await js(side,'window.buddy.bootstrap().then(b=>b.surface)'),'companion');assert.equal(await js(main,'document.body.classList.contains("companion-mode")'),false);
  assert.ok(Math.abs(side.getBounds().width-440)<=3);assert.ok(Math.abs(side.getBounds().height-anchor.height)<=3);assert.equal(side.isAlwaysOnTop(),false);
  const initialBounds=side.getBounds();for(let n=0;n<30;n++)snapshot({...anchor,x:anchor.x+n%3,height:anchor.height+n%3});assert.deepEqual(side.getBounds(),initialBounds);assert.deepEqual(anchor,anchorBefore);
+ // A real dictionary publication reaches both independent renderer asset indexes.
+ for(const window of [main,side]){
+  await until(()=>js(window,'window.buddy.bootstrap().then(b=>b.data.clientDictionary?.items.some(i=>i.id===999998))'),'Client display dictionary was not published');
+  assert.equal(await js(window,'window.buddy.bootstrap().then(b=>b.data.champions.some(c=>c.key===999999)||!!b.data.items[999998])'),false,'Public display metadata changed the authoritative game snapshot');
+  await until(()=>js(window,'import("./ui.mjs").then(m=>m.asset("item",999998).includes("assets/items/icons2d/fixture_item.png"))'),'The renderer did not install its new dictionary image');
+ }
  // The disconnected "connect" action enables auto-sync. Disable its normal
  // polling for this isolated observer check, then drain any already-started read.
  assert.equal(await js(main,'window.buddy.bootstrap().then(b=>b.state.preferences.autoSync)'),true,'Connecting should enable automatic client synchronization');

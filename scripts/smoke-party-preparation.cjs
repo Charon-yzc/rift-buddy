@@ -31,6 +31,7 @@ async function run(){
   requests++;assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   const method=options.method||'GET',route=options.path,body=options.body===undefined?undefined:JSON.parse(options.body);
   if(method==='GET'){
+   if(['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(route))return [{id:999999,name:'隔离字典'}];
    if(route==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
    if(route==='/lol-gameflow/v1/gameflow-phase')return phase;
    if(route==='/lol-gameflow/v1/session')return customGame?{gameData:{gameId:gameflowId,isCustomGame:true,queue:{id:0,gameMode:''}},map:{id:11,gameMode:'CLASSIC'}}:{gameData:{gameId:gameflowId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
@@ -280,6 +281,10 @@ async function run(){
  assert.deepEqual(attempts[3].summoners,swapped);assert.deepEqual(attempts[3].page.selectedPerkIds,perks);assert.deepEqual(attempts[3].itemSet.blocks,attempts[0].itemSet.blocks);assert.equal(picked,0);assert.equal(intent,hero('Galio').key);assert.equal(completed,false);assert.equal(await js(main,'!!document.querySelector(".drawer")'),true,'Explicit configuration navigation must show the clicked configuration');
  const clickedMainPlan=await js(main,'JSON.parse(document.querySelector(".drawer [data-client-preparation-fingerprint]").dataset.clientPreparationFingerprint)[0]');assert.equal(clickedMainPlan.champion,'Galio');assert.deepEqual(clickedMainPlan.summoners,attempts[3].summoners);assert.deepEqual(clickedMainPlan.page.selectedPerkIds,attempts[3].page.selectedPerkIds);assert.deepEqual(clickedMainPlan.itemSet.blocks,attempts[3].itemSet.blocks);
  await until(async()=>{const value=await ownPlan();return JSON.stringify(value.page.selectedPerkIds)===JSON.stringify(perks)&&JSON.stringify(value.summoners)===JSON.stringify(swapped);},'Main avatar click changed the shared sidebar configuration');
+ // Opening the explicit configuration also persists its resolved source choices.
+ // Wait for that transaction before attributing later changes to a read-only click.
+ const resolvedPersonal=getBuild(hero('Galio'),'mid',currentData);
+ await until(async()=>{const selection=(await state()).guide?.selection;return selection?.runeId===originalRune.id&&selection?.skillId===resolvedPersonal.selectedSkillId&&JSON.stringify(selection?.laterIds||[])===JSON.stringify(resolvedPersonal.selectedLaterIds||[]);},'The personal configuration did not finish committing its source choices');
  // Teammate detail remains read-only; rebuilding a native sidebar replays receipts.
  await click(main,'[data-action=close]');const beforeReadonly=writes.length,beforeReadonlyState=await state();assert.equal(await js(main,'document.querySelector(".champ-pick[data-id=Vi][data-role=jungle]").hasAttribute("data-action")'),false);await js(main,'document.querySelector(".champ-pick[data-id=Vi][data-role=jungle]").click()');assert.equal(await js(main,'!!document.querySelector(".drawer")'),false,'A displayed teammate still opens a configuration');assert.deepEqual(await state(),beforeReadonlyState);assert.equal(writes.length,beforeReadonly);
  const previousSide=side;previousSide.destroy();await click(main,'[data-action=companion-attach]');

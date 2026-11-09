@@ -11,7 +11,7 @@ global.fetch=async()=>{throw Error('Isolated matchup smoke: source network disab
 https.request=(options,callback)=>{const req=new EventEmitter();req.end=()=>queueMicrotask(()=>{try{
  assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);assert.equal(options.auth,'riot:isolated-matchups-only');assert.equal(options.method||'GET','GET','Game writes prohibited');
  const identity=cell=>({summonerId:cell,puuid:'isolated-matchups-player-'+cell,gameName:'隔离队友'+cell,tagLine:'TEST'}),route=options.path;
- const value=route==='/lol-gameflow/v1/gameflow-phase'?(seedLobby?'Lobby':fixture.phase):
+ const value=['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(route)?[{id:999999,name:'隔离字典'}]:route==='/lol-gameflow/v1/gameflow-phase'?(seedLobby?'Lobby':fixture.phase):
   route==='/lol-gameflow/v1/session'?{gameData:{...fixture.game,queue:{id:420,gameMode:'CLASSIC'}}}:
   route==='/lol-champ-select/v1/session'?{...fixture.session,gameId:fixture.game.gameId,myTeam:fixture.session.myTeam.map(player=>({...player,...identity(player.cellId)})),bans:{myTeamBans:[],theirTeamBans:[]}}:
   route==='/lol-lobby/v2/lobby'?{localMember:identity(1),members:[identity(1),identity(2)]}:

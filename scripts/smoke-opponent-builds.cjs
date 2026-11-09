@@ -22,6 +22,7 @@ async function run(){
   return u.hostname==='lol-api-champion.op.gg'?Response.json(fixture.raw):new Response(flight(fragments));
  };
  const response=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   if(options.method&&options.method!=='GET'){runeWrites++;throw Error('Real rune writes prohibited');}
   if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};

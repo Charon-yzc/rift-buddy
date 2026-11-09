@@ -28,6 +28,9 @@ function publishData(keys,replace=false){
  const changes={};for(const key of keys)if(replace||sharedDataFields.get(key)!==data[key]){changes[key]=data[key];sharedDataFields.set(key,data[key]);}
  if(Object.keys(changes).length)publishWindows('data-update',{changes,replace,revision:++dataRevision});
 }
+const {installClientDictionary}=require('../src/core/client-dictionary.mjs');
+let dictionaryRevision=0;
+function mergeLiveGameData(live){if(live&&installClientDictionary(data,live))publishData(['clientDictionary']);}
 let importingItemSet=false;
 let mainExplicitInGame=false,mainDismissed=false;
 const mainRequests=new Map(),inGame=()=>latestClient.connected&&['GameStart','InProgress','Reconnect'].includes(latestClient.phase);
@@ -918,6 +921,12 @@ async function boot(){
    usageCollector.observe(latestClient,latestHistoryTransport).catch(()=>{});
    if(!latestClient.connected||postgameTransport!==latestHistoryTransport)postgameOwner=null;
    postgameTransport=latestHistoryTransport;
+   const dictionaryTicket=++dictionaryRevision,dictionaryBase=data,dictionaryTransport=latestHistoryTransport;
+   if(latestClient.connected){
+    helper.liveDictionary(state.preferences?.installPath,dictionaryTransport).then(live=>{
+     if(dictionaryTicket===dictionaryRevision&&latestClient.connected&&data===dictionaryBase&&helper.transportCurrent(dictionaryTransport))mergeLiveGameData(live);
+    }).catch(()=>{});
+   }else if(installClientDictionary(data,null))publishData(['clientDictionary']);
    if(latestClient.connected&&(latestClient.own?.summonerId||latestClient.own?.puuid))postgameOwner={...(latestClient.own.summonerId?{summonerId:latestClient.own.summonerId}:{}),...(latestClient.own.puuid?{puuid:latestClient.own.puuid}:{})};
    postgameLifecycle.observe();
    if(ballotRoundChanged(latestClient))clearRoomBallot();

@@ -10,6 +10,7 @@ async function run(){
  global.fetch=async()=>{throw Error('Isolated creative workflow: external network disabled');};
  let phase=restart?'ChampSelect':'Lobby',gameId=restart?'1510':'0',support='Rell',formalPosition=restart?'TOP':'MIDDLE';
  const output=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);if(options.method&&options.method!=='GET'){writes++;throw Error('No rune writes allowed in creative workflow');}
   if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;

@@ -58,7 +58,7 @@ document.addEventListener('click',async event=>{
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented)api.control('hide').catch(error=>toast(error.message));});
 document.addEventListener('mousemove',event=>{const over=!!event.target?.closest?.('#guide-root>header,[data-window-resize]');if(over!==hoverHeader){hoverHeader=over;api.hover?.(over).catch(()=>{});}});
 document.addEventListener('mouseleave',()=>{if(hoverHeader){hoverHeader=false;api.hover?.(false).catch(()=>{});}});
-document.addEventListener('error',event=>{if(event.target.tagName==='IMG')event.target.classList.add('missing');},true);
+document.addEventListener('error',event=>{const img=event.target;if(img?.tagName!=='IMG')return;if(img.dataset.fallback){const url=img.dataset.fallback;delete img.dataset.fallback;img.src=url;return;}img.classList.add('missing');},true);
 installWindowResize(root,(action,value)=>api.control(action,value));
 api.onUpdate?.(next=>{snapshot=next;render();});
 try{snapshot=await api.bootstrap();render();}catch(error){root.innerHTML=`<header class="compact-header drag"><b>${e(error.message)}</b><button data-action="hide">×</button></header>`;}

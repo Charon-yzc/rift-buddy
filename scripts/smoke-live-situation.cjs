@@ -7,6 +7,7 @@ async function run(){
  const release=JSON.parse(await fs.readFile('release/latest.json','utf8')),base=path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));
  let hero='Ashe',role='BOTTOM',inventory=[],enemyItems=[3031,6672],gold=800,requests=0;
  const response=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.method||'GET','GET','Only read-only calls are permitted');
   const p=options.path;
   if(options.port===2999){requests++;

@@ -16,6 +16,15 @@ function fixture({requestSnapshot,onAccepted=()=>{}}={}){
  return {store,calls,changes,errors,choose:value=>source=value};
 }
 
+test('client display metadata refreshes image indexes without changing the base or recommendation source generation',()=>{
+ const f=fixture();f.store.bootstrap({data:base(),revision:0});const original=f.store.current(),before={...f.calls},generation=f.store.baseGeneration();
+ const clientDictionary={champions:[{id:'FutureHero',key:999999}],items:[{id:999998,icon:'https://raw.communitydragon.org/latest/example.png'}]};
+ f.store.accept({revision:1,changes:{clientDictionary}});const change=f.changes.at(-1);
+ assert.equal(change.assetsChanged,true);assert.equal(change.baseChanged,false);assert.equal(change.sourceChanged,false);assert.equal(f.store.baseGeneration(),generation);
+ assert.equal(f.calls.images,before.images+1);assert.equal(f.calls.source,before.source);assert.equal(f.calls.catalog,before.catalog);
+ assert.equal(f.store.current().champions,original.champions);assert.equal(f.store.current().items,original.items);assert.equal(f.store.current().clientDictionary,clientDictionary);
+});
+
 test('subscribe-before-bootstrap buffers the update that arrives while other startup calls wait',()=>{
  const f=fixture();f.store.accept({revision:8,changes:{rankings:{latest:true}}});
  f.store.bootstrap({data:base(),revision:7});assert.equal(f.store.revision(),8);assert.deepEqual(f.store.current().rankings,{latest:true});

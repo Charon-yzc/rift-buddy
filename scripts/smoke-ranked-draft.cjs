@@ -24,6 +24,7 @@ async function run(){
  let complete=false,matchingOwnOnly=false,queueId=420,observer,writes=0,processReads=0;
  const session=()=>({gameId:queueId,localPlayerCellId:ownCell,allowDuplicatePicks:false,myTeam:allies.map((id,i)=>({cellId:i,championId:key(id),assignedPosition:positions[i]})),theirTeam:enemies.map((id,i)=>({cellId:i+5,championId:i===0||!complete&&i>2?0:key(id),assignedPosition:''})),actions:[...allies.map((id,i)=>({id:i,type:'pick',actorCellId:i,championId:key(id),completed:matchingOwnOnly?i===ownCell:complete||i!==0&&(!unlocked||i!==ownCell)&&(!teamHover||i!==0),isInProgress:!complete&&(unlocked&&i===ownCell||teamHover&&i===0)})),...enemies.map((id,i)=>({id:i+5,type:'pick',actorCellId:i+5,championId:complete||i<3?key(id):0,completed:complete||i<3,isInProgress:!complete&&i===3}))],bans:{myTeamBans:[],theirTeamBans:[]},timer:{phase:complete?'FINALIZATION':'BAN_PICK',adjustedTimeLeftInPhase:27000}});
  const response=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);assert.equal(options.method||'GET','GET','No client writes permitted');
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return 'ChampSelect';
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId:queueId,mapId:11,queue:{id:queueId,gameMode:'CLASSIC'}}};

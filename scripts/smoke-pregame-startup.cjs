@@ -40,6 +40,7 @@ async function run(){
   const method=options.method||'GET',route=options.path,body=options.body===undefined?undefined:JSON.parse(options.body);
   if(phase==='Offline')throw Error('Synthetic client not running yet');
   if(method==='GET'){
+   if(['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(route))return [{id:999999,name:'隔离字典'}];
    if(route==='/lol-summoner/v1/current-summoner')return ownIdentity;
    if(route==='/riotclient/region-locale')return {region:'unconfigured-fixture'};
    if(route==='/lol-match-history/v1/products/lol/'+ownIdentity.puuid+'/matches?begIndex=0&endIndex=99')return {games:{games:[]}};

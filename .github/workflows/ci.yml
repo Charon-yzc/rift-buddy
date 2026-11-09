@@ -78,6 +78,8 @@ jobs:
         run: pnpm package
       - name: Verify package contents
         run: node scripts/inspect-package.mjs --verify-current
+      - name: Check application startup and automatic connection in both launch orders
+        run: node scripts/smoke-package-startup-connection.mjs
       - name: Check signed complete-data adoption and deferred restart with isolated sources
         run: node scripts/smoke-package-data-generation.mjs
       - name: Check real main and sidebar synchronization and idle-game resources
