@@ -49,6 +49,15 @@ test('desktop feedback binds chosen screenshots and never follows redirects or a
  clock+=31000;status=302;await assert.rejects(client.send({text:'问题',images:[],consent:true}),/未完成/);assert.equal(calls.length,2,'A redirect cannot issue a second request');client.clear();
 });
 
+test('feedback exposes bounded remaining cooldown after network failure without clearing the rate limit',async()=>{
+ let clock=100000,calls=0;const client=createFeedbackClient({version:'test',now:()=>clock,request(){calls++;throw Error('offline');}});
+ assert.deepEqual(client.status(),{retryAfterMs:0});
+ await assert.rejects(client.send({text:'failed draft',images:[],consent:true}),/未完成/);
+ assert.equal(client.status().retryAfterMs,30000);client.clear();clock+=1000;assert.equal(client.status().retryAfterMs,29000);
+ await assert.rejects(client.send({text:'retry',images:[],consent:true}),/稍后/);assert.equal(calls,1);
+ clock+=29000;assert.equal(client.status().retryAfterMs,0);clock-=1000000;assert.equal(client.status().retryAfterMs,30000);
+});
+
 test('erasing feedback after picking a screenshot cannot revive the previous text',async()=>{
  let html='',value='',sent;const textarea={get value(){return value;},focus(){}},overlay={addEventListener(){},querySelector:selector=>selector==='.feedback-dialog'?html.includes('feedback-dialog'):selector==='#feedback-text'||selector==='textarea'?textarea:null,get innerHTML(){return html;},set innerHTML(v){html=v;value=/<textarea[^>]*>([^<]*)<\/textarea>/.exec(v)?.[1]||'';}};
  const ui=createFeedbackUI({overlay,api:{feedbackClear:async()=>{},feedbackImages:async()=>[{id:'chosen',preview:'data:image/png;base64,'}],feedbackSend:async input=>{sent=input;return {id:'receipt'};}}});

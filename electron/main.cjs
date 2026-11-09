@@ -99,6 +99,7 @@ async function boot(){
  guard('feedback-images',context=>{if(context.surface!=='main')throw Error('请在完整助手中反馈');return feedback.choose();},true);
  guard('feedback-send',(value,context)=>{if(context.surface!=='main')throw Error('请在完整助手中反馈');return feedback.send(value);},true);
  guard('feedback-clear',context=>{if(context.surface!=='main')throw Error('请在完整助手中反馈');feedback.clear();return true;},true);
+ guard('feedback-status',context=>{if(context.surface!=='main')throw Error('请在完整助手中反馈');return feedback.status();},true);
  const itemSetCore=await import('../src/core/item-sets.mjs'),itemSetService=await import('../services/item-sets.mjs');
  const {changeCompanionPlan}=await import('../src/core/companion-plan.mjs');
  const {pregamePhase,validatePregameIntent,pregameIntentChoice,restoredRoleClaim,partyWithPregameIntents}=await import('../src/core/pregame-intent.mjs');

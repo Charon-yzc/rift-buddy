@@ -13,7 +13,7 @@ module.exports=function createSkillWindow({root,getState,setState,getPayload,get
   if(placed&&same(next,placed.requested)&&same(current,placed.actual))return;
   moving=true;if(!same(current,next))win.setBounds(next);const actual=win.getBounds();if(win.setShape)win.setShape([{x:0,y:0,width:actual.width,height:next.height}]);placed={requested:next,actual};moving=false;
  }
- function publish(value=getPayload()){if(!isActive()){hide();return;}if(peek.active()){peek.sync(true);return;}if(!win||win.isDestroyed())return;win.setOpacity(getState()?.opacity||1);const payload={model:value.model,presentation:value.presentation},key=JSON.stringify(payload);if(key!==last){last=key;win.webContents.send('skill-update',payload);}fit();}
+ function publish(value=getPayload()){if(!isActive()){hide();return;}if(peek.active()){peek.sync(true);return;}if(!win||win.isDestroyed())return;win.setOpacity(getState()?.opacity||1);const payload={model:value.model,presentation:value.presentation,referenceRevision:value.referenceRevision},key=JSON.stringify(payload);if(key!==last){last=key;win.webContents.send('skill-update',payload);}fit();}
  function hide(){peek.unfold();resize.cancel();requested=false;win?.hide();}
  function create(){const bounds=skillWidgetPlacement(getState()?.skillWidget?.offset,getArea(),getGameBounds(),getScale(),getState()?.skillWidget?.size);
   win=new BrowserWindow({...bounds,frame:false,show:false,alwaysOnTop:true,skipTaskbar:true,focusable:false,resizable:false,transparent:true,backgroundColor:'#00000000',title:'开黑搭子 · 加点',icon:path.join(root,'assets/icon.png'),webPreferences:{preload:path.join(root,'electron/skill-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});

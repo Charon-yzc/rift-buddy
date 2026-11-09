@@ -58,6 +58,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  feedbackImages:()=>ipcRenderer.invoke('feedback-images'),
  feedbackSend:value=>ipcRenderer.invoke('feedback-send',value),
  feedbackClear:()=>ipcRenderer.invoke('feedback-clear'),
+ feedbackStatus:()=>ipcRenderer.invoke('feedback-status'),
  copy:text=>ipcRenderer.invoke('copy',text),
  chooseDirectory:()=>ipcRenderer.invoke('choose-directory'),
  openLink:url=>ipcRenderer.invoke('open-link',url),

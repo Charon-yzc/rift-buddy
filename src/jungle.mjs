@@ -2,10 +2,15 @@ import {windowResizeGrip,installWindowResize} from './window-resize.mjs';
 import {escape as e} from './ui.mjs';
 import {applyPresentation} from './presentation-view.mjs';
 import {jungleRouteMap,routeStepButton} from './jungle-route-view.mjs';
+import {holdRenderDuringPointer} from './pointer-render.mjs';
+import {guideRenderContext} from './guide-render-context.mjs';
 const root=document.getElementById('jungle-root'),api=window.jungleWidget;
-let last='',latest,showMap=false,message='';
+let last='',latest,context=null,showMap=false,message='';
+const interaction=holdRenderDuringPointer({document,root,render:()=>render(latest),selector:'button[data-action]'});
 function render(value){
  latest=value;
+ const nextContext=value?.interactionContext??guideRenderContext(value);
+ if(context!==nextContext){interaction.invalidate();last='';showMap=false;message='';}else if(interaction.defer())return;context=nextContext;
  applyPresentation(value?.presentation);
  const m=value?.model,j=value?.jungle||m?.jungle,time=value?.time??m?.live?.gameTime;
  const early=j?.routeStage?j.routeStage==='opening':!Number.isFinite(time)||time<210,recovering=!!j?.recoveryRoute?.length,route=recovering?j.recoveryRoute:early?j?.compactRoute:j?.rotationRoute;
@@ -19,6 +24,6 @@ function render(value){
  const markup=`<header><b>刷野路线 · ${recovering?'中断恢复':early?'首轮参考':'后续轮转'}</b><div><button data-action="map" aria-pressed="${showMap}" aria-label="${showMap?'显示文字顺序':'显示己方营地顺序图'}" title="地图与文字在原尺寸内切换">${showMap?'序':'图'}</button><button data-action="fold" title="暂时收起到屏幕边缘；点小拉手展开" aria-label="暂时收起野区规划">‹</button><button data-action="hide" aria-label="关闭野区规划" title="可从装备卡的野区按钮恢复">×</button></div></header><main>${content}<div class="quick-notes" aria-label="路线半区与中断">${stageButton}${!showMap?halves:''}${interruption}</div>${message?`<small class="error" role="status">${e(message)}</small>`:''}</main>${windowResizeGrip}`;
  if(markup!==last){last=markup;root.innerHTML=markup;}
 }
-root.addEventListener('click',async event=>{const button=event.target.closest('[data-action]');if(!button||button.disabled)return;if(button.dataset.action==='map'){showMap=!showMap;render(latest);return;}button.disabled=true;message='';try{await api.control(button.dataset.action,button.dataset.value);}catch(error){message=error.message||'操作未完成，请从本局指引恢复';render(latest);}finally{if(button.isConnected)button.disabled=false;}});
+root.addEventListener('click',async event=>{const button=event.target.closest('[data-action]');if(!button||!root.contains(button)||button.disabled)return;if(button.dataset.action==='map'){showMap=!showMap;render(latest);return;}button.disabled=true;message='';try{await api.control(button.dataset.action,button.dataset.value);}catch(error){message=error.message||'操作未完成，请从本局指引恢复';render(latest);}finally{if(button.isConnected)button.disabled=false;}});
 installWindowResize(root,(action,value)=>api.control(action,value));
 api.onUpdate(render);render(await api.bootstrap());

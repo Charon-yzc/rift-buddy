@@ -6,6 +6,7 @@ import {validateFeedbackPng} from './feedback-images.mjs';
 
 export function createFeedbackClient({chooseFiles,encodeImage,version,request=https.request,now=Date.now}){
  let pending=new Map(),busy=false,last=-Infinity,picking=false,epoch=0,expiry;
+ const status=()=>({retryAfterMs:Math.max(0,Math.min(30000,30000-(now()-last)))});
  const clear=()=>{epoch++;clearTimeout(expiry);pending.clear();};
  async function choose(){
   if(busy||picking)throw Error('请等待当前操作完成');picking=true;const generation=++epoch;
@@ -41,5 +42,5 @@ export function createFeedbackClient({chooseFiles,encodeImage,version,request=ht
    });clear();return result;
   }finally{busy=false;}
  }
- return {choose,send,clear};
+ return {choose,send,clear,status};
 }

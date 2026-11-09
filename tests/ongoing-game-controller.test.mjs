@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createOngoingGameController} from '../src/ongoing-game-controller.mjs';
+import {normalizeMatch} from '../src/core/match-history/model.mjs';
+import {ongoingGameView} from '../src/ongoing-game-view.mjs';
 const member={key:'mock-public-player-1',puuid:'mock-public-player-1',name:'本人',self:true,team:'LOBBY'};
 const roster=(key='one')=>({key,session:'account-one',phase:'lobby',queue:430,players:[member],teams:{LOBBY:[member.key]},selfPuuid:member.puuid});
 const page={handle:'handle-one',games:[],count:20,start:0,hasMore:false,player:{puuid:member.puuid}};
@@ -115,6 +117,34 @@ test('original historical-group times are converted to the renderer count contra
 test('historical roster settings can reload its players and returning to the page resumes cancelled history',async()=>{
  let reads=0;const c=createOngoingGameController({request:async op=>op==='page'?(reads++,page):{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],setTimer:()=>1,clearTimer:()=>{}}),game={id:1,map:11,queue:420,mode:'CLASSIC',self:member,participants:[{...member,champion:22,team:'TEAM-100'}]};
  await c.setDraft(game);await c.configure({count:10});assert.equal(c.state.roster.phase,'draft');assert.equal(reads,2);c.stop();c.start();await new Promise(resolve=>setImmediate(resolve));assert.equal(c.state.roster.phase,'draft');c.stop();
+});
+test('a normalized historical Arena simulation keeps all eight public subteams and recorded spell order',async()=>{
+ const ids=Array.from({length:16},(_,i)=>'mock-arena-history-player-'+i);
+ const game=normalizeMatch({gameId:777,gameMode:'CHERRY',mapId:30,queueId:1700,gameDuration:1200,
+  participantIdentities:ids.map((puuid,i)=>({participantId:i+1,player:{puuid,gameName:'演示玩家 '+i}})),
+  participants:ids.map((_,i)=>({participantId:i+1,championId:22,teamId:100,spell1Id:i%2?7:4,spell2Id:i%2?4:7,stats:{playerSubteamId:Math.floor(i/2)+1}})),teams:[]},'lcu',ids[0]);
+ const queries=[],c=createOngoingGameController({settings:{count:1,details:0},request:async(op,p)=>{queries.push([op,p]);return op==='page'?page:{};},analyze:()=>null,infer:()=>[]});
+ await c.setDraft(game);
+ assert.deepEqual(c.state.roster.players.map(p=>p.group),game.participants.map(p=>Number(p.team.slice(7))));
+ assert.deepEqual(c.state.roster.players.map(p=>p.spells),game.participants.map(p=>p.spells));assert.equal(c.state.roster.players[0].self,true);
+ const html=ongoingGameView(c.state,{champions:[],items:{},runes:[],augments:[],spells:{}});
+ assert.equal((html.match(/data-ongoing-team="CHERRY-\d+"/g)||[]).length,8);assert.doesNotMatch(html,/data-ongoing-team="CHERRY-unknown"/);
+ assert.ok(queries.filter(([op])=>op==='page').every(([,p])=>ids.includes(p.puuid)));
+});
+test('historical five-versus-five simulation preserves teams and partial spells without querying anonymous players',async()=>{
+ const participants=Array.from({length:10},(_,i)=>({id:i+1,puuid:i===7?'':'mock-classic-history-player-'+i,name:i===7?'':'演示玩家 '+i,champion:22,team:i<5?'TEAM-100':'TEAM-200',position:i%5?'MIDDLE':'TOP',spells:i===7?[4,null]:[7,4]}));
+ const queries=[],c=createOngoingGameController({settings:{count:1,details:0},request:async(op,p)=>{queries.push([op,p]);return op==='page'?page:{};},analyze:()=>null,infer:()=>[]});
+ await c.setDraft({id:778,map:11,queue:420,mode:'CLASSIC',self:participants[0],participants});
+ assert.deepEqual(Object.keys(c.state.roster.teams),['TEAM-100','TEAM-200']);assert.deepEqual(Object.values(c.state.roster.teams).map(team=>team.length),[5,5]);
+ assert.deepEqual(c.state.roster.players.map(p=>p.spells),participants.map(p=>p.spells));assert.ok(c.state.roster.players.every(p=>p.group===null));
+ assert.equal(c.state.roster.players[7].puuid,'');assert.equal(queries.filter(([op])=>op==='page').length,9);assert.ok(queries.filter(([op])=>op==='page').every(([,p])=>p.puuid));
+});
+test('historical Arena never invents a public subteam or a missing spell',async()=>{
+ const participants=['CHERRY-unknown','CHERRY-0','CHERRY-9007199254740992'].map((team,i)=>({id:i+1,puuid:'',name:'',champion:22,team,spells:i===0?[null,7]:[]}));
+ const c=createOngoingGameController({request:async()=>assert.fail('Unknown identities cannot request player data'),analyze:()=>null,infer:()=>[]});
+ await c.setDraft({id:779,map:30,queue:1700,mode:'CHERRY',participants});
+ assert.equal(c.state.roster.players.length,3);assert.ok(c.state.roster.players.every(p=>p.puuid===''&&p.group===null));
+ assert.deepEqual(c.state.roster.players.map(p=>p.spells),[[null,7],[null,null],[null,null]]);
 });
 test('clearing a historical simulation returns refresh to the live roster',async()=>{
  let reads=0;const c=createOngoingGameController({request:async op=>op==='roster'?(reads++,roster()):op==='page'?page:{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});await c.setDraft({id:1,map:11,queue:420,mode:'CLASSIC',self:member,participants:[{...member,team:'TEAM-100'}]});c.clear();await c.refresh();assert.equal(c.state.draft,false);assert.equal(reads,1);assert.equal(c.state.roster.key,'one');

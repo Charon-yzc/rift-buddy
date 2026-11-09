@@ -8,10 +8,11 @@ import {skillSummary} from '../src/core/skill-summary.mjs';
 import {defaultState,saveState,readState,validateState} from '../services/storage.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {sendChampSelectAnnouncement} from '../services/lcu-chat.mjs';
+import {guideRenderContext} from '../src/guide-render-context.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));
 const source=await fs.readFile('src/skill.mjs','utf8');
 const renderSource=source.slice(source.indexOf('function render(value)'),source.indexOf('root.addEventListener'));
-function widget(model){const root={innerHTML:''},context=vm.createContext({root,windowResizeGrip:'',applyPresentation(){},skillSummary,e:String});vm.runInContext(renderSource,context);context.render({model});return root.innerHTML;}
+function widget(model){const root={innerHTML:''},context=vm.createContext({root,latest:null,context:null,interaction:{invalidate(){},defer:()=>false},guideRenderContext,windowResizeGrip:'',applyPresentation(){},skillSummary,e:String});vm.runInContext(renderSource,context);context.render({model});return root.innerHTML;}
 
 test('chat notice defaults on and explicit on/off survives real disk saves and re-reads',async()=>{
  assert.equal(validateState(defaultState()).preferences.chatNotice,true);

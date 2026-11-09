@@ -31,7 +31,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const usesHexMicro=()=>isHex();
  const usesEconomy=()=>!isHex()&&currentSelection()?.mode==='rift'&&currentSelection()?.id===getState()?.selection?.id&&(inGame(phase)||!connected&&inGame(lastConnectedPhase));
  const ended=()=>['WaitingForStats','PreEndOfGame','EndOfGame'].includes(phase);
- const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
+ const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.compactBounds||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
  const peek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:workArea,title:'本局指引',onRestore:()=>{if(usesHexMicro()||getPreferences().guideEquipment===false)return;displayEpoch++;visibilityRequested=true;equipmentRequested=true;win?.showInactive();inputMode();publish();}});
  const resize=require('./window-resize.cjs')({getWindow:()=>win,getArea:workArea,getLimits:area=>guideWindowLimits('compact',area,stripScale()),onStart:()=>{clearTimeout(boundsTimer);boundsTimer=null;hoverHeader=true;inputMode();},onEnd:rememberBounds});
  async function rememberBounds(){clearTimeout(boundsTimer);boundsTimer=null;if(!win||win.isDestroyed()||!getState())return;await save({...getState(),compactBounds:win.getBounds()});}

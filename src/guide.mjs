@@ -5,6 +5,8 @@ import {createGameTooltips,gameTooltipView} from './game-tooltip-view.mjs';
 import {gameReference} from './core/game-reference.mjs';
 import {escape as e} from './ui.mjs';
 import {createGuideModel,selectGuide} from './core/guide.mjs';
+import {holdRenderDuringPointer} from './pointer-render.mjs';
+import {guideRenderContext} from './guide-render-context.mjs';
 const root=document.getElementById('guide-root'),isPreview=!window.guide;
 let snapshot,referenceContext=null,messageTimer,hoverHeader=false;
 const api=window.guide||{
@@ -31,10 +33,12 @@ const api=window.guide||{
 };
 const image=(kind,id,name)=>`<img ${['item','rune','spell'].includes(kind)?`data-game-tooltip-kind="${kind}" data-game-tooltip-id="${e(id)}"`:''} src="${e(snapshot.model?.imageOverrides?.[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" alt="${e(name)}">`;
 const tooltips=createGameTooltips({document,observeRoots:[root],getMode:()=>snapshot?.model?.mode||'rift',getContent:async(kind,id,mode)=>{const reference=await api.reference?.(kind,id,mode,snapshot?.referenceRevision);return reference?gameTooltipView(reference,kind,id,{mode,image}):'';}});
+const interaction=holdRenderDuringPointer({document,root,render,selector:'button[data-action]'});
 function toast(message){clearTimeout(messageTimer);const el=document.getElementById('guide-toast');el.textContent=message;el.className='visible';messageTimer=setTimeout(()=>el.className='',4000);}
 function render(){
+ const context=guideRenderContext(snapshot);
+ if(referenceContext!==context)interaction.invalidate();else if(interaction.defer())return;
  applyPresentation(snapshot?.presentation,{theme:false});
- const m=snapshot?.model,context=JSON.stringify([m?.champion?.id,m?.selection?.role,m?.mode,m?.matchId,snapshot?.referenceRevision,m?.version,m?.fetchedAt]);
  const focused=root.contains(document.activeElement)&&referenceContext===context?document.activeElement:null;
  const focus=focused?{action:focused.dataset.action,id:focused.dataset.id,reference:focused.dataset.referenceFocus}:null;
  if(referenceContext!==context)tooltips.close();referenceContext=context;
@@ -51,7 +55,7 @@ function render(){
  });
 }
 document.addEventListener('click',async event=>{
- const target=event.target.closest('button[data-action]');if(!target)return;target.disabled=true;
+ const target=event.target.closest('button[data-action]');if(!target||!root.contains(target)||target.disabled)return;target.disabled=true;
  try{const result=await api.control(target.dataset.action,target.dataset.id);if(result?.model!==undefined){snapshot=result;render();}}
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}
 });
