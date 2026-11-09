@@ -3,6 +3,7 @@
 const root='https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/';
 const number=value=>Number.isSafeInteger(Number(value))&&Number(value)>0&&Number(value)<=1000000?Number(value):null;
 const text=(value,max)=>typeof value==='string'?value.replace(/[\x00-\x1f\x7f]/g,'').trim().slice(0,max):'';
+const price=value=>typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=1000000?value:null;
 export function championIcon(value){const id=number(value);return id?root+'v1/champion-icons/'+id+'.png':'';}
 function itemIcon(value){
  if(typeof value!=='string'||!value.startsWith('/lol-game-data/assets/'))return '';
@@ -18,8 +19,8 @@ export function normalizeClientDictionary(championsRaw,itemsRaw){
  }
  if(Array.isArray(itemsRaw)&&itemsRaw.length<=25000)for(const item of itemsRaw){
   const id=number(item?.id);if(!id||seenItems.has(id))continue;
-  const price=Number(item.price),cost=Number.isFinite(price)&&price>=0&&price<=1000000?price:null;
-  items.push({id,clientOnly:true,name:text(item.name,64)||'装备 '+id,description:text(item.description,2000),icon:itemIcon(item.iconPath),...(cost!==null?{gold:{total:cost,base:cost,sell:Math.round(cost*.7)}}:{})});seenItems.add(id);
+  const gold=Object.fromEntries([['base',price(item.price)],['total',price(item.priceTotal)],['sell',price(item.sellPrice)]].filter(([,cost])=>cost!==null));
+  items.push({id,clientOnly:true,name:text(item.name,64)||'装备 '+id,description:text(item.description,2000),icon:itemIcon(item.iconPath),...(Object.keys(gold).length?{gold}:{})});seenItems.add(id);
  }
  return champions.length||items.length?{champions,items}:null;
 }

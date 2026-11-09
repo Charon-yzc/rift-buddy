@@ -9,13 +9,14 @@ import {selectedBuildReference} from '../src/core/build-source.mjs';
 
 const auth={port:23456,password:'isolated-only'};
 const champions=[{id:999999,alias:'FutureHero',name:'新英雄',title:'新称号',token:'PRIVATE'}];
-const items=[{id:999998,name:'新装备',price:1500,description:'公开效果',iconPath:'/lol-game-data/assets/ASSETS/Items/Icons2D/fixture_item.png',token:'PRIVATE'}];
+const items=[{id:999998,name:'新装备',price:450,priceTotal:1500,description:'公开效果',iconPath:'/lol-game-data/assets/ASSETS/Items/Icons2D/fixture_item.png',token:'PRIVATE'}];
 const reply=(_auth,route)=>Promise.resolve(route.endsWith('items.json')?items:champions);
 
 test('the display dictionary is bounded, deduplicated and cannot supply arbitrary image origins or private fields',()=>{
  const value=normalizeClientDictionary([...champions,...champions,{id:-1},{id:999997,alias:'../../evil',name:'x\nname'}],[...items,...items,{id:999996,name:'unknown',iconPath:'/lol-game-data/assets/ASSETS/Items/Icons2D/../secret.png'},{id:999995,iconPath:'https://evil.invalid/a.png',price:-1}]);
  assert.equal(value.champions.length,2);assert.equal(value.items.length,3);assert.equal(value.champions[1].id,'Champion999997');assert.equal(value.champions[1].name,'xname');
  assert.equal(value.items[1].icon,'');assert.equal(value.items[2].icon,'');assert.equal(value.items[2].gold,undefined);assert.doesNotMatch(JSON.stringify(value),/PRIVATE|token|evil\.invalid|\.\.\//);
+ assert.deepEqual(value.items[0].gold,{base:450,total:1500});assert.equal(value.items[0].gold.sell,undefined,'Missing sell prices must never be inferred from total price');
  assert.equal(championIcon('Ahri'),'');assert.equal(championIcon(-1),'');assert.equal(normalizeClientDictionary(Array(501).fill(champions[0]),Array(25001).fill(items[0])),null);
 });
 
