@@ -20,6 +20,7 @@ async function run(){
  }
  assert.ok((await fs.readFile('THIRD_PARTY_NOTICES.md')).equals(await fs.readFile(path.join(base,'THIRD_PARTY_NOTICES.md'))));
  const output=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);if(options.method&&options.method!=='GET'){writes++;throw Error('Client writes prohibited in item-set smoke');}
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return 'ChampSelect';
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId:'1545',mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};

@@ -10,6 +10,7 @@ async function run(){
  const waiting=step.startsWith('waiting');let phase=['restart','waiting-restart'].includes(step)?'InProgress':'ChampSelect',gameId=waiting&&step!=='waiting-restart'?null:'1560',picked='Nautilus',enemies=['Caitlyn','Morgana'],connected=true;
  const player=(id,team,self=false)=>({riotId:'isolated-'+id,rawChampionName:'game_character_displayname_'+id,team,position:self?'UTILITY':'',level:6,items:[],scores:{kills:0,deaths:0,assists:0,creepScore:30}});
  const output=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');if(options.method&&options.method!=='GET'){writes++;throw Error('Client writes prohibited');}
   if(options.path.startsWith('/liveclientdata/')){
    assert.equal(options.port,2999);
