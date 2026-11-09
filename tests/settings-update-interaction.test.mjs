@@ -72,6 +72,45 @@ test('failed source saving blocks that download and does not poison a later choi
  assert.deepEqual(f.downloads,[]);assert.equal(f.context.appUpdate.phase,'error');assert.match(f.context.appUpdate.error,/disk unavailable/);assert(f.notices.some(([message])=>message.includes('disk unavailable')));
  const gate=f.nextGate(),next=f.context.chooseMirror('https://working.example');gate.resolve();await next;f.context.appUpdate.phase='available';await f.context.downloadAppUpdate();assert.deepEqual(f.downloads,['https://working.example']);
 });
+test('a source failure that settled before the download click still blocks the old source until a new choice succeeds',async()=>{
+ const f=updateFixture(),choice=f.context.chooseMirror('https://broken.example'),failed=assert.rejects(choice,/settled disk failure/);f.gate().reject(Error('settled disk failure'));await failed;
+ await f.context.downloadAppUpdate();assert.deepEqual(f.downloads,[]);assert.match(f.context.appUpdate.error,/settled disk failure/);
+ const gate=f.nextGate(),next=f.context.chooseMirror('https://recovered.example');gate.resolve();await next;f.context.appUpdate.phase='available';await f.context.downloadAppUpdate();assert.deepEqual(f.downloads,['https://recovered.example']);
+});
+test('a reported source failure does not permanently block a new explicit download after recovery',async()=>{
+ const f=updateFixture(),choice=f.context.chooseMirror('https://broken.example'),failed=assert.rejects(choice,/disk failed/);f.gate().reject(Error('disk failed'));await failed;
+ await f.context.downloadAppUpdate();assert.deepEqual(f.downloads,[]);assert.equal(f.context.appUpdate.phase,'error');
+ f.context.saved.preferences.updateMirror='https://old.example';f.context.appUpdate={phase:'available',release:{version:'0.59.57'}};await f.context.downloadAppUpdate();assert.deepEqual(f.downloads,['https://old.example']);
+});
+
+function restoredMirrorFixture(){
+ const f=updateFixture(),c=f.context,listeners=new Map();let field;
+ const input=value=>({id:'update-mirror',tagName:'INPUT',type:'url',dataset:{},value,selectionStart:12,selectionEnd:12,isConnected:true,readOnly:false,disabled:false,matches:()=>true,focus(){c.document.activeElement=this;},setSelectionRange(start,end){this.selectionStart=start;this.selectionEnd=end;},dispatchEvent(event){if(event.type==='change')c.onRestoredMirrorChange(this);}});
+ field=input('https://new-source.example');Object.assign(c,{route:'settings',history:{state:{current:'own'}},windowLayout:{docked:false},Event,document:{activeElement:field,getElementById:()=>field,addEventListener:(type,handler)=>listeners.set(type,handler)},app:{contains:node=>node===field},replaceInput(){field.isConnected=false;field=input('https://old.example');c.document.activeElement=null;}});
+ const start=source.indexOf("if(el.id==='update-mirror')"),end=source.indexOf("if(['play-difficulty'",start);vm.runInContext('function onRestoredMirrorChange(el){'+source.slice(start,end)+'}',c);
+ const listener=source.split('\n').find(line=>line.startsWith("for(const type of ['focusout','keydown'])document.addEventListener"));if(listener)vm.runInContext(listener,c);
+ const capture=source.slice(source.indexOf(' const formFocus='),source.indexOf(' const rankingFocus=')),restore=source.slice(source.indexOf('  if(formFocus){'),source.indexOf('  restoreItemReferenceFocus('));
+ vm.runInContext('(function(){'+capture+'replaceInput();'+restore+'})()',c);
+ return {...f,field,emit(type,extra={}){let prevented=false;listeners.get(type)?.({type,key:'Enter',target:field,preventDefault(){prevented=true;},...extra});return {prevented};}};
+}
+for(const ime of [{isComposing:true},{keyCode:229}])test(`restored update source leaves IME ${ime.isComposing?'composition':'key 229'} Enter untouched`,async()=>{
+ const f=restoredMirrorFixture(),event=f.emit('keydown',ime);assert.equal(event.prevented,false);assert.equal(f.context.saved.preferences.updateMirror,'https://old.example');assert.equal(f.field.restoredChangeDraft,true);assert.deepEqual(f.downloads,[]);
+ f.emit('keydown',{isComposing:false,keyCode:13});assert.equal(f.context.saved.preferences.updateMirror,'https://new-source.example');f.gate().resolve();await f.gate().promise;
+});
+for(const type of ['focusout','keydown'])test(`restored update source commits on ${type==='focusout'?'blur before download':'Enter'} and download waits for that source save`,async()=>{
+ const f=restoredMirrorFixture(),c=f.context;assert.equal(c.saved.preferences.updateMirror,'https://old.example');f.emit(type);assert.equal(c.saved.preferences.updateMirror,'https://new-source.example');
+ const download=c.downloadAppUpdate();await Promise.resolve();assert.deepEqual(f.downloads,[]);f.gate().resolve();await download;assert.deepEqual(f.downloads,['https://new-source.example']);
+});
+test('a failed restored-source blur save still blocks the next download',async()=>{
+ const f=restoredMirrorFixture();f.gate().promise.catch(()=>{});f.emit('focusout');const download=f.context.downloadAppUpdate();f.gate().reject(Error('restored source save failed'));await download;
+ assert.deepEqual(f.downloads,[]);assert.equal(f.context.appUpdate.phase,'error');assert.match(f.context.appUpdate.error,/restored source save failed/);
+});
+test('restored catalog URL keeps its explicit save-button boundary and uses the new DOM draft',async()=>{
+ let field,calls=[];const typed='https://catalog-draft.example/catalog.json',c={route:'settings',windowLayout:{docked:false},history:{state:{current:'own'}},document:{activeElement:null,getElementById:()=>field,querySelector:()=>field},app:{contains:node=>node===field},catalogRequest:0,dataOperation:value=>value,useCatalogResult(){},toast(){},api:{catalogSource:async value=>{calls.push(value);return {};}}};
+ const input=value=>({tagName:'INPUT',type:'url',id:'catalog-url',dataset:{},value,disabled:false,matches:()=>true,focus(){c.document.activeElement=this;},setSelectionRange(){}});field=input(typed);c.document.activeElement=field;c.replaceInput=()=>{field=input('https://saved.example');c.document.activeElement=null;};
+ vm.createContext(c);const capture=source.slice(source.indexOf(' const formFocus='),source.indexOf(' const rankingFocus=')),restore=source.slice(source.indexOf('  if(formFocus){'),source.indexOf('  restoreItemReferenceFocus('));vm.runInContext('(function(){'+capture+'replaceInput();'+restore+'})()',c);assert.deepEqual(calls,[]);assert.equal(field.value,typed);
+ const start=source.indexOf("else if(action==='catalog-source')"),end=source.indexOf("else if(action===",start+10);vm.runInContext('async function saveCatalog(){const action="catalog-source";if(false){}'+source.slice(start,end)+'}',c);await c.saveCatalog();assert.deepEqual(calls,[typed]);
+});
 
 for(const destination of ['closed','feedback'])test(`late window reset keeps the ${destination} overlay instead of reopening settings`,async()=>{
  const gate=deferred(),entered=deferred(),overlay={firstElementChild:{kind:'settings'},html:'settings',set innerHTML(value){this.html=value;this.firstElementChild=value?{}:null;},get innerHTML(){return this.html;}};

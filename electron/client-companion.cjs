@@ -14,11 +14,14 @@ module.exports=function createClientCompanion({root,getWindow,showMain,getClient
  const peek=require('./window-peek.cjs')({root,getWindow:()=>side,getArea:()=>areaFor(side?.getBounds()),title:'选人侧栏',onRestore:()=>sync()});
  function layout(surface='main'){return surface==='companion'?{surface,docked:true,overlap,custom:!!(manualBounds||getPreferences().companionBounds)}:{surface:'main',docked:false,companionVisible:!!side&&!side.isDestroyed()&&side.isVisible()};}
  function publish(){for(const [surface,win] of [['main',getWindow()],['companion',side]]){if(!win||win.isDestroyed())continue;const value=layout(surface),key=JSON.stringify(value);if(published.get(win.webContents.id)!==key){published.set(win.webContents.id,key);win.webContents.send('window-layout',value);}}}
- function bindPlacement(win,key){let moving=false,saveTimer=null;const id=win.webContents.id;
+ function bindPlacement(win,key){let moving=false,saveTimer=null,pendingBounds=null;const id=win.webContents.id;
   const begin=()=>{moving=true;if(key==='companionBounds')manual=true;clearTimeout(saveTimer);};
-  const remember=()=>{if(!moving||win.isMinimized()||win.isMaximized())return;if(key==='companionBounds')manualBounds=win.getBounds();clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{moving=false;saveTimer=null;if(key==='companionBounds')manual=false;try{await savePlacement({[key]:win.getBounds()});publish();}catch(error){diagnostic('window placement not saved '+error.message);}},350);};
+  const persist=async bounds=>{try{await savePlacement({[key]:bounds});publish();}catch(error){diagnostic('window placement not saved '+error.message);}};
+  // Closing commits the last user move; a layout reset only cancels it.
+  const cancel=(flush=false)=>{clearTimeout(saveTimer);saveTimer=null;moving=false;if(key==='companionBounds')manual=false;const bounds=pendingBounds;pendingBounds=null;if(flush&&bounds)return persist(bounds);};
+  const remember=()=>{if(!moving||win.isMinimized()||win.isMaximized())return;pendingBounds=win.getBounds();if(key==='companionBounds')manualBounds=pendingBounds;clearTimeout(saveTimer);saveTimer=setTimeout(()=>cancel(true),350);};
   win.on('will-move',begin);win.on('will-resize',begin);win.on('move',remember);win.on('resize',remember);
-  const cancel=()=>{clearTimeout(saveTimer);saveTimer=null;moving=false;if(key==='companionBounds')manual=false;};win.on('closed',()=>{cancel();published.delete(id);});return cancel;
+  win.on('closed',()=>{cancel(true);published.delete(id);});return cancel;
  }
  function bindWindow(){const main=getWindow();if(!main||main===boundMain)return;boundMain=main;cancelMainPlacement=bindPlacement(main,'mainBounds');main.on('closed',()=>{boundMain=null;});publish();}
  function create(){
@@ -33,13 +36,13 @@ module.exports=function createClientCompanion({root,getWindow,showMain,getClient
   win.webContents.on('render-process-gone',(_event,detail)=>diagnostic('sidebar renderer gone '+detail.reason));
   win.loadFile(path.join(root,'src/index.html'),{query:{surface:'companion'}});publish();
  }
- function release(){peek.destroy();cancelSidePlacement();if(side&&!side.isDestroyed())side.destroy();side=null;ready=false;publish();}
+ function release(){peek.destroy();cancelSidePlacement(true);if(side&&!side.isDestroyed())side.destroy();side=null;ready=false;publish();}
  function sync(){
   const client=getClient(),next=client.connected?client.phase:'Offline',pregame=PREGAME_PHASES.includes(next),nextGame=next==='ChampSelect'?publicClientGameId(client):null;
   // A manual opening belongs to this pregame cycle, not one polling phase.
   if(!pregame||(next==='Lobby'&&(phase==='ChampSelect'||gameId))||(gameId&&nextGame&&gameId!==nextGame))manualRequested=false;
   if(!pregame||next==='Lobby')gameId=null;else if(nextGame)gameId=nextGame;
-  if(next!==phase){phase=next;dismissed=false;}
+  if(next!==phase){const waiting=['Lobby','Matchmaking','ReadyCheck'];if(!waiting.includes(phase)||!waiting.includes(next))dismissed=false;phase=next;}
   if(!pregame||getPreferences().clientCompanion===false&&!manualRequested||dismissed){release();return;}
   if(!native||native.minimized){peek.sync(false,false);if(side&&!side.isDestroyed()&&side.isVisible())side.hide();publish();return;}
   if(!side||side.isDestroyed())create();

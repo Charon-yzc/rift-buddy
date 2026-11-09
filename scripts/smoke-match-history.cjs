@@ -55,7 +55,18 @@ async function run(){
  // A live-data render can replace a hovered node during its dwell timer.
  // Re-enter only its replacement, as native pointer targeting would; never
  // restart the timer for a stable target or bypass the real hover handler.
- const hover=async(selector,label)=>{await js('window.__historySmokeHoverTarget=null');await until(()=>js(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)return false;if(window.__historySmokeHoverTarget!==el){window.__historySmokeHoverTarget=el;(el.querySelector('img')||el).dispatchEvent(new PointerEvent('pointerover',{bubbles:true}));}const tip=document.querySelector('#history-hover-detail');return !!(tip&&tip.matches(':popover-open')&&el.getAttribute('aria-describedby')==='history-hover-detail');})()`),label);};
+ const hover=async(selector,label)=>{
+  await js('window.__historySmokeHoverTarget=null');
+  await until(()=>js(`(async()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)return false;
+   if(window.__historySmokeHoverTarget!==el){
+    el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    if(!el.isConnected||el!==document.querySelector(${JSON.stringify(selector)})||!el.checkVisibility())return false;
+    const r=el.getBoundingClientRect(),x=(r.left+r.right)/2,y=(r.top+r.bottom)/2,hit=document.elementFromPoint(x,y);
+    if(!r.width||!r.height||x<0||y<0||x>=innerWidth||y>=innerHeight||!hit||hit!==el&&!el.contains(hit))return false;
+    window.__historySmokeHoverTarget=el;(el.querySelector('img')||el).dispatchEvent(new PointerEvent('pointerover',{bubbles:true}));
+   }
+   const tip=document.querySelector('#history-hover-detail');return !!(tip&&tip.matches(':popover-open')&&el.getAttribute('aria-describedby')==='history-hover-detail');})()`),label);
+ };
  const hoverText=()=>js('document.querySelector("#history-hover-detail")?.textContent||""');
  const originalTheme=await js('document.documentElement.dataset.theme');
  const chooseTheme=async theme=>{await click('[data-action=theme-open]');await click(`[data-action=presentation][data-field=theme][data-value="${theme}"]`);await until(()=>js(`document.documentElement.dataset.theme===${JSON.stringify(theme)}`),'Theme did not apply');await click('[aria-label=配色] [data-action=close]');};

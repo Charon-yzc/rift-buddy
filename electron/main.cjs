@@ -32,7 +32,7 @@ const {installClientDictionary}=require('../src/core/client-dictionary.mjs');
 let dictionaryRevision=0;
 function mergeLiveGameData(live){if(live&&installClientDictionary(data,live))publishData(['clientDictionary']);}
 let importingItemSet=false;
-let mainExplicitInGame=false,mainDismissed=false;
+let mainExplicitInGame=false,mainDismissed=false,mainBootReady=false;
 const mainRequests=new Map(),inGame=()=>latestClient.connected&&['GameStart','InProgress','Reconnect'].includes(latestClient.phase);
 const mainRelease=require('./main-window-release.cjs')({getWindow:()=>win,canRelease:()=>inGame()&&!mainExplicitInGame&&!!tray&&!quitting,isBusy:window=>!!mainRequests.get(window.webContents.id)||applyingRunes||importingItemSet||updating,getSaveTask:()=>saveTask,release:window=>{rendererReady=false;diagnostic('released hidden main renderer for game');window.destroy();},diagnostic});
 let synchronizeSavedState=()=>{};
@@ -58,7 +58,7 @@ const quitRequested=process.argv.includes('--quit');
 const lock=app.requestSingleInstanceLock();if(!lock||quitRequested)app.quit();
 if(quitRequested)return;
 const mainPeek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:()=>screen.getDisplayMatching(win?.getBounds()||screen.getPrimaryDisplay().bounds).workArea,title:'完整助手',onRestore:()=>showMainWindow()});
-function showMainWindow(){mainDismissed=false;mainExplicitInGame=inGame();mainRelease.cancel();mainPeek.unfold();if(!win){if(data)createWindow();}else{if(win.isMinimized())win.restore();win.show();win.focus();}diagnostic(`show-main-window ${!!win?.isVisible()}`);}
+function showMainWindow(){mainDismissed=false;mainExplicitInGame=inGame();mainRelease.cancel();mainPeek.unfold();if(!win){if(mainBootReady)createWindow();}else{if(win.isMinimized())win.restore();win.show();win.focus();}diagnostic(`show-main-window ${!!win?.isVisible()}`);}
 app.on('second-instance',(_event,argv)=>{if(argv.includes('--quit')){quitting=true;app.quit();}else if(argv.includes('--show-guide'))guide?.show();else showMainWindow();});
 function createWindow({automatic=false}={}){
  rendererReady=false;
@@ -1333,7 +1333,7 @@ async function boot(){
   const incoming=await storage.readBackup(result.filePaths[0]);
   await saveCurrentState(current=>{const entry=windowSources.get(sender);if(entry?.helperLocked)throw Error('连接助手正在应用该窗口的配置，请完成后再导入');if(epoch!==undefined&&entry&&epoch<entry.epoch)throw Error('配置来源已变化，请重新导入');const merged=storage.mergeState(current,incoming,data.champions),previous=entry?.source||source;if(!isDeepStrictEqual(previous,merged.preferences.buildSource))noteWindowSource(sender,merged.preferences.buildSource,epoch,{saveFallback:epoch===undefined});return merged;});closeAutoRoomIfRevoked();publishWindows('presentation-update',state.preferences.presentation);guide.publish();companion.sync();return state;
  },true);
- Menu.setApplicationMenu(null);createWindow();
+ Menu.setApplicationMenu(null);mainBootReady=true;createWindow();
  try{tray=new Tray(nativeImage.createFromPath(path.join(root,'assets/icon.png')));tray.setToolTip('开黑搭子');tray.setContextMenu(Menu.buildFromTemplate([{label:'打开开黑搭子',click:showMainWindow},{label:'本局指引',click:()=>prepareCurrentGuide().then(()=>guide.show()).catch(()=>guide.show())},{label:'找回指引到当前屏幕',click:()=>prepareCurrentGuide().then(()=>guide.recover()).catch(()=>guide.recover().catch(()=>{}))},{label:'切换指引交互 / 鼠标穿透',click:()=>guide.interact().catch(()=>{})},{label:'退出',click:()=>{quitting=true;app.quit();}}]));tray.on('double-click',showMainWindow);}catch{}
  hotkeyAvailable=globalShortcut.register('Control+Shift+Space',()=>{if(win?.isVisible()&&win.isFocused()){companion?.dismiss();win.hide();}else showMainWindow();});
  guideHotkeyAvailable=globalShortcut.register('Control+Shift+G',()=>guide.toggle());guide.setHotkey(guideHotkeyAvailable);

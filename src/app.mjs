@@ -221,10 +221,28 @@ function refreshHistoryAnalysis(){
 // Card-local state (detail tabs, charts, event filters, table search) patches
 // only the Vue card list; the full shell renders when Vue does not own the list.
 function updateHistoryCards(){if(route!=='history'||!data||!vueRoutes.update('history',currentHistoryCards()))return false;historyTooltips.close();return true;}
-const history=createHistoryController({request:historyRequest,analyze:analyzeAkariHistory,onChange:change=>{if(route==='history'&&data){
+let historySearchResults=null,historySearchLayer=null,historySearchPrivate=false,historySearchIntent=null;
+function submitHistorySearch(){historySearchIntent={query:String(history.state.query).trim()};return history.search();}
+function presentHistorySearchResults(explicit=false){
+ if(route!=='history')return;
+ const results=history.state.searchResults,privateMode=!!history.state.streamer,changed=results!==historySearchResults,privacyChanged=privateMode!==historySearchPrivate;
+ historySearchResults=results;historySearchPrivate=privateMode;
+ if(!results.length){historySearchLayer=null;return;}
+ const layer=overlay.firstElementChild;
+ if(changed||explicit){
+  const query=String(document.getElementById('history-query')?.value??history.state.query).trim();
+  if(layer&&layer!==historySearchLayer||!explicit&&(!historySearchIntent||query!==historySearchIntent.query)){historySearchLayer=null;return;}
+ }
+ else if(!privacyChanged||!historySearchLayer||layer!==historySearchLayer)return;
+ const restore=layer&&layer===historySearchLayer?preserveOverlay(overlay):null;
+ overlay.innerHTML=matchHistorySearchView(privateHistoryState(history.state));historySearchLayer=overlay.firstElementChild;restore?.();
+}
+const history=createHistoryController({request:historyRequest,analyze:analyzeAkariHistory,onChange:change=>{
+ if(route!=='history')historySearchIntent=null;
+ if(route==='history'&&data){
  // A profile shows only in its own tab; a background tab's late profile needs no render.
  if(change?.type==='profile'&&change.tabId!==history.state.current)return;
- if(change?.type==='detail'){if(change.tabId!==history.state.current)return;if(updateHistoryCards()){if(change.analysisChanged)refreshHistoryAnalysis();return;}}render();if(history.state.searchResults.length)overlay.innerHTML=matchHistorySearchView(privateHistoryState(history.state));if(history.state.error)toast(history.state.streamer?'查询失败，请检查连接':history.state.error,true);}}});
+ if(change?.type==='detail'){if(change.tabId!==history.state.current)return;if(updateHistoryCards()){if(change.analysisChanged)refreshHistoryAnalysis();return;}}render();presentHistorySearchResults();if(history.state.error)toast(history.state.streamer?'查询失败，请检查连接':history.state.error,true);}}});
 function acceptChampionUsage(value){
  if(!value||!Number.isSafeInteger(value.revision)||championUsage&&value.revision<=championUsage.revision)return;
  const accountChanged=!!championUsage&&value.session!==championUsage.session;
@@ -247,7 +265,7 @@ let ongoingObservedPhase='Offline';
 function acceptOngoingClient(value){
  ongoing.observeClient(value);
  const phase=value?.phase||'Offline',starting=['ChampSelect','GameStart','InProgress'].includes(phase)&&!['ChampSelect','GameStart','InProgress','Reconnect'].includes(ongoingObservedPhase);ongoingObservedPhase=phase;
- if(!windowLayout.docked&&ongoing.state.settings.autoRoute&&ongoing.state.settings.enabled&&starting){route='ongoing';closeOverlay();render();ongoing.start();}
+ if(!windowLayout.docked&&ongoing.state.settings.autoRoute&&ongoing.state.settings.enabled&&starting&&!overlay.firstElementChild){route='ongoing';closeOverlay();render();ongoing.start();}
 }
 async function ongoingAction(action,el){
  const key=el.dataset.player,member=ongoing.state.roster?.players.find(p=>p.key===key),entry=ongoing.state.players[key];
@@ -273,18 +291,36 @@ async function ongoingAction(action,el){
   if(route==='history'&&history.current()===tab&&tab.ticket===ticket)document.querySelector(`[data-history-match="${game.id}"]`)?.scrollIntoView({block:'start'});
  }
 }
+function historyActionFocus(el){
+ if(document.activeElement!==el)return async()=>{};
+ const layer=overlay.firstElementChild;let diverted=false;
+ const changed=()=>{diverted=true;};document.addEventListener('focusin',changed,true);
+ return async(tab,ticket,selectors)=>{
+  try{
+   await nextTick();
+   if(diverted||route!=='history'||history.current()!==tab||tab&&tab.ticket!==ticket||overlay.firstElementChild!==layer||document.activeElement!==document.body&&document.activeElement!==el)return;
+   const target=selectors.flatMap(selector=>[...document.querySelectorAll(selector)]).find(node=>!node.disabled&&node.checkVisibility?.()!==false);
+   target?.focus({preventScroll:true});
+  }finally{document.removeEventListener('focusin',changed,true);}
+ };
+}
+async function loadHistoryPage(tab,change,el,action){
+ const restore=historyActionFocus(el),pending=history.load(tab,change),ticket=tab.ticket;
+ try{await pending;}finally{await restore(tab,ticket,[`[data-action="${action}"]`,'.history-pagination button','#history-query']);}
+}
 async function historyAction(action,el,background=false){
  const tab=history.current(),id=Number(el.dataset.id);
   if(action==='champion-usage-refresh'){acceptChampionUsage(await api.refreshChampionUsage());return;}
   if(action==='champion-usage-import'){if(!api.importChampionUsage)throw Error('请在桌面版导入英雄统计');const value=await api.importChampionUsage();if(value){acceptChampionUsage(value);toast('已导入当前账号的英雄统计');}return;}
   if(action==='history-self'){const search=document.querySelector('.history-search-disclosure');if(search)search.open=false;await history.open({source:history.state.source,server:''});}
+ else if(action==='history-search-results')presentHistorySearchResults(true);
  else if(action==='history-tab')history.select(id);
- else if(action==='history-close')history.close(id);
+ else if(action==='history-close'){const restore=historyActionFocus(el);history.close(id);const remaining=history.current();await restore(remaining,remaining?.ticket,remaining?[`[data-action="history-tab"][data-id="${remaining.id}"]`]:['#history-query']);}
  else if(action==='history-refresh'&&tab)await history.load(tab,{...(tab.page?{}:{handle:undefined}),fresh:true});
- else if(action==='history-next'&&tab?.page)await history.load(tab,{start:tab.page.start+tab.page.count});
- else if(action==='history-prev'&&tab?.page)await history.load(tab,{start:Math.max(0,tab.page.start-tab.page.count)});
- else if(action==='history-first'&&tab)await history.load(tab,{start:0});
- else if(action==='history-page-go'&&tab?.page){const value=Number(document.querySelector('[data-history-page="number"]')?.value);if(!Number.isInteger(value)||value<1||value>Math.ceil(10000/tab.page.count))throw Error('请输入范围内的页数');await history.load(tab,{start:(value-1)*tab.page.count});}
+ else if(action==='history-next'&&tab?.page)await loadHistoryPage(tab,{start:tab.page.start+tab.page.count},el,action);
+ else if(action==='history-prev'&&tab?.page)await loadHistoryPage(tab,{start:Math.max(0,tab.page.start-tab.page.count)},el,action);
+ else if(action==='history-first'&&tab)await loadHistoryPage(tab,{start:0},el,action);
+ else if(action==='history-page-go'&&tab?.page){const value=Number(document.querySelector('[data-history-page="number"]')?.value);if(!Number.isInteger(value)||value<1||value>Math.ceil(10000/tab.page.count))throw Error('请输入范围内的页数');await loadHistoryPage(tab,{start:(value-1)*tab.page.count},el,action);}
    else if(action==='history-detail'){const section=el.dataset.section,ticket=tab?.ticket;await history.detail(id,section);await nextTick();if(route!=='history'||history.current()!==tab||tab?.ticket!==ticket)return;if(section==='toggle')document.querySelector(`[data-history-match="${id}"] .history-expand`)?.focus({preventScroll:true});else if(tab.details[id]?.section===section)document.getElementById(`history-tab-${id}-${section}`)?.focus({preventScroll:true});}
  else if(action==='history-collect')await history.collect();
  else if(action==='history-collect-active')await history.collect({useFilters:true,scanFromStart:true,expectedCount:500});
@@ -322,10 +358,10 @@ function repaintNationalDetail(){
 }
 let patchVersion='',patchQuery='';
 let referenceHero='',referenceQuery='',referenceRole='all',referenceTab='skills',referenceSkill='Q',referenceVariant=0;
-let referenceKind='champions',referenceItem='',referenceItemQuery='',referenceItemMode='rift',referenceRuneId='',referenceShardRow='';
+let referenceKind='champions',referenceItem='',referenceItemQuery='',referenceItemMode='rift',referenceItemScope='shop',referenceRuneId='',referenceShardRow='';
 function renderReference(){
  const tabs=[['champions','英雄'],['items','装备'],['runes','符文']].map(([id,name])=>`<button type="button" class="segment ${referenceKind===id?'active':''}" data-action="reference-kind" data-kind="${id}" aria-pressed="${referenceKind===id}">${name}</button>`).join('');
- return `<nav class="segmented reference-kind" aria-label="图鉴分类">${tabs}</nav>`+(referenceKind==='items'?itemReferenceView(data,{id:referenceItem,query:referenceItemQuery,mode:referenceItemMode}):referenceKind==='runes'?runeReferenceView(data,{id:referenceRuneId,shardRow:referenceShardRow}):championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}));
+ return `<nav class="segmented reference-kind" aria-label="图鉴分类">${tabs}</nav>`+(referenceKind==='items'?itemReferenceView(data,{id:referenceItem,query:referenceItemQuery,mode:referenceItemMode,scope:referenceItemScope}):referenceKind==='runes'?runeReferenceView(data,{id:referenceRuneId,shardRow:referenceShardRow}):championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}));
 }
 const rankingPending=new Set(),rankingErrors=new Map();
 const rankingOptions=()=>{const source=rankingSource||data.buildSource,key=rankingKey(data.patch,source);return {source,role:rankingRole,query:rankingQuery,sort:rankingSort,pending:rankingPending.has(key),error:rankingErrors.get(key)||'',heroAction:id=>companionHeroAction(client,champ(id),saved.preferences.clickPrepare!==false)};};
@@ -419,7 +455,7 @@ const selectionRequestContext=()=>JSON.stringify([selectionUiRevision,dataState.
 function clearSelectionUi(){
  selectionUiRevision++;pairRefreshErrors.clear();pairRefreshOpen=false;opponentRefreshErrors.clear();buildErrors.clear();matchupFocusError=null;
  lastTaskSelection=null;lastAdoptedRoomShare='';clickedRoomPlan=null;roomRoleChoice=null;positionClaim=null;draftComparing=false;
- companionTab='recommend';companionPreview=null;lastCompanionOwn='';lastCompanionIntent='';lastCompanionLocked='';
+ companionTab='recommend';companionPreview=null;lastCompanionOwn='';lastCompanionIntent='';if(windowLayout.docked)lastCompanionLocked='';
  pendingIntentPreparation=null;pendingIntentPlanId='';showAllCandidates=false;recommendationError='';
  hexOptions=[];hexOwned=[];
  clientPreparationStatuses.clear();itemSetStatuses.clear();runeAppliedKeys.clear(true);matchupTargets.clear();unassigned=[];
@@ -542,6 +578,7 @@ let buildReturn=null,guideSelection=null,lastGuideSyncKey='',guideSyncChain=Prom
 // Each explicit click replaces one editable page; remember the applied scheme.
 const app=document.getElementById('app'),overlay=document.getElementById('overlay-root');
 const renderInteraction=holdRenderDuringPointer({document,root:app,render});
+const restoredDraftRenderInteraction=holdRenderDuringPointer({document,root:{contains:node=>app.contains(node)&&document.activeElement?.restoredChangeDraft===true},render,selector:'button[data-action]'});
 const buildRenderInteraction=holdRenderDuringPointer({document,root:overlay,render:renderBuild});
 const vueRoutes=createVueRouteHost();
 const champ=id=>data.champions.find(c=>c.id===id);
@@ -549,7 +586,7 @@ const roleName=id=>ROLES.find(r=>r.id===id)?.name||id;
 const assignedPlayerRole=()=>CLIENT_POSITION_ROLES[String(client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId)?.assignedPosition||'').toUpperCase()];
 const rarityName={kSilver:'白银',kGold:'黄金',kPrismatic:'棱彩'};
 const nav=[['draft','开黑推荐','team'],['room','开黑房间','link'],['history','历史战绩','ranking'],['ongoing','实时对局','sword'],['builds','符文与出装','sword'],['reference','图鉴','book'],['rankings','各路排行','ranking'],['patches','版本改动','refresh'],['hex','海克斯手册','hex'],['favorites','我的收藏','star'],['settings','数据与连接','settings']];
-function toast(message,error=false){clearTimeout(toastTimer);const el=document.getElementById('toast');el.textContent=message;el.className=`show ${error?'error':''}`;toastTimer=setTimeout(()=>el.className='',error?7000:3800);}
+function toast(message,error=false){clearTimeout(toastTimer);const el=document.getElementById('toast');el.textContent=error&&typeof message==='string'?message.replace(/Error invoking remote method '[^'\r\n]+': Error:\s*/g,''):message;el.className=`show ${error?'error':''}`;toastTimer=setTimeout(()=>el.className='',error?7000:3800);}
 function restoreRejectedSave(before,failed){
  const previousSource=normalizeBuildSource(saved.preferences.buildSource);
  saved.preparations=preparations.snapshot();
@@ -873,14 +910,14 @@ function restoreCandidateScroll(position,context){
 function markNewRoomProposals(previous){
  for(const row of app.querySelectorAll('.room-ballot-row'))if(!previous.has(row.dataset.proposalKey))row.dataset.arrival='true';
 }
-// Removing a focused URL may synchronously emit change before the new DOM is ready.
+// Removing a focused input may synchronously emit change before the new DOM is ready.
 let replacingApp=false;
 function render(){
- if(renderInteraction.defer())return;
+ if(renderInteraction.defer()||restoredDraftRenderInteraction.defer())return;
  const poolTab=app.querySelector('.hex-config-pool-tabs input:checked'),poolSelection=poolTab?{name:poolTab.name,value:poolTab.value}:null;
  const ballotKey=overlay.querySelector('[data-action="room-adopt-ballot"][data-key]')?.dataset.key;
  if(ballotKey&&!roomBallotBoard(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null,party:currentParty(),includePreselected:includePublicPreselection(),patch:data.patch,catalogStatus:data.catalogInfo?.status}).some(row=>row.key===ballotKey))closeOverlay();
- const formFocus=app.contains(document.activeElement)&&['history','ongoing','settings'].includes(route)&&document.activeElement.matches('input,textarea,select')?{tag:document.activeElement.tagName,id:document.activeElement.id,data:{...document.activeElement.dataset},value:document.activeElement.value,start:document.activeElement.selectionStart,end:document.activeElement.selectionEnd}:null;
+ const formFocus=app.contains(document.activeElement)&&(['history','ongoing','settings','room'].includes(route)||windowLayout.docked&&companionTab==='room')&&document.activeElement.matches('input,textarea,select')?{room:document.activeElement.tagName==='INPUT'&&/^room-(nick|invite|pin|relay-room|relay-url)$/.test(document.activeElement.id),tag:document.activeElement.tagName,id:document.activeElement.id,data:{...document.activeElement.dataset},value:document.activeElement.value,start:document.activeElement.selectionStart,end:document.activeElement.selectionEnd}:null;
  const rankingFocus=['ranking-search','patch-search','reference-search','item-reference-search'].includes(document.activeElement?.id)?{id:document.activeElement.id,start:document.activeElement.selectionStart,end:document.activeElement.selectionEnd}:app.contains(document.activeElement)&&document.activeElement?.matches('[data-ranking-filter]')?{filter:document.activeElement.dataset.rankingFilter}:null;
  const disclosureFocus={scope:renderedDisclosureScope,context:renderedSelectContext,key:disclosureState.captureFocus(app)};
  if(dragPick){pendingDragRender=true;return;}
@@ -898,10 +935,21 @@ function render(){
  selectionUiReset=false;
  document.body.classList.toggle('companion-mode',windowLayout.docked);
  const lockedNavigation=localPickLocked(client.session)?preparationGameId(client)+':'+client.session.myTeam.find(p=>p.cellId===client.session.localPlayerCellId)?.championId:'';
- if(!windowLayout.docked&&lockedNavigation!==lastCompanionLocked){lastCompanionLocked=lockedNavigation;if(lockedNavigation&&client.mode?.id!=='hex'){const plan=ownTaskPreparation();if(plan)queueMicrotask(()=>{if(!buildView?.snapshotPreview)showBuild(plan.selection.id,plan.selection.role,plan.selection.mode,{...plan.selection,quickConfiguration:true},{followOwn:true});});}}
+ if(!windowLayout.docked&&lockedNavigation!==lastCompanionLocked){
+  lastCompanionLocked=lockedNavigation;
+  if(route==='draft'&&lockedNavigation&&client.mode?.id!=='hex'){
+   const own=ownQuickBuildIdentity();
+   if(own)queueMicrotask(()=>{
+    if(windowLayout.docked||route!=='draft'||overlay.firstElementChild||buildView?.snapshotPreview||lastCompanionLocked!==lockedNavigation||!localPickLocked(client.session))return;
+    const current=ownQuickBuildIdentity();if(!current||!['gameId','cellId','id','role','mode'].every(field=>current[field]===own[field]))return;
+    const plan=ownTaskPreparation();if(!plan?.selection||plan.selection.readOnly||!['id','role','mode'].every(field=>plan.selection[field]===current[field]))return;
+    showBuild(plan.selection.id,plan.selection.role,plan.selection.mode,{...plan.selection,quickConfiguration:true},{followOwn:true});
+   });
+  }
+ }
  if(windowLayout.docked){
   vueRoutes.unmount();
-  const focused=document.activeElement,focus=app.contains(focused)&&['INPUT','SELECT'].includes(focused.tagName)?{id:focused.id,tag:focused.tagName,data:{...focused.dataset}}:null;
+  const focused=document.activeElement,focus=formFocus?.room?formFocus:app.contains(focused)&&['INPUT','SELECT'].includes(focused.tagName)?{id:focused.id,tag:focused.tagName,data:{...focused.dataset}}:null;
   const preparation=selectPreparation.own,own=preparation?.own.id||'',claiming=activeRoleClaim(positionClaim,client);
   if(own!==lastCompanionOwn){lastCompanionOwn=own;companionPreview=null;lastCompanionIntent='';if(own&&!claiming&&localPickLocked(client.session))companionTab=client.mode?.id==='hex'?'recommend':'plan';companionScroll.delete('plan');}
   const ownPick=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId),locked=ownPick&&(ownPick.pickState==='locked'||client.session.actions?.flat().some(a=>a.type==='pick'&&a.actorCellId===ownPick.cellId&&a.completed));
@@ -916,14 +964,14 @@ function render(){
   const ownPrepared=clientPreparationPlan(data,preparation||prepared.currentOnly);
   const focusScope=JSON.stringify([client.connected,client.phase,client.game?.gameId||'',own,client.mode?.id||'']);
   if(plan)maybeRefreshBuild(plan.selection.id,plan.selection.role,plan.selection.mode);
-  lastRenderedClient=clientRenderIdentity(client);app.innerHTML=companionView({data,client,partyRangeMode:partyRangeMode(saved.draft?.partyRangeMode),displayedRoster:companionDisplayRoster(),hexRound:hexRoundForHero(hexRoundSnapshot,companionPreview?.id)||hexRoundSnapshot.live||hexRoundSnapshot.manual,enemyRoles:saved.draft?.enemyRoles,connectionBusy:syncing,slots,unassigned,enemy,bans:clientBans,scope,soloRole,playerPosition:saved.draft?.playerPosition,preselection:displayedPreselection(),style,tab:companionTab,results,ballotKeys:room?.mode!=='idle'&&room?.ballots?results.map(r=>proposalKey(roomResultProposal(r))):[],generating,error:recommendationError,preparation,plan,favorites:saved.favorites,preferences:saved.preferences,room,roomContent:companionTab==='room'?roomPanelHTML():'',rankings:companionTab==='rankings'?rankingContent(true):'',activePlan:activeCreativePlan,adoptedShare:lastAdoptedRoomShare,draftNotice:creativePlanNotice,preparationStatus:clientPreparing?{message:'正在预选并配置…'}:ownPrepared&&clientPreparationStatuses.get(clientPreparationKey(client,ownPrepared)),configurationStatus:{heroStatistics:plan?championStatisticsView(client,data,plan.selection):'',rankedAdvice:plan?rankedConfigurationAdvice(client,data,plan.selection,plan.build,saved.draft?.enemyRoles):null,pending:clientPreparing||runeApplying||!!itemSetPending,itemSetStatuses,clientControls:clientControls(plan,'companion'),refreshing:refreshingBuilds.has(configurationKey),error:buildErrors.get(configurationKey),enemyIds:publicMatchupIds(),publicContext:matchupPreparationContext(),opponentId:plan?chosenMatchupOpponent(plan.selection)?.id||'':'',matchupStatus:plan?matchupFocusStatus(plan.selection):'',opponentRefresh:plan?opponentRefreshStatus(plan.selection):{}},applied:!!preparation&&runeAppliedKeys.has(runeApplicationKey(own,preparation.build.role,preparation.build.runePage)),guideAutoShow:saved.preferences.guideAutoShow!==false,appVersion:boot.version,pairRefresh:pairRefreshStatus(),overlap:windowLayout.overlap,recovery:stateRecovery,taskControls:taskControls(prepared.task),taskPlan:prepared.task,taskComparing:draftComparing,claimingPosition:claiming,showAllCandidates}).replaceAll('loading="lazy"','loading="eager"');
+  lastRenderedClient=clientRenderIdentity(client);replacingApp=true;try{app.innerHTML=companionView({data,client,partyRangeMode:partyRangeMode(saved.draft?.partyRangeMode),displayedRoster:companionDisplayRoster(),hexRound:hexRoundForHero(hexRoundSnapshot,companionPreview?.id)||hexRoundSnapshot.live||hexRoundSnapshot.manual,enemyRoles:saved.draft?.enemyRoles,connectionBusy:syncing,slots,unassigned,enemy,bans:clientBans,scope,soloRole,playerPosition:saved.draft?.playerPosition,preselection:displayedPreselection(),style,tab:companionTab,results,ballotKeys:room?.mode!=='idle'&&room?.ballots?results.map(r=>proposalKey(roomResultProposal(r))):[],generating,error:recommendationError,preparation,plan,favorites:saved.favorites,preferences:saved.preferences,room,roomContent:companionTab==='room'?roomPanelHTML():'',rankings:companionTab==='rankings'?rankingContent(true):'',activePlan:activeCreativePlan,adoptedShare:lastAdoptedRoomShare,draftNotice:creativePlanNotice,preparationStatus:clientPreparing?{message:'正在预选并配置…'}:ownPrepared&&clientPreparationStatuses.get(clientPreparationKey(client,ownPrepared)),configurationStatus:{heroStatistics:plan?championStatisticsView(client,data,plan.selection):'',rankedAdvice:plan?rankedConfigurationAdvice(client,data,plan.selection,plan.build,saved.draft?.enemyRoles):null,pending:clientPreparing||runeApplying||!!itemSetPending,itemSetStatuses,clientControls:clientControls(plan,'companion'),refreshing:refreshingBuilds.has(configurationKey),error:buildErrors.get(configurationKey),enemyIds:publicMatchupIds(),publicContext:matchupPreparationContext(),opponentId:plan?chosenMatchupOpponent(plan.selection)?.id||'':'',matchupStatus:plan?matchupFocusStatus(plan.selection):'',opponentRefresh:plan?opponentRefreshStatus(plan.selection):{}},applied:!!preparation&&runeAppliedKeys.has(runeApplicationKey(own,preparation.build.role,preparation.build.runePage)),guideAutoShow:saved.preferences.guideAutoShow!==false,appVersion:boot.version,pairRefresh:pairRefreshStatus(),overlap:windowLayout.overlap,recovery:stateRecovery,taskControls:taskControls(prepared.task),taskPlan:prepared.task,taskComparing:draftComparing,claimingPosition:claiming,showAllCandidates}).replaceAll('loading="lazy"','loading="eager"');}finally{replacingApp=false;}
   const content=document.querySelector('.companion-content');content.dataset.view=view;content.dataset.disclosureScope=disclosureScope;content.dataset.focusScope=focusScope;
   renderedDisclosureScope='companion:'+disclosureScope;disclosureState.restore(renderedDisclosureScope,app);markNewRoomProposals(previousProposals);
   if(poolSelection){const input=[...app.querySelectorAll('.hex-config-pool-tabs input')].find(node=>node.name===poolSelection.name&&node.value===poolSelection.value);if(input)input.checked=true;}
   if(disclosureFocus.scope===renderedDisclosureScope&&old?.dataset.focusScope===focusScope)disclosureState.restoreFocus(disclosureFocus.key,app);
   content.scrollTop=companionScroll.get(view)||0;
   renderedSelectContext=appSelectionContext(prepared);reflectRunePending();
-  if(focus&&old?.dataset.focusScope===focusScope){const target=focus.id?document.getElementById(focus.id):[...app.querySelectorAll('button,input,select')].find(control=>control.tagName===focus.tag&&Object.keys(focus.data).length&&Object.entries(focus.data).every(([key,value])=>control.dataset[key]===value));target?.focus({preventScroll:true});}return;
+  if(focus&&(focus.room&&companionTab==='room'||old?.dataset.focusScope===focusScope)){const target=focus.id?document.getElementById(focus.id):[...app.querySelectorAll('button,input,select')].find(control=>control.tagName===focus.tag&&Object.keys(focus.data).length&&Object.entries(focus.data).every(([key,value])=>control.dataset[key]===value));if(target&&!target.disabled&&(!focus.room||!target.readOnly)){if(focus.room){target.value=focus.value;if(['room-nick','room-relay-url'].includes(target.id))target.restoredChangeDraft=true;}target.focus({preventScroll:true});if(focus.room)try{target.setSelectionRange(focus.start,focus.end);}catch{}}}return;
  }
    const keptScroll=captureScroll(app);
    const navigationScroll=app.querySelector('.sidebar>nav')?.scrollTop||0,navigationFocus=document.activeElement?.closest('.sidebar [data-action="navigate"]')?.dataset.route;
@@ -935,7 +983,7 @@ function render(){
  restoreCandidateScroll(candidateScroll,selectContext);renderedDraftResults=route==='draft'?results:null;
  reflectRunePending();
   if(rankingFocus){const input=rankingFocus.id?document.getElementById(rankingFocus.id):app.querySelector('[data-ranking-filter="'+CSS.escape(rankingFocus.filter)+'"]');input?.focus({preventScroll:true});if(rankingFocus.id)try{input?.setSelectionRange(rankingFocus.start,rankingFocus.end);}catch{}}
-  if(formFocus){const focusRoute=route,focusTab=history.state.current,restore=()=>{if(route!==focusRoute||route==='history'&&history.state.current!==focusTab)return;const target=formFocus.id?document.getElementById(formFocus.id):[...app.querySelectorAll('input,textarea,select')].find(node=>node.tagName===formFocus.tag&&Object.keys(formFocus.data).length&&Object.entries(formFocus.data).every(([key,value])=>node.dataset[key]===value));if(target&&!target.disabled){if(target.tagName==='TEXTAREA'||['text','search','url','number','date'].includes(target.type))target.value=formFocus.value;target.focus({preventScroll:true});try{target.setSelectionRange(formFocus.start,formFocus.end);}catch{}}};restore();if(route==='history')nextTick(restore);}
+  if(formFocus){const focusRoute=route,focusTab=history.state.current,restore=()=>{if(route!==focusRoute||route==='history'&&history.state.current!==focusTab)return;const target=formFocus.id?document.getElementById(formFocus.id):[...app.querySelectorAll('input,textarea,select')].find(node=>node.tagName===formFocus.tag&&Object.keys(formFocus.data).length&&Object.entries(formFocus.data).every(([key,value])=>node.dataset[key]===value));if(target&&!target.disabled&&(!formFocus.room||!target.readOnly)){if(formFocus.room||target.tagName==='TEXTAREA'||['text','search','url','number','date'].includes(target.type))target.value=formFocus.value;if(['room-nick','room-relay-url','update-mirror'].includes(target.id))target.restoredChangeDraft=true;target.focus({preventScroll:true});try{target.setSelectionRange(formFocus.start,formFocus.end);}catch{}}};restore();if(route==='history')nextTick(restore);}
   restoreItemReferenceFocus(itemReferenceFocus);restoreRuneReferenceFocus(runeReferenceFocus);restoreChampionReferenceFocus(championReferenceFocus);
 }
 function mainNavigation(){
@@ -958,6 +1006,7 @@ function chooseRoomRole(role){
  if(own){roomRoleChoice=null;setCompanionRole(role);return;}
  roomRoleChoice={role,context:roomRoleContext()};soloRole=role;persist();render();
 }
+for(const type of ['focusout','keydown'])document.addEventListener(type,event=>{const el=event.target;if(!el.restoredChangeDraft||!['room-nick','room-relay-url','update-mirror'].includes(el.id)||replacingApp||el.isConnected===false||el.readOnly||event.type==='keydown'&&(event.key!=='Enter'||event.isComposing||event.keyCode===229))return;if(event.type==='keydown')event.preventDefault();el.dispatchEvent(new Event('change',{bubbles:true}));});
 function roomNickname(){const nick=saved.preferences.roomNick?.trim();return client.playerName||(nick&&nick!=='队友'?nick:'队友');}
 function roomPanelHTML(){return api.roomStatus?roomBallotView(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null,party:currentParty(),includePreselected:includePublicPreselection(),patch:data.patch,catalogStatus:data.catalogInfo?.status})+roomPanel({room,transport:roomTransport,relayUrl:roomRelayUrl,relayRoom:roomRelayRoom,nick:roomNickname(),detectedNick:client.playerName||'',busy:roomBusy,scanning:roomScanning,scanResults:roomScanResults,error:roomError,invite:roomInvite,pin:roomPin,addresses:roomAddresses,champ,hasPreparationFile:!!roomPreparationFile,preparationFileBusy,autoEnabled:saved.preferences.roomAuto===true,autoSync:saved.preferences.autoSync!==false,autoError:room?.autoError||'',autoQuiet:roomAutoQuiet&&(room?.members?.length??0)<=1}):'<p>连接队友房间请使用桌面版。</p>';}
 function roomOwnPreparation(){
@@ -1821,7 +1870,8 @@ async function performSync(manual=true,fresh=false){
  const previousClient=client,previousOwn=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId),previousOwnIntent=previousOwn?.championId||previousOwn?.championPickIntent||0;
  lastSyncStarted=Date.now();syncing=true;const before=lastRenderedClient||clientRenderIdentity(client),previousMatchups=matchupContext(),previousPhase=client.phase,previousRecommendation=recommendationKey(recommendationInput());let changed=false,newGame=false;if(manual)render();
  try{
-   await saveChain;const incoming=sharedClient;sharedClient=null;client=!manual&&!fresh&&incoming?incoming:await api.client(manual||fresh);history.observeClient({...client,historySession:championUsage?.session||''});if(route==='history')history.autoLoadOwn(client,championUsage).catch(()=>{});ongoing.observeClient(client);drainExternalState();
+   await saveChain;const incoming=sharedClient;sharedClient=null;const received=!manual&&!fresh&&incoming?incoming:await api.client(manual||fresh);
+   client=sharedClient||received;sharedClient=null;history.observeClient({...client,historySession:championUsage?.session||''});if(route==='history')history.autoLoadOwn(client,championUsage).catch(()=>{});ongoing.observeClient(client);drainExternalState();
   if(positionClaim&&!positionClaim.pending&&!activeRoleClaim(positionClaim,client)){
    if(localPickLocked(client.session)&&preparationGameId(client)===positionClaim.gameId){draftComparing=false;companionTab='plan';}
    positionClaim=null;
@@ -1888,7 +1938,7 @@ async function performSync(manual=true,fresh=false){
   if(dragPick)pendingDragRender=true;else if(activeAppSelect||windowLayout.docked&&changed||!document.activeElement?.matches('input,select'))render();
   if(buildView&&(renderedBuildContext!==buildSelectionContext(buildView.build)||previousMatchups!==matchupContext()))renderBuild();
  }}
- refreshClientClock();queueCompanionRecommendation();prefetchRankedDraft().catch(()=>{});if(sharedClient?.receivedAt===client.receivedAt)sharedClient=null;if(sharedClient)setTimeout(()=>sync(false),0);
+ refreshClientClock();queueCompanionRecommendation();prefetchRankedDraft().catch(()=>{});if(sharedClient?.receivedAt&&sharedClient.receivedAt===client.receivedAt)sharedClient=null;if(sharedClient)setTimeout(()=>sync(false),0);
 }
 function reflectRunePending(){
  reflectItemSetPending();
@@ -1929,20 +1979,45 @@ async function checkAppUpdate(silent=false){
  const cleanError=message=>String(message||'请稍后重试').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');
  try{
   const snapshot=await api.checkAppUpdate(silent);
-  if(appUpdate.phase==='checking')appUpdate={phase:snapshot.phase,release:snapshot.release||null,received:0,total:null,error:snapshot.error||'',...(snapshot.record?{record:snapshot.record}:{}),...(snapshot.dismissed?{dismissed:true}:{})};
-  if(['available','current','ready'].includes(snapshot.phase)){saved.preferences.lastAppUpdateCheck=new Date().toISOString();persist();}
-  if(!silent){if(snapshot.phase==='available')toast(`发现新版 v${snapshot.release.version}，可下载安装`);else if(snapshot.phase==='ready')toast('新版安装包已就绪，可退出并安装');else if(snapshot.phase==='current')toast('软件已是最新版本');else toast('软件更新检查未完成：'+cleanError(snapshot.error),true);}
+  if(appUpdate.phase==='checking')appUpdate={phase:snapshot.phase,release:snapshot.release||null,received:snapshot.received||0,total:snapshot.total??null,kind:snapshot.kind||snapshot.record?.kind||'full',via:snapshot.via||null,error:snapshot.error||'',...(snapshot.record?{record:snapshot.record}:{}),...(snapshot.dismissed?{dismissed:true}:{})};
+  if(['available','current','ready','paused'].includes(snapshot.phase)){saved.preferences.lastAppUpdateCheck=new Date().toISOString();persist();}
+  if(!silent){if(snapshot.phase==='available')toast(`发现新版 v${snapshot.release.version}，可下载安装`);else if(snapshot.phase==='ready')toast('新版安装包已就绪，可退出并安装');else if(snapshot.phase==='paused')toast('已找到上次下载，可继续下载');else if(snapshot.phase==='current')toast('软件已是最新版本');else toast('软件更新检查未完成：'+cleanError(snapshot.error),true);}
  }catch(err){appUpdate={phase:'error',release:null,received:0,total:null,error:cleanError(err.message),via:null};if(!silent)toast('软件更新检查未完成：'+appUpdate.error,true);}
  finally{if(route==='settings'||!silent)render();}
 }
-let updateMirrorSave=null;
+let updateMirrorSave=null,updateMirrorError=null,appUpdateStart=null;
 function saveUpdateMirror(value){
  saved.preferences.updateMirror=value;
- const request=persist({throwOnError:true});updateMirrorSave=request;
- const settled=()=>{if(updateMirrorSave===request)updateMirrorSave=null;};request.then(settled,settled);
+ const request=persist({throwOnError:true});updateMirrorSave=request;updateMirrorError=null;
+ const settled=error=>{if(updateMirrorSave===request){updateMirrorSave=null;updateMirrorError=error||null;}};request.then(()=>settled(),settled);
  return request;
 }
-async function downloadAppUpdate(){const release=appUpdate.release;try{appUpdate.phase='downloading';render();while(updateMirrorSave)await updateMirrorSave;await api.downloadAppUpdate();}catch(err){const prev=appUpdate;appUpdate={phase:'error',release,received:0,total:null,error:String(err.message||'下载未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,''),via:prev.via||null,fallbackNotice:prev.fallbackNotice||false};render();toast(appUpdate.error,true);}}
+async function downloadAppUpdate(){
+ if(appUpdateStart)return;
+ const request={previous:{...appUpdate},waitingSource:true};appUpdateStart=request;appUpdate={...appUpdate,phase:'downloading',error:''};render();
+ try{
+  while(updateMirrorSave){await updateMirrorSave;if(appUpdateStart!==request)return;}
+  if(appUpdateStart!==request)return;
+  if(updateMirrorError)throw updateMirrorError;
+  request.waitingSource=false;await api.downloadAppUpdate();
+ }catch(err){
+  if(appUpdateStart!==request)return;
+  if(updateMirrorError===err)updateMirrorError=null;
+  const prev=appUpdate;appUpdate={phase:'error',release:request.previous.release,received:0,total:null,error:String(err.message||'下载未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,''),via:prev.via||null,fallbackNotice:prev.fallbackNotice||false};render();toast(appUpdate.error,true);
+ }finally{if(appUpdateStart===request)appUpdateStart=null;}
+}
+async function stopAppUpdateDownload(pause=false){
+ const request=appUpdateStart?.waitingSource?appUpdateStart:null;
+ if(request){appUpdateStart=null;appUpdate={...request.previous,phase:pause?'paused':'cancelling',error:''};render();if(pause)return;}
+ try{
+  await (pause?api.pauseAppUpdate():api.cancelAppUpdate());
+  if(request&&!appUpdateStart&&appUpdate.phase==='cancelling'){appUpdate={...request.previous,phase:'available',error:''};render();}
+ }catch(err){
+  const error=String(err.message||'操作未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');
+  if(request&&!appUpdateStart&&appUpdate.phase==='cancelling'){appUpdate={...request.previous,error};render();}
+  toast(error,true);
+ }
+}
 async function installAppUpdate(){
  if(appUpdate.phase!=='ready')return;
  const prev=appUpdate;appUpdate={...prev,phase:'installing',error:''};render();
@@ -1961,9 +2036,9 @@ async function updateData(silent=false){
 }
 async function changeFavorites(next,message){
  if(favoriteSaving)throw Error('收藏正在保存，请稍候再操作');
- const previous=saved.favorites;favoriteSaving=true;saved.favorites=next;render();
+ favoriteSaving=true;saved.favorites=next;render();
  try{await persist({throwOnError:true});toast(message);}
- catch(error){saved.favorites=previous;await persist();throw Error('收藏未保存，已保留原收藏：'+error.message);}
+ catch(error){throw Error('收藏未保存，已保留原收藏：'+error.message);}
  finally{favoriteSaving=false;render();if(buildView)renderBuild();}
 }
 async function addFavorite(fav){const index=saved.favorites.findIndex(f=>f.id===fav.id);if(index>=0){await changeFavorites(saved.favorites.filter((_,i)=>i!==index),'已取消收藏');}else{if(saved.favorites.length>=500)throw Error('收藏已达到 500 项，请先移出一项再收藏');await changeFavorites([{...fav,version:data.version,createdAt:new Date().toISOString()},...saved.favorites],'已收藏，下次就玩这套');}}
@@ -2023,10 +2098,22 @@ document.addEventListener('change',event=>{
 function historyChartAction(event){const el=event.target.closest?.('[data-history-chart][data-value]');if(!el)return false;const detail=history.current()?.details[el.dataset.historyChart];if(detail&&['chartFrame','chartPlayer','rawStatsMetric'].includes(el.dataset.chartField)){detail[el.dataset.chartField]=el.dataset.value;if(!updateHistoryCards())render();return true;}return false;}
 document.addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)&&event.target.matches?.('[data-history-chart][data-value]')){event.preventDefault();historyChartAction(event);}});
 document.addEventListener('keydown',event=>{const tab=event.target.closest?.('.history-detail-tabs [role=tab]');if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;const tabs=[...tab.parentElement.querySelectorAll('[role=tab]')],index=tabs.indexOf(tab),next=event.key==='Home'?tabs[0]:event.key==='End'?tabs.at(-1):tabs[(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];event.preventDefault();next.click();});
-let feedbackUI;
+let feedbackUI,backdropGesture=null;
+document.addEventListener('pointerdown',event=>{
+ backdropGesture=null;const backdrop=overlay.firstElementChild;
+ if(event.button===0&&event.isPrimary!==false&&event.target===backdrop&&backdrop?.dataset.backdrop)backdropGesture={backdrop,pointerId:event.pointerId,released:false};
+},true);
+document.addEventListener('pointerup',event=>{
+ if(!backdropGesture)return;
+ if(event.button!==0||event.isPrimary===false||event.pointerId!==backdropGesture.pointerId||event.target!==backdropGesture.backdrop||overlay.firstElementChild!==backdropGesture.backdrop)backdropGesture=null;
+ else backdropGesture.released=true;
+},true);
+document.addEventListener('pointercancel',()=>{backdropGesture=null;},true);
+window.addEventListener('blur',()=>{backdropGesture=null;});
 document.addEventListener('click',async event=>{
  if(historyChartAction(event))return;
- const el=event.target.closest('[data-action]');if(!el){if(event.target.dataset.backdrop)closeOverlay();return;}
+ const gesture=backdropGesture;backdropGesture=null;
+ const el=event.target.closest('[data-action]');if(!el){if(gesture?.released&&event.target===gesture.backdrop&&overlay.firstElementChild===gesture.backdrop)closeOverlay();return;}
  if(Date.now()-draggedAt<250)return;
  const action=el.dataset.action;try{
  if(action.startsWith('feedback-')){feedbackUI||=createFeedbackUI({overlay,api});await feedbackUI.action(action,el);return;}
@@ -2038,7 +2125,7 @@ document.addEventListener('click',async event=>{
  if(action==='window-info-copy'){if(!currentWindowInfo)throw Error('请先读取窗口资料');await api.copy(windowInfoText(currentWindowInfo));toast('窗口资料已复制');return;}
  if(action==='theme-open'){closeOverlay();updateThemeDialog(overlay,saved.preferences.presentation);return;}
  if(action==='presentation-open'){updatePresentationDialog(overlay,saved.preferences.presentation);return;}
-  if(action==='presentation'){const change={field:el.dataset.field,value:el.dataset.field==='textScale'?Number(el.dataset.value):el.dataset.value};const themeOnly=!!overlay.querySelector('.theme-settings');saved.preferences.presentation=await api.presentation(change);render();if(themeOnly)updateThemeDialog(overlay,saved.preferences.presentation);else updatePresentationDialog(overlay,saved.preferences.presentation);return;}
+  if(action==='presentation'){const change={field:el.dataset.field,value:el.dataset.field==='textScale'?Number(el.dataset.value):el.dataset.value},panel=overlay.firstElementChild;const themeOnly=!!overlay.querySelector('.theme-settings');saved.preferences.presentation=await api.presentation(change);render();if(panel&&overlay.firstElementChild===panel){if(themeOnly)updateThemeDialog(overlay,saved.preferences.presentation);else updatePresentationDialog(overlay,saved.preferences.presentation);}return;}
   if(action==='build-source-cache'){
    const selection=el.dataset.plan?companionPreparation()?.selection:buildView&&buildSelection();
    if(!selection||selection.mode!=='rift'||selection.id!==el.dataset.cacheChampion||selection.role!==el.dataset.cacheRole||el.dataset.plan&&el.dataset.plan!==[selection.id,selection.role,selection.mode].join(':'))throw Error('英雄或位置已变化，请核对当前配置');
@@ -2059,7 +2146,8 @@ document.addEventListener('click',async event=>{
  if(action==='reference-hero'){if(!champ(el.dataset.id))throw Error('英雄资料已变化');if(windowLayout.docked&&api.openMainPage){await api.openMainPage({route:'reference',id:el.dataset.id,tab:el.dataset.tab==='changes'?'changes':'skills'});return;}referenceKind='champions';referenceHero=el.dataset.id;referenceTab=el.dataset.tab==='changes'?'changes':'skills';referenceSkill='Q';referenceVariant=0;route='reference';closeOverlay();render();return;}
  if(action==='reference-kind'){if(!['champions','items','runes'].includes(el.dataset.kind))return;referenceKind=el.dataset.kind;render();document.querySelector(`[data-action="reference-kind"][data-kind="${referenceKind}"]`)?.focus({preventScroll:true});return;}
  if(action==='reference-rune'){const id=el.dataset.id,shardRow=el.dataset.shardRow||'';if(route!=='reference'||referenceKind!=='runes'||!referenceRune(data,id)||shardRow&&!/^[0-2]$/.test(shardRow))return;referenceRuneId=id;referenceShardRow=shardRow;render();[...app.querySelectorAll('button[data-action="reference-rune"]')].find(node=>node.dataset.id===id&&(node.dataset.shardRow||'')===shardRow)?.focus({preventScroll:true});if(window.matchMedia('(max-width:760px)').matches){const detail=app.querySelector('.rune-reference-detail'),rect=detail?.getBoundingClientRect();if(rect&&(rect.top<0||rect.top+Math.min(rect.height,160)>window.innerHeight))detail.scrollIntoView({block:'nearest'});}return;}
- if(action==='reference-item-mode'){if(!['rift','hex'].includes(el.dataset.mode))return;referenceItemMode=el.dataset.mode;render();document.querySelector(`[data-action="reference-item-mode"][data-mode="${referenceItemMode}"]`)?.focus({preventScroll:true});return;}
+ if(action==='reference-item-mode'){if(!['rift','hex'].includes(el.dataset.mode))return;const scroll=document.getElementById('item-reference-grid')?.scrollTop||0;referenceItemMode=el.dataset.mode;render();const grid=document.getElementById('item-reference-grid');if(grid)grid.scrollTop=scroll;document.querySelector(`[data-action="reference-item-mode"][data-mode="${referenceItemMode}"]`)?.focus({preventScroll:true});return;}
+ if(action==='reference-item-scope'){if(!['shop','all'].includes(el.dataset.scope))return;const scroll=document.getElementById('item-reference-grid')?.scrollTop||0;referenceItemScope=el.dataset.scope;render();const grid=document.getElementById('item-reference-grid');if(grid)grid.scrollTop=scroll;document.querySelector(`[data-action="reference-item-scope"][data-scope="${referenceItemScope}"]`)?.focus({preventScroll:true});return;}
  if(action==='reference-item'){const id=el.dataset.id;if(!/^\d{1,8}$/.test(id||'')||!Object.hasOwn(data.items||{},id)||data.items[id].maps?.[referenceItemMode==='hex'?'12':'11']!==true)return;referenceItem=id;render();const detail=document.getElementById('item-reference-detail');if(detail){detail.focus({preventScroll:true});const rect=detail.getBoundingClientRect();if(rect.top<0||rect.top+Math.min(rect.height,160)>window.innerHeight)detail.scrollIntoView({block:'start',inline:'nearest'});}return;}
  if(action==='reference-back'){referenceHero='';render();return;}
  if(action==='reference-role'){if(!['all',...ROLES.map(r=>r.id)].includes(el.dataset.role))return;referenceRole=el.dataset.role;render();return;}
@@ -2405,8 +2493,8 @@ document.addEventListener('click',async event=>{
  else if(action==='app-update-check-toggle'){saved.preferences.appUpdateCheck=!saved.preferences.appUpdateCheck;persist();render();}
  else if(action==='app-update-check')await checkAppUpdate();
  else if(action==='app-update-download')await downloadAppUpdate();
- else if(action==='app-update-cancel'){try{await api.cancelAppUpdate();}catch(err){toast(err.message,true);}}
- else if(action==='app-update-pause'){try{await api.pauseAppUpdate();}catch(err){toast(err.message,true);}}
+ else if(action==='app-update-cancel')await stopAppUpdateDownload();
+ else if(action==='app-update-pause')await stopAppUpdateDownload(true);
  else if(action==='app-update-install')await installAppUpdate();
  else if(action==='app-update-delete'){try{await api.deleteAppUpdate();appUpdate={phase:'idle',release:null,received:0,total:null,error:'',via:null};render();}catch(err){toast(err.message,true);}}
  else if(action==='app-update-dismiss'){saved.preferences.dismissedAppVersion=appUpdate.release?.tag;await persist();appUpdate={phase:'current',dismissed:true,release:appUpdate.release,received:0,total:null,error:'',via:null};render();}
@@ -2422,7 +2510,7 @@ else if(action==='app-update-mirror-clear'){await saveUpdateMirror('');render();
  else if(action==='link')await api.openLink(el.dataset.url);
  }catch(err){toast(err.message||'操作没有完成，请重试',true);}
 });
-document.addEventListener('submit',event=>{if(event.target.id==='history-search'){event.preventDefault();history.state.query=document.getElementById('history-query').value;const search=event.target.closest('details');if(search)search.open=false;history.search().catch(error=>toast(error.message,true));return;}if(event.target.id==='catalog-form'){event.preventDefault();overlay.querySelector('[data-action=catalog-save]')?.click();}});
+document.addEventListener('submit',event=>{if(event.target.id==='history-search'){event.preventDefault();history.state.query=document.getElementById('history-query').value;const search=event.target.closest('details');if(search)search.open=false;submitHistorySearch().catch(error=>toast(error.message,true));return;}if(event.target.id==='catalog-form'){event.preventDefault();overlay.querySelector('[data-action=catalog-save]')?.click();}});
 document.addEventListener('input',event=>{if(event.target.id==='history-query')history.state.query=event.target.value;});
 document.addEventListener('change',async event=>{const el=event.target;if(!el.matches('[data-hex-option-input]')||!el.value.trim())return;try{const inBuild=overlay.contains(el)&&buildView?.hexWorkbench,id=resolveHexAugmentInput(el.value,hexManualAugments(data,{includeDisabled:true})),context=el.closest('[data-hex-context]')?.dataset.hexContext,record=[hexRoundSnapshot.live,hexRoundSnapshot.manual].find(row=>row?.context===context);if(!record?.options.includes(id))await changeHexRound('compare',id,el);if(inBuild)renderBuild();else render();const host=inBuild?overlay:document; (host.querySelector('[data-hex-option-input]:not(:disabled)')||host.querySelector('.hex-workspace-options [data-augment="'+id+'"] [data-action=augment-detail]')||host.querySelector('.hex-comparison [data-augment="'+id+'"] summary'))?.focus();}catch(error){toast(error.message,true);}});
 document.addEventListener('change',event=>{const el=event.target,tab=history.current();if(tab&&el.dataset.historyTool==='mastery-query'&&!history.state.streamer){tab.masteryQuery=String(el.value).slice(0,96);render();}});
@@ -2437,8 +2525,8 @@ document.addEventListener('change',event=>{
 });
 document.addEventListener('change',event=>{const field=event.target.dataset.historyField,tab=history.current();if(event.target.dataset.historyChart&&tab){const detail=tab.details[event.target.dataset.historyChart];if(detail){detail[event.target.dataset.chartField]=event.target.multiple?[...event.target.selectedOptions].map(option=>option.value):event.target.value;if(!updateHistoryCards())render();}return;}if(event.target.hasAttribute('data-history-rule')&&tab){const advanced=tab.filter.advanced,index=Number(event.target.dataset.historyRule);history.filter('advanced',{...advanced,rules:advanced.rules.map((r,i)=>i===index?{...r,[event.target.dataset.ruleField]:event.target.value}:r)});return;}if(!field)return;if(field==='source'||field==='server'){history.state[field]=event.target.value;return;}if(field==='advanced-mode'&&tab){history.filter('advanced',{...tab.filter.advanced,mode:event.target.value});return;}if(field.startsWith('filter-'))history.filter(field.slice(7),event.target.type==='checkbox'?event.target.checked:event.target.value);});
 document.addEventListener('input',event=>{const el=event.target;if(el.id==='combo-search'&&comboView){comboView.query=el.value;document.getElementById('combo-list').innerHTML=combinationRows(data,comboView,slots);}if(el.id==='picker-search'){picker.query=el.value;document.getElementById('picker-grid').innerHTML=pickerTiles();}if(el.id==='library-search'){libraryQuery=el.value;document.getElementById('library-grid').innerHTML=libraryTiles();}if(el.id==='hex-search'){hexQuery=el.value;document.getElementById('augment-grid').innerHTML=augmentTiles();}if(el.id==='room-invite')roomInvite=el.value;if(el.id==='room-pin')roomPin=el.value;if(el.id==='room-relay-room')roomRelayRoom=el.value;if(el.id==='room-relay-url')roomRelayUrl=el.value;});
-document.addEventListener('change',event=>{const el=event.target;if(el.id==='hex-mechanism'){hexMechanism=el.value;hexPoolRound=0;render();return;}if(el.id==='hex-pool-filter'){if(['all','observed','unobserved','reference','disabled','special','unknown'].includes(el.value))hexPoolFilter=el.value;document.getElementById('augment-grid').innerHTML=augmentTiles();return;}if(el.id==='familiarity-mass'){saved.preferences.familiarityMass=Number(el.value)/100;invalidate();return;}if(el.id==='include-preselected'){saved.preferences.includePreselected=el.checked;invalidate();return;}if(el.id==='flash-slot'){saved.preferences.flashSlot=el.value;persist();render();if(buildView)renderBuild();return;}if(el.id==='room-auto'){saved.preferences.roomAuto=el.checked;persist();render();return;}if(el.hasAttribute('data-matchup-target')){try{changeMatchupTarget(el);}catch(error){toast(error.message,true);render();if(buildView)renderBuild();}return;}if(el.dataset.buildSourceField){try{const source=requireBuildSource({...normalizeBuildSource(buildSourceDraft||data.buildSource),[el.dataset.buildSourceField]:el.value});changeWindowBuildSource(source);}catch(error){toast(error.message,true);}return;}if(el.dataset.presentationModule){api.presentation({field:'toggleModule',value:el.dataset.presentationModule}).then(value=>{saved.preferences.presentation=value;render();updatePresentationDialog(overlay,value);}).catch(error=>toast(error.message,true));return;}if(el.id==='companion-width'){saved.preferences.companionWidth=Number(el.value);persist().then(()=>api.windowLayoutControl('follow')).then(acceptWindowLayout).catch(error=>toast(error.message,true));return;}if(el.id==='party-ids'){saved.preferences.partyIds=normalizePartyIds(el.value);persist().then(()=>sync(false,{fresh:true}));return;}if(el.id==='configuration-role'){try{changeConfigurationRole(el);}catch(error){toast(error.message,true);if(overlay.contains(el))renderBuild();else render();}return;}if(el.id==='solo-role'||el.id==='task-own-role'){if(el.id==='solo-role'&&client.connected&&pregamePhase(client.phase)){stagePregameIntent({role:el.value}).catch(error=>{toast(error.message,true);render();});return;}try{setCompanionRole(el.value);if(el.id==='solo-role'&&client.connected&&client.phase==='ChampSelect'&&!localPickLocked(client.session))claimPosition(el.value).catch(error=>toast(error.message,true));if(el.id==='task-own-role')renderTaskMembers();}catch(error){toast(error.message,true);render();}return;}if(el.dataset.buildSummoner){try{editBuildSummoners(el,'summoner-'+el.dataset.buildSummoner,el.value);}catch(error){toast(error.message,true);renderBuild();}return;}if(el.dataset.companionField){try{editCompanionPlan(el,el.dataset.companionField,el.value);}catch(error){toast(error.message,true);render();}return;}if(el.id==='companion-scope'){scope=el.value;invalidate();}if(el.id==='companion-style'){style=el.value;invalidate();}if(el.id==='build-skill'){buildView.skillId=el.value||undefined;renderBuild();}if(el.id==='guide-after-game'){saved.preferences.guideAfterGame=el.value;persist();}if(el.id==='update-mirror'){if(replacingApp||el.isConnected===false)return;try{const value=normalizeMirrorBase(el.value);el.value=value;saveUpdateMirror(value).catch(error=>toast(error.message,true));}catch(error){toast(error.message,true);}render();}if(['play-difficulty','play-tempo','play-unusual','play-meleeBottom'].includes(el.id)){saved.preferences.play[el.id.slice(5)]=el.type==='checkbox'?el.checked:el.value;invalidate();}if(el.dataset.rolePoolMode){saved.preferences.rolePools[el.dataset.rolePoolMode].mode=el.value;invalidate();}if(el.matches('[data-catalog-member],#catalog-form select[name^="role-"]')){const i=el.dataset.catalogMember??el.name.split('-')[1],form=el.closest('form'),id=form.querySelector('[name="hero-'+i+'"]').value,role=form.querySelector('[name="role-'+i+'"]').value;form.querySelector('[name="loadout-'+i+'"]').innerHTML=editorLoadouts(data,id,role);}if(comboView&&['combo-style','combo-fit','combo-source','combo-configured','combo-tempo'].includes(event.target.id)){if(event.target.id==='combo-tempo')comboView.tempo=event.target.value;else if(event.target.id==='combo-style')comboView.style=event.target.value;else if(event.target.id==='combo-source')comboView.source=event.target.value;else if(event.target.id==='combo-configured')comboView.configured=event.target.checked;else comboView.fit=event.target.checked;document.getElementById('combo-list').innerHTML=combinationRows(data,comboView,slots);}if(event.target.id==='pool-mode'){saved.preferences.poolMode=event.target.value;invalidate();}if(event.target.id==='hex-category'){hexCategory=event.target.value;document.getElementById('augment-grid').innerHTML=augmentTiles();}if(event.target.id==='build-role'&&event.target.value!==buildView.role){if(scope==='solo'&&currentPlayerSelection(client.session,data.champions,slots)?.id===buildView.id){soloRole=event.target.value;persist();}showBuild(buildView.id,event.target.value,buildView.mode);}if(event.target.id==='hex-rarity'){hexRarity=event.target.value;document.getElementById('augment-grid').innerHTML=augmentTiles();}if(el.id==='room-nick'){const clean=sanitizeNick(el.value);saved.preferences.roomNick=clean||'队友';el.value=saved.preferences.roomNick;persist();}if(el.id==='room-relay-url'){roomRelayUrl=el.value;const clean=normalizeRelayUrl(el.value);if(clean){saved.preferences.relayUrl=clean;el.value=clean;persist();}}});
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented){if(activeOverlaySelect?.isConnected){deferOverlaySelect();return;}if(!activeAppSelect){if(!overlay.firstElementChild&&closeRecommendationMenus({restoreFocus:true}))event.preventDefault();else closeOverlay();}}if(event.key==='Tab'&&overlay.firstElementChild){const focusable=[...overlay.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]')].filter(el=>el.getClientRects().length);const first=focusable[0],last=focusable.at(-1);if(!overlay.contains(document.activeElement)){event.preventDefault();(event.shiftKey?last:first)?.focus();}else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
+document.addEventListener('change',event=>{const el=event.target;if(el.id==='hex-mechanism'){hexMechanism=el.value;hexPoolRound=0;render();return;}if(el.id==='hex-pool-filter'){if(['all','observed','unobserved','reference','disabled','special','unknown'].includes(el.value))hexPoolFilter=el.value;document.getElementById('augment-grid').innerHTML=augmentTiles();return;}if(el.id==='familiarity-mass'){saved.preferences.familiarityMass=Number(el.value)/100;invalidate();return;}if(el.id==='include-preselected'){saved.preferences.includePreselected=el.checked;invalidate();return;}if(el.id==='flash-slot'){saved.preferences.flashSlot=el.value;persist();render();if(buildView)renderBuild();return;}if(el.id==='room-auto'){saved.preferences.roomAuto=el.checked;persist();render();return;}if(el.hasAttribute('data-matchup-target')){try{changeMatchupTarget(el);}catch(error){toast(error.message,true);render();if(buildView)renderBuild();}return;}if(el.dataset.buildSourceField){try{const source=requireBuildSource({...normalizeBuildSource(buildSourceDraft||data.buildSource),[el.dataset.buildSourceField]:el.value});changeWindowBuildSource(source);}catch(error){toast(error.message,true);}return;}if(el.dataset.presentationModule){const panel=overlay.firstElementChild;api.presentation({field:'toggleModule',value:el.dataset.presentationModule}).then(value=>{saved.preferences.presentation=value;render();if(panel&&overlay.firstElementChild===panel)updatePresentationDialog(overlay,value);}).catch(error=>toast(error.message,true));return;}if(el.id==='companion-width'){saved.preferences.companionWidth=Number(el.value);persist().then(()=>api.windowLayoutControl('follow')).then(acceptWindowLayout).catch(error=>toast(error.message,true));return;}if(el.id==='party-ids'){saved.preferences.partyIds=normalizePartyIds(el.value);persist().then(()=>sync(false,{fresh:true}));return;}if(el.id==='configuration-role'){try{changeConfigurationRole(el);}catch(error){toast(error.message,true);if(overlay.contains(el))renderBuild();else render();}return;}if(el.id==='solo-role'||el.id==='task-own-role'){if(el.id==='solo-role'&&client.connected&&pregamePhase(client.phase)){stagePregameIntent({role:el.value}).catch(error=>{toast(error.message,true);render();});return;}try{setCompanionRole(el.value);if(el.id==='solo-role'&&client.connected&&client.phase==='ChampSelect'&&!localPickLocked(client.session))claimPosition(el.value).catch(error=>toast(error.message,true));if(el.id==='task-own-role')renderTaskMembers();}catch(error){toast(error.message,true);render();}return;}if(el.dataset.buildSummoner){try{editBuildSummoners(el,'summoner-'+el.dataset.buildSummoner,el.value);}catch(error){toast(error.message,true);renderBuild();}return;}if(el.dataset.companionField){try{editCompanionPlan(el,el.dataset.companionField,el.value);}catch(error){toast(error.message,true);render();}return;}if(el.id==='companion-scope'){scope=el.value;invalidate();}if(el.id==='companion-style'){style=el.value;invalidate();}if(el.id==='build-skill'){buildView.skillId=el.value||undefined;renderBuild();}if(el.id==='guide-after-game'){saved.preferences.guideAfterGame=el.value;persist();}if(el.id==='update-mirror'){if(replacingApp||el.isConnected===false)return;el.restoredChangeDraft=false;try{const value=normalizeMirrorBase(el.value);el.value=value;saveUpdateMirror(value).catch(error=>toast(error.message,true));}catch(error){toast(error.message,true);}render();}if(['play-difficulty','play-tempo','play-unusual','play-meleeBottom'].includes(el.id)){saved.preferences.play[el.id.slice(5)]=el.type==='checkbox'?el.checked:el.value;invalidate();}if(el.dataset.rolePoolMode){saved.preferences.rolePools[el.dataset.rolePoolMode].mode=el.value;invalidate();}if(el.matches('[data-catalog-member],#catalog-form select[name^="role-"]')){const i=el.dataset.catalogMember??el.name.split('-')[1],form=el.closest('form'),id=form.querySelector('[name="hero-'+i+'"]').value,role=form.querySelector('[name="role-'+i+'"]').value;form.querySelector('[name="loadout-'+i+'"]').innerHTML=editorLoadouts(data,id,role);}if(comboView&&['combo-style','combo-fit','combo-source','combo-configured','combo-tempo'].includes(event.target.id)){if(event.target.id==='combo-tempo')comboView.tempo=event.target.value;else if(event.target.id==='combo-style')comboView.style=event.target.value;else if(event.target.id==='combo-source')comboView.source=event.target.value;else if(event.target.id==='combo-configured')comboView.configured=event.target.checked;else comboView.fit=event.target.checked;document.getElementById('combo-list').innerHTML=combinationRows(data,comboView,slots);}if(event.target.id==='pool-mode'){saved.preferences.poolMode=event.target.value;invalidate();}if(event.target.id==='hex-category'){hexCategory=event.target.value;document.getElementById('augment-grid').innerHTML=augmentTiles();}if(event.target.id==='build-role'&&event.target.value!==buildView.role){if(scope==='solo'&&currentPlayerSelection(client.session,data.champions,slots)?.id===buildView.id){soloRole=event.target.value;persist();}showBuild(buildView.id,event.target.value,buildView.mode);}if(event.target.id==='hex-rarity'){hexRarity=event.target.value;document.getElementById('augment-grid').innerHTML=augmentTiles();}if(el.id==='room-nick'){if(replacingApp||el.isConnected===false)return;el.restoredChangeDraft=false;const clean=sanitizeNick(el.value)||'队友';el.value=clean;if(saved.preferences.roomNick!==clean){saved.preferences.roomNick=clean;persist();}}if(el.id==='room-relay-url'){if(replacingApp||el.isConnected===false)return;el.restoredChangeDraft=false;roomRelayUrl=el.value;const clean=normalizeRelayUrl(el.value);if(clean){el.value=clean;if(saved.preferences.relayUrl!==clean){saved.preferences.relayUrl=clean;persist();}}}});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented){if(activeOverlaySelect?.isConnected){deferOverlaySelect();return;}if(!activeAppSelect){if(!overlay.firstElementChild&&closeRecommendationMenus({restoreFocus:true}))event.preventDefault();else closeOverlay();}}if(event.key==='Tab'&&overlay.firstElementChild){const focusable=[...overlay.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],summary')].filter(el=>el.getClientRects().length&&el.checkVisibility({visibilityProperty:true}));const first=focusable[0],last=focusable.at(-1);if(!first){event.preventDefault();const dialog=overlay.querySelector('[role="dialog"]')||overlay.firstElementChild;if(!dialog.hasAttribute('tabindex'))dialog.tabIndex=-1;dialog.focus();}else if(!overlay.contains(document.activeElement)){event.preventDefault();(event.shiftKey?last:first)?.focus();}else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
 document.addEventListener('change',event=>{
  if(event.target.id!=='room-role')return;
  try{chooseRoomRole(event.target.value);}catch(error){toast(error.message,true);render();}
@@ -2481,7 +2569,7 @@ document.addEventListener('change',event=>{
 });
 document.addEventListener('input',event=>{
  if(event.target.id==='reference-search'){referenceQuery=event.target.value;const grid=document.getElementById('reference-grid');if(grid)grid.innerHTML=referenceHeroTiles(data,{query:referenceQuery,role:referenceRole});return;}
- if(event.target.id==='item-reference-search'){referenceItemQuery=event.target.value;const grid=document.getElementById('item-reference-grid');if(grid)grid.innerHTML=referenceItemTiles(data,{query:referenceItemQuery,mode:referenceItemMode,id:referenceItem});return;}
+ if(event.target.id==='item-reference-search'){referenceItemQuery=event.target.value;const grid=document.getElementById('item-reference-grid');if(grid){grid.innerHTML=referenceItemTiles(data,{query:referenceItemQuery,mode:referenceItemMode,scope:referenceItemScope,id:referenceItem});const count=document.querySelector('[data-item-reference-count]');if(count)count.textContent=String(grid.querySelectorAll('.item-reference-tile').length);}return;}
  if(event.target.id==='patch-search'){patchQuery=event.target.value;const start=event.target.selectionStart;render();const input=document.getElementById('patch-search');input?.focus({preventScroll:true});try{input?.setSelectionRange(start,start);}catch{}return;}
  if(event.target.id!=='ranking-search')return;rankingQuery=event.target.value;const start=event.target.selectionStart,end=event.target.selectionEnd;
  render();const input=document.getElementById('ranking-search');input?.focus({preventScroll:true});try{input?.setSelectionRange(start,end);}catch{}
@@ -2489,7 +2577,7 @@ document.addEventListener('input',event=>{
 document.addEventListener('error',event=>{const img=event.target;if(img.tagName!=='IMG')return;if(img.dataset.fallback){const url=img.dataset.fallback;delete img.dataset.fallback;img.src=url;}else{img.style.visibility='hidden';}},true);
 window.addEventListener('unhandledrejection',event=>{toast(event.reason?.message||'操作失败，请重试',true);event.preventDefault();});
 let stopDataUpdates;
-window.addEventListener('pagehide',()=>{stopDataUpdates?.();dataState.dispose();});
+window.addEventListener('pagehide',()=>{if(appUpdateStart?.waitingSource)appUpdateStart=null;stopDataUpdates?.();dataState.dispose();});
 try{api.onHexRound?.(acceptHexRound);stopDataUpdates=api.onData?.(acceptSharedData);boot=await api.bootstrap();appUpdate=boot.appUpdate||appUpdate;saved=boot.state;dataState.bootstrap({data:boot.data,revision:boot.dataRevision||0});savedBase=structuredClone(saved);stateRevision=boot.stateRevision||0;stateRecovery=saved.recovery||null;
  ongoing.configure(saved.preferences.ongoing||{}).then(()=>history.state.streamer=ongoing.state.settings.streamer).catch(()=>{});
   acceptHexRound(boot.hexRound);client=boot.client||client;championUsage=boot.championUsage||null;history.observeClient({...client,historySession:championUsage?.session||''});runeAppliedKeys.observe(client);windowLayout=boot.windowLayout||{docked:false};api.onWindowLayout?.(acceptWindowLayout);
@@ -2504,7 +2592,7 @@ try{api.onHexRound?.(acceptHexRound);stopDataUpdates=api.onData?.(acceptSharedDa
  api.onMainPage?.(destination=>{if(windowLayout.docked)return;if(destination?.route==='reference'&&champ(destination.id)){referenceKind='champions';referenceHero=destination.id;referenceTab=destination.tab==='changes'?'changes':'skills';referenceSkill='Q';referenceVariant=0;route='reference';}else if(destination?.route==='hex-source'&&champ(destination.id)){hexHero=destination.id;refreshHexNotes();route='hex';}else if(destination?.route==='settings')route='settings';else if(destination?.route==='history'){route='history';history.openOwnGame(destination.gameId).catch(error=>toast(error.message,true));}else return;closeOverlay();render();if(destination.route==='hex-source'){const linked=destination.routeId?.match(/^([A-Za-z][A-Za-z0-9]{0,39})-item-(\d+)$/);if(linked?.[1]===destination.id&&data.augments.some(a=>a.id===Number(linked[2]))){showAugment(Number(linked[2]));return;}const details=[...document.querySelectorAll('.hex-route-details')].find(row=>row.dataset.guideSection==='hex-route-'+destination.routeId);if(details){details.open=true;details.scrollIntoView({block:'nearest'});details.querySelector('summary')?.focus({preventScroll:true});}}});
  api.onProgress?.(message=>{updateMessage=message;const status=document.getElementById('update-message');if(status)status.textContent=message;});
  api.onPreselection?.(value=>{if(value?.message)toast(value.message,true);});
- api.onAppUpdate?.(snapshot=>{appUpdate={phase:snapshot.phase||'idle',release:snapshot.release||null,received:snapshot.received||0,total:snapshot.total??null,error:snapshot.error||'',via:snapshot.via||null,kind:snapshot.kind||snapshot.record?.kind||'full',fallbackNotice:snapshot.fallbackNotice||false,...(snapshot.record?{record:snapshot.record}:{}),...(snapshot.dismissed?{dismissed:true}:{})};if(route==='settings'&&!patchAppUpdateProgress(document,appUpdate))render();});
+ api.onAppUpdate?.(snapshot=>{if(appUpdateStart?.waitingSource){if(!['downloading','verifying','ready','installing','pausing','cancelling'].includes(snapshot.phase))return;appUpdateStart=null;}appUpdate={phase:snapshot.phase||'idle',release:snapshot.release||null,received:snapshot.received||0,total:snapshot.total??null,error:snapshot.error||'',via:snapshot.via||null,kind:snapshot.kind||snapshot.record?.kind||'full',fallbackNotice:snapshot.fallbackNotice||false,...(snapshot.record?{record:snapshot.record}:{}),...(snapshot.dismissed?{dismissed:true}:{})};if(route==='settings'&&!patchAppUpdateProgress(document,appUpdate))render();});
  saved.preferences={style:'fun',autoCheck:true,autoLive:true,appUpdateCheck:true,pool:[],poolMode:'off',...saved.preferences};saved.preferences.play={difficulty:'any',tempo:'any',unusual:true,meleeBottom:true,...saved.preferences.play};saved.preferences.rolePools=Object.fromEntries(ROLES.map(r=>[r.id,{heroes:[],mode:'off',...saved.preferences.rolePools?.[r.id]}]));saved.preferences.buildSource=normalizeBuildSource(saved.preferences.buildSource);dataState.selectSource();saved.favorites=saved.favorites||[];saved.excluded=saved.excluded||[];
  if(saved.draft?.slots){try{validateSlots(saved.draft.slots,data.champions);slots=saved.draft.slots;}catch{}}
  activeCreativePlan=saved.draft?.creativePlan?validateCreativePlan(saved.draft.creativePlan,slots,{allowUnknown:true}):null;
@@ -2516,7 +2604,7 @@ try{api.onHexRound?.(acceptHexRound);stopDataUpdates=api.onData?.(acceptSharedDa
   await restorePreparationSnapshot(boot.preparationSnapshot);render();api.onChampionUsage?.(acceptChampionUsage);api.championUsage?.().then(acceptChampionUsage).catch(()=>{});api.onClient?.(value=>{
    acceptOngoingClient(value);
   if(value?.connecting&&syncing){client={...client,...value};render();return;}
-  if(value?.receivedAt&&value.receivedAt!==client.receivedAt)sharedClient=value;
+  if(value?.connected===false&&!value.connecting||value?.receivedAt&&value.receivedAt!==client.receivedAt)sharedClient=value;
   if(!syncing&&(saved.preferences.autoSync!==false||sharedClient))sync(false);
  });const ready=await api.ready?.();await restorePreparationSnapshot(ready?.preparationSnapshot);if(ready?.state&&ready.revision>Math.max(stateRevision,externalState?.revision||0)){externalState=ready;drainExternalState();}queueCompanionRecommendation();if(saved.preferences.autoSync!==false)sync(false,{fresh:true});else if(client.receivedAt){sharedClient=client;sync(false);}
  

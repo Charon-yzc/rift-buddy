@@ -1,3 +1,4 @@
+import {createClientSync} from '../src/core/async-tasks.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import {canonicalJSON} from '../src/core/content-fingerprint.mjs';
 import {catalogContextRevision} from '../src/core/catalog-choice.mjs';
@@ -873,7 +874,7 @@ test('dodge clears selection UI caches while saved hero configurations and prefe
  c.pairRefreshErrors.set('old','offline');c.opponentRefreshErrors.set('old','offline');c.buildErrors.set('old','offline');c.pairRefreshOpen=true;c.matchupFocusError={message:'old failure'};
  await c.performSync(false,true);
  assert.equal(c.saved.draft.preselection,undefined);assert.equal(c.saved.draft.partyCount,undefined);
- assert.equal(c.lastCompanionOwn,'');assert.equal(c.lastCompanionIntent,'');assert.equal(c.lastCompanionLocked,'');assert.equal(c.showAllCandidates,false);
+ assert.equal(c.lastCompanionOwn,'');assert.equal(c.lastCompanionIntent,'');assert.equal(c.lastCompanionLocked,'old-locked','Main consumes its lock navigation from the public client, not from a state-only reset');assert.equal(c.showAllCandidates,false);
  assert.equal(c.pendingIntentPlanId,'');assert.equal(c.companionScroll.size,0);assert.equal(c.clientPreparationStatuses.size,0);assert.equal(c.itemSetStatuses.size,0);
  assert.equal(c.pairRefreshErrors.size,0);assert.equal(c.opponentRefreshErrors.size,0);assert.equal(c.buildErrors.size,0);assert.equal(c.pairRefreshOpen,false);assert.equal(c.matchupFocusError,null);assert.ok(c.selectionUiRevision>0);
  assert.equal(c.preparations.recall(selection).coreIndex,1);assert.equal(c.saved.preferences.flashSlot,'d');
@@ -1263,4 +1264,33 @@ test('a frozen room profile revokes immediately and rejects its late worker on w
   if(change==='account')c.acceptChampionUsage({...c.championUsage,revision:2,session:'b'.repeat(32)});else c.applyRoomSnapshot(next);
   assert.equal(f.calls.cancel,1,change);finish({rows:[{id:'late'}]});await pending;assert.equal(c.results.length,0,change);
  }
+});
+
+function reconnectConsumer(current){
+ const f=setup({current,incoming:structuredClone(current)}),c=f.context;let notify;
+ c.saved.preferences.autoSync=false;c.acceptOngoingClient=()=>{};c.api.onClient=handler=>{notify=handler;};c.sync=createClientSync(c.performSync);
+ const start=source.indexOf('api.onClient?.(value=>{'),end=source.indexOf('});const ready=',start);vm.runInContext(source.slice(start,end+3),c);
+ return {...f,notify:value=>notify(value)};
+}
+const nextTurn=()=>new Promise(resolve=>setImmediate(resolve));
+test('reconnect consumer: disabled polling still consumes an explicit shared disconnect without LCU reads',async()=>{
+ const current=client();current.receivedAt='2026-11-10T00:00:00.000Z';const f=reconnectConsumer(current),c=f.context;let reads=0;
+ c.api.client=async()=>{reads++;return current;};f.notify({connected:false,phase:'Offline',message:'Mock client closed'});await nextTurn();await nextTurn();
+ assert.equal(c.client.connected,false);assert.equal(c.saved.preferences.autoSync,false);assert.equal(reads,0);
+});
+test('reconnect consumer: a disconnect queued while saving is not lost and never performs an extra read',async()=>{
+ const f=reconnectConsumer(client()),c=f.context,save=Promise.withResolvers();let reads=0;c.api.client=async()=>{reads++;return client();};c.saveChain=save.promise;
+ const busy=c.sync(false);await nextTurn();f.notify({connected:false,phase:'Offline',message:'Mock client closed'});save.resolve();await busy;
+ assert.equal(c.client.connected,false);assert.equal(reads,0);assert.equal(c.syncing,false);
+});
+test('reconnect consumer: a late old offline read cannot overwrite a newer connected push',async()=>{
+ const f=reconnectConsumer(client()),c=f.context,read=Promise.withResolvers(),started=Promise.withResolvers();let reads=0;c.api.client=()=>{reads++;started.resolve();return read.promise;};
+ const busy=c.sync(false,{fresh:true});await started.promise;const newer=client();newer.receivedAt='2026-11-10T00:00:02.000Z';f.notify(newer);read.resolve({connected:false,phase:'Offline',message:'Older offline read'});await busy;
+ assert.equal(c.client.connected,true);assert.equal(c.client.receivedAt,newer.receivedAt);assert.equal(reads,1);assert.equal(c.sharedClient,null);
+});
+test('reconnect consumer: untimestamped terminal states arriving during final save remain queued',async()=>{
+ const offline={connected:false,phase:'Offline',message:'Old offline'},f=reconnectConsumer(offline),c=f.context,save=Promise.withResolvers(),read=Promise.withResolvers(),started=Promise.withResolvers();let reads=0,prompts=0;
+ c.api.client=()=>{reads++;started.resolve();return read.promise;};c.api.authorizeClient=async()=>{prompts++;return offline;};
+ const busy=c.sync(false,{fresh:true});await started.promise;c.saveChain=save.promise;read.resolve(offline);await nextTurn();f.notify({connected:false,phase:'Offline',needsElevation:true,message:'Mock permission required'});save.resolve();await busy;
+ assert.equal(c.sharedClient?.needsElevation,true);await c.sync(false);assert.equal(c.client.needsElevation,true);assert.equal(reads,1);assert.equal(prompts,0);
 });

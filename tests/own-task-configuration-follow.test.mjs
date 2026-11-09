@@ -1,12 +1,14 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import vm from 'node:vm';
 import {CLIENT_POSITION_ROLES} from '../src/core/draft.mjs';
-import {CONFIGURATION_FIELDS,configurationKey} from '../src/core/preparation.mjs';
+import {CONFIGURATION_FIELDS,configurationKey,preparationIdentity} from '../src/core/preparation.mjs';
 import {selectedBuildFields} from '../src/core/build-favorites.mjs';
 import {configurationReadOnly,assertConfigurationEditable} from '../src/core/companion-plan.mjs';
 import {currentPlayerSelection} from '../src/core/guide.mjs';
 import {normalizeBuildSource} from '../src/core/build-source.mjs';
 import {holdRenderDuringPointer} from '../src/pointer-render.mjs';
 import {localPickLocked} from '../src/core/draft-intents.mjs';
+import {defaultState} from '../services/storage.mjs';
+import {rebaseWindowState} from '../src/core/window-state.mjs';
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const extract=(from,to)=>{const start=source.indexOf(from),end=source.indexOf(to,start);assert(start>=0&&end>start,from);return source.slice(start,end);};
 const viewFunctions=extract('function showBuild(','function editBuildSummoners(')+extract('function buildSelection(){','function receiveGuideSelection(');
@@ -16,7 +18,7 @@ const nextSelection={id:'Jinx',role:'bottom',mode:'rift',coreId:'Jinx-current',r
 function fixture({entry='task-edit'}={}){
  let remembered=0,guideWrites=0,clientWrites=0;const context={CLIENT_POSITION_ROLES,CONFIGURATION_FIELDS,structuredClone,selectedBuildFields,configurationReadOnly,currentPlayerSelection,buildChoiceKey:configurationKey,
   data:{champions:[{id:'Ashe',key:22},{id:'Jinx',key:222}],patch:'16.22',buildSource:{}},client:{connected:true,phase:'ChampSelect',mode:{id:'rift'},game:{gameId:777},session:{gameId:777,localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:22,assignedPosition:'BOTTOM'}]}},
-  slots:[],manualRole:'bottom',plan:{selection:structuredClone(oldSelection)},windowLayout:{docked:false},buildView:null,detailResult:null,buildReturn:null,picker:null,comboView:null,activeOverlaySelect:null,pendingBuildRender:false,renderedBuildContext:null,
+  slots:[],manualRole:'bottom',plan:{selection:structuredClone(oldSelection)},route:'draft',windowLayout:{docked:false},buildView:null,detailResult:null,buildReturn:null,picker:null,comboView:null,activeOverlaySelect:null,pendingBuildRender:false,renderedBuildContext:null,
   saved:{favorites:[]},overlay:{querySelector:()=>null},buildRenderInteraction:{defer:()=>false,invalidate(){}},button:()=>'',refreshingBuilds:new Set(),guideSyncBase:null,lastGuideSyncKey:'',
   ownManualRole:()=>context.manualRole,taskOwnRole:()=>context.manualRole||CLIENT_POSITION_ROLES[context.client.session.myTeam[0].assignedPosition]||'',preparationGameId:()=>String(context.client.session?.gameId||context.client.game?.gameId||''),ownTaskPreparation:()=>context.plan,
   champ:id=>context.data.champions.find(c=>c.id===id),rememberedPreparation:()=>({}),maybeRefreshBuild(){},rememberPreparation(){remembered++;},syncPreparedGuide(){guideWrites++;},preserveOverlay:()=>()=>{},buildKey:(...args)=>args.join(':'),runeAppliedKeys:{has:()=>false},runeApplicationKey:()=>'',paint(){},render(){},favoriteSnapshotConflict:()=>false,
@@ -25,6 +27,15 @@ function fixture({entry='task-edit'}={}){
  vm.createContext(context);vm.runInContext(viewFunctions+renderPrefix,context);
  const branch=source.split('\n').find(line=>line.startsWith(` if(action==='${entry}')`));assert(branch);vm.runInContext(`function openTask(){const action='${entry}';${branch}}`,context);
  return {context,open(){context.openTask();remembered=guideWrites=0;},resetWrites(){remembered=guideWrites=0;},get writes(){return {remembered,guideWrites,clientWrites};},own(id='Jinx',role='bottom'){context.plan={selection:{...structuredClone(nextSelection),id,role}};context.client.session.myTeam[0].championPickIntent=id==='Jinx'?222:22;context.manualRole=role;}};
+}
+function autoNavigationFixture(route='draft'){
+ const f=fixture(),c=f.context,callbacks=[],opened=[];
+ Object.assign(c,{route,localPickLocked,lastCompanionLocked:'',queueMicrotask:callback=>callbacks.push(callback)});c.overlay.firstElementChild=null;
+ Object.assign(c.client.session.myTeam[0],{championId:22,championPickIntent:0,pickState:'locked'});
+ const show=c.showBuild;c.showBuild=(...args)=>{opened.push(args[0]);return show(...args);};
+ c.paint=()=>{c.overlay.firstElementChild={kind:'configuration'};};
+ vm.runInContext('function autoOpenLocked(){'+extract(' const lockedNavigation=',' if(windowLayout.docked){')+'}',c);
+ return {...f,c,callbacks,opened,flush(){while(callbacks.length)callbacks.shift()();}};
 }
 
 for(const entry of ['task-edit','task-configuration'])test(`${entry} follows a cross-window confirmed own hover with a complete fresh configuration`,()=>{
@@ -37,7 +48,7 @@ for(const entry of ['task-edit','task-configuration'])test(`${entry} follows a c
 });
 
 test('the actual locked-hero auto-open callback retains the own-task binding for later cross-window heroes',()=>{
- const f=fixture();f.open();const c=f.context,callbacks=[];
+ const f=fixture();const c=f.context,callbacks=[];c.overlay.firstElementChild=null;
  Object.assign(c,{localPickLocked,lastCompanionLocked:'',queueMicrotask:callback=>callbacks.push(callback)});
  Object.assign(c.client.session.myTeam[0],{championId:22,championPickIntent:0,pickState:'locked'});
  vm.runInContext('function autoOpenLocked(){'+extract(' const lockedNavigation=',' if(windowLayout.docked){')+'}',c);
@@ -45,6 +56,77 @@ test('the actual locked-hero auto-open callback retains the own-task binding for
  f.resetWrites();f.own();Object.assign(c.client.session.myTeam[0],{championId:0,pickState:'hovered'});c.renderBuild();
  assert.equal(c.buildView.id,'Jinx');assert.equal(c.buildView.coreId,'Jinx-current');assert.equal(c.buildView.customRunePage,undefined);
  assert.deepEqual(f.writes,{remembered:0,guideWrites:0,clientWrites:0});
+});
+
+for(const route of ['settings','history','room'])test(`a new lock does not interrupt the main ${route} page or reopen later on draft`,()=>{
+ const f=autoNavigationFixture(route);f.c.autoOpenLocked();f.flush();assert.deepEqual(f.opened,[]);assert.equal(f.c.buildView,null);
+ f.c.route='draft';f.c.autoOpenLocked();f.flush();assert.deepEqual(f.opened,[],'Returning to draft must not revive the consumed lock navigation');
+});
+
+for(const [label,change] of [
+ ['page',c=>{c.route='settings';}],
+ ['game',c=>{c.client.session.gameId=778;c.client.game.gameId=778;}],
+ ['cell',c=>{c.client.session.localPlayerCellId=2;c.client.session.myTeam[0].cellId=2;}],
+ ['hero',c=>{Object.assign(c.client.session.myTeam[0],{championId:222,championPickIntent:0});}],
+ ['role',c=>{c.manualRole='support';}],
+ ['mode',c=>{c.client.mode.id='hex';}],
+ ['window mode',c=>{c.windowLayout.docked=true;}],
+ ['phase with the old locked session retained',c=>{c.client.phase='GameStart';assert.equal(localPickLocked(c.client.session),true);}],
+ ['lock state',c=>{Object.assign(c.client.session.myTeam[0],{championId:0,championPickIntent:22,pickState:'hovered'});assert.equal(localPickLocked(c.client.session),false);}],
+])test(`a queued lock navigation is cancelled after the ${label} changes`,()=>{
+ const f=autoNavigationFixture();f.c.autoOpenLocked();assert.equal(f.callbacks.length,1);change(f.c);f.flush();assert.deepEqual(f.opened,[]);assert.equal(f.c.buildView,null);
+});
+
+test('a newer locked hero opens without the old callback creating a blocking stale drawer',()=>{
+ const f=autoNavigationFixture();f.c.autoOpenLocked();f.own('Jinx');Object.assign(f.c.client.session.myTeam[0],{championId:222,championPickIntent:0,pickState:'locked'});f.c.autoOpenLocked();f.flush();
+ assert.deepEqual(f.opened,['Jinx']);assert.equal(f.c.buildView.id,'Jinx');assert(f.c.buildView.ownQuickBinding);
+});
+
+test('a queued lock navigation reads the current complete plan instead of its earlier configuration',()=>{
+ const f=autoNavigationFixture();f.c.autoOpenLocked();f.c.plan={selection:{...structuredClone(oldSelection),runeId:'fresh-Ashe-rune'}};f.flush();
+ assert.deepEqual(f.opened,['Ashe']);assert.equal(f.c.buildView.runeId,'fresh-Ashe-rune');assert(f.c.buildView.ownQuickBinding);
+});
+
+test('a new-game state arriving before its client snapshot cannot reopen the consumed previous lock',()=>{
+ const f=autoNavigationFixture(),c=f.c;f.own('Jinx');Object.assign(c.client.session.myTeam[0],{championId:222,championPickIntent:0,pickState:'locked'});
+ c.autoOpenLocked();f.flush();assert.equal(c.buildView.id,'Jinx');
+ const close=()=>{c.buildView=null;c.overlay.firstElementChild=null;};close();f.opened.length=0;
+ const saved=defaultState();saved.draft={slots:[],clientGameId:'777',scope:'party',style:'balanced',soloRole:'bottom'};
+ Object.assign(c,{saved,savedBase:structuredClone(saved),stateRevision:0,rebaseWindowState,preparationIdentity,preparations:{restore(){}},initialSlots:()=>[],validPartyCount:()=>false,
+  scope:'party',soloRole:'bottom',style:'balanced',activeCreativePlan:null,recommendationKey:()=>'',recommendationInput:()=>({}),markResultStale(){},queueCompanionRecommendation(){},dataState:{selectSource(){}},guideSyncPending:false,
+  selectionUiRevision:0,pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshErrors:new Map(),buildErrors:new Map(),matchupFocusError:null,lastTaskSelection:null,lastAdoptedRoomShare:'',clickedRoomPlan:null,roomRoleChoice:null,positionClaim:null,draftComparing:false,
+  companionTab:'recommend',lastCompanionOwn:'',lastCompanionIntent:'',pendingIntentPreparation:null,pendingIntentPlanId:'',showAllCandidates:false,recommendationError:'',hexOptions:[],hexOwned:[],clientPreparationStatuses:new Map(),itemSetStatuses:new Map(),matchupTargets:new Map(),unassigned:[],
+  cancelRecommendation(){},results:[],offset:0,renderedDraftResults:null,companionScroll:new Map(),disclosureState:{clear(){}},renderedDisclosureScope:'',selectionUiReset:false,closeOverlay:close,render:()=>c.autoOpenLocked(),toast(){},
+ });c.runeAppliedKeys.clear=()=>{};
+ vm.runInContext(extract('function clearSelectionUi(){','let activeAppSelect=')+extract('function acceptSavedState(','function drainExternalState('),c);
+ const accepted=structuredClone(saved);accepted.draft.clientGameId='778';c.acceptSavedState(accepted,1);f.flush();
+ assert.equal(c.client.session.gameId,777,'The real state consumer runs before the next public client snapshot');assert.equal(c.buildView,null,'An already closed Jinx drawer must not reopen from the old client');assert.deepEqual(f.opened,[]);
+ c.client.session.gameId=778;c.client.game.gameId=778;c.plan={selection:structuredClone(oldSelection)};Object.assign(c.client.session.myTeam[0],{championId:0,championPickIntent:22,pickState:'hovered'});c.render();f.flush();assert.equal(c.buildView,null);
+ Object.assign(c.client.session.myTeam[0],{championId:22,championPickIntent:0,pickState:'locked'});c.render();f.flush();assert.deepEqual(f.opened,['Ashe']);assert.equal(c.buildView.id,'Ashe');assert(f.c.buildView.ownQuickBinding);
+ c.windowLayout.docked=true;c.clearSelectionUi();assert.equal(c.lastCompanionLocked,'','The sidebar keeps its existing UI reset behavior');
+});
+
+for(const kind of ['another hero','read-only'])test(`a queued lock navigation cannot open a current plan for ${kind}`,()=>{
+ const f=autoNavigationFixture();f.c.autoOpenLocked();f.c.plan={selection:kind==='another hero'?structuredClone(nextSelection):{...structuredClone(oldSelection),readOnly:true}};f.flush();assert.deepEqual(f.opened,[]);assert.equal(f.c.buildView,null);
+});
+
+for(const timing of ['already open','opened while queued'])test(`a locked-hero auto-open leaves feedback ${timing} and its draft untouched`,()=>{
+ const f=fixture(),c=f.context,callbacks=[],feedback={kind:'feedback',draft:'正在填写的玩家反馈'};c.overlay.firstElementChild=timing==='already open'?feedback:null;
+ Object.assign(c,{localPickLocked,lastCompanionLocked:'',queueMicrotask:callback=>callbacks.push(callback)});
+ Object.assign(c.client.session.myTeam[0],{championId:22,championPickIntent:0,pickState:'locked'});
+ c.paint=()=>{c.overlay.firstElementChild={kind:'configuration'};};
+ vm.runInContext('function autoOpenLocked(){'+extract(' const lockedNavigation=',' if(windowLayout.docked){')+'}',c);
+ c.autoOpenLocked();assert.equal(callbacks.length,1);c.overlay.firstElementChild=feedback;callbacks.shift()();
+ assert.equal(c.overlay.firstElementChild,feedback);assert.equal(feedback.draft,'正在填写的玩家反馈');assert.equal(c.buildView,null);assert.deepEqual(f.writes,{remembered:0,guideWrites:0,clientWrites:0});
+ c.overlay.firstElementChild=null;c.autoOpenLocked();assert.equal(callbacks.length,0,'Closing feedback must not revive the consumed lock navigation');assert.equal(c.buildView,null);
+});
+
+test('a locked-hero auto-open leaves an existing configuration drawer to its own follow handler',()=>{
+ const f=fixture();f.open();const c=f.context,callbacks=[],drawer={kind:'configuration'};c.overlay.firstElementChild=drawer;const view=c.buildView;
+ Object.assign(c,{localPickLocked,lastCompanionLocked:'',queueMicrotask:callback=>callbacks.push(callback)});
+ Object.assign(c.client.session.myTeam[0],{championId:22,championPickIntent:0,pickState:'locked'});
+ vm.runInContext('function autoOpenLocked(){'+extract(' const lockedNavigation=',' if(windowLayout.docked){')+'}',c);
+ c.autoOpenLocked();assert.equal(callbacks.length,1);callbacks.shift()();assert.equal(c.buildView,view);assert.equal(c.overlay.firstElementChild,drawer);assert.deepEqual(f.writes,{remembered:0,guideWrites:0,clientWrites:0});
 });
 
 for(const roleKind of ['manual','assigned'])test(`the same own hero follows its reliable ${roleKind} role without old lane fields`,()=>{

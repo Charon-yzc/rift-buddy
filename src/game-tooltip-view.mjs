@@ -13,7 +13,7 @@ export function gameTooltipView(data,kind,id,{mode='rift',image=asset,compact=fa
   const item=data.items[id];if(!item)return '';
   modeDetail=itemModeTooltip(item,data.patch,mode);
   const detailed=modeDetail||(item.tooltip?.patch===data.patch&&typeof item.tooltip.description==='string'?item.tooltip:null);
-  name=item.name;description=detailed?.description||item.description;partial=detailed?.status==='partial';
+  name=gameDescription(item.name).replace(/\s+/g,' ').trim();description=detailed?.description||item.description;partial=detailed?.status==='partial';
   sourceConflict=itemSourceConflict(data,id);
   if(sourceConflict&&!modeDetail){description='';partial=false;}
   if(partial&&!sourceConflict){const official=gameDescription(item.description).split(/\n\s*\n/).find(block=>/^\s*\d/.test(block));if(official&&official.replace(/\s/g,'')!==gameDescription(description).split(/\n\s*\n/)[0].replace(/\s/g,''))basic=official;}
