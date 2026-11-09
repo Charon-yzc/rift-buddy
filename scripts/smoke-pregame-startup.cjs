@@ -74,7 +74,7 @@ async function run(){
  const bootstrap=()=>handlers.get('bootstrap')(event(main)),state=async()=>(await bootstrap()).state,client=async()=>(await bootstrap()).client;
  const click=async(window,selector)=>{assert.ok(!selector.includes('data-action=sync'),'This regression may not click manual sync');await until(()=>js(window,'(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)return false;el.click();return true;})()'),'Enabled control missing: '+selector);};
  const change=async(window,selector,value)=>{await until(()=>js(window,'(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el&&'+JSON.stringify(selector)+'==="#solo-role")document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.click();return !!el&&!el.disabled;})()'),'Enabled role control missing: '+selector);return js(window,'(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');};
- const completeHeroClick=async(before,window,champion,role)=>{
+ const completeHeroRequests=async(before,champion,role)=>{
   await until(()=>attempts.length>before,'The avatar click did not dispatch its independent hero request');
   const first=attempts[before];assert.equal(first.preselectOnly,true,'The first avatar request must select the hero before configuration work');assert.deepEqual(Object.keys(first).sort(),['champion','role','mode','preselectOnly','sessionGameId','context'].sort(),'The first request must contain only the hero and current public selection context');
   assert.equal(first.champion,champion);if(role)assert.equal(first.role,role);assert.equal(first.sessionGameId,String(gameId));assert.equal(first.context.phase,'ChampSelect');assert.equal(first.context.gameId,String(gameId));assert.equal(first.context.cellId,2);
@@ -82,10 +82,23 @@ async function run(){
   assert.equal(preparationResults[before].steps.hover.status,'done');for(const step of ['runes','spells','items'])assert.equal(preparationResults[before].steps[step].status,'skipped','Hero selection must not perform configuration work');
   const full=attempts[before+1],result=preparationResults[before+1];assert.notEqual(full.preselectOnly,true);assert.equal(full.champion,champion);assert.equal(full.role,first.role);assert.equal(full.sessionGameId,String(gameId));assert.equal(full.context.phase,'ChampSelect');assert.equal(full.context.gameId,String(gameId));assert.equal(full.context.cellId,2);assert.equal(full.context.assignedPosition,first.context.assignedPosition);assert.ok(full.buildSource&&Number.isSafeInteger(full.sourceEpoch)&&full.sourceEpoch>0,'Full configuration must retain its guarded source');assert.ok(typeof full.reviewStamp==='string'&&full.reviewStamp.length>0,'Full configuration must retain its review guard');
   assert.equal(result.complete,true);for(const step of ['hover','runes','spells','items'])assert.equal(result.steps[step].status,'done','Missing complete '+step+' preparation');
+  return {full,result};
+ };
+ const completeHeroClick=async(before,window,champion,role)=>{
+  const {result}=await completeHeroRequests(before,champion,role);
   // The IPC receipt precedes renderer sync/save. Do not advance the fixture's
   // phase until that same click has finished in the originating renderer.
   await until(()=>js(window,'(()=>{const role=document.querySelector("#solo-role"),toast=document.querySelector("#toast");return !!role&&!role.disabled&&toast?.classList.contains("show")&&!toast.classList.contains("error")&&toast.textContent.startsWith("预选与配置已完成");})()'),'The avatar click did not settle after its complete configuration');
   await delay(250);assert.equal(attempts.length-before,2,'One avatar click must dispatch one hero request and one complete configuration');return result;
+ };
+ const completeConfigurationSwitch=async(before,window,choice)=>{
+  const [value]=JSON.parse(choice.fingerprint),{full,result}=await completeHeroRequests(before,value.champion,value.role);
+  assert.equal(choice.plan,[value.champion,value.role,value.mode].join(':'));
+  for(const [field,expected] of Object.entries(value))assert.deepEqual(full[field],expected,'Configuration switch dispatched a different '+field+' from the chosen complete row');
+  // A row switch preserves the configuration workspace. Bind its completion to
+  // that exact row and its visible receipt, rather than waiting for #solo-role.
+  await until(()=>js(window,'(()=>{const expected='+JSON.stringify(choice)+',shell=document.querySelector(".companion-shell[data-tab=plan]"),current=shell?.querySelector(".configuration-current"),button=current?.querySelector("[data-action=configuration-switch]"),role=shell?.querySelector("#configuration-role"),receipt=shell?.querySelector(".configuration-receipt .client-preparation-result"),toast=document.querySelector("#toast");return shell?.dataset.clientPhase==="ChampSelect"&&shell.dataset.clientGame==='+JSON.stringify(String(gameId))+'&&current?.dataset.clientPreparationFingerprint===expected.fingerprint&&button?.dataset.plan===expected.plan&&!button.disabled&&role?.value==='+JSON.stringify(value.role)+'&&!role.disabled&&["hover","runes","spells","items"].every(step=>receipt?.querySelector("[data-preparation-step="+step+"][data-step-status=done]"))&&toast?.classList.contains("show")&&!toast.classList.contains("error")&&toast.textContent.startsWith("预选与配置已完成");})()'),'The chosen configuration did not settle with its complete receipt on the configuration page');
+  await delay(250);assert.equal(attempts.length-before,2,'One configuration switch must dispatch one hero request and one complete configuration');return result;
  };
  const capture=async(window,name)=>{await js(window,'Promise.race([Promise.all([...document.images].filter(image=>{const r=image.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;}).map(image=>image.decode().catch(()=>{}))),new Promise(resolve=>setTimeout(resolve,2000))])');await js(window,'new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await window.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());report.screenshots=[...(report.screenshots||[]),name];};
  const fresh=async predicate=>until(async()=>predicate(await client()),'Automatic client snapshot did not follow the synthetic phase/selection');
@@ -418,8 +431,10 @@ async function run(){
    await until(()=>js(side,'!!document.querySelector(".companion-shell[data-tab=recommend]")'),'Explicit hero hover must remain on recommendations');await click(side,'[data-action=companion-tab][data-tab=plan]');await until(()=>js(side,'!!document.querySelector(".configuration-current")'),'Explicit configuration navigation failed');
    side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
    const configurationWrites=writes.length,configurationBefore=attempts.length;
+   const configurationChoice=await js(side,'(()=>{const button=document.querySelector(".configuration-choice:not(.configuration-current) [data-action=configuration-switch]");return button&&{id:button.dataset.config,plan:button.dataset.plan,fingerprint:button.closest(".configuration-choice").dataset.clientPreparationFingerprint};})()');
+   assert.ok(configurationChoice?.id&&configurationChoice.fingerprint,'A complete alternative configuration must be available');assert.equal(JSON.parse(configurationChoice.fingerprint)[0].champion,'Ahri');
    await click(side,'.configuration-choice:not(.configuration-current) [data-action=configuration-switch]');
-   await completeHeroClick(configurationBefore,side,'Ahri');
+   await completeConfigurationSwitch(configurationBefore,side,configurationChoice);
    const switched=writes.slice(configurationWrites);assert.equal(switched.length,4,'A complete configuration switch must perform both hero checks, one rune write and one spell write');assert.equal(switched.filter(write=>write.route==='/lol-champ-select/v1/session/actions/22'&&write.body.championId===hero('Ahri').key&&write.body.completed===false).length,2);assert.equal(switched.filter(write=>write.route==='/lol-perks/v1/pages/44').length,1);assert.equal(switched.filter(write=>write.route==='/lol-champ-select/v1/session/my-selection').length,1);
    assert.equal(intent,hero('Ahri').key,'Switching configuration changed the hero');
    assert.equal(results.at(-1).complete,true);assert.notEqual(attempts.at(-1).preselectOnly,true);
