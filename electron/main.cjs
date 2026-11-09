@@ -312,6 +312,11 @@ async function boot(){
   const draftSlots=state.draft?.slots||[],observedSlots=latestClient.session&&draftSlots.length===5?recommendationCore.mergeClientSession(draftSlots,latestClient.session,data.champions,{autoArrange:state.preferences.autoArrange!==false,autoParty:state.preferences.autoParty!==false,party:latestClient.party,partyCount:partyRangeCount(state.draft),partyRangeMode:partyRangeMode(state.draft?.partyRangeMode),roleOrder:rankedClientRoles(data)}).slots:draftSlots;
   const choice=state.draft?.catalogChoice,found=own.mode==='rift'?recommendationCore.currentCombo(observedSlots,own.id,own.role,data.catalogInfo?.status,null,state.draft?.creativePlan,{patch:data.patch,catalogChoice:choice}):null,combo=choice&&found?.id!==choice.id?null:found;
   const prior=state.guide?.selection,same=prior&&guideCore.guideIdentity(prior)===guideCore.guideIdentity(own),stalePlan=!!prior?.creativePlan&&!recommendationCore.automaticCreativePlan(prior.creativePlan,data.catalogInfo?.status,data.patch),comboKnown=!!choice||!!combo||stalePlan||own.mode!=='rift'||!!(gameId&&state.guide?.match?.gameId&&gameId!==String(state.guide.match.gameId))||recommendationCore.comboContextKnown(observedSlots,own.id,own.role,same?prior.comboId:null,same?prior.creativePlan:null);
+  // A restart loses the in-memory application receipt. A complete saved
+  // configuration bound to this same game and explicit plan is still a real
+  // player choice; an inferred public pairing alone cannot restore one.
+  const boundChoice=same&&own.mode==='rift'&&prior.loadoutId&&prior.comboId===combo?.id&&String(state.guide?.match?.gameId||'')===gameId&&(choice?.id===prior.comboId||state.draft?.creativePlan?.id===prior.comboId)&&storedPreparation(state.preparations,prior);
+  if(boundChoice)return {...own,...prior,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown:false};
   const context={id:own.id,role:own.role,mode:own.mode};
   const remembered=storedPreparation(state.preparations,context),previousSameHeroRole=prior&&guideCore.guideIdentity(prior)===guideCore.guideIdentity(own);
   const fresh=!remembered&&!previousSameHeroRole&&own.mode==='rift';

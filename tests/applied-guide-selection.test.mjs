@@ -11,6 +11,8 @@ import {confirmedClientDraft} from '../src/core/draft-intents.mjs';
 import {comboMembers} from '../src/core/combo-members.mjs';
 import {catalogChoiceCompatible} from '../src/core/catalog-choice.mjs';
 import {partyRangeCount,partyRangeMode} from '../src/core/party-range.mjs';
+import {BUNDLED_CATALOG,catalogIssues} from '../src/core/catalog.mjs';
+import {catalogChoiceFor} from '../src/core/catalog-choice.mjs';
 
 const main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
@@ -49,4 +51,16 @@ test('a real public community pairing never replaces the applied or automatic or
   assert.equal(current.id,'Jinx');assert.equal(current.role,'bottom');assert.equal(current.comboId,undefined);assert.equal(current.loadoutId,'default');
  }
  assert.equal(own.comboId,'jinx-braum','The public tracker must not be mutated');
+});
+
+test('same-game restart preserves a complete explicitly chosen community configuration, while a next game cannot restore it',()=>{
+ const currentData={...data,catalog:BUNDLED_CATALOG,catalogInfo:catalogIssues(BUNDLED_CATALOG,data)},combo=BUNDLED_CATALOG.duos.find(row=>row.id==='jinx-braum');assert(combo);
+ const slots=recommendationCore.createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='bottom'?{champion:'Jinx',clientCellId:1,locked:true}:s.role==='support'?{champion:'Braum',clientCellId:2,locked:true}:{})}));
+ const own={id:'Jinx',role:'bottom',formalRole:'bottom',positionKnown:true,mode:'rift'},tracker={current:()=>({...own})},selection={...own,comboId:combo.id,loadoutId:'crit-carry',coreIndex:1};
+ const state={draft:{slots,catalogChoice:catalogChoiceFor(combo,'11111111-1111-4111-8111-111111111111')},preferences:{},preparations:[selection],guide:{selection,match:{gameId:'123'}}};
+ const client={connected:true,phase:'ChampSelect',game:{gameId:'123'},session:{gameId:123,localPlayerCellId:1,myTeam:[{cellId:1,championId:222,assignedPosition:'BOTTOM'},{cellId:2,championId:201,assignedPosition:'UTILITY'}]}};
+ const read=()=>choose(tracker,client,null,currentData,state,publicClientGameId,recommendationCore,creativeComboContext,storedPreparation,rankedClientRoles,guideCore,null);
+ const restored=read();assert.equal(restored.comboId,combo.id);assert.equal(restored.loadoutId,'crit-carry');assert.equal(restored.coreIndex,1);
+ client.game.gameId='124';client.session.gameId=124;assert.equal(read().comboId,undefined);
+ client.game.gameId='123';client.session.gameId=123;delete state.draft.catalogChoice;assert.equal(read().comboId,undefined,'The current public pair alone is insufficient');
 });
