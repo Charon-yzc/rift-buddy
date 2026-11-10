@@ -39,6 +39,18 @@ test('a complete Riot ID query invalidates an earlier fuzzy name search',async()
  c.state.query='old';const old=c.search();c.state.query='new#TEST';await c.search();release({players:[{name:'old'}]});await old;
  assert.equal(c.state.searchResults.length,0);assert.equal(c.current().page.player.name,'new#TEST');
 });
+test('resubmitting a failed complete ID retries once while pending and healthy tabs remain reused',async()=>{
+ let reads=0,release;const c=createHistoryController({request:async(op,p)=>{
+  if(op==='profile')return {};
+  reads++;if(reads===1)throw Error('临时后台错误');
+  return new Promise(resolve=>release=()=>resolve(page(p.query)));
+ }});
+ c.state.query='演示玩家#TEST';await c.search();const tab=c.current();assert.match(tab.error,/临时后台错误/);assert.equal(tab.page,null);
+ const retry=c.search();assert.equal(reads,2,'The same explicit query must retry the failed page');assert.equal(tab.loading,true);
+ const repeated=c.search();assert.equal(reads,2,'A still-pending retry must not start another read');assert.equal(c.current(),tab);
+ release();await Promise.all([retry,repeated]);assert.equal(tab.error,'');assert.equal(tab.page.player.name,c.state.query);
+ await c.search();assert.equal(reads,2,'An already healthy tab remains cached');assert.equal(c.state.tabs.length,1);
+});
 test('repeated detail clicks share a single in-flight summary request',async()=>{
  let release,calls=0;const c=createHistoryController({request:async(op)=>op==='profile'?{}:op==='page'?page('one'):op==='detail'?(calls++,new Promise(resolve=>release=resolve)):{timeline:{frames:[],events:[]}}});
  await c.open();const a=c.detail(1,'summary'),b=c.detail(1,'stats');assert.equal(calls,1);release({game:c.current().page.games[0]});await Promise.all([a,b]);assert.equal(c.current().details[1].section,'stats');

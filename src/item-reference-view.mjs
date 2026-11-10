@@ -9,6 +9,7 @@ const validId=id=>/^\d{1,8}$/.test(String(id));
 const itemFor=(data,id)=>validId(id)&&Object.hasOwn(data.items||{},String(id))?data.items[String(id)]:null;
 const modeName=mode=>mode==='hex'?'海克斯大乱斗':'召唤师峡谷';
 const available=(item,mode)=>item?.maps?.[mapFor(mode)]===true;
+const itemName=item=>gameDescription(item?.name).replace(/\s+/g,' ').trim();
 const heroName=(data,id)=>data.champions?.find(champion=>champion.id===id)?.name||id;
 // Reviewed first blocks from 16.21.1; exact text changes require a new review.
 const reviewedOmnivampBlocks={
@@ -99,8 +100,8 @@ function availability(data,item,mode){
  if(String(item.id)==='3330')label=mode==='rift'?'费德提克饰品替换':'费德提克饰品；模式获取方式待核';
  else if(String(item.id)==='3865'&&mode==='rift')label='峡谷辅助位置通常给予';
  else if(mode==='hex')label='海克斯获取方式待核';
- else if(questBase)label=`位置任务升级 · 基础鞋 ${questBase.name}`;
- else if(base)label=`由${base.name}升级或转化`;
+ else if(questBase)label=`位置任务升级 · 基础鞋 ${itemName(questBase)}`;
+ else if(base)label=`由${itemName(base)}升级或转化`;
  else if(item.inStore===true&&item.gold?.purchasable===true)label='商店资料标为可购买';
  else if(item.inStore===false||item.gold?.purchasable===false)label='商店资料标为不可直接购买';
  else label='购买状态未收录';
@@ -110,22 +111,25 @@ function availability(data,item,mode){
 function relation(data,ids,mode,label,region){
  if(!Array.isArray(ids)||!ids.length)return '';
  const rows=ids.map(id=>{
-  const item=itemFor(data,id),name=item?.name||`未收录 #${id}`;
+  const item=itemFor(data,id),name=itemName(item)||`未收录 #${id}`;
   return item&&available(item,mode)?`<button type="button" class="item-reference-related" data-action="reference-item" data-id="${e(id)}">${asset('item',id,name)}<span>${e(name)}</span></button>`:`<span class="item-reference-unavailable">${e(name)}</span>`;
  });
  return `<section class="item-reference-relation" data-item-region="${region}"><h3>${label}</h3><div>${rows.join('')}</div></section>`;
 }
-export function referenceItemTiles(data,{query='',mode='rift',id=''}={}){
- const needle=String(query).trim().toLocaleLowerCase(),items=Object.entries(data.items||{}).filter(([key,item])=>validId(key)&&available(item,mode)&&typeof item.name==='string'&&(!needle||`${item.name} ${key}`.toLocaleLowerCase().includes(needle))).sort((a,b)=>a[1].name.localeCompare(b[1].name,'zh-CN')||Number(a[0])-Number(b[0]));
- return items.map(([key,item])=>`<button type="button" class="item-reference-tile ${String(id)===key?'active':''}" data-action="reference-item" data-id="${e(key)}" aria-pressed="${String(id)===key}">${asset('item',key,item.name)}<span>${e(item.name)}</span></button>`).join('')||'<p class="empty-state">没有匹配的装备。</p>';
+function referenceItems(data,{query='',mode='rift',scope='shop'}={}){
+ const needle=String(query).trim().toLocaleLowerCase();
+ return Object.entries(data.items||{}).filter(([key,item])=>validId(key)&&available(item,mode)&&typeof item.name==='string'&&(scope==='all'||item.inStore===true&&item.gold?.purchasable===true)&&(!needle||`${itemName(item)} ${key}`.toLocaleLowerCase().includes(needle))).sort((a,b)=>itemName(a[1]).localeCompare(itemName(b[1]),'zh-CN')||Number(a[0])-Number(b[0]));
 }
-export function itemReferenceView(data,{query='',mode='rift',id=''}={}){
- mode=mode==='hex'?'hex':'rift';
- const selected=itemFor(data,id),visible=available(selected,mode),count=Object.entries(data.items||{}).filter(([key,item])=>validId(key)&&available(item,mode)&&typeof item.name==='string').length;
+export function referenceItemTiles(data,{query='',mode='rift',scope='shop',id=''}={}){
+ return referenceItems(data,{query,mode,scope}).map(([key,item])=>`<button type="button" class="item-reference-tile ${String(id)===key?'active':''}" data-action="reference-item" data-id="${e(key)}" aria-pressed="${String(id)===key}">${asset('item',key,itemName(item))}<span>${e(itemName(item))}</span></button>`).join('')||'<p class="empty-state">没有匹配的装备。</p>';
+}
+export function itemReferenceView(data,{query='',mode='rift',scope='shop',id=''}={}){
+ mode=mode==='hex'?'hex':'rift';scope=scope==='all'?'all':'shop';
+ const selected=itemFor(data,id),visible=available(selected,mode),count=referenceItems(data,{query,mode,scope}).length;
  const collected=Number.isFinite(Date.parse(data.fetchedAt||''))?dateLabel(data.fetchedAt):'未知';
  let detail='<p class="item-reference-empty">选择装备查看详情。</p>';
  if(id&&!selected)detail='<p class="item-reference-empty">当前资料未收录这件装备，请重新选择。</p>';
- else if(selected&&!visible)detail=`<p class="item-reference-empty">${e(selected.name)}未列入${modeName(mode)}资料，请重新选择。</p>`;
+ else if(selected&&!visible)detail=`<p class="item-reference-empty">${e(itemName(selected))}未列入${modeName(mode)}资料，请重新选择。</p>`;
  else if(selected){
   const tooltip=selected.tooltip,base=itemFor(data,selected.specialRecipe),from=Array.isArray(selected.from)?[...selected.from]:[];
   const omnivampCopy=referenceOmnivampCopy(data,selected,String(id),mode),formulaCopy=referenceFormulaCopy(data,selected,String(id),mode,omnivampCopy),displayData=formulaCopy||omnivampCopy||data,displayItem=displayData.items[id],displayTooltip=displayItem.tooltip;
@@ -145,5 +149,5 @@ export function itemReferenceView(data,{query='',mode='rift',id=''}={}){
   }
   detail=`<div class="item-reference-summary" data-item-region="summary">${gameTooltipView(displayData,'item',String(id),{mode,hidePartialNote})}</div>${omnivampCopy?'<p class="bottom-note">基础全能吸血取自同版本官方简介，请以游戏内显示为准。</p>':''}${formulaCopy?'<p class="bottom-note">公式数值依据公开装备资料整理，请以游戏内显示为准。</p>':''}${durationNote}<p class="item-reference-availability">${e(availability(data,selected,mode))}</p>${stale}${relation(data,from,mode,'合成或转化来源','from')}${relation(data,selected.into,mode,'可合成','into')}${sources?`<details class="ui-disclosure item-reference-sources" data-item-region="sources" data-disclosure-key="item-reference-sources"><summary>资料来源</summary>${sources}</details>`:''}`;
  }
- return `<section class="reference-workspace item-reference" aria-label="装备图鉴" data-item-reference-mode="${mode}" data-item-reference-id="${e(id)}"><div class="item-reference-toolbar"><label class="ranking-search">搜索装备<input type="search" id="item-reference-search" value="${e(query)}" placeholder="名称或 ID" autocomplete="off"></label><div class="segmented" aria-label="装备模式">${[['rift','峡谷'],['hex','海克斯']].map(([value,name])=>`<button type="button" class="segment ${mode===value?'active':''}" data-action="reference-item-mode" data-mode="${value}" aria-pressed="${mode===value}">${name}</button>`).join('')}</div><span class="badge">资料 ${e(data.version||data.patch||'版本未知')} · 采集 ${e(collected)} · ${count} 件</span></div><div class="item-reference-layout"><div class="item-reference-list" id="item-reference-grid" data-scroll-key="item-reference-${mode}" aria-label="装备列表">${referenceItemTiles(data,{query,mode,id})}</div><article class="item-reference-detail" id="item-reference-detail" tabindex="-1" aria-label="装备详情">${detail}</article></div></section>`;
+ return `<section class="reference-workspace item-reference" aria-label="装备图鉴" data-item-reference-mode="${mode}" data-item-reference-scope="${scope}" data-item-reference-id="${e(id)}"><div class="item-reference-toolbar"><label class="ranking-search">搜索装备<input type="search" id="item-reference-search" value="${e(query)}" placeholder="名称或 ID" autocomplete="off"></label><div class="segmented" aria-label="装备模式">${[['rift','峡谷'],['hex','海克斯']].map(([value,name])=>`<button type="button" class="segment ${mode===value?'active':''}" data-action="reference-item-mode" data-mode="${value}" aria-pressed="${mode===value}">${name}</button>`).join('')}</div><div class="segmented" aria-label="装备列表范围">${[['shop','商店'],['all','全部资料']].map(([value,name])=>`<button type="button" class="segment ${scope===value?'active':''}" data-action="reference-item-scope" data-scope="${value}" aria-pressed="${scope===value}" title="${value==='all'?'包括本模式转化、任务与英雄专属条目':'按商店资料筛选，特殊获取条件见详情'}">${name}</button>`).join('')}</div><span class="badge">资料 ${e(data.version||data.patch||'版本未知')} · 采集 ${e(collected)} · <span data-item-reference-count>${count}</span> 件</span></div><div class="item-reference-layout"><div class="item-reference-list" id="item-reference-grid" data-scroll-key="item-reference-${mode}" aria-label="装备列表">${referenceItemTiles(data,{query,mode,scope,id})}</div><article class="item-reference-detail" id="item-reference-detail" tabindex="-1" aria-label="装备详情">${detail}</article></div></section>`;
 }

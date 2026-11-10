@@ -50,7 +50,12 @@ async function run(){
  const area=screen.getPrimaryDisplay().workArea,anchor={x:area.x+20,y:area.y+20,width:Math.max(600,area.width-500),height:Math.min(800,area.height-40)};observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,anchor),foreground:false,minimized:false},game:null})+'\n');
  await control(main,'[data-client-connect]');await until(()=>{side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));return side;},'Independent sidebar missing');diagnosticSide=side;
  const avatar=(window,id)=>window===main?'[data-action=build][data-prepare-click=true][data-role=bottom][data-id='+id+']':'[data-action=companion-preview][data-role=bottom][data-id='+id+']';
- async function point(window,selector){await until(()=>js(window,'!!document.querySelector('+JSON.stringify(selector)+')'),'Real avatar missing '+selector);return js(window,'(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.scrollIntoView({block:"nearest"});window.__pressedHero=el;const r=el.getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};})()');}
+ async function point(window,selector){
+  await until(()=>js(window,'!!document.querySelector('+JSON.stringify(selector)+')'),'Real avatar missing '+selector);
+  // A legal render can replace the measured node before pointerdown. Capture
+  // this press's actual trusted target; only a held button must survive refresh.
+  return js(window,'(()=>{const selector='+JSON.stringify(selector)+',el=document.querySelector(selector);el.scrollIntoView({block:"nearest"});window.__pressedHero=null;document.addEventListener("pointerdown",event=>{const current=document.querySelector(selector),pressed=event.target.closest?.(selector);if(event.isTrusted&&event.button===0&&event.isPrimary!==false&&pressed&&pressed===current&&!pressed.disabled)window.__pressedHero=pressed;},{capture:true,once:true});const r=el.getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};})()');
+ }
  function mouse(window,type,point){window.webContents.sendInputEvent({type,...point,button:'left',clickCount:1});}
  async function visibleControl(window,selector){
   await until(()=>js(window,'!!document.querySelector('+JSON.stringify(selector)+')&&!document.querySelector('+JSON.stringify(selector)+').disabled&&document.querySelector('+JSON.stringify(selector)+').checkVisibility()'),'Visible enabled real reentry control missing '+selector);
@@ -59,7 +64,7 @@ async function run(){
  async function nativeClick(window,id,withRefresh=false){
   await js(window,'(()=>{if(window.__pointerProbe)return;window.__pointerProbe={client:0,data:0};window.buddy.onClient(()=>window.__pointerProbe.client++);window.buddy.onData(value=>window.__pointerProbe.data=value.revision);})()');
   const observed=await js(window,'window.__pointerProbe.client'),selector=avatar(window,id),p=await point(window,selector);mouse(window,'mouseMove',p);mouse(window,'mouseDown',p);
-  await until(()=>js(window,'window.__pressedHero?.matches(":active")'),'Native mouseDown did not press the real hero button');
+  await until(()=>js(window,'(()=>{const pressed=window.__pressedHero;return !!pressed&&pressed.isConnected&&pressed===document.querySelector('+JSON.stringify(selector)+')&&!pressed.disabled&&pressed.matches(":active");})()'),'Native mouseDown did not press the real hero button');
   if(withRefresh){
    const before=(await handlers.get('data-snapshot')(event(window))).revision;refresh++;await handlers.get('client-status')(event(window),true);
    const catalog=(await handlers.get('data-snapshot')(event(window))).data.catalog,entry=structuredClone(catalog.duos[0]);entry.id='local-pointer-refresh';entry.name='鼠标按住期间刷新 '+refresh;

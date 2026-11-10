@@ -26,3 +26,36 @@ test('waiting for a screenshot chooser does not claim feedback is being sent',as
  const overlay=new Overlay(),images=deferred(),ui=createFeedbackUI({overlay,api:{feedbackClear:async()=>{},feedbackImages:()=>images.promise}});
  await ui.action('feedback-open');overlay.type('draft');const pending=ui.action('feedback-images');assert.equal(overlay.send.disabled,true);assert.ok(!overlay.innerHTML.includes('发送中'));images.resolve([]);await pending;assert.equal(overlay.field.value,'draft');assert.equal(overlay.send.disabled,false);
 });
+
+test('failed feedback shows its remaining cooldown without replacing the editable draft',async t=>{
+ t.mock.timers.enable({apis:['Date','setTimeout'],now:100000});
+ const overlay=new Overlay();let sends=0,retryAt=0;
+ const ui=createFeedbackUI({overlay,api:{feedbackClear:async()=>{},feedbackImages:async()=>[],feedbackStatus:async()=>({retryAfterMs:Math.max(0,retryAt-Date.now())}),feedbackSend:async()=>{sends++;retryAt=Date.now()+30000;throw Error('发送未完成，请稍后重试');}}});
+ await ui.action('feedback-open');overlay.type('请保留这个问题');await ui.action('feedback-send');
+ assert.equal(overlay.send.disabled,true);assert.match(overlay.html,/30 秒后重试/);assert.equal(overlay.field.value,'请保留这个问题');
+ const field=overlay.field;overlay.type('继续补充');assert.equal(overlay.send.disabled,true);
+ await ui.action('feedback-send');assert.equal(sends,1);
+ t.mock.timers.tick(29000);assert.equal(overlay.field,field);assert.equal(overlay.field.value,'继续补充');assert.equal(overlay.send.disabled,true);assert.equal(overlay.send.textContent,'1 秒后重试');
+ t.mock.timers.tick(1000);assert.equal(overlay.send.disabled,false);assert.equal(overlay.send.textContent,'发送反馈');
+});
+
+test('reopening feedback retains the service cooldown and closing stops its timer',async t=>{
+ t.mock.timers.enable({apis:['Date','setTimeout'],now:100000});
+ const overlay=new Overlay(),ui=createFeedbackUI({overlay,api:{feedbackClear:async()=>{},feedbackImages:async()=>[],feedbackStatus:async()=>({retryAfterMs:7000})}});
+ await ui.action('feedback-open');overlay.type('still waiting');assert.equal(overlay.send.disabled,true);assert.match(overlay.html,/7 秒后重试/);
+ overlay.innerHTML='';t.mock.timers.tick(10000);assert.equal(overlay.innerHTML,'');
+});
+
+test('feedback failure shows the player reason without the Electron IPC prefix',async()=>{
+ const overlay=new Overlay(),ui=createFeedbackUI({overlay,api:{feedbackClear:async()=>{},feedbackImages:async()=>[],feedbackStatus:async()=>({retryAfterMs:0}),feedbackSend:async()=>{throw new Error("Error invoking remote method 'feedback-send': Error: 发送未完成，请稍后重试");}}});
+ await ui.action('feedback-open');overlay.type('保留原始问题');await ui.action('feedback-send');
+ assert.match(overlay.html,/<p class="feedback-error" role="alert">发送未完成，请稍后重试<\/p>/);assert.doesNotMatch(overlay.html,/Error invoking remote method|feedback-send&#39;: Error:/);assert.equal(overlay.field.value,'保留原始问题');
+});
+
+test('a delayed cooldown reply cannot change a reopened editor or its new draft',async()=>{
+ const overlay=new Overlay(),oldStatus=deferred(),entered=deferred();let calls=0;
+ const ui=createFeedbackUI({overlay,api:{feedbackClear:async()=>{},feedbackImages:async()=>[],feedbackStatus:()=>{if(++calls===1){entered.resolve();return oldStatus.promise;}return Promise.resolve({retryAfterMs:0});}}});
+ const first=ui.action('feedback-open');await entered.promise;overlay.innerHTML='';await ui.action('feedback-open');overlay.type('新弹窗的草稿');const field=overlay.field;
+ oldStatus.resolve({retryAfterMs:30000});await first;
+ assert.equal(overlay.field,field);assert.equal(overlay.field.value,'新弹窗的草稿');assert.equal(overlay.send.disabled,false);assert.doesNotMatch(overlay.html,/秒后重试/);
+});

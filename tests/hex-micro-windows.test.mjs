@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import {EventEmitter} from 'node:events';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
+import {guideRenderContext} from '../src/guide-render-context.mjs';
 
 const area={x:0,y:0,width:1920,height:1040};
 const root=fileURLToPath(new URL('..',import.meta.url));
@@ -66,6 +67,7 @@ test('native hover cards flip away from icons and the cursor when either micro w
 test('expanded pin order and bounded input regions survive refresh but reset with the match',async()=>{
  const s=setup();s.value.model.hexMicroRoutes=Array.from({length:5},(_,i)=>({id:'r'+i,augments:[],items:[]}));s.micro.show();s.ready();
  const snapshot=()=>s.call('routes','hex-micro-bootstrap'),control=(action,id,context=snapshot().context)=>s.call('routes','hex-micro-control',action,{context,view:snapshot().view,id});
+ assert.equal(snapshot().interactionContext,guideRenderContext(s.value));
  assert.equal(await control('pin','r4'),false);assert.equal(await control('expand',null,'stale'),false);assert.equal(await control('expand'),true);
  assert.equal(await control('pin','r4'),true);assert.deepEqual(Array.from(snapshot().routes,r=>r.id),['r4','r0','r1','r2','r3']);
  const win=s.windows[1],b=win.bounds,rows=[{action:'pin',id:'r0',x:6,y:40,width:18,height:24}];
@@ -74,6 +76,8 @@ test('expanded pin order and bounded input regions survive refresh but reset wit
  s.call('routes','hex-micro-regions',{context:snapshot().context,view:snapshot().view,rows:[{...rows[0],width:200,height:200}]});s.pointer({x:b.x+10,y:b.y+45});assert.equal(win.ignore,true,'An oversized region must not swallow game clicks');
  const scroll={action:'scroll',x:6,y:25,width:b.width-12,height:b.height-50};s.call('routes','hex-micro-regions',{context:snapshot().context,view:snapshot().view,rows:[scroll]});s.pointer({x:b.x+30,y:b.y+30});assert.equal(win.ignore,false,'Overflowing list receives wheel input');s.pointer({x:b.x+2,y:b.y+30});assert.equal(win.ignore,true,'The margin remains click-through');
  s.value.referenceRevision++;s.micro.publish();assert.equal(snapshot().expanded,true);assert.equal(snapshot().routes[0].id,'r4');
+ const prior=snapshot();s.value.model.selection={id:'Yasuo',role:'top',mode:'hex'};s.value.model.source='changed source';s.micro.publish();assert.notEqual(snapshot().interactionContext,prior.interactionContext);assert.equal(snapshot().interactionContext,guideRenderContext(s.value));
+ assert.equal(await s.call('routes','hex-micro-control','pin',{context:prior.context,view:prior.view,id:'r0'}),false,'Forwarding paint identity must not weaken the main-process view check');
  s.value.model.hexMicroRoutes=s.value.model.hexMicroRoutes.filter(r=>r.id!=='r4');s.micro.publish();assert.equal(snapshot().routes[0].id,'r0');
  assert.equal(await control('pin','r4'),false);s.value.model.hexRound={context:'manual-reset'};s.micro.publish();assert.equal(snapshot().expanded,false);
  assert.equal(await control('expand'),true);s.value.model.matchId='next';s.micro.publish();assert.equal(snapshot().expanded,false);
@@ -147,14 +151,14 @@ test('late Rift widget ready, peek restore and controls cannot create a third He
 
 // Exercise the real guide owner and micro windows together: manual previews
 // must stay editable without allowing a late legacy window over the game.
-function guideOwner({mode='hex',prepare=async()=>true,preferences={guideAutoShow:true}}={}){
+function guideOwner({mode='hex',prepare=async()=>true,preferences={guideAutoShow:true},compactBounds,displays=[area]}={}){
  const file=new URL('../electron/guide-window.cjs',import.meta.url),nativeRequire=createRequire(file),handlers={},windows=[];let restore;
- let state={selection:{id:'Yasuo',mode,conditions:[]},compact:true,match:{gameId:'1'}},current={id:'Yasuo',mode};
+ let state={selection:{id:'Yasuo',mode,conditions:[]},compact:true,...(compactBounds?{compactBounds}:{}),match:{gameId:'1'}},current={id:'Yasuo',mode};
  class Window extends EventEmitter{
   constructor(options){super();this.options=options;this.bounds={x:options.x||0,y:options.y||0,width:options.width,height:options.height};this.visible=false;this.webContents=new EventEmitter();this.webContents.mainFrame={};this.webContents.send=()=>{};this.webContents.setWindowOpenHandler=()=>{};windows.push(this);}
   getBounds(){return this.bounds;}setBounds(b){this.bounds=b;}getSize(){return [this.bounds.width,this.bounds.height];}setSize(width,height){Object.assign(this.bounds,{width,height});}setPosition(x,y){Object.assign(this.bounds,{x,y});}setMinimumSize(){}setResizable(){}setOpacity(){}setFocusable(value){this.focusable=value;}isFocusable(){return this.focusable;}isFocused(){return false;}isMinimized(){return !!this.minimized;}restore(){this.restores=(this.restores||0)+1;this.minimized=false;}moveTop(){this.raises=(this.raises||0)+1;}isDestroyed(){return !!this.destroyed;}isVisible(){return this.visible;}showInactive(){this.visible=true;this.shows=(this.shows||0)+1;}hide(){this.visible=false;}setAlwaysOnTop(){}setIgnoreMouseEvents(){}loadFile(){}async loadURL(){}destroy(){this.destroyed=true;this.emit('closed');}
  }
- const display={workArea:area,bounds:area},screen=Object.assign(new EventEmitter(),{getDisplayMatching:()=>display,getPrimaryDisplay:()=>display,getCursorScreenPoint:()=>({x:-100,y:-100})});
+ const display=value=>({workArea:value,bounds:value}),screen=Object.assign(new EventEmitter(),{getDisplayMatching:b=>display(displays.find(d=>b.x>=d.x&&b.x<d.x+d.width)||displays[0]),getPrimaryDisplay:()=>display(displays[0]),getCursorScreenPoint:()=>({x:-100,y:-100})});
  const electron={BrowserWindow:Window,ipcMain:{handle:(name,fn)=>{handlers[name]=fn;}},screen,clipboard:{}};
  const widgets=[];const widget=options=>{let visible=false;const w={show(){if(options.isActive()&&options.getState()?.skillWidget?.enabled!==false)visible=true;},hide(){visible=false;},publish(){if(!options.isActive())visible=false;},fit(){},destroy(){},reset(){},visible:()=>visible,info:()=>null};widgets.push(w);return w;};
  function load(url){const module={exports:{}};vm.runInNewContext(fs.readFileSync(url,'utf8'),{module,process,Buffer,setTimeout:()=>1,clearTimeout(){},setInterval:()=>({unref(){}}),clearInterval(){},require:name=>name==='electron'?electron:name==='./hex-micro-windows.cjs'?load(new URL('../electron/hex-micro-windows.cjs',import.meta.url)):['./skill-window.cjs','./jungle-window.cjs'].includes(name)?widget:name==='./window-peek.cjs'?options=>{restore=options.onRestore;return {unfold(){},destroy(){},active:()=>false,visible:()=>false,sync(){}};}:name==='./window-resize.cjs'?()=>({cancel(){},active:()=>false}):nativeRequire(name)});return module.exports;}
@@ -164,6 +168,17 @@ function guideOwner({mode='hex',prepare=async()=>true,preferences={guideAutoShow
  const call=(w,name,...args)=>handlers[name]({sender:w.webContents,senderFrame:w.webContents.mainFrame},...args);
  return {guide,windows,widgets,legacy,micro,call,state:()=>state,current:value=>{current=value;},restore:()=>restore(),ready:()=>windows.forEach(w=>w.emit('ready-to-show'))};
 }
+
+test('reopening the real compact guide restores its saved display and clamps disconnected displays',()=>{
+ for(const [saved,displays,x] of [
+  [{x:2100,y:100,width:320,height:236},[area,{...area,x:1920}],2100],
+  [{x:-1700,y:100,width:320,height:236},[area,{...area,x:-1920}],-1700],
+  [{x:2100,y:100,width:320,height:236},[area],1600],
+  [undefined,[area],1588]
+ ]){
+  const s=guideOwner({mode:'rift',compactBounds:saved,displays});try{s.guide.show();s.ready();assert.equal(s.legacy().bounds.x,x);assert.equal(s.legacy().bounds.y,saved?100:56);}finally{s.guide.destroy();}
+ }
+});
 
 test('Hex manual preview and game use only two micro windows and preserve independent close through reconnect',async()=>{
  const s=guideOwner();try{

@@ -147,7 +147,10 @@ export function createOngoingGameController({request,analyze,teamAnalyze,infer,c
  }
  async function setDraft(game){stop();clear();state.draft=true;
   const own={puuid:game.self?.puuid||''},teamOne=game.participants.filter(p=>p.team==='TEAM-100'),teamTwo=game.participants.filter(p=>p.team!=='TEAM-100');
-  const raw=p=>({puuid:p.puuid,gameName:p.name,championId:p.champion,selectedPosition:p.position});
+  const raw=p=>{
+   const group=game.mode==='CHERRY'&&/^CHERRY-[1-9]\d*$/.test(p.team||'')?Number(p.team.slice(7)):null;
+   return {puuid:p.puuid,gameName:p.name,championId:p.champion,selectedPosition:p.position,spell1Id:p.spells?.[0],spell2Id:p.spells?.[1],...(Number.isSafeInteger(group)?{teamParticipantId:group}:{})};
+  };
   state.roster=ongoingRoster({phase:'InProgress',own,game:{map:{id:game.map,gameMode:game.mode},gameData:{gameId:game.id,queue:{id:game.queue,gameMode:game.mode},teamOne:teamOne.map(raw),teamTwo:teamTwo.map(raw)}}},'historical-draft');state.roster.phase='draft';state.roster.server=game.server||'';onChange();await loadMembers();
  }
  async function exitDraft(){stop();state.draft=false;clear();start();}

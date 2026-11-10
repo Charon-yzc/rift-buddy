@@ -3,6 +3,7 @@ const {HEX_WINDOWS,hexMicroPlacement,hexMicroOffset,hexMicroPayload}=require('..
 const {tooltipPlacement}=require('../src/core/window-placement.mjs');
 const {hexMicroHint}=require('../src/core/hex-micro-hint.mjs');
 const {orderHexCards}=require('../src/core/hex-route-card.mjs');
+const {guideRenderContext}=require('../src/guide-render-context.mjs');
 const escape=value=>String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 module.exports=function createHexMicroWindows({root,getState,setState,getPayload,getArea,getGameBounds,getScale,isActive,isQuitting,onHide,onChange,diagnostic,getPreferences=()=>({})}){
@@ -22,7 +23,7 @@ module.exports=function createHexMicroWindows({root,getState,setState,getPayload
  }
  async function reset(clear=()=>{}){resetting++;placementEpoch++;for(const e of Object.values(entries)){clearTimeout(e.timer);e.timer=null;e.layout='full';e.peek.unfold();}expanded=false;hideTooltip();try{await placementWrites;await clear();}finally{resetting--;}}
  function publish(value=getPayload()){
-  for(const kind of HEX_WINDOWS){const e=entries[kind],next=hexMicroPayload(value,kind);
+  for(const kind of HEX_WINDOWS){const e=entries[kind],next={...hexMicroPayload(value,kind),interactionContext:guideRenderContext(value)};
    if(kind==='routes'){
     if(next.session!==routeSession){routeSession=next.session;expanded=false;pinned=[];}
     pinned=pinned.filter(id=>next.routes?.some(r=>r.id===id));

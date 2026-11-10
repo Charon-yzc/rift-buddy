@@ -1,3 +1,4 @@
+import {createClientSync} from '../src/core/async-tasks.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import {canonicalJSON} from '../src/core/content-fingerprint.mjs';
 import {catalogContextRevision} from '../src/core/catalog-choice.mjs';
@@ -741,22 +742,54 @@ test('an explicit local hero click can replace its earlier manual plan position 
 });
 
 test('explicit configuration switching preserves the chosen runes and spells while a fresh avatar resets to the role default',async()=>{
- for(const locked of [false,true]){
+ for(const locked of [false,true])for(const docked of [false,true]){
   const current=client();current.session.myTeam[0].championId=hero('Ashe').key;current.session.myTeam[0].pickState=locked?'locked':'hovered';
   const {context:c,calls}=setup({current,incoming:structuredClone(current)}),base=getBuild(hero('Ashe'),'bottom',data,{mode:'rift',loadoutId:'default'});
   const chosen={id:'Ashe',role:'bottom',mode:'rift',loadoutId:'default',customRunePage:{primaryStyleId:base.runePage.primaryStyleId,subStyleId:base.runePage.subStyleId,selectedPerkIds:[...base.runePage.selectedPerkIds],patch:data.patch},summonerIds:['SummonerHeal','SummonerFlash'],skillOrder:base.skillOrder};
   const build=getBuild(hero('Ashe'),'bottom',data,chosen);
-  c.overlay={contains:()=>false};c.companionPreparation=()=>({selection:chosen,build});c.assertConfigurationEditable=()=>{};
+  // Main rows live in an existing build drawer; sidebar rows use its plan.
+  // A main window with no drawer cannot render a configuration-switch button.
+  c.windowLayout.docked=docked;c.companionTab='plan';c.overlay={contains:()=>!docked};
+  if(docked)c.companionPreview=structuredClone(chosen);else c.showBuild(chosen.id,chosen.role,chosen.mode,{...chosen,quickConfiguration:true});
+  const drawer=c.buildView,opened=calls.opened.length;
+  c.companionPreparation=()=>{const selection=c.companionPreview||c.preparations.recall(chosen)||chosen;return {selection,build:getBuild(hero(selection.id),selection.role,data,selection)};};c.assertConfigurationEditable=()=>{};
   c.selectionRequestContext=()=> 'same-current-hero';c.configurationChoices=()=>[{id:'current',selection:chosen,build}];
   vm.runInContext(`async function switchConfiguration(el){const action='configuration-switch';${extract("if(action==='configuration-switch'){","if(action==='companion-jump')")}}`,c);
   await c.switchConfiguration({dataset:{plan:'Ashe:bottom:rift',config:'current'}});
   assert.equal(calls.prepared.length,1);assert.deepEqual(structuredClone(calls.prepared[0].selection.customRunePage),chosen.customRunePage);
   assert.deepEqual(structuredClone(calls.prepared[0].selection.summonerIds),chosen.summonerIds);
+  assert.deepEqual(structuredClone(calls.prepared[0].page.selectedPerkIds),chosen.customRunePage.selectedPerkIds);assert.deepEqual(structuredClone(calls.prepared[0].summoners),chosen.summonerIds);
+  if(docked)assert.equal(c.companionTab,'plan');else{assert.equal(c.buildView,drawer);assert.equal(calls.opened.length,opened,'Applying a chosen configuration keeps the current main drawer');}
   await c.prepareHeroClick(chosen);
   assert.equal(calls.prepared.length,2);assert.equal(calls.prepared[1].selection.customRunePage,undefined);assert.equal(calls.prepared[1].selection.summonerIds,undefined);
   assert.equal(c.preparations.recall(chosen).customRunePage,undefined);assert.equal(c.preparations.recall(chosen).summonerIds,undefined);
+  assert.equal(calls.prepared[1].selection.loadoutId,'default');assert.equal(calls.prepared[1].selection.coreAuto,true);assert.equal(calls.prepared[1].selection.coreIndex,0);
   assert.deepEqual(c.ownTaskPreparation().build.runePage.selectedPerkIds,base.runePage.selectedPerkIds);
  }
+});
+
+test('successful configuration messages distinguish a confirmed lock from an unlocked hover',async()=>{
+ for(const locked of [false,true]){
+  const current=client(),key=hero('Ashe').key;Object.assign(current.session.myTeam[0],{championId:key,pickState:locked?'locked':'hovered'});
+  current.session.actions=[[{id:1,type:'pick',actorCellId:1,championId:key,completed:locked,isInProgress:!locked}]];
+  const {context:c}=setup({current,incoming:structuredClone(current)}),messages=[];c.toast=message=>messages.push(message);
+  const result=await c.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'});
+  assert.equal(result.complete,true);assert.equal(result.steps.hover.locked,locked);
+  assert.equal(messages.at(-1),locked?'配置已应用':'预选与配置已完成，锁定请在客户端确认');
+ }
+});
+
+test('a locked main configuration switch cannot reopen its drawer over feedback after the guide wait',async()=>{
+ const current=client();current.session.myTeam[0].championId=hero('Ashe').key;current.session.myTeam[0].pickState='locked';
+ const {context:c,calls}=setup({current,incoming:structuredClone(current)}),selection={id:'Ashe',role:'bottom',mode:'rift',loadoutId:'default'},build=getBuild(hero('Ashe'),'bottom',data,selection);
+ c.showBuild(selection.id,selection.role,selection.mode,{...selection,quickConfiguration:true});c.overlay={contains:()=>true};c.assertConfigurationEditable=()=>{};
+ c.selectionRequestContext=()=> 'same-current-hero';c.configurationChoices=()=>[{id:'current',selection,build}];
+ const guide=Promise.withResolvers(),entered=Promise.withResolvers();c.guideSyncChain=guide.promise;c.syncPreparedGuide=()=>entered.resolve();
+ vm.runInContext(`async function switchConfiguration(el){const action='configuration-switch';${extract("if(action==='configuration-switch'){","if(action==='companion-jump')")}}`,c);
+ const applying=c.switchConfiguration({dataset:{plan:'Ashe:bottom:rift',config:'current'}});
+ await Promise.race([entered.promise,applying.then(()=>{throw Error('Configuration did not wait for the guide');})]);
+ const opened=calls.opened.length;c.buildView=null;c.overlay={contains:()=>false,innerHTML:'<section class="feedback-dialog">new feedback</section>'};guide.resolve();
+ await assert.rejects(applying,/页面方案已变化/);assert.equal(calls.opened.length,opened);assert.equal(c.buildView,null);assert.equal(calls.prepared.length,0);assert.match(c.overlay.innerHTML,/new feedback/);
 });
 
 test('a newer configuration edit during a client write remains saved after the older click completes',async()=>{
@@ -841,7 +874,7 @@ test('dodge clears selection UI caches while saved hero configurations and prefe
  c.pairRefreshErrors.set('old','offline');c.opponentRefreshErrors.set('old','offline');c.buildErrors.set('old','offline');c.pairRefreshOpen=true;c.matchupFocusError={message:'old failure'};
  await c.performSync(false,true);
  assert.equal(c.saved.draft.preselection,undefined);assert.equal(c.saved.draft.partyCount,undefined);
- assert.equal(c.lastCompanionOwn,'');assert.equal(c.lastCompanionIntent,'');assert.equal(c.lastCompanionLocked,'');assert.equal(c.showAllCandidates,false);
+ assert.equal(c.lastCompanionOwn,'');assert.equal(c.lastCompanionIntent,'');assert.equal(c.lastCompanionLocked,'old-locked','Main consumes its lock navigation from the public client, not from a state-only reset');assert.equal(c.showAllCandidates,false);
  assert.equal(c.pendingIntentPlanId,'');assert.equal(c.companionScroll.size,0);assert.equal(c.clientPreparationStatuses.size,0);assert.equal(c.itemSetStatuses.size,0);
  assert.equal(c.pairRefreshErrors.size,0);assert.equal(c.opponentRefreshErrors.size,0);assert.equal(c.buildErrors.size,0);assert.equal(c.pairRefreshOpen,false);assert.equal(c.matchupFocusError,null);assert.ok(c.selectionUiRevision>0);
  assert.equal(c.preparations.recall(selection).coreIndex,1);assert.equal(c.saved.preferences.flashSlot,'d');
@@ -1231,4 +1264,33 @@ test('a frozen room profile revokes immediately and rejects its late worker on w
   if(change==='account')c.acceptChampionUsage({...c.championUsage,revision:2,session:'b'.repeat(32)});else c.applyRoomSnapshot(next);
   assert.equal(f.calls.cancel,1,change);finish({rows:[{id:'late'}]});await pending;assert.equal(c.results.length,0,change);
  }
+});
+
+function reconnectConsumer(current){
+ const f=setup({current,incoming:structuredClone(current)}),c=f.context;let notify;
+ c.saved.preferences.autoSync=false;c.acceptOngoingClient=()=>{};c.api.onClient=handler=>{notify=handler;};c.sync=createClientSync(c.performSync);
+ const start=source.indexOf('api.onClient?.(value=>{'),end=source.indexOf('});const ready=',start);vm.runInContext(source.slice(start,end+3),c);
+ return {...f,notify:value=>notify(value)};
+}
+const nextTurn=()=>new Promise(resolve=>setImmediate(resolve));
+test('reconnect consumer: disabled polling still consumes an explicit shared disconnect without LCU reads',async()=>{
+ const current=client();current.receivedAt='2026-11-10T00:00:00.000Z';const f=reconnectConsumer(current),c=f.context;let reads=0;
+ c.api.client=async()=>{reads++;return current;};f.notify({connected:false,phase:'Offline',message:'Mock client closed'});await nextTurn();await nextTurn();
+ assert.equal(c.client.connected,false);assert.equal(c.saved.preferences.autoSync,false);assert.equal(reads,0);
+});
+test('reconnect consumer: a disconnect queued while saving is not lost and never performs an extra read',async()=>{
+ const f=reconnectConsumer(client()),c=f.context,save=Promise.withResolvers();let reads=0;c.api.client=async()=>{reads++;return client();};c.saveChain=save.promise;
+ const busy=c.sync(false);await nextTurn();f.notify({connected:false,phase:'Offline',message:'Mock client closed'});save.resolve();await busy;
+ assert.equal(c.client.connected,false);assert.equal(reads,0);assert.equal(c.syncing,false);
+});
+test('reconnect consumer: a late old offline read cannot overwrite a newer connected push',async()=>{
+ const f=reconnectConsumer(client()),c=f.context,read=Promise.withResolvers(),started=Promise.withResolvers();let reads=0;c.api.client=()=>{reads++;started.resolve();return read.promise;};
+ const busy=c.sync(false,{fresh:true});await started.promise;const newer=client();newer.receivedAt='2026-11-10T00:00:02.000Z';f.notify(newer);read.resolve({connected:false,phase:'Offline',message:'Older offline read'});await busy;
+ assert.equal(c.client.connected,true);assert.equal(c.client.receivedAt,newer.receivedAt);assert.equal(reads,1);assert.equal(c.sharedClient,null);
+});
+test('reconnect consumer: untimestamped terminal states arriving during final save remain queued',async()=>{
+ const offline={connected:false,phase:'Offline',message:'Old offline'},f=reconnectConsumer(offline),c=f.context,save=Promise.withResolvers(),read=Promise.withResolvers(),started=Promise.withResolvers();let reads=0,prompts=0;
+ c.api.client=()=>{reads++;started.resolve();return read.promise;};c.api.authorizeClient=async()=>{prompts++;return offline;};
+ const busy=c.sync(false,{fresh:true});await started.promise;c.saveChain=save.promise;read.resolve(offline);await nextTurn();f.notify({connected:false,phase:'Offline',needsElevation:true,message:'Mock permission required'});save.resolve();await busy;
+ assert.equal(c.sharedClient?.needsElevation,true);await c.sync(false);assert.equal(c.client.needsElevation,true);assert.equal(reads,1);assert.equal(prompts,0);
 });

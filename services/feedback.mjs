@@ -6,6 +6,7 @@ import {validateFeedbackPng} from './feedback-images.mjs';
 
 export function createFeedbackClient({chooseFiles,encodeImage,version,request=https.request,now=Date.now}){
  let pending=new Map(),busy=false,last=-Infinity,picking=false,epoch=0,expiry;
+ const status=()=>({retryAfterMs:Math.max(0,Math.min(30000,30000-(now()-last)))});
  const clear=()=>{epoch++;clearTimeout(expiry);pending.clear();};
  async function choose(){
   if(busy||picking)throw Error('请等待当前操作完成');picking=true;const generation=++epoch;
@@ -19,7 +20,8 @@ export function createFeedbackClient({chooseFiles,encodeImage,version,request=ht
     const {bytes,preview}=await encodeImage(original);validateFeedbackPng(bytes);total+=bytes.length;if(total>L.imageBytes)throw Error('图片合计不超过10MB');
     const id=randomUUID();next.set(id,bytes);views.push({id,preview});
    }
-   if(generation!==epoch)return null;clearTimeout(expiry);pending=next;expiry=setTimeout(clear,600000);expiry.unref?.();return views;
+   // Expiring old bytes must not cancel a chooser already replacing them.
+   if(generation!==epoch)return null;clearTimeout(expiry);pending=next;expiry=setTimeout(()=>{if(pending===next)pending.clear();},600000);expiry.unref?.();return views;
   }finally{picking=false;}
  }
  async function send(input){
@@ -41,5 +43,5 @@ export function createFeedbackClient({chooseFiles,encodeImage,version,request=ht
    });clear();return result;
   }finally{busy=false;}
  }
- return {choose,send,clear};
+ return {choose,send,clear,status};
 }
