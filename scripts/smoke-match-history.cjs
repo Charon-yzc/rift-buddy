@@ -174,7 +174,13 @@ async function run(){
   await until(()=>js('!!document.querySelector("[aria-label=玩家搜索结果]")'),'Search results missing');
   if(close==='button')await click('[aria-label=玩家搜索结果] [data-action=close]');
   else if(close==='escape')await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
-  else await js('document.querySelector(".modal-backdrop").click()');
+  else{
+   const point=await js('(()=>{const backdrop=document.querySelector(".modal-backdrop");if(!backdrop)return null;const r=backdrop.getBoundingClientRect(),left=Math.max(0,r.left)+3,right=Math.min(innerWidth,r.right)-3,top=Math.max(0,r.top)+3,bottom=Math.min(innerHeight,r.bottom)-3;return [{x:left,y:top},{x:right,y:top},{x:left,y:bottom},{x:right,y:bottom}].map(p=>({x:Math.round(p.x),y:Math.round(p.y)})).find(p=>p.x>=0&&p.y>=0&&p.x<innerWidth&&p.y<innerHeight&&document.elementFromPoint(p.x,p.y)===backdrop)||null;})()');
+   assert.ok(point,'A visible outer backdrop point must be hit-testable outside the modal');
+   main.webContents.sendInputEvent({type:'mouseMove',...point});
+   main.webContents.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...point});
+   main.webContents.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,...point});
+  }
   await click('[data-action=history-tab][data-id="1"]');await click('[data-action=history-refresh]');
   await until(()=>js('!document.querySelector(".history-loading")'),'History refresh missing after closing search');
   assert.equal(await js('!!document.querySelector("[aria-label=玩家搜索结果]")'),false,'Closed search must stay closed: '+close);
