@@ -3,18 +3,20 @@ const fs=require('node:fs/promises'),path=require('node:path'),assert=require('n
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),phase=process.env.RIFT_BUDDY_FAVORITE_PHASE,windows=[];
 app.disableHardwareAcceleration();
 let fixture,runeWrites=0,clientReads=0,failNextRead=false;
+const clientSnapshot=()=>structuredClone(failNextRead?{connected:false,phase:'Offline',message:'隔离刷新失败'}:fixture);
 const rendererErrors=[];
 globalShortcut.register=()=>false;
 global.fetch=async()=>{throw Error('Isolated favorite smoke: external network disabled');};
 https.request=()=>{throw Error('Isolated favorite smoke: client and live sockets disabled');};
 const originalHandle=ipcMain.handle.bind(ipcMain);
-ipcMain.handle=(name,handler)=>originalHandle(name,name==='client-status'?()=>{clientReads++;return failNextRead?{connected:false,phase:'Offline',message:'隔离刷新失败'}:structuredClone(fixture);}:name==='apply-runes'?()=>{runeWrites++;throw Error('Favorite loading must not write runes');}:handler);
+ipcMain.handle=(name,handler)=>originalHandle(name,name==='client-status'?()=>{clientReads++;return clientSnapshot();}:name==='apply-runes'?()=>{runeWrites++;throw Error('Favorite loading must not write runes');}:handler);
 const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{
  if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);
  const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;
  observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;
 };
-app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);window.webContents.on('console-message',event=>{if(/Uncaught|Refused to|Failed to load module/i.test(event.message))rendererErrors.push(event.message);});window.webContents.on('render-process-gone',(_event,details)=>rendererErrors.push('Renderer exited: '+details.reason));});
+// Public pushes and explicit reads must share one isolated client, including failures.
+app.on('browser-window-created',(_event,window)=>{windows.push(window);const send=window.webContents.send.bind(window.webContents);window.webContents.send=(channel,...args)=>send(channel,...(channel==='client-update'?[clientSnapshot()]:args));window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);window.webContents.on('console-message',event=>{if(/Uncaught|Refused to|Failed to load module/i.test(event.message))rendererErrors.push(event.message);});window.webContents.on('render-process-gone',(_event,details)=>rendererErrors.push('Renderer exited: '+details.reason));});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label){for(let n=0;n<150;n++){if(await check())return;await delay(60);}throw Error(label);}
@@ -98,6 +100,13 @@ async function run(){
  if(phase==='restart'){
   const accepted=JSON.parse(await fs.readFile(path.join(root,'accepted.json'),'utf8'));assert.deepEqual(after.draft.slots,accepted.slots);
   for(const choice of accepted.preparations)assert.ok(after.preparations.some(p=>JSON.stringify(p)===JSON.stringify(choice)),'Restart lost a preparation');
+ }
+ if(phase==='changed'){
+  await js('window.__lastFavoriteClient=null;window.buddy.onClient(value=>{window.__lastFavoriteClient=value;});true');
+  failNextRead=true;main.webContents.send('client-update',fixture);
+  await until(()=>js('window.__lastFavoriteClient?.connected===false&&window.__lastFavoriteClient.phase==="Offline"&&window.__lastFavoriteClient.message==="隔离刷新失败"&&document.querySelector(".sidebar-footer")?.textContent.includes("未连接客户端")'),'Failed client snapshot was not broadcast and rendered');
+  assert.deepEqual(await js('window.buddy.client(true)'),clientSnapshot(),'Failed broadcast and explicit read diverged');
+  assert.equal(runeWrites,0);
  }
  await fs.writeFile(path.join(root,phase+'-result.json'),JSON.stringify({phase,status:'passed',version:app.getVersion(),slots:after.draft.slots,runeWrites,clientReads},null,2));
  console.log('Favorite context '+phase+' passed');app.quit();
