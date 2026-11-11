@@ -53,7 +53,7 @@ function faultSource(kind,c){
  if(!kind||baseline||kind==='nested')return source;
  if(kind==='backup-existing'){const anchor="$Backup=CheckedRoot ($Old+'.rollback-'+[Guid]::NewGuid().ToString('N'))";assert.ok(source.includes(anchor));return source.replace(anchor,"$Backup=CheckedRoot '"+path.join(c.root,'existing-backup').replaceAll("'","''")+"'");}
  if(kind.startsWith('backup-')){const anchor='Copy-Item -LiteralPath $From -Destination $To -Force}',folder=kind==='backup-files'?'files':'shortcuts';assert.ok(source.includes(anchor));return source.replace(anchor,`Copy-Item -LiteralPath $From -Destination $To -Force;if($To -like '*.rollback-*\\${folder}\\*'){throw 'Synthetic backup failure'}}`);}
- if(kind==='shortcut'){const anchor='$Readback=$Shell.CreateShortcut($File)';assert.ok(source.includes(anchor));return source.replace(anchor,"throw 'Synthetic shortcut failure'\n  "+anchor);}
+ if(kind==='shortcut'){const anchor='$Readback=$Shell.CreateShortcut($File)';assert.ok(source.includes(anchor));return source.replace("$ErrorActionPreference='Stop'","$ErrorActionPreference='Stop'\n$FixtureErrorWriter=[IO.StreamWriter]::new([Console]::OpenStandardError(),[Text.Encoding]::ASCII);$FixtureErrorWriter.AutoFlush=$true;[Console]::SetError($FixtureErrorWriter)").replace(anchor,"throw 'Synthetic shortcut failure'\n  "+anchor);}
  const start=source.indexOf('function WriteRegistration('),end=source.indexOf('\nfunction RestoreRegistration(',start);assert.ok(start>0&&end>start);
  const anchor='$Key.SetValue($Row.name,$Row.value,$Row.kind);CheckRegistryValue $Key $Row',part=source.slice(start,end);assert.ok(part.includes(anchor));
  let result=source.slice(0,start)+part.replace(anchor,"$Key.SetValue($Row.name,$Row.value,$Row.kind);if($Row.name -eq 'DisplayVersion'){throw 'Synthetic registration failure'};CheckRegistryValue $Key $Row")+source.slice(end);
@@ -88,16 +88,18 @@ try {
    for(const row of old.manifest.files)assert.equal(await exists(path.join(c.a,row.name)),false);
   }else{
    await assert.rejects(install(pkg,target));
-   const log=await fs.readFile(pkg.log,'utf8');
+   const log=await fs.readFile(pkg.log,baseline?'utf8':'utf16le');
    if(!baseline)assert.match(log,kind==='nested'?/registration has nested entries/:kind==='backup-existing'?/^1[\r\n]/:/Synthetic (shortcut|registration|backup) failure/);
    if(kind==='nested'||kind.startsWith('backup-'))assert.equal(await exists(path.join(c.root,'stop-called.txt')),false,'Preflight rejection must precede stopping the old app');
    if(kind==='backup-existing')assert.equal(await fs.readFile(path.join(unowned,'player-note.txt'),'utf8'),'not this invocation');
-   if(kind==='backup-files'||kind==='backup-shortcuts')assert.match(log,/Previous installation was not changed/);
+   if(kind==='backup-files'||kind==='backup-shortcuts')assert.match(log,/原有程序未改动/);
+   if(!baseline&&kind==='nested')assert.match(log,/旧版安装信息异常/);
+   if(!baseline&&kind!=='recovery'&&!kind.startsWith('backup-')&&kind!=='nested')assert.match(log,fresh?/已撤回本次新增/:/已恢复旧版程序/);
    if(baseline){await fs.writeFile(path.join(root,'baseline-observed.json'),JSON.stringify({baseline,expectedVersion:old.manifest.version,observedVersion:await fs.readFile(path.join(target,'resources/app.asar'),'utf8'),backupDirectories:(await fs.readdir(c.root)).filter(n=>n.includes('.rollback-'))},null,2));}
    if(!fresh)await checkPayload(c.a,old);else await noNewPayload(target);
    if(target!==c.a)await noNewPayload(target);
    if(kind==='recovery'){
-    assert.match(log,/Recovery requires attention; backup:/);const backups=(await fs.readdir(c.root)).filter(n=>n.startsWith('old app.rollback-'));assert.equal(backups.length,1);const backup=path.join(c.root,backups[0]);assert.ok(await exists(path.join(backup,'registration.xml')));for(const row of old.manifest.files)assert.equal(hash(await fs.readFile(path.join(backup,'files',row.name))),row.sha256);
+    assert.match(log,/自动恢复尚未完成/);assert.match(log,/备份位置：/);const backups=(await fs.readdir(c.root)).filter(n=>n.startsWith('old app.rollback-'));assert.equal(backups.length,1);const backup=path.join(c.root,backups[0]);assert.ok(await exists(path.join(backup,'registration.xml')));for(const row of old.manifest.files)assert.equal(hash(await fs.readFile(path.join(backup,'files',row.name))),row.sha256);
     const after=await inspect(c);assert.deepEqual(after.links,before.links);assert.deepEqual(after.keys[0],before.keys[0]);
    }else{assert.deepEqual(await inspect(c),before);assert.equal((await fs.readdir(c.root)).some(n=>n.includes('.rollback-')),false);}
   }

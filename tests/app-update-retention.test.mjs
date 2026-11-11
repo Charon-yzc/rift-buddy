@@ -18,6 +18,38 @@ async function fixture(t){
  return {root,tempDir,storeFile,options,artifact,record};
 }
 
+test('opening the download directory preserves every downloaded package and user file',async t=>{
+ const f=await fixture(t),record=await f.record(),personal=path.join(f.tempDir,'player-note.txt');
+ await fs.writeFile(personal,'keep');await fs.writeFile(f.storeFile+'.partial.json','malformed checkpoint');
+ const before=await fs.readdir(f.tempDir),service=createAppUpdateService(f.options);
+ assert.equal(await service.downloadDirectory(),path.resolve(f.tempDir));
+ assert.deepEqual(await fs.readdir(f.tempDir),before);assert.equal(await fs.readFile(personal,'utf8'),'keep');
+ assert.equal((await fs.stat(record.file)).size,record.bytes);
+ assert.equal(await fs.readFile(f.storeFile+'.partial.json','utf8'),'malformed checkpoint');
+ const fresh=path.join(f.root,'new-update-cache');
+ assert.equal(await createAppUpdateService({...f.options,tempDir:fresh}).downloadDirectory(),fresh);
+ assert.ok((await fs.stat(fresh)).isDirectory());
+});
+
+test('opening the download directory refuses files and linked locations',async t=>{
+ const f=await fixture(t),outside=path.join(f.root,'outside'),linked=path.join(f.root,'linked'),file=path.join(f.root,'file');
+ await fs.mkdir(outside);await fs.writeFile(path.join(outside,'user.txt'),'keep');await fs.writeFile(file,'keep file');
+ await fs.symlink(outside,linked,process.platform==='win32'?'junction':'dir');
+ for(const tempDir of [file,linked])await assert.rejects(createAppUpdateService({...f.options,tempDir}).downloadDirectory(),/不是普通文件夹/);
+ assert.equal(await fs.readFile(path.join(outside,'user.txt'),'utf8'),'keep');assert.equal(await fs.readFile(file,'utf8'),'keep file');
+});
+
+test('the folder IPC ignores renderer paths and reports opening failures without changing updates',async()=>{
+ const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),opened=[];
+ let failure='',refuse=false;
+ vm.runInNewContext(source.slice(source.indexOf(" guard('app-update-open-folder'"),source.indexOf(" guard('app-update-check'")),{
+  guard:(name,fn)=>handlers.set(name,fn),updater:()=>({downloadDirectory:async()=>{if(refuse)throw Error('invalid folder');return 'trusted-update-folder';}}),shell:{openPath:async directory=>{opened.push(directory);return failure;}}
+ });
+ const open=handlers.get('app-update-open-folder');assert.equal(await open('untrusted-renderer-path'),true);assert.deepEqual(opened,['trusted-update-folder']);
+ failure='EACCES';await assert.rejects(open(),/无法打开更新文件夹：EACCES/);
+ refuse=true;await assert.rejects(open(),/invalid folder/);assert.equal(opened.length,2);
+});
+
 test('successful upgrade removes obsolete updater packages and keeps player files',async t=>{
  const f=await fixture(t),record=await f.record(),orphan=f.artifact();await fs.writeFile(orphan,'interrupted download');
  const personal=path.join(f.tempDir,'my-builds.json'),manual=path.join(f.tempDir,'RiftBuddy-1.0.0-Setup.exe');await fs.writeFile(personal,'player choices');await fs.writeFile(manual,'manual download');

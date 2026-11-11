@@ -20,6 +20,14 @@ test('interactive finish page offers launching the installed app',()=>{
  assert.match(script,/MUI_FINISHPAGE_RUN_TEXT "启动开黑搭子"/);
  assert.ok(script.indexOf('!define MUI_FINISHPAGE_RUN ')<script.indexOf('!insertmacro MUI_PAGE_FINISH'));
 });
+test('installer explains replacement scope and reports a missing failure reason without claiming recovery',()=>{
+ const script=installerScript(args);
+ assert.match(script,/MUI_WELCOMEPAGE_TEXT.*先备份旧程序.*收藏与配置保留/);
+ assert.match(script,/\$1 == ""/);assert.match(script,/安装程序未返回详细原因/);
+ assert.match(script,/MessageBox MB_OK\|MB_ICONSTOP "\$1"/);
+ assert.match(script,/-FailureFile "\$PLUGINSDIR\\failure\.txt"/);
+ assert.match(script,/FileReadUTF16LE \$2 \$3/);
+});
 test('installer removes only its enumerated payload while retaining unrelated files and personal preferences',()=>{
  const script=installerScript(args),uninstall=script.slice(script.indexOf('Section "Uninstall"'));
  assert.match(uninstall,/Delete "\$INSTDIR\\resources\\app\.asar"/);assert.match(uninstall,/RMDir "\$INSTDIR\\resources\\connection"/);

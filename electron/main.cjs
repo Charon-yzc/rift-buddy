@@ -701,7 +701,7 @@ async function boot(){
  guard('bootstrap',async({surface})=>{
   const paused=appUpdateStatus.phase==='idle'&&!appUpdateFlight?await updater().partial().catch(()=>null):null;
   if(paused&&appUpdateStatus.phase==='idle'&&!appUpdateFlight)appUpdateStatus={phase:'paused',release:paused.release,received:paused.received,total:paused.total,kind:paused.kind,via:paused.via};
-  return {data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),hexRound:hexRounds.snapshot(),surface,client:forRenderer(latestClient),championUsage:usageCollector.snapshot(),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable,appUpdate:appUpdateStatus};
+  return {data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),hexRound:hexRounds.snapshot(),surface,client:forRenderer(latestClient),championUsage:usageCollector.snapshot(),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable,appUpdate:appUpdateStatus,appUpdateDownloadDirectory:path.resolve(appUpdateBase.tempDir)};
  },true);
  guard('data-snapshot',()=>({data,revision:dataRevision}));
  const {windowInfo}=await import('../services/window-info.mjs');
@@ -1101,6 +1101,12 @@ async function boot(){
  });
  guard('check-data-feed',async()=>dataResult(await dataFeed.check({force:true})));
  guard('adopt-data-generation',async release=>{if(typeof release!=='string'||!/^[a-f0-9]{64}$/.test(release))throw Error('资料候选已变化，请重新检查');if(!await generation.activate({release,explicit:true}))throw Error('当前无法启用，请在大厅重新检查资料');return dataResult(generation.summary());});
+ guard('app-update-open-folder',async()=>{
+  const directory=await updater().downloadDirectory();
+  const error=await shell.openPath(directory);
+  if(error)throw Error('无法打开更新文件夹：'+error);
+  return true;
+ });
  guard('app-update-check',async(silent=false)=>{
   if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)return appUpdateStatus;
   const prev=appUpdateStatus;

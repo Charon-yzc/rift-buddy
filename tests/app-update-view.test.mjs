@@ -2,6 +2,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {appUpdatePanel} from '../src/app-update-view.mjs';
 const base={version:'0.44.0',preferences:{appUpdateCheck:true},update:{phase:'idle'}};
+test('download location remains visible and escaped before, during and after a transfer',()=>{
+ const directory='C:\\Users\\player & <name>\\Temp\\rift-buddy-update';
+ for(const phase of ['idle','downloading','paused','ready','installing','error']){
+  const html=appUpdatePanel({...base,downloadDirectory:directory,update:{phase,release:{version:'0.59.58'},record:{version:'0.59.58'}}});
+  assert.match(html,/下载位置/);assert.match(html,/data-action="app-update-open-folder"/);
+  assert.ok(html.includes('player &amp; &lt;name&gt;'));assert.ok(!html.includes('<name>'));
+ }
+ assert.doesNotMatch(appUpdatePanel(base),/app-update-open-folder/);
+});
+test('install and cleanup actions explain their scope before the user chooses',()=>{
+ const html=appUpdatePanel({...base,update:{phase:'ready',record:{version:'0.59.58',bytes:2048}}});
+ assert.match(html,/将 v0\.44\.0 更新为 v0\.59\.58/);
+ assert.match(html,/仅替换开黑搭子程序及自身快捷方式，保留收藏与配置/);
+ assert.match(html,/清理更新缓存/);assert.doesNotMatch(html,/>删除安装包</);
+ assert.match(html,/仅删除本软件已下载的更新包，保留已安装程序与配置/);
+ const failed=appUpdatePanel({...base,update:{phase:'ready',record:{version:'0.59.58'},error:'blocked'}});
+ assert.match(failed,/安装包已保留，可重试/);
+});
 test('download and paused states distinguish preserving progress from discarding it',()=>{
  const release={version:'0.57.3',tag:'v0.57.3'},transfer={release,kind:'incremental',received:524288,total:2097152};
  const downloading=appUpdatePanel({...base,update:{...transfer,phase:'downloading'}}),paused=appUpdatePanel({...base,update:{...transfer,phase:'paused'}});

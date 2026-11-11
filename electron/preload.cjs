@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  cancelAppUpdate:()=>ipcRenderer.invoke('app-update-cancel'),
  installAppUpdate:()=>ipcRenderer.invoke('app-update-install'),
  deleteAppUpdate:()=>ipcRenderer.invoke('app-update-delete'),
+ openAppUpdateFolder:()=>ipcRenderer.invoke('app-update-open-folder'),
  onAppUpdate:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('app-update-progress',listener);return()=>ipcRenderer.removeListener('app-update-progress',listener);},
  refreshRankings:source=>ipcRenderer.invoke('refresh-rankings',source),
  nationalReference:input=>ipcRenderer.invoke('national-reference',input),

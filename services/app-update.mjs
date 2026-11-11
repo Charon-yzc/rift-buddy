@@ -319,5 +319,11 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
    child.once('spawn',()=>{child.unref?.();resolve({launched:true,file:record.file});});
   });
  }
- return {check,download,pending,partial,cleanup,install,verify,sweep};
+ async function downloadDirectory(){
+  if(!await safeTempRoot())throw Error('更新缓存位置不是普通文件夹，无法打开');
+  await fs.mkdir(tempDir,{recursive:true});
+  if(!await safeTempRoot())throw Error('更新缓存位置已变化，请重试');
+  return path.resolve(tempDir);
+ }
+ return {check,download,pending,partial,cleanup,install,verify,sweep,downloadDirectory};
 }

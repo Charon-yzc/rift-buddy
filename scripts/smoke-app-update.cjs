@@ -1,13 +1,13 @@
 const {revealDraftAction}=require('./smoke-draft-ui.cjs');
-const {app}=require('electron');
+const {app,shell}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA);
 app.on('browser-window-created',(_e,w)=>windows.push(w));
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(check,label){for(let i=0;i<150;i++){const r=await check();if(r)return r;await delay(100);}throw Error(label);}
 const BIN=crypto.randomBytes(131072),BIN_SHA=crypto.createHash('sha256').update(BIN).digest('hex');
-// 注意：源码模式（RIFT_BUDDY_SOURCE=1 / pnpm start）下 app.getVersion() 返回的是
-// Electron 版本号（实测 44.5.1）而非应用版本；v99.0.0 高于两者，保证两种模式都确定性触发更新。
+// The harness uses the development Electron executable but loads the selected
+// source/package manifest's real app version, rather than Electron's version.
 const FEED_URL='https://github.com/Legender134/rift-buddy/releases.atom';
 const SETUP_URL='https://github.com/Legender134/rift-buddy/releases/download/v99.0.0/RiftBuddy-99.0.0-Setup.exe';
 const SUM_URL='https://github.com/Legender134/rift-buddy/releases/download/v99.0.0/SHA256SUMS-99.0.0.txt';
@@ -18,6 +18,8 @@ const SUM100_URL='https://github.com/Legender134/rift-buddy/releases/download/v1
 const MSETUP100_URL='https://mirror.smoke/https://github.com/Legender134/rift-buddy/releases/download/v100.0.0/RiftBuddy-100.0.0-Setup.exe';
 async function run(){
  app.setPath('userData',root);
+ const openedFolders=[];
+ shell.openPath=async directory=>{assert.equal(directory,path.join(root,'update-tmp'));openedFolders.push(directory);return '';};
  const https=require('node:https'),dns=require('node:dns/promises'),{EventEmitter}=require('node:events');
  const handoff=process.env.RIFT_BUDDY_SMOKE_UPDATE_HANDOFF==='1';let launches=0,quits=0;
  if(handoff){
@@ -56,6 +58,8 @@ async function run(){
  };
  const source=process.env.RIFT_BUDDY_SOURCE==='1';
  const release=source?null:JSON.parse(await fs.readFile(process.env.RIFT_BUDDY_SMOKE_RELEASE||'release/latest.json','utf8'));
+ const testedVersion=JSON.parse(await fs.readFile(source?'package.json':path.join(release.directory,'resources/app.asar/package.json'),'utf8')).version;
+ app.getVersion=()=>testedVersion;
  require(source?path.resolve('electron/main.cjs'):path.join(release.directory,'resources/app.asar/electron/main.cjs'));
  const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=code=>main.webContents.executeJavaScript(code,true).catch(error=>{throw Error('Renderer expression: '+code,{cause:error});});
  const reload=()=>new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.webContents.reload();});
@@ -63,6 +67,8 @@ async function run(){
  const click=async selector=>{selector=await revealDraftAction(js,selector);assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);await js(`document.querySelector(${JSON.stringify(selector)}).click()`);await delay(120);};
  const set=async(selector,value,event='input')=>js(`{const el=document.querySelector(${JSON.stringify(selector)});el.value=${JSON.stringify(value)};el.dispatchEvent(new Event(${JSON.stringify(event)},{bubbles:true}));}`);
  await click('[data-action=navigate][data-route=settings]');
+ assert.equal(await js('document.querySelector(".app-update-directory")?.textContent'),path.join(root,'update-tmp'));
+ await click('[data-action=app-update-open-folder]');assert.equal(openedFolders.length,1);
  await click('[data-action=app-update-check]');
  await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("未完成")'),'Offline failure not surfaced');
  mode='feed';
@@ -81,6 +87,7 @@ async function run(){
  await until(()=>js('!!document.querySelector("[data-app-update-phase=paused]")'),'Pause click lost');
  const paused=JSON.parse(await fs.readFile(path.join(root,'app-update.json.partial.json'),'utf8')),pausedBytes=(await fs.stat(paused.file)).size;
  assert.ok(pausedBytes>0&&pausedBytes<BIN.length);
+ await click('[data-action=app-update-open-folder]');assert.equal(openedFolders.length,2);assert.equal((await fs.stat(paused.file)).size,pausedBytes);
  await fs.writeFile(path.join(root,'controls-paused.png'),(await main.webContents.capturePage()).toPNG());
  await reload();await until(()=>js('!!document.querySelector("#solo-role")'),'Reload while paused failed');
  await click('[data-action=navigate][data-route=settings]');await until(()=>js('!!document.querySelector("[data-app-update-phase=paused]")'),'Bootstrap did not restore paused status');
@@ -95,6 +102,12 @@ async function run(){
  const record=JSON.parse(await fs.readFile(path.join(root,'app-update.json'),'utf8'));
  assert.equal(record.version,'99.0.0');
  assert.equal(crypto.createHash('sha256').update(await fs.readFile(record.file)).digest('hex'),BIN_SHA);
+ assert.match(await js('document.querySelector("[data-action=app-update-delete]").textContent'),/清理更新缓存/);
+ assert.match(await js('document.querySelector("[data-app-update-phase=ready]").textContent'),/仅替换开黑搭子程序及自身快捷方式，保留收藏与配置/);
+ assert.ok((await js('document.querySelector("[data-app-update-phase=ready]").textContent')).includes(`将 v${testedVersion} 更新为 v99.0.0`));
+ await click('[data-action=app-update-open-folder]');assert.equal(openedFolders.length,3);assert.ok(await fs.stat(record.file));
+ await js('document.querySelector("[data-app-update-phase]").scrollIntoView({block:"start"})');
+ await fs.writeFile(path.join(root,'update-ready.png'),(await main.webContents.capturePage()).toPNG());
  await click('[data-action=app-update-install]');
  if(handoff){
   await until(()=>js('document.querySelector("[data-action=app-update-install]")?.disabled'),'Install button did not enter busy state');

@@ -38,6 +38,7 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Rift Buddy contributors"
 !define MUI_ICON ${quote(icon)}
 !define MUI_UNICON ${quote(icon)}
 !define MUI_ABORTWARNING
+!define MUI_WELCOMEPAGE_TEXT "将安装开黑搭子 ${version}。$\\r$\\n$\\r$\\n升级会先备份旧程序，再替换程序文件和开黑搭子自身的快捷方式。$\\r$\\n收藏与配置保留。$\\r$\\n$\\r$\\n安装失败时会尝试恢复旧版，并显示恢复结果。"
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -85,13 +86,31 @@ ${stageFiles}
   File /oname=lifecycle.ps1 ${quote(lifecycle)}
 ${baseManifest?`  File /oname=base-install.json ${quote(baseManifest)}`:''}
 ${blockPatch?`  File /oname=block-patch.json ${quote(blockPatch)}`:''}
-  nsExec::ExecToStack /TIMEOUT=600000 '${ps} -RegistryId ${registryId} -ShortcutName "${shortcutName}" -InstallDir "$INSTDIR" -PreviousInstallDir "$PreviousInstallDir" -StagedDir "$PLUGINSDIR\\new"${baseManifest?' -BaseManifest "$PLUGINSDIR\\base-install.json"':''}${blockPatch?' -BlockPatch "$PLUGINSDIR\\block-patch.json"':''}'
+  nsExec::ExecToStack /TIMEOUT=600000 '${ps} -RegistryId ${registryId} -ShortcutName "${shortcutName}" -InstallDir "$INSTDIR" -PreviousInstallDir "$PreviousInstallDir" -StagedDir "$PLUGINSDIR\\new" -FailureFile "$PLUGINSDIR\\failure.txt"${baseManifest?' -BaseManifest "$PLUGINSDIR\\base-install.json"':''}${blockPatch?' -BlockPatch "$PLUGINSDIR\\block-patch.json"':''}'
   Pop $0
   Pop $1
-${diagnosticFile?`  FileOpen $2 ${quote(diagnosticFile)} w\n  FileWrite $2 "$0$\\r$\\n$1"\n  FileClose $2`:''}
+  ClearErrors
+  FileOpen $2 "$PLUGINSDIR\\failure.txt" r
+  \${IfNot} \${Errors}
+    # PowerShell writes UTF-16 with a BOM, independent of the console code page.
+    FileSeek $2 2 SET
+    StrCpy $1 ""
+    read_failure:
+      ClearErrors
+      FileReadUTF16LE $2 $3
+      IfErrors read_failure_done
+      StrCpy $1 "$1$3"
+      Goto read_failure
+    read_failure_done:
+    FileClose $2
+  \${EndIf}
+${diagnosticFile?`  FileOpen $2 ${quote(diagnosticFile)} w\n  FileWriteUTF16LE $2 "$0$\\r$\\n$1"\n  FileClose $2`:''}
   \${If} $0 != 0
+    \${If} $1 == ""
+      StrCpy $1 "安装未完成，安装程序未返回详细原因。请检查旧版是否仍能打开；无法打开时请保留安装目录，并使用完整安装包修复。"
+    \${EndIf}
     IfSilent +2
-    MessageBox MB_OK|MB_ICONSTOP "升级未完成。请查看以下原因；增量基线不匹配时可改用完整安装包。$\\r$\\n$1"
+    MessageBox MB_OK|MB_ICONSTOP "$1"
     SetErrorLevel 1
     Abort
   \${EndIf}
