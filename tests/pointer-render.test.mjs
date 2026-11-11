@@ -28,6 +28,27 @@ test('docked candidate portraits are protected; proposal buttons keep their ordi
  const proposal=fixture('propose-result');proposal.emit('pointerdown');assert.equal(proposal.gate.defer(),false);
 });
 
+function rangeFixture(rangeId='familiarity-mass'){
+ const listeners=new Map(),tasks=new Map();let id=0,painted=0;
+ const range={id:rangeId,tagName:'INPUT',type:'range',dataset:{},isConnected:true,disabled:false};
+ range.closest=selector=>selector.split(',').some(part=>part.trim()==='#'+range.id)?range:null;
+ const document={addEventListener:(name,fn)=>listeners.set(name,fn),defaultView:{addEventListener:(name,fn)=>listeners.set(name,fn)}};
+ const gate=holdRenderDuringPointer({document,root:{contains:value=>value===range},render:()=>painted++,setTimer:fn=>{tasks.set(++id,fn);return id;},clearTimer:key=>tasks.delete(key)});
+ return {gate,range,emit:(name,extra={})=>listeners.get(name)?.({target:range,button:0,...extra}),flush(){const due=[...tasks.values()];tasks.clear();due.forEach(fn=>fn());},get painted(){return painted;}};
+}
+for(const release of ['pointerup','pointercancel','blur'])test(`the ID-only familiarity range holds a background paint and releases after ${release}`,()=>{
+ const f=rangeFixture();assert.deepEqual(f.range.dataset,{});f.emit('pointerdown');assert.equal(f.gate.defer(),true);assert.equal(f.painted,0);
+ f.emit(release);assert.equal(f.painted,0);f.flush();assert.equal(f.painted,1);assert.equal(f.gate.defer(),false);
+});
+test('a familiarity range click coalesces queued paints after its handlers have run',()=>{
+ const f=rangeFixture();f.emit('pointerdown');assert.equal(f.gate.defer(),true);assert.equal(f.gate.defer(),true);f.emit('pointerup');
+ assert.equal(f.painted,0);f.emit('click');assert.equal(f.painted,0);f.flush();assert.equal(f.painted,1);assert.equal(f.gate.defer(),false);
+});
+test('unrelated ranges, secondary pointers and disabled familiarity controls do not hold painting',()=>{
+ const unrelated=rangeFixture('another-range');unrelated.emit('pointerdown');assert.equal(unrelated.gate.defer(),false);
+ const f=rangeFixture();f.emit('pointerdown',{isPrimary:false});assert.equal(f.gate.defer(),false);f.range.disabled=true;f.emit('pointerdown');assert.equal(f.gate.defer(),false);
+});
+
 const appSource=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const dragStart=appSource.indexOf('function finishDrag(){'),dragEnd=appSource.indexOf('function configurationEventSelection(',dragStart);
 assert(dragStart>=0&&dragEnd>dragStart);

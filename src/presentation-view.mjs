@@ -15,9 +15,12 @@ export function themeDialog(value){
  return `<div class="modal-backdrop" data-backdrop="true"><section class="modal drawer theme-drawer recommendation-ui" role="dialog" aria-modal="true" aria-label="配色"><header class="modal-header"><h3>配色</h3><button class="btn quiet small" data-action="close">关闭</button></header><div class="drawer-content theme-settings"><h4>客户端灵感</h4>${choices('client')}<details class="theme-other" ${getTheme(selected).group==='other'?'open':''}><summary>其他配色</summary>${choices('other')}</details></div></section></div>`;
 }
 export function updateThemeDialog(root,value){
- const selected=root.querySelector(':focus')?.dataset.value,scroll=root.querySelector('.drawer-content')?.scrollTop||0;
- root.innerHTML=themeDialog(value);root.querySelector('.drawer-content').scrollTop=scroll;
- if(selected)[...root.querySelectorAll('[data-value]')].find(el=>el.dataset.value===selected)?.focus({preventScroll:true});
+ const active=document.activeElement,focused=root.contains(active)?{tag:active.tagName,data:{...active.dataset}}:null;
+ const expanded=root.querySelector('.theme-other')?.open,scroll=root.querySelector('.drawer-content')?.scrollTop||0;
+ root.innerHTML=themeDialog(value);
+ if(expanded!==undefined)root.querySelector('.theme-other').open=expanded;
+ root.querySelector('.drawer-content').scrollTop=scroll;
+ if(focused){const target=focused.tag==='SUMMARY'?root.querySelector('.theme-other > summary'):[...root.querySelectorAll('button')].find(el=>Object.keys(focused.data).length&&Object.entries(focused.data).every(([key,v])=>el.dataset[key]===v));target?.focus({preventScroll:true});}
 }
 export function presentationSettings(value,{guide=false,opacity=1}={}){
  const p=normalizePresentation(value);
