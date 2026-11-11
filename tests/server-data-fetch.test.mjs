@@ -50,3 +50,8 @@ test('hero observation collection allows only the homepage and bounded champion 
  for(const url of ['https://mayhemmeta.com/api/players','https://mayhemmeta.com/?token=secret','https://mayhemmeta.com/champions/yasuo?patch=16.20&player=x','https://mayhemmeta.com/champions/yasuo'])await assert.rejects(network.fetcher(url),{code:'SOURCE_NOT_ALLOWED'});
  assert.equal(calls,0);await network.fetcher('https://mayhemmeta.com/');await network.fetcher('https://mayhemmeta.com/champions/yasuo?patch=16.20');assert.equal(calls,2);
 });
+test('official patch collection permits only credential-free canonical note paths',async()=>{
+ let calls=0;const network=createServerDataFetch({intervalMs:0,transport:async(url,options)=>{calls++;assert.equal(options.redirect,'error');return new Response('ok');}});
+ for(const url of ['https://www.leagueoflegends.com/','https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/?player=x','https://www.leagueoflegends.com/en-us/api/players','https://user:pass@www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/'])await assert.rejects(network.fetcher(url),{code:'SOURCE_NOT_ALLOWED'});
+ assert.equal(calls,0);await network.fetcher('https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/');assert.equal(calls,1);
+});

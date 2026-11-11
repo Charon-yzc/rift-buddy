@@ -2,9 +2,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
 import { collectSnapshot, atomicJSON, DD } from '../services/data.mjs';
+import {fetchPatchNotes,loadPatchNotes} from '../services/patch-notes.mjs';
 const root = path.resolve('data');
 const d = await collectSnapshot(console.log);
 await atomicJSON(path.join(root,'game.json'),d);
+// A failed source check never relabels old notes as the new patch.
+try{const notes=await fetchPatchNotes(d,{previous:await loadPatchNotes(root,d)});await atomicJSON(path.join(root,'patch-notes.json'),notes);console.log(`官方版本改动已核对至 ${notes.patches[0].officialPatch}`);}
+catch(error){console.error(`官方版本改动刷新未完成，保留旧记录：${error.message}`);}
 // The spell book is versioned separately from game.json: refresh it right
 // here so a new game version can never silently pair with stale formulas.
 // A failed enrichment keeps the previous book and is reported loudly;

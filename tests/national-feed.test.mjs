@@ -77,8 +77,9 @@ test('accepted sequence rejects replay and equivocation after restart without re
  feed=signed(101);assert.equal((await createNationalReferenceCache(options)({...input,force:true})).refreshError,null);
 });
 
-test('unavailable project feed uses only the fixed public endpoint and permits direct fallback',async()=>{
- let calls=0;assert.equal(await fetchNationalFeed(data,{clock,fetcher:async(url,options)=>{calls++;assert.match(url,/^https:\/\/data\.riftbuddy\.dpdns\.org\/national\/v1\/latest\.json$/);assert.equal(options.redirect,'error');return new Response('',{status:404});}}),null);assert.equal(calls,1);
+test('unavailable project feed checks only the two fixed public endpoints and permits direct fallback',async()=>{
+ const calls=[];assert.equal(await fetchNationalFeed(data,{clock,fetcher:async(url,options)=>{calls.push(url);assert.equal(options.redirect,'error');return new Response('',{status:404});}}),null);
+ assert.deepEqual(calls,['https://data.riftbuddy.dpdns.org/national/v1/latest.json','https://rift-buddy-data.3-27-57-181.sslip.io/national/v1/latest.json']);
 });
 
 test('a damaged disk signature does not permanently block a newly verified server batch',async t=>{
@@ -146,9 +147,9 @@ test('an older authentic bundle renders immediately while a normal guarded refre
 
 test('the actual bundled national snapshot verifies with the production pin and renders its offline origin',async()=>{
  const current=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),envelope=JSON.parse(await fs.readFile(new URL('../data/national-feed.json',import.meta.url))),historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
- assert.throws(()=>verifyNationalEnvelope(envelope,current),/版本或格式不匹配/);const payload=verifyNationalEnvelope(envelope,historical);
- assert.equal(Object.keys(payload.entries).length,3);assert.equal(payload.patch,historical.patch);
- const {nationalRankingsView}=await import('../src/national-reference-view.mjs');assert.match(nationalRankingsView(historical,{state:{reference:Object.values(payload.entries)[0],bundled:true}}),/内置参考/);
+ assert.throws(()=>verifyNationalEnvelope(envelope,historical),/版本或格式不匹配/);const payload=verifyNationalEnvelope(envelope,current);
+ assert.equal(Object.keys(payload.entries).length,3);assert.equal(payload.patch,current.patch);
+ const {nationalRankingsView}=await import('../src/national-reference-view.mjs');assert.match(nationalRankingsView(current,{state:{reference:Object.values(payload.entries)[0],bundled:true}}),/内置参考/);
 });
 
 test('actual app base acceptance invalidates both completed and in-flight national overlays',async()=>{

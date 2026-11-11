@@ -33,8 +33,9 @@ test('newer installer data wins over a valid old local cache without changing sa
  await fs.writeFile(path.join(root,'game.json'),old);await fs.writeFile(path.join(root,'personal.json'),personal);const restored=await loadSnapshot(root,path.resolve('data'));assert.equal(restored.patch,game.patch);assert.equal(restored.version,game.version);assert.equal(restored.champions.length,173);assert((await fs.readFile(path.join(root,'personal.json'))).equals(personal));assert((await fs.readFile(path.join(root,'game.json'))).equals(old),'Read-only startup selection does not erase the old file or player state');
 });
 
-test('the archived signed national feed retains its genuine patch and cannot become current by relabelling',async()=>{
- const historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),envelope=await read('national-feed');assert.equal(verifyNationalEnvelope(envelope,historical).patch,historical.patch);assert.throws(()=>verifyNationalEnvelope(envelope,game),/版本或格式/);
+test('the bundled signed national feed matches current data and cannot be relabelled for another patch',async()=>{
+ const historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url))),envelope=await read('national-feed');assert.equal(verifyNationalEnvelope(envelope,game).patch,game.patch);assert.throws(()=>verifyNationalEnvelope(envelope,historical),/版本或格式/);
+ const tampered={...envelope,payload:Buffer.from(Buffer.from(envelope.payload,'base64').toString().replaceAll(game.patch,historical.patch)).toString('base64')};assert.throws(()=>verifyNationalEnvelope(tampered,historical),/签名/);
 });
 
 test('current or mixed raw data cannot generate creative skill jobs from an unreviewed previous-patch kit',async()=>{

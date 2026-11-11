@@ -20,11 +20,13 @@ const pinHash=pin=>createHash('sha256').update(pin).digest('hex');
 const tick=(ms=5)=>new Promise(resolve=>setTimeout(resolve,ms));
 
 test('the suggested relay is a valid opt-in input and saved custom addresses retain precedence',()=>{
- assert.equal(DEFAULT_RELAY_URL,'wss://room.riftbuddy.dpdns.org');assert.equal(normalizeRelayUrl(DEFAULT_RELAY_URL),DEFAULT_RELAY_URL);
+ assert.equal(DEFAULT_RELAY_URL,'wss://rift-buddy-room.3-27-9-233.sslip.io');assert.equal(normalizeRelayUrl(DEFAULT_RELAY_URL),DEFAULT_RELAY_URL);
  for(const saved of [undefined,null,'','  '])assert.equal(initialRelayUrl(saved),DEFAULT_RELAY_URL);
  assert.equal(initialRelayUrl('wss://other.example.com/'),'wss://other.example.com');
  assert.equal(initialRelayUrl('ws://localhost:8787'),'ws://localhost:8787');
- assert.equal(relayEndpoint(DEFAULT_RELAY_URL,'482913'),'wss://room.riftbuddy.dpdns.org/room/482913');
+ assert.equal(initialRelayUrl('wss://room.riftbuddy.dpdns.org/'),DEFAULT_RELAY_URL,'Migrate only the project-owned previous default');
+ assert.equal(initialRelayUrl('wss://room.riftbuddy.dpdns.org:8443'),'wss://room.riftbuddy.dpdns.org:8443','An explicitly different port stays custom');
+ assert.equal(relayEndpoint(DEFAULT_RELAY_URL,'482913'),'wss://rift-buddy-room.3-27-9-233.sslip.io/room/482913');
  assert.equal(relayEndpoint('', '482913'),null,'cleared input must still fail explicit join validation');
 });
 

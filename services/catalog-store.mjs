@@ -3,7 +3,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import https from 'node:https';
 import dns from 'node:dns/promises';
-import net from 'node:net';
+import {createPublicResolver,resolvePublicHost} from './public-host.mjs';
+export {publicAddress} from './public-host.mjs';
 import {atomicJSON} from './data.mjs';
 import {comboMembers} from '../src/core/combo-members.mjs';
 import {publicLinkOrigins,linkReviewStatuses} from '../src/core/catalog-link-review.mjs';
@@ -65,17 +66,13 @@ function freezePersonalEntry(catalog,personal,entryId){
  return next;
 }
 
-export function publicAddress(address){
- if(net.isIP(address)===4){const [a,b]=address.split('.').map(Number);return !(a===0||a===10||a===127||a>=224||a===169&&b===254||a===172&&b>=16&&b<=31||a===192&&(b===168||b===0||b===2)||a===100&&b>=64&&b<=127||a===198&&(b===18||b===19||b===51)||a===203&&b===0);}
- if(net.isIP(address)===6){const a=address.toLowerCase();return /^[23][0-9a-f]{3}:/.test(a)&&!a.startsWith('2001:db8:')&&!a.startsWith('2002:')&&!a.startsWith('2001:0:');}return false;
-}
-export async function downloadCatalog(url,{lookup=dns.lookup,request=https.request,timeout=15000}={}){
+export async function downloadCatalog(url,{lookup=dns.lookup,request=https.request,timeout=15000,signal,dohRequest}={}){
  if(!safeSourceURL(url))throw Error('组合库地址必须是无账号信息的 HTTPS 链接');
  const u=new URL(url);if(u.hostname==='localhost'||u.hostname.endsWith('.localhost')||u.hostname.endsWith('.local')||u.hash)throw Error('不支持本机或内网组合库地址');
- const records=await Promise.race([lookup(u.hostname,{all:true,verbatim:true}),new Promise((_,reject)=>{const timer=setTimeout(()=>reject(Error('解析组合库地址超时')),timeout);timer.unref();})]);
- if(!records.length||records.some(r=>!publicAddress(r.address)))throw Error('组合库地址不能指向本机、内网或保留地址');
+ const resolve=lookup===dns.lookup&&dohRequest===undefined?resolvePublicHost:createPublicResolver({lookup,dohRequest});
+ const records=await resolve(u.hostname,{timeout,signal,deniedMessage:'组合库地址不能指向本机、内网或保留地址',timeoutMessage:'解析组合库地址超时'});
  return new Promise((resolve,reject)=>{let bytes=0,parts=[];
-  const req=request(u,{method:'GET',headers:{Accept:'application/json'},lookup:(_host,options,cb)=>options?.all?cb(null,records):cb(null,records[0].address,records[0].family)},res=>{
+  const req=request(u,{method:'GET',headers:{Accept:'application/json'},signal,lookup:(_host,options,cb)=>options?.all?cb(null,records):cb(null,records[0].address,records[0].family)},res=>{
    if(res.statusCode!==200){res.resume();reject(Error('组合库服务未返回 JSON 数据（HTTP '+res.statusCode+'）；不跟随跳转'));return;}
    res.on('data',chunk=>{bytes+=chunk.length;if(bytes>CATALOG_LIMIT){req.destroy(Error('组合库数据超过 '+CATALOG_LIMIT/1_000_000+' MB'));return;}parts.push(chunk);});
    res.on('error',reject);res.on('end',()=>{try{resolve(JSON.parse(Buffer.concat(parts).toString('utf8')));}catch{reject(Error('组合库下载内容不是有效 JSON'));}});

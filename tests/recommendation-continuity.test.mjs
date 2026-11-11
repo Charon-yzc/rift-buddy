@@ -1,4 +1,6 @@
 import {createClientSync} from '../src/core/async-tasks.mjs';
+import {button,icon,escape as e} from '../src/ui.mjs';
+import {clientConnectionNotice} from '../src/client-connection-view.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import {canonicalJSON} from '../src/core/content-fingerprint.mjs';
 import {catalogContextRevision} from '../src/core/catalog-choice.mjs';
@@ -109,7 +111,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   Date:ClockDate,data,slots,client:current,championUsage:null,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
   route:'draft',scope:'party',soloRole:'bottom',style:'wild',offset:0,activeCreativePlan:null,unassigned:[],enemy:[],clientBans:[],
   roomShareRoom:'123456',roomShareSig:'',roomShareWarned:false,roomQuietTimer:null,roomAutoQuiet:false,roomScanResults:[],roomError:'',AUTO_QUIET_MS:60000,
-  generating:false,syncing:false,windowLayout:{docked:false},autoRecommendTimer:null,autoRecommendationKey:'',results,resultsSignature:'',
+  generating:false,syncing:false,manualSyncing:false,windowLayout:{docked:false},autoRecommendTimer:null,autoRecommendationKey:'',results,resultsSignature:'',
   recommendationRun:0,activeRecommendation:null,cancelRecommendationReveal:noop,recommendationRunner:null,recommendationSearchActive:false,communityAfter:'',recommendationFactoryGeneration:0,buildSourceEpoch:0,pendingBuildSourceEpoch:null,buildSourceLocked:false,lockedBuildSource:null,buildSourceDraft:null,externalState:null,stateRevision:0,
   lastRenderedClient:'',lastMatchupSession:'',lastMatchupSync:'',lastMatchupGame:'123',matchupTargets:new Map(),lastClientRead:'',
   lastAutoPartyContext:'',pendingIntentPreparation:null,pendingIntentPlanId:'',lastMatchupOwn:'',saveChain:Promise.resolve(),sharedClient:null,
@@ -161,6 +163,44 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
  const runTimer=()=>{assert.equal(timers.size,1);const callback=timers.values().next().value;timers.clear();callback();};
  return {context,calls,timers,worker,startCalculation,runTimer,clock};
 }
+
+test('explicit sync restores its button with a focused input or select while background sync preserves editing',async()=>{
+ for(const manual of [false,true])for(const focused of ['input','select']){
+  const incoming=client(),{context:c}=setup({incoming,results:[]});await c.performSync(false,true);
+  incoming.receivedAt='2026-11-11T12:00:00.000Z';c.clientRenderIdentity=value=>value.receivedAt||'';
+  c.document.activeElement={tagName:focused.toUpperCase(),matches:selector=>selector.split(',').includes(focused)};
+  const readStarted=Promise.withResolvers(),finishRead=Promise.withResolvers(),renders=[];let buttonDisabled=false;
+  c.render=()=>{buttonDisabled=c.manualSyncing;renders.push(c.manualSyncing);};
+  c.api.client=async()=>{readStarted.resolve();await finishRead.promise;return structuredClone(incoming);};
+  const operation=c.performSync(manual,true);await readStarted.promise;
+  assert.equal(c.syncing,true);assert.equal(buttonDisabled,manual);assert.deepEqual(renders,manual?[true]:[]);
+  finishRead.resolve();await operation;
+  assert.equal(c.syncing,false);assert.equal(buttonDisabled,false);assert.deepEqual(renders,manual?[true,false]:[]);
+  assert.equal(c.client.receivedAt,incoming.receivedAt);
+ }
+});
+
+test('external paints during background reads leave sync clickable and a queued manual read restores its button',async()=>{
+ const {context:c}=setup({results:[]});await c.performSync(false,true);c.sync=createClientSync(c.performSync);
+ Object.assign(c,{button,icon,e,boot:{version:'test'},pinned:false});
+ vm.runInContext(source.split('\n').find(line=>line.startsWith('function mainWindowActions(){')),c);
+ const snapshot=structuredClone(c.client),gates=Array.from({length:3},()=>({started:Promise.withResolvers(),finish:Promise.withResolvers()})),renders=[];let reads=0,buttonDisabled=false;
+ c.clientRenderIdentity=()=>'';c.document.activeElement.matches=()=>true;
+ c.render=()=>{const control=c.mainWindowActions().match(/<button[^>]*data-action="sync"[^>]*>/)?.[0];assert.ok(control);buttonDisabled=/\bdisabled\b/.test(control);renders.push(buttonDisabled);};
+ c.api.client=async()=>{const gate=gates[reads++];gate.started.resolve();await gate.finish.promise;return structuredClone(snapshot);};
+ const background=c.sync(false,{fresh:true});await gates[0].started.promise;
+ assert.equal(c.syncing,true);assert.equal(c.manualSyncing,false);assert.deepEqual(renders,[]);
+ c.render();assert.equal(buttonDisabled,false);
+ gates[0].finish.resolve();await background;
+ assert.equal(c.syncing,false);assert.equal(c.manualSyncing,false);assert.equal(buttonDisabled,false);assert.deepEqual(renders,[false]);
+ const nextBackground=c.sync(false,{fresh:true});await gates[1].started.promise;c.render();
+ const manual=c.sync(true);await Promise.resolve();assert.equal(reads,2);assert.equal(buttonDisabled,false);
+ gates[1].finish.resolve();await gates[2].started.promise;
+ assert.equal(c.syncing,true);assert.equal(c.manualSyncing,true);assert.equal(buttonDisabled,true);
+ gates[2].finish.resolve();await Promise.all([nextBackground,manual]);
+ assert.equal(c.syncing,false);assert.equal(c.manualSyncing,false);assert.equal(buttonDisabled,false);assert.equal(reads,3);
+ for(const compact of [false,true])assert.match(clientConnectionNotice({connected:false,connecting:true},{autoSync:true},c.manualSyncing,{compact}),/data-action="sync"[^>]*disabled/);
+});
 
 test('client identity bindings preserve candidates and an in-flight recommendation when its input is unchanged',async()=>{
  const incoming=client();incoming.session.myTeam[0].championId=hero('Ashe').key;

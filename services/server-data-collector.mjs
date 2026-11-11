@@ -14,6 +14,8 @@ import {defaultBuildJobs} from '../src/core/default-build-jobs.mjs';
 import {createGenerationRecipe} from './data-generation.mjs';
 import {fetchHexPoolIndex,fetchHexPoolEvidence} from './hex-pool-sources.mjs';
 import {validHexPoolRecord,mergeHexPoolEvidence} from '../src/core/hex-pool-evidence.mjs';
+import {fetchPatchNotes,loadPatchNotes} from './patch-notes.mjs';
+import {preferredPatchNotes,validPatchNotes} from '../src/core/patch-notes.mjs';
 
 const scopes=BUILD_REGIONS.flatMap(region=>BUILD_TIERS.map(tier=>({region:region.id,tier:tier.id})));
 const counts=bundle=>Object.fromEntries(['rankings','builds','hex-builds'].map(name=>[name,Object.keys(bundle[name].entries).length]));
@@ -21,6 +23,7 @@ const errorText=error=>String(error?.message||error).replace(/[\r\n]/g,' ').slic
 
 export async function loadServerSeed(root){
  const game=await loadSnapshot(root);
+ const notes=await loadPatchNotes(root,game);if(notes.patches.length)game.patchNotes=preferredPatchNotes(game,game.patchNotes,notes);
  const [rankings,builds,hex]=await Promise.all([loadRankings([root],game),loadBuildSources([root],game),loadHexBuilds([root],game)]);
  const bundle={game,rankings:{schema:1,entries:rankings},builds:{schema:2,entries:builds},'hex-builds':{schema:1,entries:hex}};
  validateServerData(bundle);return bundle;
@@ -61,9 +64,23 @@ export async function collectServerData({root,seedRoot,clock=()=>new Date().toIS
   const next=candidate.version.split('.').map(Number),old=game.version.split('.').map(Number);
   // Content revisions include patch-specific formulas and are comparable only within a patch.
   if((next[0]-old[0]||next[1]-old[1]||next[2]-old[2])<0||(candidate.patch===game.patch&&candidate.contentRevision<game.contentRevision))throw Error('拒绝基础资料版本回退');
+  // Patch notes are independently rechecked below; a base fetch must not drop
+  // previously verified official records on a same-patch refresh.
+  if(game.patchNotes)candidate.patchNotes=preferredPatchNotes(candidate,candidate.patchNotes,game.patchNotes);
   if(!contentEqual(game,candidate)){game=candidate;base.changed++;}
  }catch(error){fail(base,'game',error);}
  finish(base);
+ const notes=begin('patch-notes',1);notes.optional=true;await checkpoint();
+ let previousNotes=game.patchNotes;
+ try{
+  // Existing server candidates predate this field. Carry the reviewed bundled
+  // history/region annotations into their first real official-page refresh.
+  previousNotes=preferredPatchNotes(game,game.patchNotes,await loadPatchNotes(seedRoot,game));
+  notes.checked++;const incoming=await (providers.patchNotes||fetchPatchNotes)(game,{fetcher:network.fetcher,previous:previousNotes});
+  if(!validPatchNotes(incoming,game)||incoming.patches[0]?.patch!==game.patch)throw Error('官方版本改动未覆盖当前补丁');
+  if(!contentEqual(game.patchNotes,incoming)){game={...game,patchNotes:incoming};notes.changed++;}
+ }catch(error){fail(notes,'patch-notes',error);if(previousNotes)game={...game,patchNotes:{...previousNotes,unavailable:true}};}
+ finish(notes);
  const bundle=compatibleBundle(previous,game);await checkpoint();
  const rankings=begin('rankings',scopes.length);await checkpoint();
  for(const source of scopes){

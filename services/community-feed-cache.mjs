@@ -3,7 +3,8 @@ import {renameSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import path from 'node:path';
 import {atomicJSON} from './data.mjs';
-import {DATA_FEED_ORIGIN,DATA_FEED_KEYS} from './data-feed.mjs';
+import {DATA_FEED_KEYS} from './data-feed.mjs';
+import {downloadSignedFeed} from './signed-feed-download.mjs';
 import {COMMUNITY_MAX_PACKED,verifyCommunityEnvelope,decodeCommunitySnapshot,validateCommunityData} from './community-data.mjs';
 import {BUNDLED_CATALOG} from '../src/core/catalog.mjs';
 import {compareVersions} from '../src/core/app-update.mjs';
@@ -16,15 +17,9 @@ const MAX_CACHE=Math.ceil(COMMUNITY_MAX_PACKED/3)*4+MAX_MANIFEST+4096;
 const compare=(a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<4;i++)if(x[i]!==y[i])return Math.sign(x[i]-y[i]);return 0;};
 const follows=(next,prior)=>!prior||next.sequence>=prior.sequence&&compare(next.version,prior.version)>=0&&Date.parse(next.publishedAt)>=Date.parse(prior.publishedAt)&&(next.sequence!==prior.sequence||JSON.stringify(next)===JSON.stringify(prior));
 
-export async function downloadCommunityFeed(relative,{limit,fetcher=fetch}={}){
+export async function downloadCommunityFeed(relative,{limit,fetcher=fetch,signal}={}){
  if(!/^\/community\/v1\/(?:latest\.json|assets\/[a-f0-9]{64}\.json\.gz)$/.test(relative)||!Number.isSafeInteger(limit)||limit<1||limit>COMMUNITY_MAX_PACKED)throw Error('社区资料下载地址或限制无效');
- const response=await fetcher(DATA_FEED_ORIGIN+relative,{redirect:'error',credentials:'omit',signal:AbortSignal.timeout(20000),headers:{Accept:'application/json, application/octet-stream'}});
- if(!response.ok){await response.body?.cancel();const error=Error('社区资料服务暂不可用');if(relative.includes('/assets/')&&[404,410].includes(response.status))error.code='COMMUNITY_REPLACED';throw error;}
- if(Number(response.headers.get('content-length'))>limit){await response.body?.cancel();throw Error('社区资料响应过大');}
- const reader=response.body?.getReader(),parts=[];let bytes=0;if(!reader)throw Error('社区资料响应为空');
- try{while(true){const part=await reader.read();if(part.done)break;bytes+=part.value.byteLength;if(bytes>limit)throw Error('社区资料响应过大');parts.push(part.value);}}
- finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
- return Buffer.concat(parts);
+ return downloadSignedFeed(relative,{limit,fetcher,signal,label:'社区资料',replacedCode:'COMMUNITY_REPLACED'});
 }
 
 // prepare returns a synchronous, non-throwing commit after validating and

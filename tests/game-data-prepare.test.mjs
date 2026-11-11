@@ -20,6 +20,11 @@ async function fixture(t){
 test('unchanged bundled base retains exact ability/spell sources and source-aware image reuse',async t=>{
  const f=await fixture(t),{data}=await f.prepare(game);assert.ok(data.abilityReference?.champions.length);assert.ok(Object.keys(data.spellbook).length);assert.deepEqual(data.catalog,BUNDLED_CATALOG);assert.ok(f.calls[0].bundledKeys.has('champion/Ahri'));
 });
+test('prepared signed notes override the same bundled patch and retain offline history without invalidating abilities',async t=>{
+ const f=await fixture(t),notes=JSON.parse(await fs.readFile('data/patch-notes.json')),incoming=structuredClone(game);
+ incoming.patchNotes={...notes,patches:[structuredClone(notes.patches[0])]};incoming.patchNotes.patches[0].champions[0].changes[0].text+=' (synthetic corrected official source for transport test)';
+ const {data}=await f.prepare(incoming);assert.deepEqual(data.patchNotes.patches[0],incoming.patchNotes.patches[0]);assert.ok(data.patchNotes.patches.some(row=>row.patch==='16.20'));assert.ok(data.abilityReference?.champions.length);assert.equal(generationBaseIdentity(data),generationBaseIdentity(game));
+});
 test('same-version mechanism change clears stale exact values without renewing personal source anchors',async t=>{
  const f=await fixture(t),personal=structuredClone(BUNDLED_CATALOG.duos[0]);personal.id='local-source-preserved';await f.store.savePersonal(personal);const bytes=await fs.readFile(path.join(f.root,'combinations.json'));
  const changed=structuredClone(game);for(const hero of changed.champions)hero.mechanicSource.character.sha256='a'.repeat(64);

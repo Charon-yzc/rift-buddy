@@ -17,6 +17,7 @@ function sources(){return {
  game:async()=>structuredClone(seed.game),rankings:async(data,source)=>structuredClone(seed.rankings.entries[rankingKey(seed.game.patch,source)]),
  builds:async(hero,role)=>structuredClone(seed.builds.entries[buildSourceKey(hero.id,role,DEFAULT_BUILD_SOURCE,seed.game.patch)]),
  hex:async hero=>structuredClone(seed['hex-builds'].entries[hero.id]),
+ patchNotes:async()=>structuredClone(seed.game.patchNotes),
 };}
 async function temporary(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-collector-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;}
 
@@ -53,16 +54,21 @@ test('new patch without matching complete statistics cannot replace a working ca
 test('offline round retains timestamps and never reports a fresh successful update',async t=>{
  const root=await temporary(t);const first=await stageServerData(root,seed);
  const offline=async()=>{throw Object.assign(Error('paused'),{code:'SOURCE_PAUSED'});};
- const result=await collectServerData({root,seedRoot,network,providers:{game:offline,rankings:offline,builds:offline,hex:offline}});
- assert.equal(result.state,'partial');assert.equal(result.changed,false);assert.equal(result.release,first.pointer.release);
+ const result=await collectServerData({root,seedRoot,network,providers:{game:offline,rankings:offline,builds:offline,hex:offline,patchNotes:offline}});
+ assert.equal(result.state,'partial');assert.equal(result.changed,true);assert.notEqual(result.release,first.pointer.release);
  for(const state of Object.values(result.datasets)){assert.equal(state.failed,1);assert.equal(state.lastCompleteAt,null);}
- assert.deepEqual((await loadServerData(root)).bundle,seed);
+ assert.deepEqual((await loadServerData(root)).bundle,{...seed,game:{...seed.game,patchNotes:{...seed.game.patchNotes,unavailable:true}}});
 });
 test('older analysis is rejected even when fetched today; bad data never changes the pointer',async t=>{
  const root=await temporary(t);const first=await stageServerData(root,seed),providers=sources();
  providers.rankings=async(data,source)=>{const ref=structuredClone(seed.rankings.entries[rankingKey(data.patch,source)]);ref.analyzedAt='2020-01-01T00:00:00Z';ref.fetchedAt=new Date().toISOString();return ref;};
  const result=await collectServerData({root,seedRoot,network,providers,maxChampions:1});
  assert.equal(result.datasets.rankings.failed,6);assert.equal(result.changed,false);assert.equal(result.release,first.pointer.release);
+});
+test('official-note outage keeps real prior records while a complete primary round remains publishable',async t=>{
+ const root=await temporary(t);await stageServerData(root,seed);const providers=sources();providers.patchNotes=async()=>{throw Error('official page structure changed');};
+ const result=await collectServerData({root,seedRoot,network,providers});assert.equal(result.state,'ok');assert.equal(result.datasets['patch-notes'].failed,1);assert.equal(result.datasets['patch-notes'].optional,true);assert.equal(result.datasets['patch-notes'].lastCompleteAt,null);
+ assert.deepEqual((await loadServerData(root)).bundle.game.patchNotes,{...seed.game.patchNotes,unavailable:true});
 });
 
 test('optional hero pools follow signed Hex data without overwriting a newer local build or admitting player records',async t=>{

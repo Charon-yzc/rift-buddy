@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {BUILD_REGIONS,BUILD_TIERS,DEFAULT_BUILD_SOURCE,buildSourceKey,buildSourcePendingKey,buildSourceLabel,collectBuildSources,selectBuildSource,projectBuildSources} from '../src/core/build-source.mjs';
 import {getBuild,validReference,previousPatch} from '../src/core/builds.mjs';
+import {LOADOUTS} from '../src/core/loadouts.mjs';
 import {fetchChampionBuild,parseBuildJSON,parseBuildPage} from '../services/build-sources.mjs';
 import {createBuildCache,loadBuildSources,loadBuilds} from '../services/build-cache.mjs';
 import {defaultState,validateState,saveState,readState,mergeState} from '../services/storage.mjs';
@@ -13,6 +14,18 @@ const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.
 const bundledSources=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
 const base=projectBuildSources(bundledSources,DEFAULT_BUILD_SOURCE,data.patch)['Ashe:bottom'];
 const champion=data.champions.find(c=>c.id==='Ashe'),kr={region:'kr',tier:'diamond_plus'};
+test('uncached tank jungle fallback respects role and retains explicit rune choices',()=>{
+ for(const [id,keystone] of [['Sejuani',8439],['Rammus',8439],['DrMundo',8021]]){
+  const hero=data.champions.find(c=>c.id===id),fixture={...data,buildSource:kr,builds:{},buildSources:{}},build=getBuild(hero,'jungle',fixture);
+  assert.equal(build.reference,null);assert.match(build.source,/机制/);assert.equal(build.runePage.selectedPerkIds[0],keystone,id+' jungle fallback');
+  const manual=getBuild(hero,'jungle',fixture,{runeId:'curated-grasp'});assert.equal(manual.runePage.selectedPerkIds[0],8437,id+' explicit grasp');
+ }
+ const mundo=data.champions.find(c=>c.id==='DrMundo'),fixture={...data,buildSource:kr,builds:{},buildSources:{}};assert.equal(getBuild(mundo,'top',fixture).runePage.selectedPerkIds[0],8437,'lane fallback remains available');
+});
+test('an explicit Mundo jungle loadout retains its authored rune default',()=>{
+ const custom={...LOADOUTS.find(l=>l.base==='tank'),id:'test-mundo-jungle-grasp',champions:['DrMundo'],roles:['jungle'],runes:['grasp','fleet']};LOADOUTS.push(custom);
+ try{const fixture={...data,buildSource:kr,builds:{},buildSources:{}},build=getBuild(data.champions.find(c=>c.id==='DrMundo'),'jungle',fixture,{loadoutId:custom.id});assert.equal(build.loadoutId,custom.id);assert.equal(build.runePage.selectedPerkIds[0],8437);}finally{LOADOUTS.splice(LOADOUTS.indexOf(custom),1);}
+});
 const makeRef=(source=DEFAULT_BUILD_SOURCE,extra={})=>({...structuredClone(base),...source,...extra});
 const raw=(patch=data.patch)=>{
  const page=base.runePage;

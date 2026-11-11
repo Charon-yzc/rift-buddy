@@ -14,7 +14,7 @@ import {BUILD_REGIONS,BUILD_TIERS} from '../src/core/build-source.mjs';
 import {rankingKey} from '../src/core/rankings.mjs';
 import {stageServerData} from '../services/server-data-store.mjs';
 import {publishServerData} from '../services/server-data-publish.mjs';
-import {GENERATION_NAMES,validateGenerationGame,createGenerationRecipe,projectGenerationBundle,validateGenerationBundle,packGenerationBundle,generationRelease,validateGenerationManifest,verifyGenerationEnvelope,decodeGenerationAssets} from '../services/data-generation.mjs';
+import {GENERATION_NAMES,validateGenerationGame,createGenerationRecipe,projectGenerationBundle,validateGenerationBundle,packGenerationBundle,generationRelease,validateGenerationManifest,verifyGenerationEnvelope,decodeGenerationAssets,generationBaseIdentity} from '../services/data-generation.mjs';
 
 const seed=await loadServerSeed('tests/fixtures/snapshot-16.21'),recipe=createGenerationRecipe(seed,serverBuildJobs(seed)),bundle=projectGenerationBundle(seed,recipe),packed=packGenerationBundle(bundle,recipe);
 const pair=generateKeyPairSync('ed25519'),keys={test:pair.publicKey.export({type:'spki',format:'pem'})};
@@ -33,6 +33,16 @@ test('signed global generation round-trips all four assets independently of the 
  assert.deepEqual(signed.recipe.builds,Object.keys(bundle.builds.entries).sort());assert.equal(signed.recipe.rankings.length,6);assert.deepEqual(signed.recipe.hex,seed.game.champions.map(c=>c.id).sort());
  assert.deepEqual(await decodeGenerationAssets(signed,packed.assets),bundle);
  assert.throws(()=>verifyFeedEnvelope(envelope(signed),{keys}),/清单/,'Legacy three-file protocol must remain distinct');
+});
+test('official notes travel inside the signed game asset without changing the mechanism identity',async()=>{
+ const candidate=structuredClone(bundle),notes=JSON.parse(await fs.readFile('data/patch-notes.json'));
+ notes.patches=notes.patches.filter(patch=>patch.patch!=='16.22');candidate.game.patchNotes=notes;
+ assert.equal(generationBaseIdentity(candidate.game),generationBaseIdentity(bundle.game));
+ const expected=createGenerationRecipe(candidate,serverBuildJobs(seed)),assets=packGenerationBundle(candidate,expected),value=manifest({...base,files:assets.files,recipe:expected});
+ const verified=verifyGenerationEnvelope(envelope(value),{keys}),decoded=await decodeGenerationAssets(verified,assets.assets);assert.deepEqual(decoded.game.patchNotes,notes);assert.notEqual(expected.baseSha256,recipe.baseSha256);
+ const bad=structuredClone(candidate.game);bad.patchNotes.patches[0].sourceURL='https://untrusted.example/';assert.throws(()=>validateGenerationGame(bad),/版本改动/);
+ const stale=structuredClone(candidate.game);stale.patchNotes.patches.shift();stale.patchNotes.unavailable=true;assert.doesNotThrow(()=>validateGenerationGame(stale));
+ const future=structuredClone(candidate.game);future.patchNotes.patches.unshift(JSON.parse(await fs.readFile('data/patch-notes.json')).patches[0]);assert.throws(()=>validateGenerationGame(future),/版本改动/);
 });
 test('signature verification rejects tampering, unknown keys, ambiguous fields and noncanonical encoding',()=>{
  const value=manifest(protocolBase());assert.equal(validateGenerationManifest(value),value);const original=envelope(value);

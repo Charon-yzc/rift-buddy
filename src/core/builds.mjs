@@ -322,7 +322,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const runeOptions=[],runeSeen=new Set();
  const addRune=(option)=>{const page=option.source==='OP.GG'?structuredClone(option.page):mechanismRunePage(option.page);
   if(!validateRunePage(page,data.runes)||runeMechanicIssue(champion.id,page))return;const identity=page.selectedPerkIds.join('-');if(runeSeen.has(identity))return;runeSeen.add(identity);runeOptions.push({...option,page});};
- const addMechanisms=()=>{if(!p.reviewed&&!config)return;const plans=champion.id==='DrMundo'&&key==='tank'?['grasp','phase']:config?.runes||mechanismRuneKeys(key,champion,role);for(const id of plans){
+ const addMechanisms=()=>{if(!p.reviewed&&!config)return;const plans=config?.runes?[...config.runes]:champion.id==='DrMundo'&&key==='tank'?(role==='jungle'?['fleet','phase','grasp']:['grasp','phase']):mechanismRuneKeys(key,champion,role);if(config&&champion.id==='DrMundo'&&key==='tank')plans.push('phase');for(const id of plans){
   if(['aftershock','glacial'].includes(id)&&['DrMundo'].includes(champion.id))continue;
   const plan=runePlans[id];if(plan)addRune({id:`curated-${id}`,name:plan.name,when:runeText(plan.when),source:'机制整理',samples:null,page:plan.page});}
  };

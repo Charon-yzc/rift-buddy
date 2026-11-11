@@ -156,7 +156,7 @@ test('the relay form preserves a custom address and suggests the shared default 
  assert.match(html,/id="room-relay-url"/);
  assert.match(html,/强身份认证/);
  const empty=roomPanel({room:null,nick:'队友',transport:'relay',champ});
- assert.match(empty,/id="room-relay-url" value="wss:\/\/room\.riftbuddy\.dpdns\.org"/);
+ assert.match(empty,/id="room-relay-url" value="wss:\/\/rift-buddy-room\.3-27-9-233\.sslip\.io"/);
  assert.match(empty,/inputmode="numeric" maxlength="6"/);assert.match(empty,/type="password"/);assert.match(empty,/口令只私下告知/);
  assert.match(empty,/阵容、配置与英雄场次摘要会共享给同房间成员和中继运营者/);
  assert.match(empty,/data-action="room-relay-join"/);

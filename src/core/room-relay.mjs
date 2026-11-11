@@ -11,7 +11,8 @@ import {CHAMPION_USAGE_VERSION} from './room-champion-usage.mjs';
 export const MAX_RELAY_MEMBERS=12;
 // Suggested input only. It never opens a connection or replaces a saved
 // custom address; joining remains an explicit click in the desktop panel.
-export const DEFAULT_RELAY_URL='wss://room.riftbuddy.dpdns.org';
+export const DEFAULT_RELAY_URL='wss://rift-buddy-room.3-27-9-233.sslip.io';
+const LEGACY_PUBLIC_RELAY_URL='wss://room.riftbuddy.dpdns.org';
 const PIN_HASH=/^[a-f0-9]{64}$/;
 const RELAY_HOST=/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$/;
 // Auto-answered by the Worker without waking the Durable Object, so it must
@@ -60,7 +61,7 @@ export function normalizeRelayUrl(value){
  return `${url.protocol}//${url.host}`;
 }
 
-export function initialRelayUrl(saved){return normalizeRelayUrl(saved)||DEFAULT_RELAY_URL;}
+export function initialRelayUrl(saved){const value=normalizeRelayUrl(saved);return !value||value===LEGACY_PUBLIC_RELAY_URL?DEFAULT_RELAY_URL:value;}
 
 // The client configures the host only; the room code is part of the path.
 export function relayEndpoint(base,room){

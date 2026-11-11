@@ -7,7 +7,7 @@ import path from 'node:path';
 import {spawn as defaultSpawn} from 'node:child_process';
 import {RELEASE_FEED_URL,parseReleaseFeed,newestRelease,isNewerThan,setupFileName,checksumFileName,releaseDownloadUrl,parseChecksumFile,normalizeMirrorBase,mirrorAssetUrl} from '../src/core/app-update.mjs';
 import {GITEE_REPOSITORY_URL,GITEE_RELEASE_FEED_URL,parseGiteeReleases,giteeDownloadUrl,mirrorManifestName,parseMirrorManifest} from '../src/core/app-update.mjs';
-import {publicAddress} from './catalog-store.mjs';
+import {createPublicResolver} from './public-host.mjs';
 import {atomicJSON} from './data.mjs';
 import {installedPayload} from './incremental-update.mjs';
 import {deltaManifestName,parseDeltaManifest} from '../src/core/app-update.mjs';
@@ -16,20 +16,7 @@ export const UPDATE_HOSTS=['github.com','release-assets.githubusercontent.com','
 export const UPDATE_REDIRECT_LIMIT=5;
 const FEED_TIMEOUT=15000,TEXT_BYTES_LIMIT=65536,SETUP_BYTES_LIMIT=512*1024*1024,FILE_TIMEOUT=600000;
 const GITEE_HOSTS=['gitee.com','foruda.gitee.com'];
-async function resolvePublic(hostname,{lookup=dns.lookup,timeout=FEED_TIMEOUT,signal}={}){
- const abortError=()=>Object.assign(Error('下载已取消'),{name:'AbortError'});
- if(signal?.aborted)throw abortError();
- let timer,onAbort;
- try{
-  const cancelled=new Promise((_,reject)=>{onAbort=()=>reject(abortError());signal?.addEventListener('abort',onAbort,{once:true});});
-  const expired=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('解析更新地址超时')),Math.min(timeout,FEED_TIMEOUT));timer.unref?.();});
-  const records=await Promise.race([lookup(hostname,{all:true,verbatim:true}),cancelled,expired]);
-  if(signal?.aborted)throw abortError();
-  if(!records.length||records.some(r=>!publicAddress(r.address)))throw Error('更新地址不能指向本机、内网或保留地址');
-  return records;
- }finally{clearTimeout(timer);if(onAbort)signal?.removeEventListener('abort',onAbort);}
-}
-function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,extraHosts,onHeaders,onData,range=0}){
+function fetchOnce(url,{request,timeout,byteLimit,signal,resolveHost,insecureHosts,extraHosts,onHeaders,onData,range=0}){
  return new Promise(async(resolve,reject)=>{
   let target=url;
   try{
@@ -37,7 +24,7 @@ function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,ex
     const u=new URL(target);
     if(u.protocol!=='https:'&&!insecureHosts.includes(u.hostname))return reject(Error('更新地址必须使用 HTTPS'));
     if(!UPDATE_HOSTS.includes(u.hostname)&&!insecureHosts.includes(u.hostname)&&!(extraHosts||[]).includes(u.hostname))return reject(Error(`更新跳转不在白名单内：${u.hostname}；不跟随`));
-    const records=insecureHosts.includes(u.hostname)?null:await resolvePublic(u.hostname,{lookup,timeout,signal});
+    const records=insecureHosts.includes(u.hostname)?null:await resolveHost(u.hostname,{timeout,signal});
     const result=await new Promise((res,rej)=>{
      let bytes=0,failed=null,settled=false,ended=false;const parts=[];let chain=Promise.resolve();
      let req,response,timer;
@@ -85,8 +72,9 @@ function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,ex
   }catch(e){reject(e);}
  });
 }
-export function createAppUpdateService({currentVersion,installDir='',tempDir=os.tmpdir(),storeFile=path.join(os.tmpdir(),'rift-buddy-app-update.json'),request=https.request,spawnImpl=defaultSpawn,feedUrl=RELEASE_FEED_URL,giteeFeedUrl=GITEE_RELEASE_FEED_URL,mirrorBase='',insecureHosts=[],dryRun=false,lookup=dns.lookup}={}){
+export function createAppUpdateService({currentVersion,installDir='',tempDir=os.tmpdir(),storeFile=path.join(os.tmpdir(),'rift-buddy-app-update.json'),request=https.request,spawnImpl=defaultSpawn,feedUrl=RELEASE_FEED_URL,giteeFeedUrl=GITEE_RELEASE_FEED_URL,mirrorBase='',insecureHosts=[],dryRun=false,lookup=dns.lookup,dohRequest}={}){
  if(typeof currentVersion!=='string'||!currentVersion)throw Error('当前版本格式不正确');
+ const resolveHost=createPublicResolver({lookup,dohRequest});
  const preferGitee=normalizeMirrorBase(mirrorBase||'')===GITEE_REPOSITORY_URL;
  const mirror=preferGitee?'':normalizeMirrorBase(mirrorBase||'');
  const mirrorHost=mirror?new URL(mirror).hostname:null;
@@ -95,7 +83,7 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
  const ownsInstaller=file=>typeof file==='string'&&path.dirname(path.resolve(file))===path.resolve(tempDir)&&/^rift-buddy-update-\d+-[0-9a-f-]{36}\.exe$/.test(path.basename(file));
  const safeTempRoot=async()=>{try{const stat=await fs.lstat(tempDir);return stat.isDirectory()&&!stat.isSymbolicLink();}catch(error){if(error.code==='ENOENT')return true;throw error;}};
  async function check({signal}={}){
-  const options={request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts};
+  const options={request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,resolveHost,insecureHosts};
   const results=await Promise.allSettled([
    fetchOnce(feedUrl,options).then(({body})=>newestRelease(parseReleaseFeed(body.toString('utf8')))),
    // Local smoke feeds deliberately isolate all external traffic.
@@ -158,7 +146,7 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
   const setup=delta?.file||setupFileName(release.version),sum=checksumFileName(release.version);
   let manifest=null;
   if(gitee&&!delta){
-   const {body}=await fetchOnce(giteeDownloadUrl(release.tag,mirrorManifestName(release.version)),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts:GITEE_HOSTS});
+   const {body}=await fetchOnce(giteeDownloadUrl(release.tag,mirrorManifestName(release.version)),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,resolveHost,insecureHosts,extraHosts:GITEE_HOSTS});
    manifest=parseMirrorManifest(body.toString('utf8'),release);
   }
   const localFailure=e=>{e.localFailure=true;return e;};
@@ -183,7 +171,7 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
      assetStart+=assetBytes;continue;
     }
     const range=partBytes;
-    await fetchOnce(gitee?giteeDownloadUrl(release.tag,asset.name):mirrorAssetUrl(mirror,releaseDownloadUrl(release.tag,setup)),{request,timeout:FILE_TIMEOUT,byteLimit:asset.bytes||SETUP_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts:gitee?GITEE_HOSTS:extraHosts,
+    await fetchOnce(gitee?giteeDownloadUrl(release.tag,asset.name):mirrorAssetUrl(mirror,releaseDownloadUrl(release.tag,setup)),{request,timeout:FILE_TIMEOUT,byteLimit:asset.bytes||SETUP_BYTES_LIMIT,signal,resolveHost,insecureHosts,extraHosts:gitee?GITEE_HOSTS:extraHosts,
     range,onHeaders:async(h,status)=>{
      const length=h['content-length']==null?null:Number(h['content-length']);
      if(status===206){
@@ -222,7 +210,7 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
   let expected=delta?.sha256||manifest?.sha256;
   try{
    if(!manifest&&!delta){
-    const sumRes=await fetchOnce(releaseDownloadUrl(release.tag,sum),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
+    const sumRes=await fetchOnce(releaseDownloadUrl(release.tag,sum),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,resolveHost,insecureHosts});
     expected=parseChecksumFile(sumRes.body.toString('utf8'),setup);
    }
   }catch(e){if(!(signal?.aborted&&signal.reason==='pause'))await partials.clear();if(/HTTP 404/.test(e.message||'')){const m=Error('新版安装包缺失，请等待维护者补传发布资产后重试');m.checksumStage=true;throw m;}if(e.message!=='下载已取消')e.checksumStage=true;throw e;}
@@ -250,7 +238,7 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
   const channels=giteeFirst?[true,...(release.githubAvailable===false?[]:[false])]:[false,...(release.giteeAvailable?[true]:[])];
   const name=deltaManifestName(release.version);let lastError=null,unavailable=true;
   for(const gitee of channels){try{
-   const options={request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts:gitee?GITEE_HOSTS:[]};
+   const options={request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,resolveHost,insecureHosts,extraHosts:gitee?GITEE_HOSTS:[]};
    const {body}=await fetchOnce(gitee?giteeDownloadUrl(release.tag,name):releaseDownloadUrl(release.tag,name),options);
    if(!gitee){const sums=await fetchOnce(releaseDownloadUrl(release.tag,checksumFileName(release.version)),options);if(crypto.createHash('sha256').update(body).digest('hex')!==parseChecksumFile(sums.body.toString('utf8'),name))throw Error('增量清单校验不一致');}
    const delta=parseDeltaManifest(body.toString('utf8'),release).packages.find(item=>item.from===currentVersion&&item.baseManifestSha256===installed.sha256);

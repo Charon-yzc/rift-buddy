@@ -3,18 +3,13 @@ import {renameSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import path from 'node:path';
 import {atomicJSON} from './data.mjs';
-import {DATA_FEED_KEYS,DATA_FEED_ORIGIN} from './data-feed.mjs';
+import {DATA_FEED_KEYS} from './data-feed.mjs';
+import {downloadSignedFeed} from './signed-feed-download.mjs';
 import {GENERATION_NAMES,GENERATION_MAX_MANIFEST,compareGenerationVersions,verifyGenerationEnvelope,decodeGenerationAssets,generationBaseIdentity} from './data-generation.mjs';
 
-export async function downloadDataGeneration(relative,{limit,fetcher=fetch}={}){
+export async function downloadDataGeneration(relative,{limit,fetcher=fetch,signal}={}){
  if(!/^\/v2\/(?:latest\.json|assets\/[a-f0-9]{64}\.json\.gz)$/.test(relative)||!Number.isSafeInteger(limit)||limit<1||limit>8*1024*1024)throw Error('整套资料下载地址或限制无效');
- const response=await fetcher(DATA_FEED_ORIGIN+relative,{redirect:'error',credentials:'omit',signal:AbortSignal.timeout(20000),headers:{Accept:'application/json, application/octet-stream'}});
- if(!response.ok){await response.body?.cancel();const error=Error('整套资料服务暂不可用');if(relative.startsWith('/v2/assets/')&&[404,410].includes(response.status))error.code='DATA_GENERATION_REPLACED';throw error;}
- if(Number(response.headers.get('content-length'))>limit){await response.body?.cancel();throw Error('整套资料响应过大');}
- const reader=response.body?.getReader(),parts=[];let bytes=0;if(!reader)throw Error('整套资料响应为空');
- try{while(true){const part=await reader.read();if(part.done)break;bytes+=part.value.byteLength;if(bytes>limit)throw Error('整套资料响应过大');parts.push(part.value);}}
- finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
- return Buffer.concat(parts);
+ return downloadSignedFeed(relative,{limit,fetcher,signal,label:'整套资料',replacedCode:'DATA_GENERATION_REPLACED'});
 }
 
 // prepare performs all awaited derivation without mutating active data.

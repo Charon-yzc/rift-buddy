@@ -15,6 +15,7 @@ import {validRankingReference,newerRanking} from '../src/core/rankings.mjs';
 import {buildSourceKey,preferBuildReference,selectBuildSource} from '../src/core/build-source.mjs';
 import {validateCatalog} from '../src/core/catalog.mjs';
 import {mergeHexPoolEvidence} from '../src/core/hex-pool-evidence.mjs';
+import {preferredPatchNotes} from '../src/core/patch-notes.mjs';
 
 export async function readManualBase(root){
  try{const bytes=await fs.readFile(path.join(root,'game.json'));const game=JSON.parse(bytes);if(!validSnapshot(game))return null;return {token:feedHash(bytes),version:game.version,baseHash:generationBaseIdentity(game)};}catch{return null;}
@@ -32,6 +33,7 @@ export async function createGameDataPreparer({bundleRoot,localRoot,catalogSummar
   [next.buildSources,next.opponentBuildSources,next.pairStatistics,next.rankings,next.patchNotes,next.hexBuilds]=await Promise.all([
    loadBuildSources(roots,next),loadOpponentBuildSources(localRoot,next),loadPairStatisticsCache([path.join(bundleRoot,'pair-statistics.json'),path.join(localRoot,'pair-statistics-cache.json')],next),loadRankings(roots,next),loadPatchNotes(bundleRoot,next),loadHexBuilds(roots,next),
   ]);
+  next.patchNotes=preferredPatchNotes(next,game.patchNotes,current.patchNotes,next.patchNotes);
   // Previously verified in-memory references can be newer than their unsigned
   // disk projections, including signed recheck metadata. Validate each scope.
   for(const [key,ref] of Object.entries(current.buildSources||{}))if(heroes.has(ref.champion)&&key===buildSourceKey(ref.champion,ref.role,ref,ref.patch)&&ref.scope===undefined&&ref.opponent===undefined&&validReferenceForUse(ref,heroes.get(ref.champion),ref.role,next,{allowOlder:true})&&preferBuildReference(ref,next.buildSources[key]))next.buildSources[key]=ref;

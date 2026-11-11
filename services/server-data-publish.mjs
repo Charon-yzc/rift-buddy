@@ -44,7 +44,7 @@ async function prepareGeneration(candidate,status,publicRoot,privateKey,keyId,ke
  const datasets=status.datasets||{};
  // Hero offer observations are optional; their presence must not block the
  // four required datasets or let other/mislabeled datasets evade coverage.
- if(Object.keys(datasets).some(name=>!Object.hasOwn(totals,name)&&(name!=='hex-pools'||datasets[name]?.optional!==true))||Object.entries(totals).some(([name,total])=>{const d=datasets[name],checked=Date.parse(d?.checkedAt);return !d||d.state!=='ok'||d.total!==total||d.checked!==total||d.failed!==0||d.skipped!==0||!Number.isFinite(checked)||checked<started||checked>clock();}))throw Error('整套资料本轮采集未完整完成');
+ if(Object.keys(datasets).some(name=>!Object.hasOwn(totals,name)&&(!['hex-pools','patch-notes'].includes(name)||datasets[name]?.optional!==true))||Object.entries(totals).some(([name,total])=>{const d=datasets[name],checked=Date.parse(d?.checkedAt);return !d||d.state!=='ok'||d.total!==total||d.checked!==total||d.failed!==0||d.skipped!==0||!Number.isFinite(checked)||checked<started||checked>clock();}))throw Error('整套资料本轮采集未完整完成');
  const bundle=projectGenerationBundle(candidate.bundle,recipe),{files,assets}=packGenerationBundle(bundle,recipe),destination=path.join(publicRoot,'v2','latest.json');let prior=null;
  try{prior=verifyGenerationEnvelope(JSON.parse(await fs.readFile(destination,'utf8')),{keys});}catch(error){if(error.code!=='ENOENT')throw error;}
  if(prior&&(compareGenerationVersions(game.version,prior.version)<0||started<Date.parse(prior.checkedAt)))throw Error('整套资料版本或复查时间倒退');

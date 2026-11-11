@@ -6,7 +6,7 @@ let detected=order==='client-first',phase='Lobby',observer,heartbeat,manager,hel
 const frames=[],sockets=[],partyKey='isolated-startup-party-20261109',own={summonerId:77,gameName:'隔离启动玩家',tagLine:'TEST'};
 // A real room service handshake stays inside this process. No relay traffic.
 global.WebSocket=class {
- constructor(url){assert.equal(new URL(url).hostname,'room.riftbuddy.dpdns.org');this.url=url;this.readyState=0;this.bufferedAmount=0;sockets.push(this);queueMicrotask(()=>{this.readyState=1;this.onopen?.();});}
+ constructor(url){assert.equal(new URL(url).hostname,'rift-buddy-room.3-27-9-233.sslip.io');this.url=url;this.readyState=0;this.bufferedAmount=0;sockets.push(this);queueMicrotask(()=>{this.readyState=1;this.onopen?.();});}
  send(text){const frame=JSON.parse(text);frames.push(frame);if(frame.kind==='hello')queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'welcome',v:1,room:new URL(this.url).pathname.split('/').at(-1),members:[{nick:frame.nick,packedStates:2}],ballots:1,multiVotes:1,adoptions:1,packedStates:2,championUsage:1})}));if(frame.kind==='ping')queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'pong',v:1})}));}
  close(code=1000){this.readyState=3;this.onclose?.({code});}
 };

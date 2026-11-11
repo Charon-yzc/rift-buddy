@@ -9,6 +9,7 @@ import {validRankingReference} from '../src/core/rankings.mjs';
 import {validReference,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
 import {buildSourceKey,BUILD_REGIONS,BUILD_TIERS} from '../src/core/build-source.mjs';
 import {rankingKey} from '../src/core/rankings.mjs';
+import {validPatchNotes} from '../src/core/patch-notes.mjs';
 
 export const SERVER_DATA_FILES=Object.freeze(['game','rankings','builds','hex-builds']);
 const zip=promisify(gzip),unzip=promisify(gunzip),hashPattern=/^[a-f0-9]{64}$/;
@@ -23,6 +24,7 @@ export function contentEqual(left,right){
  return JSON.stringify(stable(left))===JSON.stringify(stable(right));
 }
 export function validateServerGame(game){
+ if(game?.patchNotes!==undefined&&!validPatchNotes(game.patchNotes,game))throw Error('版本改动资料无效');
  if(!validSnapshot(game)||game.contentRevision<7||game.augmentError||!game.augments.length||!game.sources.augmentDescriptions||!game.champions.every(c=>hasCurrentCombatStats(c,game.patch)))throw Error('基础资料不完整');
  return true;
 }
