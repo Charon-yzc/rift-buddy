@@ -119,3 +119,32 @@ for(const destination of ['closed','feedback'])test(`late window reset keeps the
  const request=context.reset();await entered.promise;overlay.innerHTML=destination==='closed'?'':feedbackDialog({text:'保留图文草稿',images:[{id:'selected-image',preview:'data:image/png;base64,AAAA'}]});const expected=overlay.innerHTML;
  gate.resolve({custom:false});await request;assert.equal(context.windowLayout.custom,false,'the requested window operation still takes effect');assert.equal(overlay.innerHTML,expected);
 });
+
+function startupUpdateFixture(){
+ const timers=[],checks=[],save=deferred(),context={boot:{desktop:true},appUpdate:{phase:'idle'},saved:{preferences:{appUpdateCheck:true}},route:'settings',Date,render(){},toast(){},persist:()=>save.promise,api:{checkAppUpdate:silent=>new Promise((resolve,reject)=>checks.push({silent,resolve,reject}))},setTimeout:(run,ms)=>timers.push({run,ms})};
+ vm.createContext(context);
+ vm.runInContext(source.slice(source.indexOf('async function checkAppUpdate('),source.indexOf('let updateMirrorSave=')),context);
+ const start=source.indexOf(' if(boot.desktop&&saved.preferences.appUpdateCheck'),end=source.indexOf('\n}catch(err)',start);assert(start>0&&end>start);vm.runInContext(source.slice(start,end),context);
+ assert.equal(timers.length,1);assert.equal(timers[0].ms,2600);
+ return {context,checks,save,fire:()=>timers[0].run()};
+}
+
+test('turning off startup update checks before the delay prevents a silent request',()=>{
+ const f=startupUpdateFixture();f.context.saved.preferences.appUpdateCheck=false;f.fire();assert.equal(f.checks.length,0);assert.equal(f.context.appUpdate.phase,'idle');
+});
+
+test('a completed manual check supersedes the old startup timer while its timestamp save is still pending',async()=>{
+ const f=startupUpdateFixture(),manual=f.context.checkAppUpdate(false);f.checks[0].resolve({phase:'available',release:{version:'99.0.0'}});await manual;
+ assert.equal(f.context.appUpdate.phase,'available');assert.ok(f.context.saved.preferences.lastAppUpdateCheck);
+ f.fire();assert.deepEqual(f.checks.map(check=>check.silent),[false]);assert.equal(f.context.appUpdate.phase,'available');assert.equal(f.context.appUpdate.release.version,'99.0.0');f.save.resolve();
+});
+
+test('the startup timer cannot duplicate a pending manual check or prevent a later explicit retry',async()=>{
+ const f=startupUpdateFixture(),manual=f.context.checkAppUpdate(false);f.fire();assert.deepEqual(f.checks.map(check=>check.silent),[false]);
+ f.checks[0].reject(Error('模拟离线'));await manual;assert.equal(f.context.appUpdate.phase,'error');
+ const retry=f.context.checkAppUpdate(false);assert.deepEqual(f.checks.map(check=>check.silent),[false,false]);f.checks[1].resolve({phase:'current'});await retry;assert.equal(f.context.appUpdate.phase,'current');f.save.resolve();
+});
+
+test('an unchanged overdue idle startup still checks automatically once',async()=>{
+ const f=startupUpdateFixture(),automatic=f.fire();assert.deepEqual(f.checks.map(check=>check.silent),[true]);f.checks[0].resolve({phase:'current'});await automatic;assert.equal(f.context.appUpdate.phase,'current');f.save.resolve();
+});

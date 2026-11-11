@@ -35,7 +35,8 @@ test('actual main IPC Hex branch uses the one queue even while Rift resources ar
  let handler,active=0,peak=0,release,started;const entered=new Promise(resolve=>started=resolve),gate=new Promise(resolve=>release=resolve),writes=[];
  const service={validateClientPreparation:value=>{assert.equal(value.mode,'hex');assert.equal(value.preselectOnly,true);return value;},prepareClientSelection:async({value},control)=>{active++;peak=Math.max(peak,active);if(value.champion==='Ashe'){started();await gate;}writes.push(value.champion);active--;return {complete:control.isCurrent()};}};
  const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
- await new AsyncFunction('queueModule','serviceModule','guard','data','state','applyingRunes','importingItemSet','helper',script)({createHexSelectionQueue},service,(name,fn,withContext)=>{assert.equal(name,'prepare-selection');assert.equal(withContext,true);handler=fn;},{},{preferences:{}},true,true,{active:()=>false});
+ const writer=Object.freeze({});
+ await new AsyncFunction('queueModule','serviceModule','guard','data','state','applyingRunes','importingItemSet','helper',script)({createHexSelectionQueue},service,(name,fn,withContext)=>{assert.equal(name,'prepare-selection');assert.equal(withContext,true);handler=fn;},{},{preferences:{}},true,true,{captureSelection:()=>({writer,helper:false,installPath:'',isCurrent:()=>true})});
  const sender={id:1};
  const first=handler({mode:'hex',preselectOnly:true,champion:'Ashe'},{sender});await entered;const last=handler({mode:'hex',preselectOnly:true,champion:'Caitlyn'},{sender});release();
  const results=await Promise.all([first,last]);assert.equal(results[0].superseded,true);assert.equal(results[1].complete,true);assert.equal(peak,1);assert.deepEqual(writes,['Ashe','Caitlyn']);

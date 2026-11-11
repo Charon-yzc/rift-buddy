@@ -56,7 +56,7 @@ export async function discoverClient(installPath='',{includeRegion=false,reuseSn
  }
   return lockAuth;
 }
-export function lcuRequest(auth,route,method='GET',body) {
+export function lcuRequest(auth,route,method='GET',body,{signal}={}) {
  const keys=body&&typeof body==='object'&&!Array.isArray(body)?Object.keys(body).sort().join(','):'';
  const benchTail=method==='POST'?Number(route.split('/').pop()):NaN;
  const benchSwap=Number.isSafeInteger(benchTail)&&benchTail>0&&route===`/lol-champ-select/v1/session/bench/swap/${benchTail}`&&!body;
@@ -64,24 +64,28 @@ export function lcuRequest(auth,route,method='GET',body) {
  const spells=method==='PATCH'&&route==='/lol-champ-select/v1/session/my-selection'&&keys==='spell1Id,spell2Id'&&[body.spell1Id,body.spell2Id].every(n=>Number.isSafeInteger(n)&&n>0)&&body.spell1Id!==body.spell2Id;
  const chatMessage=method==='POST'&&/^\/lol-chat\/v1\/conversations\/[a-zA-Z0-9_@.-]+\/messages$/.test(route)&&keys==='body,type'&&body.type==='chat'&&typeof body.body==='string'&&body.body.length>0&&body.body.length<=300&&!/[\r\n\0]/.test(body.body);
   if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='GET'&&SUMMONER_BY_ID.test(route))&&!(method==='GET'&&SUMMONER_BY_PUUID.test(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0)&&!preview&&!benchSwap&&!spells&&!chatMessage&&!allowedHistoryRoute(route,method,body))throw new Error('不支持此客户端操作');
+ if(signal&&method!=='GET')throw Error('客户端写入不能取消');
+ const cancelled=()=>signal?.aborted;
  return new Promise((resolve,reject)=>{
+  if(cancelled()){reject(signal.reason);return;}
   const payload=body?JSON.stringify(body):null;
-  const request=https.request({hostname:'127.0.0.1',port:auth.port,path:route,method,agent:lcuAgent,
+  const request=https.request({hostname:'127.0.0.1',port:auth.port,path:route,method,agent:lcuAgent,...(signal?{signal}:{}),
    // The League client exposes a self-signed loopback certificate. This exception is scoped to this socket only.
    rejectUnauthorized:false,auth:`riot:${auth.password}`,timeout:4500,
    headers:{Accept:'application/json',...(payload?{'Content-Type':'application/json','Content-Length':Buffer.byteLength(payload)}:{})}},res=>{
     let raw='',size=0;
-    res.on('error',()=>reject(new Error('客户端读取已中断')));
-    res.on('data',chunk=>{size+=chunk.length;if(size>2_000_000){request.destroy();reject(new Error('客户端响应过大'));return;}raw+=chunk;});
-    res.on('end',()=>{let value;try{value=raw?JSON.parse(raw):null;}catch{return reject(new Error('客户端返回格式异常'));}
+    res.on('error',()=>reject(cancelled()?signal.reason:new Error('客户端读取已中断')));
+    res.on('data',chunk=>{if(cancelled()){reject(signal.reason);return;}size+=chunk.length;if(size>2_000_000){request.destroy();reject(new Error('客户端响应过大'));return;}raw+=chunk;});
+    res.on('end',()=>{if(cancelled()){reject(signal.reason);return;}let value;try{value=raw?JSON.parse(raw):null;}catch{return reject(new Error('客户端返回格式异常'));}
      if(res.statusCode>=400){const error=new Error(res.statusCode===404?'当前没有可读取的选人信息':res.statusCode===401?'客户端连接已变化，请重新连接':`客户端暂未接受操作（${res.statusCode}）`);error.status=res.statusCode;return reject(error);}
      resolve(value);
     });
    });
   request.on('timeout',()=>request.destroy(new Error('客户端连接超时')));
-  request.on('error',()=>reject(new Error('未能连接客户端，请确认游戏已登录到大厅')));
+  request.on('error',()=>reject(cancelled()?signal.reason:new Error('未能连接客户端，请确认游戏已登录到大厅')));
   if(payload)request.write(payload);request.end();
  }).catch(error=>{
+  if(cancelled()&&error===signal.reason)throw error;
   if(error.status===401||!error.status){
    failedConnections.add(auth);
    if(snapshotAuth?.port===auth.port&&snapshotAuth?.password===auth.password){failedConnections.add(snapshotAuth);snapshotAuth=null;snapshotAuthAt=0;}

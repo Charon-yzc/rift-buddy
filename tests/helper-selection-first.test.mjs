@@ -18,7 +18,7 @@ test('authorized helper selects immediately during an older configuration and pr
  try{
   const selection={id:'Yasuo',role:'bottom',mode:'rift',loadoutId:'default'},hero=data.champions.find(c=>c.id===selection.id),plan=clientPreparationPlan(data,{selection,build:getBuild(hero,'bottom',data,selection)}),context=runeWriteContext({connected:true,phase:'ChampSelect',game:{gameId:'1001'},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:0,assignedPosition:'BOTTOM'}]}});
   const old=requestHelper(config,'prepareSelection',{value:{...plan.value,sessionGameId:'1001',context}}).catch(error=>({complete:false,message:error.message}));await started;
-  const chosen=await requestHelper(config,'selectChampion',{value:{champion:'Ashe',role:'bottom',mode:'rift',preselectOnly:true,sessionGameId:'1001',context}});assert.equal(chosen.steps.hover.status,'done');assert.deepEqual(writes,[22]);
+  const chosen=await requestHelper(config,'selectChampion',{selectionSeq:1,value:{champion:'Ashe',role:'bottom',mode:'rift',preselectOnly:true,sessionGameId:'1001',context}});assert.equal(chosen.steps.hover.status,'done');assert.deepEqual(writes,[22]);
   release();const previous=await old;assert.equal(previous.complete,false);assert.deepEqual(writes,[22]);assert.equal(intent,22);
   await assert.rejects(requestHelper(config,'selectChampion',{value:{champion:'Yasuo',mode:'rift'}}),/仅用于选择英雄/);
  }finally{release();https.request=original;await requestHelper(config,'shutdown').catch(()=>{});if(server.listening)server.close();}

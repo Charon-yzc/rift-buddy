@@ -39,7 +39,7 @@ import {stateRecoveryView} from './state-recovery-view.mjs';
 import {clientRenderIdentity,normalizePartyIds} from './core/client-party.mjs';
 import {canonicalJSON} from './core/content-fingerprint.mjs';
 import {validPartyCount,markedPartyCount,initialPartyCount,selectionPartyCount,reconcilePartyRange,movePartyMark,savedPartyCount,partyRangeMode,partyRangeCount} from './core/party-range.mjs';
-import {pregamePhase,partyWithPregameIntents,restoredRoleClaim} from './core/pregame-intent.mjs';
+import {pregamePhase,partyWithPregameIntents,restoredRoleClaim,pregameHeroRoleChange,pregameLobbyContext} from './core/pregame-intent.mjs';
 import {companionHeroAction} from './core/companion-action.mjs';
 import {adoptRoomLineup,roomLineupIdentity} from './core/room-lineup.mjs';
 import {rankedClientRoles} from './core/builds.mjs';
@@ -1383,12 +1383,22 @@ async function cancelPregameHero(){
  if(response?.state)acceptSavedState(response.state,response.revision||stateRevision);
  closeOverlay();companionPreview=null;render();queueCompanionRecommendation();
 }
+let pregameIntentRevision=0,pregameIntentFlight=null;
 async function stagePregameIntent(change={}){
  if(pendingBuildSourceEpoch!==null)throw Error('配置来源正在切换，请稍后再设置预选');
  if(rankedDraftPolicy(client).ranked)throw Error("排位请直接在客户端选人");
  if(!api.stageSelection)throw Error('大厅预选请在桌面版使用');
- const role=change.role??(saved.draft?.preselection?.role||''),champion=Object.hasOwn(change,'champion')?change.champion:null,kind=champion?'hero':'position';
+ const revision=++pregameIntentRevision,previous=pregameIntentFlight,layer=overlay.firstElementChild,page=route,docked=windowLayout.docked,tab=companionTab,lobby=pregameLobbyContext(client);
+ const ownsView=()=>overlay.firstElementChild===layer&&route===page&&windowLayout.docked===docked&&(!docked||companionTab===tab);
+ let older=null;
+ const retained=pregameHeroRoleChange(change,saved.draft?.preselection,client),retainedEpoch=buildSourceEpoch;
+ const assertRetained=()=>{const intent=saved.draft?.preselection,known=older?.revision===stateRevision&&canonicalJSON(older.state?.draft?.preselection)===canonicalJSON(intent)&&intent?.kind==='hero'&&!intent.attemptedGameId&&intent.champion===retained?.champion&&pregameLobbyContext(client)===retained?.context;if(retained&&(buildSourceEpoch!==retainedEpoch||pregameHeroRoleChange(change,intent,client)?.stamp!==retained.stamp&&!known))throw Error('预选英雄或组队已变化，请按当前界面重新选择分路');};
+ const role=change.role??(saved.draft?.preselection?.role||''),champion=retained?.champion??(Object.hasOwn(change,'champion')?change.champion:null),kind=champion?'hero':'position';
  await sync(false,{fresh:true});
+ if(revision!==pregameIntentRevision)return;
+ older=previous?await previous.catch(()=>null):null;
+ if(revision!==pregameIntentRevision)return;
+ assertRetained();
  if(change.reviewStamp&&(change.reviewStamp!==selectionReviewStamp(change.selection)||pendingReviewChanged(change.selection)))throw Error('组合或资料复核状态已变化，请重新选择配置');
  // The phase may advance while a visible lobby control is being clicked.
  // Honor that explicit action using the current session, not the old screen.
@@ -1396,7 +1406,13 @@ async function stagePregameIntent(change={}){
   if(Object.hasOwn(change,'champion')&&champion){await prepareHeroClick({id:champion,role:role||taskOwnRole()||profile(champ(champion)).roles[0],mode:'rift'});return;}
   setCompanionRole(role);if(role&&!localPickLocked(client.session))await claimPosition(role);return;
  }
- await saveChain;if(change.reviewStamp&&(change.reviewStamp!==selectionReviewStamp(change.selection)||pendingReviewChanged(change.selection)))throw Error('组合或资料复核状态已变化，请重新选择配置');const response=await api.stageSelection({role,champion,kind,buildSource:data.buildSource,sourceEpoch:++buildSourceEpoch,...(change.selection?{selection:change.selection}:{}),...(change.selectionFields?{selectionFields:change.selectionFields}:{}),...(change.reviewStamp?{reviewStamp:change.reviewStamp}:{}),...(change.catalogChoiceToken?{catalogChoiceToken:change.catalogChoiceToken}:{})});
+ await saveChain;if(revision!==pregameIntentRevision)return;assertRetained();
+ const selection=retained?heroClickSelection(data,{id:champion,role,mode:'rift'}):null;
+ const request=selection?{selection,selectionFields:[...CONFIGURATION_FIELDS],reviewStamp:selectionReviewStamp(selection)}:change;
+ if(request.reviewStamp&&(request.reviewStamp!==selectionReviewStamp(request.selection)||pendingReviewChanged(request.selection)))throw Error('组合或资料复核状态已变化，请重新选择配置');const sourceEpoch=++buildSourceEpoch,ownsReply=()=>revision===pregameIntentRevision&&buildSourceEpoch===sourceEpoch&&pregameLobbyContext(client)===lobby&&ownsView();
+ const pending=api.stageSelection({role,champion,kind,buildSource:data.buildSource,sourceEpoch,...(request.selection?{selection:request.selection}:{}),...(request.selectionFields?{selectionFields:request.selectionFields}:{}),...(request.reviewStamp?{reviewStamp:request.reviewStamp}:{}),...(request.catalogChoiceToken?{catalogChoiceToken:request.catalogChoiceToken}:{})});pregameIntentFlight=pending;
+ let response;try{response=await pending;}catch(error){if(!ownsReply())return;throw error;}
+ if(!ownsReply()||response?.revision&&response.revision<stateRevision)return;
  if(response?.state)acceptSavedState(response.state,response.revision||stateRevision);
  if(kind==='hero'){companionPreview=null;companionTab='recommend';closeOverlay();render();}
  queueCompanionRecommendation();
@@ -2642,7 +2658,11 @@ try{api.onHexRound?.(acceptHexRound);stopDataUpdates=api.onData?.(acceptSharedDa
  
  // Statistics are checked once by the main process; renderer windows must
  // never independently replace base game data during an active draft.
- if(boot.desktop&&saved.preferences.appUpdateCheck!==false&&Date.now()-Date.parse(saved.preferences.lastAppUpdateCheck||0)>86400000)setTimeout(()=>checkAppUpdate(true),2600);
+ if(boot.desktop&&saved.preferences.appUpdateCheck!==false&&Date.now()-Date.parse(saved.preferences.lastAppUpdateCheck||0)>86400000)setTimeout(()=>{
+  if(saved.preferences.appUpdateCheck===false||Date.now()-Date.parse(saved.preferences.lastAppUpdateCheck||0)<=86400000)return;
+  if(['checking','downloading','verifying','installing','pausing','cancelling'].includes(appUpdate.phase))return;
+  return checkAppUpdate(true);
+ },2600);
 }catch(err){app.innerHTML=`<div class="boot"><img class="brand-mark" src="../assets/icon.svg" alt="" /><h2>暂时无法打开助手</h2><p>${e(err.message)}</p><p>请保留整个程序文件夹后重新打开。</p></div>`;}
 
 

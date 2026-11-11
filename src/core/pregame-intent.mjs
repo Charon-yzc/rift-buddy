@@ -4,8 +4,24 @@ import {roleClaimChoice,activeRoleClaim} from './role-claim.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {rankedDraftPolicy} from './ranked-draft.mjs';
 import {requireBuildSource} from './build-source.mjs';
+import {canonicalJSON} from './content-fingerprint.mjs';
 
 export const pregamePhase=phase=>['None','Lobby','Matchmaking','ReadyCheck'].includes(phase);
+// A lane edit can keep an explicit hero only within its unchanged, unconsumed
+// lobby intent. The renderer rechecks this stamp after each asynchronous wait.
+export function pregameLobbyContext(client){
+ if(!client?.connected||!pregamePhase(client.phase)||client.mode?.id!=='rift'||rankedDraftPolicy(client).ranked)return null;
+ const party=client.party;
+ if(!party?.key&&!['known','lobby'].includes(party?.status))return null;
+ const own=client.own?.puuid||client.own?.summonerId||client.own?.riotId||null;
+ const members=(party?.members||[]).map(member=>canonicalJSON([member.local===true,member.displayName||'',member.publicRiotId||''])).sort();
+ const lobby=party?.key||[party?.lobbyCount??null,members];
+ return canonicalJSON([own,lobby,client.game?.queueId,client.game?.gameId]);
+}
+export function pregameHeroRoleChange(change,intent,client){
+ if(!change||!Object.hasOwn(change,'role')||Object.keys(change).some(field=>field!=='role')||!ROLES.some(role=>role.id===change.role)||intent?.kind!=='hero'||!intent.champion||intent.attemptedGameId)return null;
+ const context=pregameLobbyContext(client);return context?{role:change.role,champion:intent.champion,context,stamp:canonicalJSON([intent,context])}:null;
+}
 export function validatePregameIntent(value){
  if(!value||!['',...ROLES.map(role=>role.id)].includes(value.role)||value.champion!==null&&!(typeof value.champion==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value.champion)))throw Error('请选择分路或英雄');
  const attemptedGameId=typeof value.attemptedGameId==='string'&&/^[1-9]\d{0,19}$/.test(value.attemptedGameId)?value.attemptedGameId:'';

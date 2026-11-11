@@ -6,6 +6,7 @@ import {validateSummonerIds,summonerOptions} from '../src/core/summoner-selectio
 import {runeWriteContext,validateRuneWriteContext,sameRuneWriteContext,champSelectGameId} from '../src/core/rune-context.mjs';
 import {normalizeChampionIds} from '../src/core/pick-eligibility.mjs';
 import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
+import {selectionRead} from './hex-selection-queue.mjs';
 
 // One explicit click, only this player's public selection. Never lock or ban.
 // Interface reference: LeagueAkari 5109b2f7, league-client/champ-select.ts.
@@ -28,13 +29,15 @@ export function validateClientPreparation(value,data){
   summoners:[...summoners],preserveFlashSlot:value.preserveFlashSlot!==false,preselectOnly:value.preselectOnly===true,claimPosition:value.claimPosition===true,itemSet,
   ...(value.notice?{notice:value.notice}:{})};
 }
-export async function prepareClientSelection({value,data,installPath='',ownedPageId},{discover=path=>discoverClient(path,{reuseSnapshot:true}),request=lcuRequest,writeRunes=writeRunePage,writeItems=importItemSet,isCurrent=()=>true,isCurrentSession=()=>true}={}){
- const selected=validateClientPreparation(value,data),auth=await discover(installPath);
+export async function prepareClientSelection({value,data,installPath='',ownedPageId},{discover=path=>discoverClient(path,{reuseSnapshot:true}),request=lcuRequest,writeRunes=writeRunePage,writeItems=importItemSet,isCurrent=()=>true,isCurrentSession=()=>true,signal,beforeWrite=()=>{}}={}){
+ const selected=validateClientPreparation(value,data);let writing=false;
+ const readOnly=read=>selectionRead(read,writing?undefined:signal),auth=await readOnly(()=>discover(installPath));
  if(!auth?.port)throw Error('请先连接客户端并确认 Windows 权限');
- const currentRequest=async(...args)=>{if(!isCurrent())throw Error('组合或配置已变化，请重新选择');return request(...args);};
+ const readRequest=(auth,route)=>readOnly(()=>request(auth,route,'GET',undefined,writing?undefined:{signal}));
+ const currentRequest=async(...args)=>{if(!isCurrent())throw Error('组合或配置已变化，请重新选择');if(selected.preselectOnly){signal?.throwIfAborted();beforeWrite();writing=true;}return request(...args);};
  const read=async()=>{
   // The phase and both sessions are independent reads. Overlap them so a read costs one client round trip, and fail in the order the sequential reads did.
-  const [phase,gameRead,sessionRead]=await Promise.allSettled([request(auth,'/lol-gameflow/v1/gameflow-phase'),request(auth,'/lol-gameflow/v1/session'),request(auth,'/lol-champ-select/v1/session')]);
+  const [phase,gameRead,sessionRead]=await Promise.allSettled([readRequest(auth,'/lol-gameflow/v1/gameflow-phase'),readRequest(auth,'/lol-gameflow/v1/session'),readRequest(auth,'/lol-champ-select/v1/session')]);
   if(phase.status==='rejected')throw phase.reason;
   if(phase.value!=='ChampSelect')throw Error('已离开选人阶段，请在客户端核对');
   if(gameRead.status==='rejected')throw gameRead.reason;
@@ -58,7 +61,7 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  if(selected.mode!=='hex'&&locked&&initial.own.championId!==selected.championId)throw Error('客户端已锁定其他英雄不能预选这位英雄');
  if(!locked&&initial.timer!=='PLANNING'&&initial.action.isInProgress!==true)throw Error('请在预选阶段或轮到本人选人时点击，不会自动等待或锁定');
  const readEligibility=async()=>{
-  const [pickableValue,disabledValue]=await Promise.all([request(auth,'/lol-champ-select/v1/pickable-champion-ids'),request(auth,'/lol-champ-select/v1/disabled-champion-ids')]);
+  const [pickableValue,disabledValue]=await Promise.all([readRequest(auth,'/lol-champ-select/v1/pickable-champion-ids'),readRequest(auth,'/lol-champ-select/v1/disabled-champion-ids')]);
   const pickable=normalizeChampionIds(pickableValue),disabled=normalizeChampionIds(disabledValue);
   if(pickable===null||disabled===null)throw Error('未能确认本局可选范围，尚未预选');
   return {pickable,disabled};

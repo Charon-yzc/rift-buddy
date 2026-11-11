@@ -30,7 +30,7 @@ import {recommendationKey,CONFIGURATION_FIELDS,recallPreparation,createPreparati
 import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {roleClaimChoice,activeRoleClaim} from '../src/core/role-claim.mjs';
-import {pregamePhase,restoredRoleClaim} from '../src/core/pregame-intent.mjs';
+import {pregamePhase,restoredRoleClaim,pregameHeroRoleChange,pregameLobbyContext} from '../src/core/pregame-intent.mjs';
 import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,editPartyRange,savedPartyCount,partyRangeMode,partyRangeCount} from '../src/core/party-range.mjs';
 import {rebaseWindowState} from '../src/core/window-state.mjs';
 import {rollbackUnacceptedState} from '../src/core/save-state.mjs';
@@ -115,11 +115,11 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   recommendationRun:0,activeRecommendation:null,cancelRecommendationReveal:noop,recommendationRunner:null,recommendationSearchActive:false,communityAfter:'',recommendationFactoryGeneration:0,buildSourceEpoch:0,pendingBuildSourceEpoch:null,buildSourceLocked:false,lockedBuildSource:null,buildSourceDraft:null,externalState:null,stateRevision:0,
   lastRenderedClient:'',lastMatchupSession:'',lastMatchupSync:'',lastMatchupGame:'123',matchupTargets:new Map(),lastClientRead:'',
   lastAutoPartyContext:'',pendingIntentPreparation:null,pendingIntentPlanId:'',lastMatchupOwn:'',saveChain:Promise.resolve(),sharedClient:null,
-  buildView:null,renderedBuildContext:null,activeAppSelect:null,dragPick:null,document:{activeElement:{matches:()=>false}},
+  buildView:null,renderedBuildContext:null,activeAppSelect:null,dragPick:null,overlay:{firstElementChild:null},document:{activeElement:{matches:()=>false}},
   preparations:createPreparationStore(),clientPreparing:false,runeApplying:false,itemSetPending:'',candidatePreparing:false,
   lastTaskSelection:null,companionPreview:null,companionTab:'recommend',lastCompanionOwn:'',lastCompanionIntent:'',lastCompanionLocked:'',showAllCandidates:false,recommendationError:'',renderedDraftResults:null,disclosureState:createDisclosureState(),renderedDisclosureScope:'',selectionUiReset:false,selectionUiRevision:0,pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshErrors:new Map(),buildErrors:new Map(),matchupFocusError:null,clickedRoomPlan:null,roomRoleChoice:null,companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',positionClaim:null,
   recommendationSessionSeed:'test-session',recommendationBatch:0,clickedHeroPreparation:null,preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
-  structuredClone,validatePreparation,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,savedPartyCount,partyRangeMode,partyRangeCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
+  structuredClone,validatePreparation,pregamePhase,restoredRoleClaim,pregameHeroRoleChange,pregameLobbyContext,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,savedPartyCount,partyRangeMode,partyRangeCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
   companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,heroClickSelection,configurationChoices,getBuild,localConfigurationPreview,configurationReadOnly,
   runeWriteContext,clientPreparationPlan,preparationGameId,clientPreparationKey,runeApplicationKey,
@@ -858,7 +858,7 @@ test('cancelling a lobby hero preserves the selected lane and never prepares a p
  const before=structuredClone(c.saved.draft),requests=[];let closed=0;
  Object.assign(c,{saveChain:Promise.resolve(),closeOverlay:()=>closed++,render:()=>{},queueCompanionRecommendation:()=>{},acceptSavedState:state=>{c.saved=state;}});
  c.api.cancelPreselection=async()=>{requests.push('cancel');return {state:{...c.saved,draft:{...c.saved.draft,preselection:{role:'bottom',champion:null,kind:'position'}}},revision:2};};
- vm.runInContext(extract('async function cancelPregameHero(){','async function stagePregameIntent('),c);
+ vm.runInContext(extract('async function cancelPregameHero(){','let pregameIntentRevision='),c);
  await c.cancelPregameHero();assert.deepEqual(JSON.parse(JSON.stringify(requests)),['cancel']);assert.deepEqual(c.saved.draft.slots,before.slots);assert.equal(closed,1);assert.equal(calls.prepared.length,0);
  c.saved.draft=structuredClone(before);c.api.cancelPreselection=async()=>{throw Error('选人或组队已变化');};
  await assert.rejects(c.cancelPregameHero(),/选人或组队已变化/);assert.deepEqual(c.saved.draft,before);assert.equal(closed,1);assert.equal(calls.prepared.length,0);

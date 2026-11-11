@@ -844,7 +844,7 @@ async function boot(){
   return {required:true,current:requiredEntries.every(entry=>entry&&catalogChoiceMatches({id:entry.id,members:comboMembers(entry)},entry,projected))};
  }
  async function applyStagedSelection(){
-  const intent=state.draft?.preselection,gameId=publicClientGameId(latestClient);
+  const intent=state.draft?.preselection,gameId=publicClientGameId(latestClient),stageSelectionRevision=heroSelectionRevision;
   if(stagedSelectionRunning||applyingRunes||importingItemSet||!intent||intent.attemptedGameId||!gameId||latestClient.phase!=='ChampSelect')return;
   // A committed intent owns its frozen source independently of its window.
   // Once consumption starts, subsequent edits in that same live window can
@@ -884,18 +884,19 @@ async function boot(){
    // An explicit configuration may have acquired the client while imports
    // loaded. Its lock and newer choice take precedence over this old hover.
    if(!stageBindingCurrent())throw Error('预选执行期间配置来源已变化，请重新选择配置');
-   if(applyingRunes||importingItemSet||!latestClient.connected||latestClient.phase!=='ChampSelect'||publicClientGameId(latestClient)!==gameId||state.draft?.preselection?.attemptedGameId!==gameId||state.draft.preselection.champion!==choice.champion)return;
+   if(stageSelectionRevision!==heroSelectionRevision||applyingRunes||importingItemSet||!latestClient.connected||latestClient.phase!=='ChampSelect'||publicClientGameId(latestClient)!==gameId||state.draft?.preselection?.attemptedGameId!==gameId||state.draft.preselection.champion!==choice.champion)return;
    if(matched&&stagedCatalogChoice(intent,choice.champion,latestClient.session,sourceData())?.id!==matched.id)throw Error('组合成员或资料状态已变化，请重新选择配置');
    if(intent.reviewStamp&&intent.reviewStamp!==selectionReviewStamp(baseSelection,state,requestSource)||dispatchStamp!==selectionReviewStamp(selection,state,requestSource))throw Error('组合或资料复核状态已变化，请重新选择配置');
    const value=service.validateClientPreparation({...plan.value,sessionGameId:gameId,context:runeWriteContext(latestClient),claimPosition:intent.kind!=='hero'},data);
    const selectionWriteAtDispatch=selectionWriteRevision;
-   const stillCurrent=()=>stageBindingCurrent()&&latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&buildData.flashSlot===state.preferences.flashSlot&&(hoverOnly||selectionWriteAtDispatch===selectionWriteRevision)&&isDeepStrictEqual(state.draft?.preselection,attemptedIntent)&&(!intent.reviewStamp||intent.reviewStamp===selectionReviewStamp(baseSelection,state,requestSource))&&dispatchStamp===selectionReviewStamp(selection,state,requestSource)&&(hoverOnly||isDeepStrictEqual(remembered,priorSelection()))&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion,latestClient.session,sourceData())?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection,latestClient.session,sourceData()).current);
+   const stillCurrent=()=>stageBindingCurrent()&&latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&buildData.flashSlot===state.preferences.flashSlot&&(hoverOnly||stageSelectionRevision===heroSelectionRevision&&selectionWriteAtDispatch===selectionWriteRevision)&&isDeepStrictEqual(state.draft?.preselection,attemptedIntent)&&(!intent.reviewStamp||intent.reviewStamp===selectionReviewStamp(baseSelection,state,requestSource))&&dispatchStamp===selectionReviewStamp(selection,state,requestSource)&&(hoverOnly||isDeepStrictEqual(remembered,priorSelection()))&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion,latestClient.session,sourceData())?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection,latestClient.session,sourceData()).current);
    const guideCurrent=()=>selectionWriteAtDispatch===selectionWriteRevision&&stillCurrent();
    const operation=beginPreparation('selection',{value,selection,context:value.context});applyingRunes=true;importingItemSet=true;
    let hovered;
    try{
-    let written;if(helperReady&&sourceBinding)setHelperSourceLock(sourceBinding,true,requestSource);try{written=helperReady?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId},{isCurrent:stillCurrent,isCurrentSession:session=>stageBindingCurrent()&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion,session,sourceData())?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection,session,sourceData()).current)});}finally{if(helperReady&&sourceBinding)setHelperSourceLock(sourceBinding,false);}
+    let written;if(helperReady&&sourceBinding)setHelperSourceLock(sourceBinding,true,requestSource);try{written=hoverOnly?await selectHeroOnly(value,{isCurrent:stillCurrent}):helperReady?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId},{isCurrent:stillCurrent,isCurrentSession:session=>stageBindingCurrent()&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion,session,sourceData())?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection,session,sourceData()).current)});}finally{if(helperReady&&sourceBinding)setHelperSourceLock(sourceBinding,false);}
     finishPreparation(operation,{result:written});
+    if(written.superseded)return;
     if(written.complete&&!hoverOnly&&guideCurrent())rememberAppliedGuide(gameId,selection,requestSource);
     const result=await preservePreparationResult(written,[
      ...(written.steps?.runes?.status==='done'?[['保存已写符文页',()=>saveCurrentState(current=>({...current,ownedPageId:written.steps.runes.pageId}))]]:[]),
@@ -1237,16 +1238,36 @@ async function boot(){
  });
  const {createHexSelectionQueue}=await import('../services/hex-selection-queue.mjs');
  let heroSelectionRevision=0;
- const hexSelections=createHexSelectionQueue(async(value,control)=>{
-  if(helper.active())return helper.request('selectChampion',{value,baseIdentity:generationBaseIdentity(data)});
+ let heroWriter=null;const heroWriterTasks=new Set();
+ const hexSelections=createHexSelectionQueue(async(job,control)=>{
   const service=await import('../services/client-preparation.mjs');
-  const result=await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath},{isCurrent:control.isCurrent});
+  const result=await service.prepareClientSelection({value:job.value,data:job.data,installPath:job.owner.installPath},{isCurrent:()=>control.isCurrent()&&job.current(),isCurrentSession:job.isCurrentSession,signal:control.signal,beforeWrite:control.beforeWrite});
   return result;
  });
+ async function selectHeroOnly(value,{isCurrent=()=>true,isCurrentSession=()=>true}={}){
+  const revision=++heroSelectionRevision,owner=helper.captureSelection(),selectionData=data;
+  const current=()=>revision===heroSelectionRevision&&owner.isCurrent()&&isCurrent();
+  const superseded=()=>({complete:false,superseded:true});
+  if(heroWriter&&heroWriter!==owner.writer){
+   // A transport change cannot bypass unresolved writes owned by another
+   // helper/direct process. Same-writer requests remain free to preempt reads.
+   await Promise.allSettled([...heroWriterTasks,hexSelections.cancel()]);
+  }
+  if(!current())return superseded();
+  heroWriter=owner.writer;
+  // Forward new intent immediately to the actual writer. Waiting for an old
+  // helper RPC here would prevent its queue from seeing the replacement.
+  // A previous direct write still keeps its place before changing owners.
+  const task=owner.helper?owner.request({value,selectionSeq:revision,baseIdentity:generationBaseIdentity(selectionData)}):hexSelections({value,data:selectionData,owner,current,isCurrentSession});
+  heroWriterTasks.add(task);
+  try{const result=await task;return current()?result:superseded();}
+  catch(error){if(!current())return superseded();throw error;}
+  finally{heroWriterTasks.delete(task);}
+ }
  guard('prepare-selection',async(value,{sender})=>{
   if(value?.preselectOnly===true&&['hex','rift'].includes(value.mode)){
    const service=await import('../services/client-preparation.mjs');
-   const selected=service.validateClientPreparation(value,data);heroSelectionRevision++;return hexSelections(selected);
+   const selected=service.validateClientPreparation(value,data);return selectHeroOnly(selected);
   }
   if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，请稍后');
   const requestSource=value?.buildSource===undefined?normalizeBuildSource(data.buildSource):requireBuildSource(value.buildSource),sourceBinding=noteWindowSource(sender,requestSource,value?.sourceEpoch);

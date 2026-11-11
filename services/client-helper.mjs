@@ -35,11 +35,11 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
  const config=JSON.parse(await fs.readFile(filename,'utf8'));
  if(!pipePattern.test(config.pipe)||!tokenPattern.test(config.secret)||!Number.isInteger(config.parentPid)||config.parentPid<=0||!Number.isFinite(config.createdAt)||Date.now()-config.createdAt>600000||config.createdAt>Date.now()+5000)throw new Error('连接会话已过期');
  // The helper only serves this app's explicit operations; neither command lines nor credentials leave it.
- let writing=false,itemSetWriting=false,latestNoticeOperation=null,heroSelectionRevision=0;
+ let writing=false,itemSetWriting=false,latestNoticeOperation=null,heroSelectionRevision=0,selectionSeq=0;
  const readCurrentGame=readGame||createAcceptedGameReader({root:path.join(userData,'data'),fallbackRoot:path.join(bundleRoot,'data')});
  const selectChampion=createHexSelectionQueue(async(payload,control)=>{
-  const data=await readCurrentGame(payload?.baseIdentity??null);
-  return prepareClientSelection({value:payload.value,data,installPath:config.installPath},{isCurrent:control.isCurrent});
+  const data=await control.read(()=>readCurrentGame(payload?.baseIdentity??null));
+  return prepareClientSelection({value:payload.value,data,installPath:config.installPath},{isCurrent:()=>control.isCurrent()&&payload.current(),signal:control.signal,beforeWrite:control.beforeWrite});
  });
  const matchHistory=createMatchHistoryService({installPath:()=>config.installPath});
   const server=net.createServer(socket=>{
@@ -64,9 +64,12 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
       result=await writeRunePage({page:request.payload.page,context:validateRuneWriteContext(request.payload.context),ownedPageId:state.ownedPageId,installPath:config.installPath,trees:data.runes});
       // The unelevated app is the sole settings writer; avoid racing a preference save.
      }finally{writing=false;}
-    }else if(request.operation==='selectChampion'){
+    }else if(request.operation==='selectChampion'||request.operation==='prepareSelection'&&request.payload?.value?.preselectOnly===true){
      if(request.payload?.value?.preselectOnly!==true||!['rift','hex'].includes(request.payload.value.mode))throw Error('此操作仅用于选择英雄');
-     heroSelectionRevision++;result=await selectChampion(request.payload);
+     const next=request.payload.selectionSeq;
+     if(!Number.isSafeInteger(next)||next<=0)throw Error('英雄选择编号不正确');
+     if(next<=selectionSeq)result={complete:false,superseded:true};
+     else{selectionSeq=next;heroSelectionRevision++;result=await selectChampion({...request.payload,current:()=>!socket.destroyed});}
     }else if(request.operation==='prepareSelection'){
      latestNoticeOperation=request.payload?.operationId??null;
      if(writing||itemSetWriting)throw Error('客户端配置正在处理，请稍后');writing=true;itemSetWriting=true;socket.setTimeout(60000,()=>socket.destroy());
@@ -97,7 +100,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
  timer.unref();return server;
 }
 export function createHelperManager({userData,bundleRoot,executable,isPackaged,helperExecutable,helperEntry,helperBundleRoot,launcherExecutable,onProgress=()=>{},startupTimeoutMs=45000,launch=launchHelper,getInstallPath=()=>'',readClient=clientSnapshot,send=requestHelper,historyService=null}) {
- let config=null,opening=null,sessionFile=null,launchRecord=null,closed=false,transport=null,lifecycle=0;
+ let config=null,opening=null,sessionFile=null,launchRecord=null,closed=false,transport=null,lifecycle=0,writeEpoch=0,selectionOwner=null;
  const directHistory=historyService||createMatchHistoryService({installPath:getInstallPath});
  const revokeTransport=()=>{transport=null;lifecycle++;directHistory.clear();};
  function bindTransport(kind,installPath,helperConfig=null){
@@ -127,8 +130,8 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
  }
  async function ensure(installPath){
   if(closed)throw Error('连接已取消');
-  if(config&&config.installPath!==installPath){const previous=config;config=null;revokeTransport();await send(previous,'shutdown',{},1000).catch(()=>{});}
-  if(config){try{await send(config,'ping',{},1000);return true;}catch{config=null;revokeTransport();}}
+  if(config&&config.installPath!==installPath){const previous=config;config=null;writeEpoch++;revokeTransport();await send(previous,'shutdown',{},1000).catch(()=>{});}
+  if(config){try{await send(config,'ping',{},1000);return true;}catch{config=null;writeEpoch++;revokeTransport();}}
   if(opening)return opening;
   opening=(async()=>{
    const key=crypto.randomBytes(16).toString('hex');
@@ -152,7 +155,7 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
     if(record?.phase==='launched'&&!launched){launched=true;onProgress('连接助手已启动，正在建立本机连接…');}
     try{const ready=await send(next,'ping',{},750);if(ready.ready){
      if(closed){await send(next,'shutdown',{},750).catch(()=>{});throw Object.assign(Error('连接已取消'),{startupFailure:true});}
-     config=next;revokeTransport();return true;
+     config=next;writeEpoch++;revokeTransport();return true;
     }}catch(error){if(error.startupFailure)throw error;}
     try{const status=JSON.parse(await fs.readFile(path.join(userData,'client-helper-status.json'),'utf8'));
      if(Date.parse(status.at)>=next.createdAt&&status.stage&&!['starting','ready'].includes(status.stage))throw Object.assign(Error('连接辅助进程启动失败，请重新点击连接'),{startupFailure:true});
@@ -176,9 +179,21 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
   else{const auth=await discoverClient(installPath,{reuseSnapshot:true}).catch(()=>null);result=await liveClientDictionary(auth).catch(()=>null);}
   return !closed&&version===lifecycle&&captured===config&&(!token||transportCurrent(token))?result:null;
  }
- return {ensure,active:()=>!!config,history,postGame,statusWithTransport,transportCurrent,liveDictionary,
+ function captureSelection(){
+  if(selectionOwner?.isCurrent())return selectionOwner;
+  const captured=config,epoch=writeEpoch,installPath=String(getInstallPath()||'');
+  let owner;
+  const isCurrent=()=>selectionOwner===owner&&!closed&&writeEpoch===epoch&&config===captured&&(!captured||captured.installPath===installPath)&&String(getInstallPath()||'')===installPath;
+  owner=Object.freeze({writer:Object.freeze({}),helper:!!captured,installPath,isCurrent,request:async payload=>{
+   if(!captured||!isCurrent())throw Error('英雄选择连接已变化，请重新选择');
+   const result=await send(captured,'selectChampion',payload,12000);
+   return isCurrent()?result:{complete:false,superseded:true};
+  }});
+  selectionOwner=owner;return owner;
+ }
+ return {ensure,active:()=>!!config,captureSelection,history,postGame,statusWithTransport,transportCurrent,liveDictionary,
    request:(operation,payload)=>{if(!config)throw new Error('连接助手尚未就绪，请重试读取');return send(config,operation,payload,['prepareSelection','matchHistory'].includes(operation)?60000:12000);},
   status:async(installPath,partyIds=[])=> (await statusWithTransport(installPath,partyIds)).client,
-  shutdown:async()=>{closed=true;revokeTransport();if(config){try{await send(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},
+  shutdown:async()=>{closed=true;writeEpoch++;revokeTransport();if(config){try{await send(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},
  };
 }

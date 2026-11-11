@@ -134,7 +134,7 @@ function stagedScheduler(kind,{saveFailsAfterDispatch=false}={}){
  // one realm in production. Keep exact field/value comparisons across the VM.
  const context=vm.createContext({state:{preferences:defaultState().preferences,preparations:[],draft:{preselection:{role:'support',champion:'Nami',buildSource:DEFAULT_BUILD_SOURCE,...(kind?{kind,selection:{id:'Nami',role:'support',mode:'rift'}}:{})}}},preservePreparationResult,upsertPreparation,storedPreparation,preparationIdentity,CONFIGURATION_FIELDS,normalizeBuildSource,requireBuildSource,selectBuildSource,catalogPlanGroups,catalogContextRevision,projectCatalogAvailability,structuredClone,appliedGuideSelection:null,latestClient:current,data,isDeepStrictEqual:(a,b)=>isDeepStrictEqual(a,b,{skipPrototype:true}),publicClientGameId,pregameIntentChoice,
   stagedSourceBinding:{entry:{source:DEFAULT_BUILD_SOURCE,epoch:1,destroyed:false},epoch:1},selectionWriteRevision:0,saveTask:Promise.resolve(),
-  stagedSelectionRunning:false,applyingRunes:false,importingItemSet:false,stagedSelectionParty:current.party.key,stagedPartyIdentity:()=>current.party.key,
+  heroSelectionRevision:0,stagedSelectionRunning:false,applyingRunes:false,importingItemSet:false,stagedSelectionParty:current.party.key,stagedPartyIdentity:()=>current.party.key,
   saveCurrentState:update=>{const task=context.saveTask.catch(()=>{}).then(()=>{if(saveFailsAfterDispatch&&writes.length)throw Error('mock disk unavailable');context.state=update(context.state);return context.state;});context.saveTask=task;return task;},loadModules:()=>{entered();return loading;},
   rememberAppliedGuide:(gameId,selection,source)=>{context.appliedGuideSelection={gameId,selection:structuredClone(selection),source:requireBuildSource(source)};},
   publishWindows:(_event,value)=>messages.push(value),beginPreparation:()=>({}),finishPreparation:(_operation,event)=>events.push(event),helper:{active:()=>false},status:async()=>{},rememberSelectionHover:async()=>{}});
@@ -161,6 +161,17 @@ test('a changed source epoch stops a staged configuration before client dispatch
  const scheduler=stagedScheduler('hero'),pending=scheduler.run();await scheduler.started;
  scheduler.context.stagedSourceBinding.entry.epoch++;scheduler.release();await pending;
  assert.equal(scheduler.writes.length,0);assert.match(scheduler.messages.at(-1).message,/配置来源已变化/);
+});
+test('a newer hero click stops an older staged choice while its imports are loading',async()=>{
+ const scheduler=stagedScheduler('hero'),pending=scheduler.run();await scheduler.started;
+ scheduler.context.heroSelectionRevision++;scheduler.release();await pending;assert.equal(scheduler.writes.length,0);assert.equal(scheduler.events.length,0);
+});
+test('a staged hover-only choice uses the shared hero lane and preserves supersession',async()=>{
+ const scheduler=stagedScheduler('hero'),requests=[];
+ scheduler.context.derivedCatalogState=()=>({required:true,current:false});
+ scheduler.context.selectHeroOnly=async(value,control)=>{assert(control.isCurrent());requests.push(value);return {complete:false,superseded:true};};
+ const pending=scheduler.run();await scheduler.started;scheduler.release();await pending;
+ assert.equal(requests.length,1);assert.equal(requests[0].preselectOnly,true);assert.equal(scheduler.writes.length,0);assert.equal(scheduler.context.appliedGuideSelection,null);assert.equal(scheduler.messages.length,0);
 });
 
 test('hero cancellation preserves the latest lane and exact manual range without client access',async()=>{
