@@ -10,11 +10,11 @@ function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile
 let postgame,postgameLifecycle;
 let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,usageCache,latestHistoryTransport,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
 let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null,elevatedReadAttempted=false;
-let observedWindows=null,observedAt=0;
+let observedWindows=null,observedAt=0,clientWakePending=false;
 let saveTask=Promise.resolve();
 let stateRevision=0,dataRevision=0,latestNoticeOperation=null,selectionWriteRevision=0;
 const {createPreparationLedger,preservePreparationResult}=require('./preparation-ledger.cjs');
-const {shouldRequestElevatedRead}=require('./elevated-read-gate.cjs');
+const {shouldRequestElevatedRead,shouldWakeClientRead,OBSERVATION_MAX_AGE_MS}=require('./elevated-read-gate.cjs');
 const preparationLedger=createPreparationLedger();
 const sharedDataFields=new Map();
 function appWindows(){return [win,companion?.getWindow()].filter(w=>w&&!w.isDestroyed());}
@@ -915,15 +915,18 @@ async function boot(){
   }catch(error){if(latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&state.draft?.preselection?.attemptedGameId===gameId)publishWindows('preselection-status',{message:String(error.message||'预选未完成，请直接选择英雄')});}
   finally{stagedSelectionRunning=false;}
  }
+ const automaticReadOptions=(force=false)=>({force,autoSync:state.preferences.autoSync!==false,needsElevation:!!latestClient?.needsElevation,attempted:elevatedReadAttempted,observedWindows,observedAt,explicitInGame:mainExplicitInGame});
+ const wakeClientRead=()=>shouldWakeClientRead({...automaticReadOptions(),connected:!!latestClient.connected,clientAppeared:clientWakePending});
  const status=createClientSync(async(force=false)=>{
-  if(!force&&Date.now()-lastStatus<(latestClient.connected?(latestClient.phase==='ChampSelect'?2000:3000):5000))return latestClient;
+  if(!force&&!wakeClientRead()&&Date.now()-lastStatus<(latestClient.connected?(latestClient.phase==='ChampSelect'?2000:3000):5000))return latestClient;
+  clientWakePending=false;
   statusTask=(async()=>{const previousClient=latestClient,previousPhase=latestClient.phase,previousGame=latestClient.game?.gameId;try{latestClient=await readClientStatus();}catch{latestHistoryTransport=null;latestClient={connected:false,phase:'Offline',message:'连接暂不可用，手动选人可用'};}
    // Reading public client data is automatic. When the client runs with higher
    // privileges, Windows alone decides whether it will let us read it, so ask
    // once per run instead of making the player start an authorization step.
    // A forced/manual read leaves its permission request to the renderer, and
    // electron/elevated-read-gate.cjs holds the conditions for the one ask.
-   const allowed=shouldRequestElevatedRead({force,needsElevation:!!latestClient?.needsElevation,attempted:elevatedReadAttempted,observedWindows,observedAt,explicitInGame:mainExplicitInGame});
+   const allowed=shouldRequestElevatedRead(automaticReadOptions(force));
    if(allowed){
     elevatedReadAttempted=true;
     try{await helper.ensure(state.preferences?.installPath);latestClient=await readClientStatus();}
@@ -1371,7 +1374,7 @@ async function boot(){
  const checkStatistics=()=>{if(state.preferences.autoCheck!==false&&!quitting)dataFeed.check().catch(()=>{});};
  dataFeedStartup=setTimeout(checkStatistics,10000);dataFeedTimer=setInterval(checkStatistics,60000);
  diagnostic(`guide-hotkey-registered ${guideHotkeyAvailable}`);
- try{const {observeWindows}=await import('../services/window-observer.mjs');windowObserver=await observeWindows({root,onSnapshot:value=>{const dip=rect=>rect?{...rect,...screen.screenToDipRect(null,rect)}:null;const clientBounds=dip(value.client),gameBounds=dip(value.game);observedWindows={client:value.client?{pixels:value.client,dip:clientBounds,minimized:value.client.minimized,foreground:value.client.foreground}:null,game:value.game?{pixels:value.game,dip:gameBounds,minimized:value.game.minimized,foreground:value.game.foreground}:null};observedAt=Date.now();mainPeek.sync(true,!!clientBounds?.foreground||!!gameBounds?.foreground);companion.observe(clientBounds);guide.setGameBounds(gameBounds);},onError:message=>{observedWindows=null;observedAt=0;mainPeek.sync(true,false);companion.observe(null);diagnostic(message);}});}catch{diagnostic('window observer unavailable');}
+ try{const {observeWindows}=await import('../services/window-observer.mjs');windowObserver=await observeWindows({root,onSnapshot:value=>{const previousObservationAge=Date.now()-observedAt,previousSafeClient=!!observedWindows?.client&&!observedWindows?.game&&previousObservationAge>=0&&previousObservationAge<OBSERVATION_MAX_AGE_MS;const dip=rect=>rect?{...rect,...screen.screenToDipRect(null,rect)}:null;const clientBounds=dip(value.client),gameBounds=dip(value.game);observedWindows={client:value.client?{pixels:value.client,dip:clientBounds,minimized:value.client.minimized,foreground:value.client.foreground}:null,game:value.game?{pixels:value.game,dip:gameBounds,minimized:value.game.minimized,foreground:value.game.foreground}:null};observedAt=Date.now();const safeClient=!!observedWindows.client&&!observedWindows.game;if(!safeClient)clientWakePending=false;else if(!previousSafeClient)clientWakePending=true;mainPeek.sync(true,!!clientBounds?.foreground||!!gameBounds?.foreground);companion.observe(clientBounds);guide.setGameBounds(gameBounds);if(wakeClientRead())status().catch(()=>{});},onError:message=>{observedWindows=null;observedAt=0;clientWakePending=false;mainPeek.sync(true,false);companion.observe(null);diagnostic(message);}});}catch{diagnostic('window observer unavailable');}
  if(process.argv.includes('--show-guide'))guide.show();
  diagnostic(`hotkey-registered ${hotkeyAvailable}`);
 }

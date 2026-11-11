@@ -236,17 +236,16 @@ test('a hero click dispatches before an unrelated pending guide synchronization 
  assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Ashe');releaseGuide();await pending;
 });
 
-test('a manual click may ask Windows for permission again, while automatic polling never asks by itself',async()=>{
- // The automatic ask lives in electron/main.cjs and its conditions are unit
- // tested in tests/elevated-read-gate.test.mjs. What the renderer owns is the
- // manual click: it may retry, and polling must not silently raise a prompt.
+test('the renderer may retry explicit authorization while its background polling never calls authorizeClient',async()=>{
+ // Main owns observer-gated automatic authorization, covered by the actual
+ // scheduling tests in startup-permission-wake.test.mjs and startup smoke.
+ // This renderer case covers explicit retries and polling's IPC boundary.
  const {context:c}=setup();let prompts=0;
  c.api.authorizeClient=async()=>{prompts++;throw Error('模拟取消权限');};
  c.api.client=async()=>({connected:false,phase:'Offline',needsElevation:true});
  await c.performSync(true,true);assert.equal(prompts,1,'First manual click');
  await c.performSync(true,true);assert.equal(prompts,2,'A second explicit click may retry');
  await c.performSync(false,false);assert.equal(prompts,2,'Polling must wait for an explicit click');
- assert.match(await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),/shouldRequestElevatedRead\(\{/,'The main process asks through the tested gate');
 });
 
 test('a lobby role click crossing into selection applies a complete position claim without locking',async()=>{

@@ -8,14 +8,16 @@ import {privateHistoryState} from '../src/match-history-tools-view.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const page=(name='Mock#TEST',start=0,hasMore=true)=>({handle:name,player:{name,puuid:'mock-public-'+name},games:[],start,count:20,hasMore,servers:[]});
-function fixture(){
- const focusListeners=new Set(),requests=[],calls=[],data={champions:[],items:{},runes:[],spells:{},augments:[]};let controls=[],history,holdPages=false,searchRequest,layer=null,searchReads=0;
+function fixture({details=false}={}){
+ const focusListeners=new Set(),requests=[],detailRequests=[],calls=[],detailTabList={},data={champions:[],items:{},runes:[],spells:{},augments:[]},game={id:1,self:{champion:22,result:'win'},participants:[],teams:[],queue:420};let controls=[],history,holdPages=false,searchRequest,layer=null,searchReads=0;
  const body={tagName:'BODY'},document={body,activeElement:body,
   addEventListener(name,fn){if(name==='focusin')focusListeners.add(fn);},removeEventListener(name,fn){if(name==='focusin')focusListeners.delete(fn);},
   querySelectorAll(selector){
    if(selector==='#history-query')return controls.filter(node=>node.id==='history-query');
    if(selector==='[data-history-page="number"]')return controls.filter(node=>node.id==='page-number');
    if(selector==='.history-pagination button')return controls.filter(node=>node.pagination);
+   if(selector.startsWith('#history-tab-'))return controls.filter(node=>node.id===selector.slice(1));
+   if(selector.includes('.history-expand'))return controls.filter(node=>node.expand&&node.dataset.id===selector.match(/data-history-match="([^"]+)"/)?.[1]);
    const action=selector.match(/data-action="([^"]+)"/)?.[1],id=selector.match(/data-id="([^"]+)"/)?.[1];
    return action?controls.filter(node=>node.dataset.action===action&&(id===undefined||node.dataset.id===id)):[];
   },querySelector(selector){return this.querySelectorAll(selector)[0]||null;},getElementById(id){return controls.find(node=>node.id===id)||null;}
@@ -28,17 +30,18 @@ function fixture(){
   controls=[node('query',undefined,{id:'history-query',tagName:'INPUT',value:history.state.query}),node('page-number',undefined,{id:'page-number',value:'2'})];
   for(const tab of history.state.tabs)controls.push(node('history-tab',tab.id),node('history-close',tab.id));
   const tab=history.current();if(tab?.page)for(const action of ['history-prev','history-next','history-first','history-page-go'])controls.push(node(action,undefined,{pagination:true,disabled:tab.loading||action==='history-next'&&!tab.page.hasMore||action==='history-prev'&&tab.page.start===0}));
+  if(details&&tab?.page)for(const game of tab.page.games)for(const section of ['toggle',...(tab.details[game.id]?.open?['summary','events']:[])])controls.push(node('history-detail',game.id,{dataset:{action:'history-detail',id:String(game.id),section},key:'detail:'+game.id+':'+section,expand:section==='toggle',id:section==='toggle'?'':`history-tab-${game.id}-${section}`,matches:selector=>section!=='toggle'&&selector==='.history-detail-tabs [role="tab"]',closest:selector=>section!=='toggle'&&selector==='.history-detail-tabs'?detailTabList:null}));
   // The native focus restorer preserves matching live controls, but skips disabled ones.
   const restored=controls.find(control=>control.key===focused.key);if(restored&&!restored.disabled){if(focused.id==='history-query')restored.value=focused.value;restored.focus({preventScroll:true});}
  }
  const overlay={get firstElementChild(){return layer;},set firstElementChild(value){layer=value;},get innerHTML(){return layer?.html||'';},set innerHTML(html){layer=html?{kind:'search',html}:null;}};
  const context=vm.createContext({document,overlay,data,route:'history',createHistoryController,privateHistoryState,matchHistorySearchView,analyzeAkariHistory:()=>null,render,updateHistoryCards:()=>false,refreshHistoryAnalysis(){},toast(){},nextTick:()=>Promise.resolve(),preserveOverlay:()=>()=>{},closeOverlay(){history.cancelSearch();overlay.innerHTML='';},
-  historyRequest:async(op,options)=>{calls.push({op,...structuredClone(options)});if(op==='search'){searchReads++;searchRequest=Promise.withResolvers();return searchRequest.promise;}if(op==='profile')return {};if(holdPages){const gate=Promise.withResolvers();requests.push({options,gate});return gate.promise;}return page(options.query);}});
+  historyRequest:async(op,options)=>{calls.push({op,...structuredClone(options)});if(op==='search'){searchReads++;searchRequest=Promise.withResolvers();return searchRequest.promise;}if(op==='profile')return {};if(op==='detail'){const gate=Promise.withResolvers();detailRequests.push({options,gate});return gate.promise;}if(op==='timeline')return {timeline:{frames:[],events:[]}};if(holdPages){const gate=Promise.withResolvers();requests.push({options,gate});return gate.promise;}return {...page(options.query),...(details?{games:[game]}:{})};}});
  const originalBinding=source.indexOf('const history=createHistoryController('),helpers=source.indexOf('let historySearchResults=');
  vm.runInContext(source.slice(helpers>=0?helpers:originalBinding,source.indexOf('function acceptChampionUsage(',originalBinding)),context);history=vm.runInContext('history',context);
  const actionStart=source.indexOf('function historyActionFocus('),originalAction=source.indexOf('async function historyAction(');
  vm.runInContext(source.slice(actionStart>=0?actionStart:originalAction,source.indexOf('let stateRecovery=',originalAction)),context);
- return {document,overlay,history,requests,calls,context,body,focusListeners,node,render,view:()=>matchHistoryView(privateHistoryState(history.state),data),searchReads:()=>searchReads,hold(){holdPages=true;},control(action,id){return controls.find(node=>node.dataset.action===action&&(id===undefined||node.dataset.id===String(id)));},action(action,el){return context.historyAction(action,el);},search(query='Mock'){history.state.query=query;const input=document.getElementById('history-query');if(input)input.value=query;const pending=context.submitHistorySearch?context.submitHistorySearch():history.search(),gate=searchRequest;return {pending,finish(players=[{name:'Mock#TEST',puuid:'mock-public-search',server:'MOCK'}]){gate.resolve({players});return pending;}};}};
+ return {document,overlay,history,requests,detailRequests,game,calls,context,body,focusListeners,node,render,view:()=>matchHistoryView(privateHistoryState(history.state),data),searchReads:()=>searchReads,hold(){holdPages=true;},control(action,id,section){return controls.find(node=>node.dataset.action===action&&(id===undefined||node.dataset.id===String(id))&&(section===undefined||node.dataset.section===section));},action(action,el){return context.historyAction(action,el);},search(query='Mock'){history.state.query=query;const input=document.getElementById('history-query');if(input)input.value=query;const pending=context.submitHistorySearch?context.submitHistorySearch():history.search(),gate=searchRequest;return {pending,finish(players=[{name:'Mock#TEST',puuid:'mock-public-search',server:'MOCK'}]){gate.resolve({players});return pending;}};}};
 }
 
 test('a late name search retains its results without replacing a newer editor or reopening after it closes',async()=>{
@@ -114,4 +117,31 @@ test('closing a focused player tab selects the remaining tab, then the last clos
 
 test('closing a tab does not override an input focused before the next paint settles',async()=>{
  const f=fixture(),tab=await f.history.open();const button=f.control('history-close',tab.id);button.focus();const pending=f.action('history-close',button),input=f.document.querySelector('#history-query');input.focus();await pending;assert.equal(f.document.activeElement,input);
+});
+
+for(const diversion of ['search','feedback','closed-card','route'])test(`late match detail does not take focus from ${diversion}`,async()=>{
+ const f=fixture({details:true}),tab=await f.history.open(),button=f.control('history-detail',1,'toggle');button.focus();const pending=f.action('history-detail',button);
+ if(diversion==='closed-card'){const close=f.control('history-detail',1,'toggle');close.focus();await f.action('history-detail',close);assert.equal(tab.details[1].open,false);}
+ if(diversion==='feedback'){f.overlay.firstElementChild={kind:'feedback'};const editor=f.node('feedback',undefined,{id:'feedback-text',value:'正在填写的反馈'});editor.focus();}
+ else{const input=f.document.querySelector('#history-query');input.focus();input.value='尚未提交的新搜索';if(diversion==='route')f.context.route='favorites';}
+ const expected={id:f.document.activeElement.id,value:f.document.activeElement.value};f.detailRequests[0].gate.resolve({game:f.game});await pending;
+ assert.equal(f.document.activeElement.id,expected.id);assert.equal(f.document.activeElement.value,expected.value);assert.equal(tab.details[1].open,diversion!=='closed-card');assert.equal(f.focusListeners.size,0);
+});
+
+test('normal keyboard match detail keeps its usable expand control',async()=>{
+ const f=fixture({details:true});await f.history.open();const button=f.control('history-detail',1,'toggle');button.focus();const pending=f.action('history-detail',button);f.detailRequests[0].gate.resolve({game:f.game});await pending;
+ assert.equal(f.document.activeElement,f.control('history-detail',1,'toggle'));assert.equal(f.history.current().details[1].complete,true);assert.equal(f.focusListeners.size,0);
+});
+
+test('keyboard detail-tab activation moves focus from the previous tab to the selected tab',async()=>{
+ const f=fixture({details:true});await f.history.open();const button=f.control('history-detail',1,'toggle');button.focus();const opened=f.action('history-detail',button);f.detailRequests[0].gate.resolve({game:f.game});await opened;
+ f.control('history-detail',1,'summary').focus();await f.action('history-detail',f.control('history-detail',1,'events'));
+ assert.equal(f.history.current().details[1].section,'events');assert.equal(f.document.activeElement,f.control('history-detail',1,'events'));assert.equal(f.focusListeners.size,0);
+});
+
+test('failed match detail releases focus listeners and its explicit retry can succeed',async()=>{
+ const f=fixture({details:true}),tab=await f.history.open(),button=f.control('history-detail',1,'toggle');button.focus();const pending=f.action('history-detail',button);f.detailRequests[0].gate.reject(Error('mock detail offline'));await pending;
+ assert.match(tab.details[1].error,/offline/);assert.equal(tab.details[1].loading,false);assert.equal(f.document.activeElement,f.control('history-detail',1,'toggle'));assert.equal(f.focusListeners.size,0);
+ const retry=f.control('history-detail',1,'summary');retry.focus();const retried=f.action('history-detail',retry);f.detailRequests[1].gate.resolve({game:f.game});await retried;
+ assert.equal(tab.details[1].error,'');assert.equal(tab.details[1].complete,true);assert.equal(f.document.activeElement,f.control('history-detail',1,'summary'));assert.equal(f.focusListeners.size,0);
 });

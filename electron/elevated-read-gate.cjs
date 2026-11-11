@@ -11,9 +11,14 @@
 // on their own. The prompt itself cannot be recalled, so the check only bounds
 // the moment of the decision.
 const OBSERVATION_MAX_AGE_MS=5000;
-function shouldRequestElevatedRead({force=false,needsElevation=false,attempted=false,observedWindows=null,observedAt=0,explicitInGame=false,now=Date.now(),maxAge=OBSERVATION_MAX_AGE_MS}={}){
- if(force||!needsElevation||attempted||explicitInGame)return false;
+function shouldRequestElevatedRead({force=false,autoSync=true,needsElevation=false,attempted=false,observedWindows=null,observedAt=0,explicitInGame=false,now=Date.now(),maxAge=OBSERVATION_MAX_AGE_MS}={}){
+ if(force||autoSync===false||!needsElevation||attempted||explicitInGame)return false;
  const fresh=!!observedWindows&&Number.isFinite(observedAt)&&Number.isFinite(now)&&now-observedAt>=0&&now-observedAt<maxAge;
  return fresh&&!observedWindows.game;
 }
-module.exports={shouldRequestElevatedRead,OBSERVATION_MAX_AGE_MS};
+// Appearance wakes one bounded detection read; only its fresh needsElevation
+// result can pass the real permission gate. Stable frames do not raise polling.
+function shouldWakeClientRead({connected=false,clientAppeared=false,...options}={}){
+ return !connected&&shouldRequestElevatedRead({...options,needsElevation:options.needsElevation||clientAppeared&&!!options.observedWindows?.client});
+}
+module.exports={shouldRequestElevatedRead,shouldWakeClientRead,OBSERVATION_MAX_AGE_MS};

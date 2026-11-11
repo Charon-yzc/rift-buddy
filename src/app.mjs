@@ -321,7 +321,13 @@ async function historyAction(action,el,background=false){
  else if(action==='history-prev'&&tab?.page)await loadHistoryPage(tab,{start:Math.max(0,tab.page.start-tab.page.count)},el,action);
  else if(action==='history-first'&&tab)await loadHistoryPage(tab,{start:0},el,action);
  else if(action==='history-page-go'&&tab?.page){const value=Number(document.querySelector('[data-history-page="number"]')?.value);if(!Number.isInteger(value)||value<1||value>Math.ceil(10000/tab.page.count))throw Error('请输入范围内的页数');await loadHistoryPage(tab,{start:(value-1)*tab.page.count},el,action);}
-   else if(action==='history-detail'){const section=el.dataset.section,ticket=tab?.ticket;await history.detail(id,section);await nextTick();if(route!=='history'||history.current()!==tab||tab?.ticket!==ticket)return;if(section==='toggle')document.querySelector(`[data-history-match="${id}"] .history-expand`)?.focus({preventScroll:true});else if(tab.details[id]?.section===section)document.getElementById(`history-tab-${id}-${section}`)?.focus({preventScroll:true});}
+   else if(action==='history-detail'){
+    const section=el.dataset.section,ticket=tab?.ticket,tablist=el.closest?.('.history-detail-tabs');
+    if(tablist&&document.activeElement!==el&&el.matches?.('.history-detail-tabs [role="tab"]')&&document.activeElement?.closest?.('.history-detail-tabs')===tablist)el.focus({preventScroll:true});
+    const restore=historyActionFocus(el);
+    try{await history.detail(id,section);}
+    finally{await restore(tab,ticket,section==='toggle'?[`[data-history-match="${id}"] .history-expand`]:tab?.details[id]?.section===section?[`#history-tab-${id}-${section}`]:[]);}
+   }
  else if(action==='history-collect')await history.collect();
  else if(action==='history-collect-active')await history.collect({useFilters:true,scanFromStart:true,expectedCount:500});
  else if(action==='history-search-cancel')history.cancelSearch();
