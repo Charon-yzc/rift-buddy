@@ -24,6 +24,7 @@ function cursorInBounds(cursor,bounds,margin=2){
 module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,showHexSource=()=>{},getReference=()=>null,referenceRevision=()=>0,diagnostic,resetHexRound=()=>undefined,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,hoverHeader=false;
+ let pointerPending=null,pointerSerial=0,pointerPass=false;
  let gameBounds=null,displayEpoch=0,activeFamily=null,passiveDisplay=false,autoShowGame=null,autoShowPending=false,equipmentRequested=false,hexWasInGame=false,publishedModel=null;
  const isHex=()=>getState()?.selection?.mode==='hex';
  const inGame=value=>['GameStart','InProgress','Reconnect'].includes(value);
@@ -42,7 +43,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const needsAutoShow=()=>autoShowPending&&getPreferences().guideAutoShow!==false;
 const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&publishedModel?.live?.matched)&&interactionHotkeyAvailable);
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
-const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough(),focusable=!pass&&!passiveDisplay;win.setIgnoreMouseEvents(ignore,{forward:true});if(win.isFocusable?.()!==focusable)win.setFocusable(focusable);if(ignore&&win.isFocused())win.blur();}};
+const inputMode=()=>{const currentPass=mousePassThrough();if(currentPass!==pointerPass){pointerPass=currentPass;pointerSerial++;}if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough(),focusable=!pass&&!passiveDisplay;win.setIgnoreMouseEvents(ignore,{forward:true});if(win.isFocusable?.()!==focusable)win.setFocusable(focusable);if(ignore&&win.isFocused())win.blur();}};
 const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}publishedModel=model;return {model,referenceRevision:referenceRevision(),phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
 const skill=createSkillWindow({isActive:()=>getState()?.selection?.mode==='rift'&&!usesHexMicro()&&getPreferences().guideSkills!==false,root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish()});
 const jungle=createJungleWindow({isActive:()=>getState()?.selection?.mode==='rift'&&!usesHexMicro()&&getPreferences().guideJungle!==false,root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish()});
@@ -89,28 +90,25 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   win.webContents.on('did-fail-load',(_e,code)=>diagnostic(`guide load failed ${code}`));
   const created=win;win.once('ready-to-show',()=>{if(created!==win||created.isDestroyed())return;if(visibilityRequested&&equipmentRequested&&!usesHexMicro()&&getPreferences().guideEquipment!==false)created.showInactive();diagnostic(`guide-ready visible=${created.isVisible()}`);});
   win.webContents.on('did-finish-load',()=>{
+   pointerPending=null;pointerSerial++;hoverHeader=false;inputMode();
    diagnostic('guide loaded');
    if(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT)setTimeout(async()=>{try{await fs.writeFile(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT,(await win.webContents.capturePage()).toPNG());diagnostic('guide screenshot saved');}catch(e){diagnostic(`guide capture failed ${e.message}`);}},1500);
   });
   win.on('close',event=>{if(!isQuitting()){event.preventDefault();hide();}});
   const remember=()=>{if(adjusting||isBall()||resize.active())return;clearTimeout(boundsTimer);boundsTimer=setTimeout(()=>rememberBounds().catch(error=>diagnostic('guide placement not saved '+error.message)),350);};
   win.on('move',remember);win.on('resize',remember);
-  // Fallback for flaky forwarded mousemove: while pass-through is active,
-  // poll the OS cursor so hovering the drag strip still lifts ignore for
-  // dragging. The poll owns the strip fully: lift inside it, release fully
-  // outside the window (self-recovers even if DOM mouseleave never fires),
-  // and leave the content area to the DOM path so game clicks still pass
-  // through there.
-  const STRIP_H=44;
+  // Retain the OS cursor fallback, using the same real header/grip DOM hit
+  // test as mousemove. One query is in flight; late replies must still match
+  // the current display, pass-through mode, bounds and OS cursor.
   const hoverPoll=setInterval(()=>{
    try{
-    if(!win||win.isDestroyed()||!win.isVisible()||isBall()||isStrip()||!mousePassThrough())return;
+    if(!win||win.isDestroyed()||!win.isVisible()||isBall()||isStrip()||!mousePassThrough()||resize.active())return;
     const b=win.getBounds(),p=screen.getCursorScreenPoint();
-    if(cursorInBounds(p,{...b,height:Math.min(STRIP_H,b.height)})||cursorInBounds(p,{x:b.x+b.width-20,y:b.y+b.height-20,width:20,height:20})){
-     if(shouldIgnore()){hoverHeader=true;inputMode();}
-    }else if(!cursorInBounds(p,b)){
-     if(hoverHeader){hoverHeader=false;inputMode();}
-    }
+    if(!cursorInBounds(p,b,0)){if(hoverHeader){hoverHeader=false;inputMode();}return;}
+    if(pointerPending)return;
+    const zoom=win.webContents.getZoomFactor();
+    pointerPending={id:++pointerSerial,epoch:displayEpoch,pass:pointerPass,bounds:b,cursor:p};
+    win.webContents.send('guide-pointer',{id:pointerPending.id,x:(p.x-b.x)/zoom,y:(p.y-b.y)/zoom});
    }catch{}
   },120);
   if(hoverPoll.unref)hoverPoll.unref();
@@ -144,7 +142,13 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
  });}
  guard('guide-bootstrap',payload);
  guard('guide-reference',value=>{const current=getState();if(!current||!value||value.revision!==referenceRevision()||!['hex','rift'].includes(value.mode)||value.mode!==current.selection.mode)return null;return getReference(value.kind,value.id,value.mode);});
- guard('guide-hover',value=>{const next=!!value;if(next!==hoverHeader){hoverHeader=next;inputMode();}return hoverHeader;});
+ guard('guide-hover',(value,ticket)=>{
+  if(ticket!==undefined){const pending=pointerPending;if(!pending||pending.id!==ticket)return hoverHeader;pointerPending=null;
+   const b=win.getBounds(),p=screen.getCursorScreenPoint();
+   if(!win.isVisible()||!mousePassThrough()||resize.active()||pending.epoch!==displayEpoch||pending.id!==pointerSerial||pending.pass!==pointerPass||['x','y','width','height'].some(k=>pending.bounds[k]!==b[k])||pending.cursor.x!==p.x||pending.cursor.y!==p.y)return hoverHeader;
+  }else{pointerSerial++;if(!win.isVisible()||!mousePassThrough()||resize.active())return hoverHeader;}
+  const next=!!value;if(next!==hoverHeader){hoverHeader=next;inputMode();}return hoverHeader;
+ });
  guard('guide-control',async(action,value)=>{
   if(usesHexMicro())throw Error('海克斯局内使用两个精简窗口，请从主界面调整');
   if(action==='presentation'){await setPresentation(value);publish();return payload();}

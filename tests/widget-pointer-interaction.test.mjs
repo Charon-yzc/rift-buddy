@@ -11,16 +11,16 @@ import {hexEconomyView,hexMicroRoutesView,hexMicroLineView} from '../src/hex-mic
 // Run the production render/update/click handlers. Replacing innerHTML detaches
 // the pressed node, just as Chromium does between native down and up.
 async function renderer(kind,initial){
- const listeners=new Map(),timers=new Map(),calls=[];let nextTimer=0,update,html='',buttons=[];
+ const listeners=new Map(),timers=new Map(),calls=[],hoverCalls=[];let nextTimer=0,update,pointer,pointerTarget=null,html='',buttons=[];
  const matches=(node,selector)=>selector.split(',').some(part=>/\[data-action\]/.test(part)||part.includes(`[data-action="${node.dataset.action}"]`));
  const toolbar={dataset:{action:'fold'},isConnected:true,disabled:false,closest(selector){return matches(this,selector)?this:null;},setAttribute(){}};
  const root={className:'',dataset:{},style:{},addEventListener(name,fn){listen('root:'+name,fn);},contains:node=>buttons.includes(node),querySelector:()=>null,querySelectorAll:()=>[],
   get innerHTML(){return html;},set innerHTML(value){html=value;for(const b of buttons)b.isConnected=false;buttons=[...value.matchAll(/<button\b([^>]*)>/g)].map(([,attrs])=>{const dataset=Object.fromEntries([...attrs.matchAll(/data-([\w-]+)="([^"]*)"/g)].map(([,key,value])=>[key.replace(/-([a-z])/g,(_,c)=>c.toUpperCase()),value]));return {dataset,isConnected:true,disabled:/\sdisabled(?:\s|$)/.test(attrs),closest(selector){return matches(this,selector)?this:null;},setAttribute(){}};});}
  };
  function listen(name,fn){const list=listeners.get(name)||[];list.push(fn);listeners.set(name,list);}
- const document={getElementById:()=>root,addEventListener:listen,activeElement:null,body:{className:''},documentElement:{style:{setProperty(){}},dataset:{}},querySelector:()=>toolbar,querySelectorAll:()=>[],defaultView:{addEventListener:listen}};
+ const document={getElementById:()=>root,addEventListener:listen,elementFromPoint:()=>pointerTarget,activeElement:null,body:{className:''},documentElement:{style:{setProperty(){}},dataset:{}},querySelector:()=>toolbar,querySelectorAll:()=>[],defaultView:{addEventListener:listen}};
  const setTimer=fn=>{timers.set(++nextTimer,fn);return nextTimer;},clearTimer=id=>timers.delete(id);
- const api={bootstrap:async()=>initial,onUpdate:fn=>{update=fn;},control:async(...args)=>{calls.push(args);return true;},hover:async()=>{},regions:async()=>{},onMeasure(){},onPointer(){}};
+ const api={bootstrap:async()=>initial,onUpdate:fn=>{update=fn;},control:async(...args)=>{calls.push(args);return true;},hover:async(...args)=>{hoverCalls.push(args);},regions:async()=>{},onMeasure(){},onPointer:fn=>{pointer=fn;}};
  const source=(await fs.readFile(new URL(`../src/${kind}.mjs`,import.meta.url),'utf8')).replace(/^import .*;\r?\n/gm,'');
  const context={document,window:{guide:api,skillWidget:api,jungleWidget:api,hexMicro:api},setTimeout:setTimer,clearTimeout:clearTimer,URLSearchParams,location:{search:''},requestAnimationFrame(){},ResizeObserver:class{observe(){}},
   holdRenderDuringPointer:options=>holdRenderDuringPointer({...options,setTimer,clearTimer}),
@@ -30,12 +30,21 @@ async function renderer(kind,initial){
  };
  await vm.runInNewContext(`(async()=>{${source}\n})()`,context);
  const emit=async(name,button,extra={})=>{const event={target:button,button:0,isPrimary:true,...extra};for(const fn of listeners.get(name)||[])await fn(event);if(name==='click'&&root.contains(button))for(const fn of listeners.get('root:click')||[])await fn(event);};
- return {root,calls,update:value=>update(value),button:(action,id)=>buttons.find(b=>b.dataset.action===action&&(id===undefined||b.dataset.id===id)),toolbar,
+ return {root,calls,hoverCalls,point:node=>{pointerTarget=node;},poll:ticket=>{assert(pointer,'The renderer must answer fallback queries');pointer(ticket);},update:value=>update(value),button:(action,id)=>buttons.find(b=>b.dataset.action===action&&(id===undefined||b.dataset.id===id)),toolbar,
   emit,flush(){const due=[...timers.values()];timers.clear();due.forEach(fn=>fn());},html:()=>html};
 }
 const guideValue=(extra={})=>({referenceRevision:1,model:{champion:{id:'LeeSin'},selection:{id:'LeeSin',role:'jungle',mode:'rift'},mode:'rift',matchId:'100',source:'OP.GG',sourceUrl:'https://example.test/lee',fetchedAt:'2026-11-09',live:{gameTime:209},...extra}});
 const jungleValue=time=>{const value={...guideValue(),time,jungle:jungleGuidance({champion:'LeeSin',role:'jungle',mode:'rift',patch:'16.22',matchId:'100',live:{matched:true,gameTime:time,mapId:11,queueId:420,teamSide:'blue'}})};return {...value,interactionContext:guideRenderContext(value)};};
 const microValue=(extra={})=>({active:true,kind:'routes',layout:'full',expanded:true,context:'same',session:'same',view:1,routes:Array.from({length:4},(_,i)=>({id:'route-'+i,title:'route-'+i,augments:[],items:[]})),...extra});
+
+test('guide fallback queries synchronously answer every header/grip result and clear a header on body movement',async()=>{
+ const f=await renderer('guide',guideValue()),body={closest:()=>null},header={closest:selector=>selector.includes('#guide-root>header')?header:null},grip={closest:selector=>selector.includes('[data-window-resize]')?grip:null};
+ f.point(body);f.poll({id:1,x:12,y:35});f.poll({id:2,x:12,y:35});assert.deepEqual(f.hoverCalls,[[false,1],[false,2]],'Repeated false replies cannot rely on the renderer hover cache');
+ f.point(header);f.poll({id:3,x:12,y:10});assert.deepEqual(f.hoverCalls.at(-1),[true,3]);
+ await f.emit('mousemove',body);assert.deepEqual(f.hoverCalls.at(-1),[false,undefined],'The DOM path must share the polled hover state');
+ f.point(grip);f.poll({id:4,x:290,y:200});assert.deepEqual(f.hoverCalls.at(-1),[true,4]);
+ f.point(null);f.poll({id:5,x:-1,y:-1});assert.deepEqual(f.hoverCalls.at(-1),[false,5]);
+});
 
 for(const map of [false,true])for(const change of ['hero','game','source'])test(`jungle ${map?'map':'text'} preference survives ${change} identity changes while old controls are invalidated`,async()=>{
  const first=jungleValue(120),f=await renderer('jungle',first);

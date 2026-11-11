@@ -1,4 +1,4 @@
-const {app,BrowserWindow}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
+const {app,BrowserWindow,ipcMain,screen}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const {pathToFileURL}=require('node:url');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(check,label){for(let n=0;n<100;n++){if(await check())return;await delay(100);}throw Error(label);}
@@ -14,6 +14,12 @@ async function run(){
  let live={available:true,at:Date.now(),champion:'Ashe',mode:'rift',mapId:11,gold:1200,inventory:[],level:8,gameTime:750,skills:{Q:4,W:1,E:1,R:1}};
  const factory=require(path.join(base,'electron/guide-window.cjs')),root=path.resolve(process.env.RIFT_BUDDY_USER_DATA);
  let current={id:'Ashe',role:'bottom',mode:'rift',positionKnown:true},preferences={guideAfterGame:'hide',guideAutoShow:true},preparationGate=null;
+ let cursor={x:-10000,y:-10000},holdPointer=false,heldPointer=null;screen.getCursorScreenPoint=()=>cursor;
+ const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>handle(name,name!=='guide-hover'?handler:(event,value,ticket)=>{
+  if(!holdPointer||ticket===undefined)return handler(event,value,ticket);
+  const sender={sender:event.sender,senderFrame:event.senderFrame};
+  return new Promise((resolve,reject)=>{heldPointer={deliver:()=>{try{const result=handler(sender,value,ticket);resolve(result);return result;}catch(error){reject(error);}}};});
+ });
  const guide=factory({root:base,getState:()=>state,setState:async next=>{state=core.validateGuideState(next);},getModel:()=>core.createGuideModel(data,state,live,current),currentSelection:()=>current,prepareCurrent:async()=>{if(preparationGate)await preparationGate;if(!current)return false;if(core.guideIdentity(state.selection)!==core.guideIdentity(current))state=core.selectGuide(state,current);return true;},getPreferences:()=>preferences,isQuitting:()=>true,showMain:()=>{},diagnostic:()=>{}});
  guide.setInteractionHotkey(true);guide.show();const w=guide.window(),js=c=>w.webContents.executeJavaScript(c,true);
  await until(()=>js('!!window.guide'),'Guide preload missing');await until(()=>js('!!document.querySelector(".compact-route")'),'Guide UI missing');
@@ -28,6 +34,46 @@ async function run(){
  guide.setInteractionHotkey(true);guide.phase('Lobby',true);assert.equal(ignored,false);guide.phase('InProgress',true);
  const snapshot=await js('window.guide.bootstrap()');assert.ok(snapshot.model.action);assert.equal(snapshot.model.live.matched,true);assert.ok(snapshot.model.combo?.steps.length);
  assert.ok(await js('{const r=document.querySelector(".compact-header").getBoundingClientRect();r.bottom<=innerHeight}'),'Compact controls clipped');
+ // Keep the production main/preload/DOM path: only the OS cursor and reply
+ // delivery are isolated. No native game input or real pointer is sent.
+ const move=(x,y)=>{const b=w.getBounds(),zoom=w.webContents.getZoomFactor();cursor={x:b.x+Math.round(x*zoom),y:b.y+Math.round(y*zoom)};};
+ const outside=async()=>{cursor={x:-10000,y:-10000};await delay(180);assert.equal(ignored,true);};
+ const presentation=preferences.presentation,pointerHitScales=[];
+ for(const scale of [1,1.1,1.25])for(const zoom of [1,.8,1.25]){
+  preferences.presentation={textScale:scale};guide.publish();w.webContents.setZoomFactor(zoom);await delay(120);
+  const header=await js('document.querySelector("#guide-root>header").getBoundingClientRect().toJSON()');
+  await outside();move(12,header.bottom+4);await delay(260);assert.equal(ignored,true,'Entering real body must not lift pass-through');
+  move(12,10);await until(()=>ignored===false,'OS fallback did not recover the real header');
+  const buttons=await js('[...document.querySelectorAll("header button")].map(el=>{const r=el.getBoundingClientRect();return {action:el.dataset.action,x:r.x+r.width/2,y:r.y+r.height/2};})');
+  for(const button of buttons){move(button.x,button.y);await delay(140);assert.equal(ignored,false,'Header control remains pass-through: '+button.action);}
+  move(12,header.bottom+65);await until(()=>ignored===true,'Header to body must release input without a DOM mousemove');
+  const grip=await js('(()=>{const r=document.querySelector("[data-window-resize]").getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()');
+  move(grip.x,grip.y);await until(()=>ignored===false,'Actual resize grip remains pass-through');await outside();pointerHitScales.push({scale,zoom,header,buttons,grip});
+ }
+ preferences.presentation=presentation;w.webContents.setZoomFactor(1);guide.publish();await outside();
+ const holdAt=async(x,y)=>{await outside();holdPointer=true;move(x,y);await until(()=>!!heldPointer,'Real renderer did not answer a held pointer query');const held=heldPointer;heldPointer=null;holdPointer=false;return held;};
+ const latePointerReplies=[];
+ for(const change of ['cursor-body','outside','hide','new-game','pass-off-on']){
+  if(change==='new-game'){state={...state,match:{...state.match,gameId:'91001'}};await guide.phase('InProgress',true);}
+  const held=await holdAt(12,10);
+  if(change==='cursor-body')move(12,90);
+  if(change==='outside')cursor={x:-10000,y:-10000};
+  if(change==='hide')await js('window.guide.control("hide")');
+  if(change==='new-game'){state={...state,match:{...state.match,gameId:'91002'}};await guide.phase('InProgress',true);}
+  if(change==='pass-off-on'){await js('window.guide.control("interaction")');await js('window.guide.control("interaction")');}
+  // A fresh post-change header query is allowed to lift input. Hold it while
+  // asserting the old reply alone, then discard its hit by moving outside.
+  holdPointer=true;const oldHover=held.deliver();await delay(30);assert.equal(ignored,true,'Late header reply changed input after '+change);latePointerReplies.push({change,oldHover,freshReplyHeld:!!heldPointer});
+  cursor={x:-10000,y:-10000};if(heldPointer){heldPointer.deliver();heldPointer=null;}holdPointer=false;
+  if(change==='hide'){guide.show();await delay(120);}
+ }
+ const duringResize=await holdAt(12,90);await js('window.guide.control("resize-start")');assert.equal(ignored,false);duringResize.deliver();await delay(30);assert.equal(ignored,false,'A late body reply interrupted active resizing');cursor={x:-10000,y:-10000};await js('window.guide.control("resize-end")');await outside();latePointerReplies.push({change:'resize'});
+ const unanswered=await holdAt(12,10);await new Promise(resolve=>{w.webContents.once('did-finish-load',resolve);w.webContents.reload();});
+ await until(()=>js('!!document.querySelector(".compact-route")'),'Reloaded renderer did not become ready');await until(()=>ignored===false,'Unanswered old query blocked the reloaded header');
+ unanswered.deliver();await delay(30);assert.equal(ignored,false,'The pre-reload reply changed the new header state');await outside();
+ // The deliberately delayed pointer matrix outlives live-data freshness.
+ // Resume the existing inventory checks with a fresh isolated observation.
+ live={...live,at:Date.now()};guide.publish();
  const capture=async name=>{await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage()).toPNG());};
  await capture("guide-live-compact.png");
  for(const action of ["ball","strip","collapse"])await assert.rejects(js('window.guide.control('+JSON.stringify(action)+')'),/已移除/);
@@ -85,6 +131,7 @@ async function run(){
  await capture('guide-restored-after-preparation.png');
  const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,mousePassThrough:true,liveInputWithoutClientAuthorization:true,staleLiveInputFallback:true,keyboardFocusReleased:true,interactionToggle:true,shortcutUnavailableFallback:true,lobbyInteractive:true,compactGear:true,livePurchase:true,trioModelPreserved:true,modeMismatchGuard:true,sameHeroRoleGuard:true,unknownModeGuard:true,shoeGoal:true,manualMarksNotInventory:true,inventorySale:true,stageModelPreserved:true,endGameHideAndManualReopen:true,endGameCollapse:true,nextGameRestoresPassThrough:true,hiddenReconnectStaysHidden:true,autoShowPreparesNewHero:true,realGameInputs:false,screenshots:root};
  Object.assign(result,{estimateResistance:true,estimateOrderIndependent:true,estimateTargetPreserved:true,removedLayoutsRejected:true,noCompetingGearAdvice:true,foldDuringAutomaticPreparation:true,foldRestorePreservesBounds:true});
+ Object.assign(result,{directContentPassThrough:true,realHeaderAndGripFallback:true,latePointerReplies,reloadRecoversUnansweredPointer:true,pointerHitScales});
  await fs.writeFile(path.join(root,'guide-input-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));guide.destroy();app.quit();
 }
 run().catch(e=>{console.error(e);app.exit(1);});

@@ -60,6 +60,13 @@ test('live adopted sidebar keeps five slots and range status while recommendatio
  const state=validateState({...defaultState(),preferences:{compactTeam:false}});assert.equal(state.preferences.compactTeam,false);assert.equal(validateState(defaultState()).preferences.compactTeam,true);
 });
 
+test('painted roster drag identities distinguish public cell zero from unbound and empty lanes',()=>{
+ const slots=createSlots().map(slot=>({...slot,...(slot.role==='mid'?{champion:'Lux',clientCellId:0}:slot.role==='support'?{champion:'Nami'}:{})}));
+ const html=companionView({data,client,slots,displayedRoster:slots,unassigned:[],scope:'party',soloRole:'mid',style:'fun',tab:'recommend',results:[]});
+ assert.match(html,/data-drag-role="mid"[^>]*data-drag-owner="0"/);
+ for(const role of ['top','support'])assert.match(html,new RegExp('data-drag-role="'+role+'"[^>]*data-drag-owner=""'));
+});
+
 test('both sidebar tabs show only explicit proposals even when an old peer sends automatic lineup snapshots',()=>{
  const slots=createSlots(),lineup=slots.filter(s=>['jungle','mid'].includes(s.role)).map(s=>({role:s.role,champion:s.role==='jungle'?'Graves':'Vex'}));
  const share={kind:'state',v:1,from:'队友',at:1000,mode:'rift',lineup},room={mode:'client',ballots:true,members:[{nick:'队友',share}]};
