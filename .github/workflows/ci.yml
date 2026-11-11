@@ -86,6 +86,8 @@ jobs:
         run: node scripts/smoke-package-dual-windows.mjs
       - name: Check native hero clicks across refresh and complete default configurations
         run: node scripts/smoke-package-player-selection.mjs
+      - name: Check packaged feedback focus and selection interaction isolation
+        run: node scripts/smoke-package-interaction-ux.mjs
       - name: Check actual current offline data, saved configurations and Hex 4.0
         run: node scripts/smoke-package-current-data.mjs
       - name: Check complete shared Hex bench, teammate updates and explicit switching

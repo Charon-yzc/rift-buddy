@@ -48,3 +48,60 @@ for(const start of ['inside','background'])for(const shiftKey of [false,true])te
 test('ordinary Escape closes once while an already handled Escape leaves the modal intact',()=>{
  const f=fixture();f.summary.focus();f.press('Escape',{defaultPrevented:true});assert.equal(f.closed,0);f.press('Escape');assert.equal(f.closed,1);assert.equal(f.overlay.firstElementChild,null);
 });
+
+function returnFocusFixture(){
+ const start=source.indexOf('let overlayReturnFocus='),end=source.indexOf('async function showWindowInfo(',start);assert(start>=0&&end>start);
+ let click;const document={body:{},activeElement:null,addEventListener(name,listener){if(name==='click')click=listener;}};document.activeElement=document.body;
+ const nodes=[],app={contains:element=>nodes.includes(element),querySelectorAll:()=>nodes.filter(node=>node.tagName==='SUMMARY')};
+ function node(action,{visible=true,summary=null,label=''}={}){
+  const element={tagName:action?'BUTTON':'SUMMARY',dataset:action?{action}:{},isConnected:true,disabled:false,visible,textContent:label,
+   closest:selector=>selector==='details'?summary?{querySelector:()=>summary}:null:element,
+   checkVisibility(){return this.visible;},focus(){document.activeElement=this;}};nodes.push(element);return element;
+ }
+ let layer=null;const overlay={get firstElementChild(){return layer;},querySelector:()=>null,set innerHTML(value){assert.equal(value,'');layer=null;document.activeElement=document.body;}};
+ const context=vm.createContext({document,app,overlay,route:'draft',windowLayout:{docked:false},queueMicrotask,catalogRequest:0,
+  client:{gameId:'101',role:'mid',hero:'Ahri'},data:{champions:[]},slots:[],saved:{draft:null},lastTaskSelection:null,
+  preparationGameId:client=>client.gameId,taskOwnRole:()=>context.client.role,currentPlayerSelection:()=>({id:context.client.hero,role:context.client.role}),
+  disclosureState:{captureButtonFocus(_root,element){return element?.dataset.action||null;},restoreFocus(key){const matches=nodes.filter(node=>node.isConnected&&node.dataset.action===key);const target=matches.length===1?matches[0]:null;if(!target||target.disabled||!target.visible)return false;target.focus();return true;}}});
+ vm.runInContext(source.slice(start,end),context);
+ const opener=node('pregame-hero');
+ return {context,document,overlay,opener,node,
+  open(element=opener){element.focus();click({target:element});layer={};document.activeElement={tagName:'INPUT'};},
+  replace(){layer={};document.activeElement={tagName:'INPUT'};},
+  close(){context.closeOverlay();},flush:()=>new Promise(resolve=>queueMicrotask(resolve))};
+}
+
+test('closing a picker returns to its original available opening button',async()=>{
+ const f=returnFocusFixture();f.open();f.close();await f.flush();assert.equal(f.document.activeElement,f.opener);
+});
+
+test('replacing a dialog keeps focus inside it and retains the original opener for its eventual close',async()=>{
+ const f=returnFocusFixture();f.open();f.close();f.replace();const inside=f.document.activeElement;await f.flush();assert.equal(f.document.activeElement,inside);
+ f.close();await f.flush();assert.equal(f.document.activeElement,f.opener);
+});
+
+test('a background render can rebuild the same logical opener before the picker closes',async()=>{
+ const f=returnFocusFixture();f.open();f.opener.isConnected=false;const replacement=f.node('pregame-hero');f.close();await f.flush();assert.equal(f.document.activeElement,replacement);
+});
+
+for(const unavailable of ['hidden','disabled','ambiguous'])test(`closing a picker never redirects focus to an ${unavailable} opener`,async()=>{
+ const f=returnFocusFixture();f.open();f.close();
+ if(unavailable==='hidden')f.opener.visible=false;else if(unavailable==='disabled')f.opener.disabled=true;else{f.opener.isConnected=false;f.node('pregame-hero');f.node('pregame-hero');}
+ await f.flush();assert.equal(f.document.activeElement,f.document.body);
+});
+
+for(const moved of ['focus','route','layout','game','role','hero'])test(`closing a picker does not override a newer ${moved} choice`,async()=>{
+ const f=returnFocusFixture();f.open();f.close();const other=f.node('another-action');
+ if(moved==='focus')other.focus();else if(moved==='route')f.context.route='settings';else if(moved==='layout')f.context.windowLayout.docked=true;
+ else{f.opener.isConnected=false;f.node('pregame-hero');f.context.client[moved==='game'?'gameId':moved]=moved==='game'?'102':moved==='role'?'jungle':'Jinx';}
+ const active=f.document.activeElement;await f.flush();assert.equal(f.document.activeElement,active);
+});
+
+test('opening another picker before the previous close finishes does not restore the previous button',async()=>{
+ const f=returnFocusFixture();f.open();f.close();const newer=f.node('pick-hex');f.open(newer);const inside=f.document.activeElement;await f.flush();assert.equal(f.document.activeElement,inside);
+ f.close();await f.flush();assert.equal(f.document.activeElement,newer);
+});
+
+test('closing an already empty overlay leaves the current page focus alone',async()=>{
+ const f=returnFocusFixture();f.close();await f.flush();assert.equal(f.document.activeElement,f.document.body);
+});

@@ -10,6 +10,7 @@ class Element{
   for(const child of content){if(typeof child==='string')this.content+=child;else{this.children.push(child);child.parentElement=this;}}
  }
  getAttribute(name){return this.attributes[name]??null;}
+ contains(node){for(let current=node;current;current=current.parentElement)if(current===this)return true;return false;}
  get textContent(){return this.content+this.children.map(child=>child.textContent).join(' ');}
  querySelectorAll(selector){
   const nodes=this.children.flatMap(child=>[child,...child.querySelectorAll('*')]);
@@ -122,6 +123,30 @@ test('stable button actions restore without using vote labels and reject disable
  after.checkVisibility=()=>false;assert.equal(state.restoreFocus(key,root(after)),false);delete after.checkVisibility;
  const duplicate=el('button',{'data-action':'room-vote','data-key':'proposal-a'});duplicate.focus=()=>assert.fail('Ambiguous target');
  assert.equal(state.restoreFocus(key,root(after,duplicate)),false);
+});
+
+test('capturing a specified opener reads its identity without scanning the page or using another active control',()=>{
+ const state=createDisclosureState(),button=el('button',{'data-action':'pregame-hero'}),other=el('button',{'data-action':'navigate','data-route':'settings'}),view=root(button,other);
+ view.ownerDocument={activeElement:button};const expected=state.captureFocus(view);view.ownerDocument.activeElement=other;
+ view.querySelectorAll=()=>assert.fail('A button opener capture must not scan the page');
+ assert.equal(state.captureButtonFocus(view,button),expected);assert.equal(state.captureButtonFocus(view,el('button',{'data-action':'pregame-hero'})),null);
+ assert.equal(state.captureButtonFocus(view,other),JSON.stringify(['button',[['data-action','navigate'],['data-route','settings']],null,[]]));
+});
+
+test('a narrow candidate capture retains hero and role identity, allows reordering, and rejects ambiguity',()=>{
+ const state=createDisclosureState(),before=candidate(0,'Ahri'),button=before.node.children[0],view=root(before.node);button.attributes['data-action']='build';button.attributes['data-result-index']='0';
+ view.ownerDocument={activeElement:button};const expected=state.captureFocus(view);view.querySelectorAll=()=>assert.fail('Only the owning candidate may be read');
+ const key=state.captureButtonFocus(view,button);assert.equal(key,expected);
+ const make=(hero,role='mid',index=3)=>{const row=candidate(index,hero,{role}),target=row.node.children[0];target.attributes['data-action']='build';target.attributes['data-result-index']=String(index);target.focus=()=>{};return row;};
+ assert.equal(state.restoreFocus(key,root(make('Ahri').node)),true);
+ assert.equal(state.restoreFocus(key,root(make('Lux').node)),false);assert.equal(state.restoreFocus(key,root(make('Ahri','support').node)),false);
+ assert.equal(state.restoreFocus(key,root(make('Ahri').node,make('Ahri','mid',4).node)),false);
+});
+
+test('narrow opener capture continues to ignore Vue-owned buttons and non-button nodes',()=>{
+ const state=createDisclosureState(),button=el('button',{'data-action':'open-favorite'}),summary=el('summary',{},'查看'),view=root(el('div',{'data-vue-host':'favorites'},button),summary);
+ view.querySelectorAll=()=>assert.fail('Owned or non-button controls must not trigger a page scan');
+ assert.equal(state.captureButtonFocus(view,button),null);assert.equal(state.captureButtonFocus(view,summary),null);
 });
 
 test('a reused candidate index never opens a different hero, role, combination or plan',()=>{

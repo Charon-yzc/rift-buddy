@@ -107,6 +107,10 @@ function scanFocusTargets(root){
 export function createDisclosureState(){
  const scopes=new Map();
  return {
+  captureButtonFocus(root,button){
+   if(button?.tagName!=='BUTTON'||!root?.contains?.(button)||managed(button))return null;
+   return scanPass(()=>buttonIdentity(button,root));
+  },
   captureFocus(root){
    const active=root?.ownerDocument?.activeElement;
    if(!['SUMMARY','BUTTON','SELECT'].includes(active?.tagName))return null;

@@ -1,4 +1,4 @@
-const {app}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
+const {app,BrowserWindow}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const {pathToFileURL}=require('node:url');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(check,label){for(let n=0;n<100;n++){if(await check())return;await delay(100);}throw Error(label);}
@@ -13,8 +13,8 @@ async function run(){
  let state={...core.selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift',comboId:trio?.id,conditions:[]}),collapsed:true};
  let live={available:true,at:Date.now(),champion:'Ashe',mode:'rift',mapId:11,gold:1200,inventory:[],level:8,gameTime:750,skills:{Q:4,W:1,E:1,R:1}};
  const factory=require(path.join(base,'electron/guide-window.cjs')),root=path.resolve(process.env.RIFT_BUDDY_USER_DATA);
- let current={id:'Ashe',role:'bottom',mode:'rift',positionKnown:true},preferences={guideAfterGame:'hide',guideAutoShow:true};
- const guide=factory({root:base,getState:()=>state,setState:async next=>{state=core.validateGuideState(next);},getModel:()=>core.createGuideModel(data,state,live,current),currentSelection:()=>current,prepareCurrent:async()=>{if(!current)return false;if(core.guideIdentity(state.selection)!==core.guideIdentity(current))state=core.selectGuide(state,current);return true;},getPreferences:()=>preferences,isQuitting:()=>true,showMain:()=>{},diagnostic:()=>{}});
+ let current={id:'Ashe',role:'bottom',mode:'rift',positionKnown:true},preferences={guideAfterGame:'hide',guideAutoShow:true},preparationGate=null;
+ const guide=factory({root:base,getState:()=>state,setState:async next=>{state=core.validateGuideState(next);},getModel:()=>core.createGuideModel(data,state,live,current),currentSelection:()=>current,prepareCurrent:async()=>{if(preparationGate)await preparationGate;if(!current)return false;if(core.guideIdentity(state.selection)!==core.guideIdentity(current))state=core.selectGuide(state,current);return true;},getPreferences:()=>preferences,isQuitting:()=>true,showMain:()=>{},diagnostic:()=>{}});
  guide.setInteractionHotkey(true);guide.show();const w=guide.window(),js=c=>w.webContents.executeJavaScript(c,true);
  await until(()=>js('!!window.guide'),'Guide preload missing');await until(()=>js('!!document.querySelector(".compact-route")'),'Guide UI missing');
  let ignored=null;const original=w.setIgnoreMouseEvents.bind(w);w.setIgnoreMouseEvents=(pass,options)=>{ignored=pass;return original(pass,options);};
@@ -70,8 +70,21 @@ async function run(){
  await guide.phase('EndOfGame',true);current={id:'Jhin',role:'bottom',mode:'rift',positionKnown:true};live={...live,champion:'Jhin'};state=core.reconcileGuide(state,{phase:'ChampSelect',gameId:'3'}).guide;await guide.phase('ChampSelect',true);await guide.phase('InProgress',true);assert.equal(w.isVisible(),true);assert.equal(state.selection.id,'Jhin');assert.equal((await js('window.guide.bootstrap()')).model.champion.id,'Jhin');
  await js('window.guide.control("hide")');state=core.reconcileGuide(state,{phase:'GameStart',gameId:'4'}).guide;await guide.phase('GameStart',true);assert.equal(w.isVisible(),false,'A new loading game must wait before showing');
  state=core.reconcileGuide(state,{phase:'InProgress',gameId:'4'}).guide;await guide.phase('InProgress',true);assert.equal(w.isVisible(),true,'A changed id learned during loading must re-arm auto-show');
+ // A player can fold an already open card while new-game preparation is
+ // awaiting data. Completing that automatic request must respect the fold.
+ const beforeFold=w.getBounds();let releasePreparation;preparationGate=new Promise(resolve=>{releasePreparation=resolve;});
+ state=core.reconcileGuide(state,{phase:'InProgress',gameId:'5'}).guide;const preparing=guide.phase('InProgress',true);
+ await js('window.guide.control("fold")');
+ let tab;await until(()=>tab=BrowserWindow.getAllWindows().find(window=>window.getTitle()==='开黑搭子 · 展开本局指引'),'Equipment edge tab missing');
+ await until(()=>tab.isVisible(),'Equipment edge tab remained hidden');assert.equal(w.isVisible(),false);
+ releasePreparation();preparationGate=null;await preparing;guide.publish();await delay(180);
+ assert.equal(w.isVisible(),false,'Delayed automatic preparation unfolded equipment');assert.equal(tab.isVisible(),true);assert.equal(w.isFocused(),false);
+ await fs.writeFile(path.join(root,'guide-fold-during-preparation.png'),(await tab.webContents.capturePage()).toPNG());
+ await tab.webContents.executeJavaScript('document.getElementById("restore").click()');await until(()=>w.isVisible(),'Equipment restore button did not restore the folded card');
+ assert.deepEqual(w.getBounds(),beforeFold,'Folding must retain the player window bounds');assert.equal(w.isFocused(),false);
+ await capture('guide-restored-after-preparation.png');
  const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,mousePassThrough:true,liveInputWithoutClientAuthorization:true,staleLiveInputFallback:true,keyboardFocusReleased:true,interactionToggle:true,shortcutUnavailableFallback:true,lobbyInteractive:true,compactGear:true,livePurchase:true,trioModelPreserved:true,modeMismatchGuard:true,sameHeroRoleGuard:true,unknownModeGuard:true,shoeGoal:true,manualMarksNotInventory:true,inventorySale:true,stageModelPreserved:true,endGameHideAndManualReopen:true,endGameCollapse:true,nextGameRestoresPassThrough:true,hiddenReconnectStaysHidden:true,autoShowPreparesNewHero:true,realGameInputs:false,screenshots:root};
- Object.assign(result,{estimateResistance:true,estimateOrderIndependent:true,estimateTargetPreserved:true,removedLayoutsRejected:true,noCompetingGearAdvice:true});
+ Object.assign(result,{estimateResistance:true,estimateOrderIndependent:true,estimateTargetPreserved:true,removedLayoutsRejected:true,noCompetingGearAdvice:true,foldDuringAutomaticPreparation:true,foldRestorePreservesBounds:true});
  await fs.writeFile(path.join(root,'guide-input-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));guide.destroy();app.quit();
 }
 run().catch(e=>{console.error(e);app.exit(1);});

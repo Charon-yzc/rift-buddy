@@ -8,9 +8,10 @@ const input={data,hero:'Ahri',options:[],owned:[1318]};
 
 function extract(name,next){return source.slice(source.indexOf(name),source.indexOf(next,source.indexOf(name)));}
 test('opening the actual drawer workbench keeps the view and rejects ownership changes during the await',async()=>{
- const original={id:'Ahri',role:'mid',mode:'hex',coreId:'chosen-core',laterIds:[3157]},ctx=vm.createContext({buildView:original,client:{},taskOwnRole:()=>'',configurationReadOnly:v=>!!v.readOnly,chooseHexHero:async id=>{assert.equal(id,'Ahri');},renderBuild:()=>{}});
+ const original={id:'Ahri',role:'mid',mode:'hex',coreId:'chosen-core',laterIds:[3157]},ctx=vm.createContext({buildView:original,client:{},taskOwnRole:()=>'',configurationReadOnly:v=>!!v.readOnly,chooseHexHero:async id=>{assert.equal(id,'Ahri');return true;},renderBuild:()=>{}});
  vm.runInContext(extract('async function openBuildHexWorkbench(){','function finishHexWorkbenchChange'),ctx);await ctx.openBuildHexWorkbench();assert.equal(ctx.buildView,original);assert.equal(original.hexWorkbench,true);assert.deepEqual(original.laterIds,[3157]);
- delete original.hexWorkbench;ctx.chooseHexHero=async()=>{ctx.buildView={id:'Ashe',mode:'hex'};};await assert.rejects(ctx.openBuildHexWorkbench(),/配置窗口已变化/);assert.equal(original.hexWorkbench,undefined);
+ delete original.hexWorkbench;ctx.chooseHexHero=async()=>{ctx.buildView={id:'Ashe',mode:'hex'};return true;};await assert.rejects(ctx.openBuildHexWorkbench(),/配置窗口已变化/);assert.equal(original.hexWorkbench,undefined);
+ ctx.buildView=original;ctx.chooseHexHero=async()=>false;await ctx.openBuildHexWorkbench();assert.equal(ctx.buildView,original);assert.equal(original.hexWorkbench,undefined);
  ctx.buildView={...original,readOnly:true};let called=false;ctx.chooseHexHero=async()=>{called=true;};await assert.rejects(ctx.openBuildHexWorkbench(),/本人海克斯配置/);assert.equal(called,false);
  for(const action of ['build-hex-open','build-hex-back','own-augment','compare-augment'])assert.equal(readOnlyConfigurationAction(action),false);assert.match(readOnlyConfigurationMarkup('<button data-action="build-hex-open">比较</button>'),/disabled aria-disabled/);
 });

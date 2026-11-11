@@ -16,7 +16,25 @@ export function createFeedbackUI({overlay,api}){
  async function readCooldown(serial){
   try{const value=await api.feedbackStatus?.();if(serial===epoch&&active()){const ms=Number(value?.retryAfterMs);state.retryAt=Date.now()+(Number.isFinite(ms)?Math.max(0,Math.min(30000,ms)):0);}}catch{}
  }
- const active=()=>!!overlay.querySelector('.feedback-dialog'),text=()=>overlay.querySelector('#feedback-text')?.value??state.text??'',render=()=>{overlay.innerHTML=feedbackDialog({...state,retrySeconds:remaining()});refreshCooldown();};
+ const active=()=>!!overlay.querySelector('.feedback-dialog'),text=()=>overlay.querySelector('#feedback-text')?.value??state.text??'';
+ function render(fallbackFocus){
+  const editor=overlay.querySelector('#feedback-text'),document=overlay.ownerDocument,focused=document?.activeElement;
+  const selection=editor&&{start:editor.selectionStart,end:editor.selectionEnd,direction:editor.selectionDirection,scroll:editor.scrollTop};
+  let focus=fallbackFocus;
+  if(overlay.contains?.(focused))focus=focused.id==='feedback-text'?{editor:true}:focused.dataset?.action?{action:focused.dataset.action,id:focused.dataset.id}:null;
+  else if(focused&&focused!==document?.body)focus=null;
+  overlay.innerHTML=feedbackDialog({...state,retrySeconds:remaining()});refreshCooldown();
+  const nextEditor=overlay.querySelector('#feedback-text');
+  if(selection&&nextEditor){if(Number.isInteger(selection.start))nextEditor.setSelectionRange?.(selection.start,selection.end,selection.direction);nextEditor.scrollTop=selection.scroll;}
+  if(focus){
+   let target=focus.editor?nextEditor:Array.from(overlay.querySelectorAll?.('[data-action]')||[]).find(element=>element.dataset.action===focus.action&&element.dataset.id===focus.id);
+   if(!target&&focus.action==='feedback-remove')target=overlay.querySelector('[data-action="feedback-images"]');
+   if(target?.disabled)target=nextEditor;
+   if(state.sent)target=overlay.querySelector('[data-action="close"]');
+   if(!target?.disabled)target?.focus({preventScroll:true});
+  }
+  return focus;
+ }
  overlay.addEventListener('input',event=>{
   if(event.target.id!=='feedback-text'||!active()||state.busy)return;
   state.text=event.target.value;refreshCooldown();
@@ -24,20 +42,21 @@ export function createFeedbackUI({overlay,api}){
  async function action(name,element){
   if(name==='feedback-open'){
    if(!api.feedbackImages){state={error:'请使用桌面版发送反馈'};render();return;}
-   clearTimeout(cooldownTimer);const serial=++epoch;state={text:'',images:[],busy:true};render();
+   clearTimeout(cooldownTimer);const serial=++epoch;state={text:'',images:[],busy:true};render();const openingFocus=overlay.ownerDocument?.activeElement;
    try{await api.feedbackClear();}catch(error){if(serial===epoch&&active())state.error=feedbackError(error);}
    if(serial!==epoch||!active())return;await readCooldown(serial);if(serial!==epoch||!active())return;
-   state.busy=false;render();overlay.querySelector('textarea')?.focus();return;
+   const focusUnchanged=overlay.ownerDocument?.activeElement===openingFocus;
+   state.busy=false;render();if(focusUnchanged)overlay.querySelector('textarea')?.focus();return;
   }
   if(!active()||state.busy)return;state={...state,text:text(),error:''};
   if(name==='feedback-remove'){state.images=state.images.filter(i=>i.id!==element.dataset.id);render();return;}
   if(name==='feedback-send'&&(remaining()>0||!state.text.trim()&&!state.images?.length))return;
-  const serial=++epoch;state.busy=true;state.submitting=name==='feedback-send';render();
+  const serial=++epoch;state.busy=true;state.submitting=name==='feedback-send';const returnFocus=render();
   try{
    if(name==='feedback-images'){const images=await api.feedbackImages();if(serial!==epoch||!active())return;if(images)state.images=images;}
    if(name==='feedback-send'){const result=await api.feedbackSend({text:state.text,images:state.images.map(i=>i.id),consent:true});if(serial!==epoch||!active())return;state={sent:result.id};}
   }catch(error){if(serial!==epoch||!active())return;state.error=feedbackError(error);if(name==='feedback-send')await readCooldown(serial);}
-  finally{if(serial===epoch&&active()){state.busy=false;render();}}
+  finally{if(serial===epoch&&active()){state.busy=false;render(returnFocus);}}
  }
  return {action};
 }

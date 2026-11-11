@@ -149,7 +149,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   if(usesHexMicro())throw Error('海克斯局内使用两个精简窗口，请从主界面调整');
   if(action==='presentation'){await setPresentation(value);publish();return payload();}
   if(['resize-start','resize','resize-end','resize-key'].includes(action)){if(isBall())throw Error('请先展开指引');return resize.control(action,value);}
-  if(action==='fold'){resize.cancel();peek.fold();return true;}
+  if(action==='fold'){displayEpoch++;autoShowPending=false;resize.cancel();peek.fold();return true;}
   if(action==='reset-layout')return recover(true);
   if(action==='recover')return recover();
   if(action==='hide'){hideGear();return true;}
