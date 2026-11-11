@@ -6,23 +6,21 @@
 <p align="center">英雄联盟朋友开黑助手 · Windows x64 · 免费使用</p>
 
 <p align="center">
-  <a href="https://github.com/Legender134/rift-buddy/releases/download/v0.59.57/RiftBuddy-0.59.57-Setup.exe"><strong>下载 0.59.57 安装包</strong></a> ·
-  <a href="https://gitee.com/legender134/rift-buddy/releases/v0.59.57">Gitee 国内镜像</a> ·
-  <a href="https://github.com/Legender134/rift-buddy/releases/tag/v0.59.57">GitHub Releases</a> ·
-  <a href="docs/releases/v0.59.57.md">本次更新说明</a>
+  <a href="https://github.com/Legender134/rift-buddy/releases/download/v0.59.58/RiftBuddy-0.59.58-Setup.exe"><strong>下载 0.59.58 安装包</strong></a> ·
+  <a href="https://gitee.com/legender134/rift-buddy/releases/v0.59.58">Gitee 国内镜像</a> ·
+  <a href="https://github.com/Legender134/rift-buddy/releases/tag/v0.59.58">GitHub Releases</a> ·
+  <a href="docs/releases/v0.59.58.md">本次更新说明</a>
 </p>
 
 **优先推荐你们会玩的英雄。** 连接后先统计本人最近最多 500 场，优先推荐常玩的英雄。已玩英雄按场次分配默认 **85%** 偏好，未玩英雄合计 **15%**，在“历史战绩 → 推荐偏好”调节。房间成员先各自归一化，再共同探索；每个位置仍按对应成员本人的偏好分配。
 
-**更新只下需要的内容。** [0.59.56 → 0.59.57 补丁](https://github.com/Legender134/rift-buddy/releases/download/v0.59.57/RiftBuddy-0.59.57-From-0.59.56-Update.exe)。退出助手后运行；首次安装或其他版本使用完整包。暂停保留进度，取消清理下载；收藏、配置与配色保留。本机文件校验不匹配或运行库大幅变化时仍需完整包。
+**更新只下需要的内容。** [0.59.57 → 0.59.58 补丁](https://github.com/Legender134/rift-buddy/releases/download/v0.59.58/RiftBuddy-0.59.58-From-0.59.57-Update.exe)，约 346 KiB。退出助手后运行；首次安装或其他版本使用完整包。暂停保留进度，取消清理更新缓存；收藏、配置与配色保留。本机文件校验不匹配或运行库大幅变化时仍需完整包。
 
 [Akari 战绩与实时对局](docs/match-history.md)提供本人及公开玩家查询、筛选和单局复盘，也可查看大厅、选人和游戏中的公开玩家资料。个人战绩和备注只保留在本机当前运行内存；国服真实接口与回放兼容仍需授权客户端核验。
 
 [常用英雄推荐](docs/releases/v0.59.0.md)只向房间共享本人的有界英雄次数和偏好比例，不共享逐局战绩。偏好会影响候选，不增加机制契合分，也不代表胜率或固定展示比例。排位可参考公开双方阵容、对位和[分时统计](docs/ranked-recommendations.md)，也可浏览有出处的[跨位置双人方案](docs/cross-role-combinations.md)。
 
-当前公开版本为 **0.59.57**，集中修复点选与配置跟随、输入与弹窗、侧栏恢复、更新反馈和启动体验，详见[体验修复说明](docs/releases/v0.59.57.md)。提供 GitHub、Gitee 和国内下载页。
-
-源码版本 **0.59.58** 尚未发布，增加更新下载位置与“打开文件夹”，明确缓存清理范围及安装失败恢复结果；上方下载仍为已发布的 0.59.57。
+当前公开版本为 **0.59.58**，更新页直接显示下载位置并提供“打开文件夹”，明确缓存清理范围和安装失败恢复结果，详见[更新说明](docs/releases/v0.59.58.md)。提供 GitHub、Gitee 和国内下载页。
 
 点击头像先选英雄，再配置对应分路的 OP.GG 常用方案；配置繁忙也可切换英雄。开黑范围默认自动避开外部队友，手动调整本局保留。社区组合单独标识并保留实际契合分，不给普通算法加收录奖励；已提议的阵容与配置不会随自动换批跳动。社区专属配置在“我的配置”主动选择。基础资料与详细技能图鉴为 **16.22.1**，签名资料更新在选人和游戏期间暂存、空闲时启用。
 
