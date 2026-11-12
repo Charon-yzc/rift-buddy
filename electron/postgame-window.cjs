@@ -1,7 +1,7 @@
 const path = require('node:path');
 const {pathToFileURL} = require('node:url');
 
-module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic = () => {}, electron = require('electron')}) {
+module.exports = function createPostgameWindow({root, onOpenHistory, onDismiss = () => {}, diagnostic = () => {}, electron = require('electron')}) {
   const {BrowserWindow, ipcMain, screen} = electron;
   let win = null;
   let currentReport = null;
@@ -125,12 +125,14 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
     return true;
   });
   guard('postgame-close', () => {
+    if (currentReport) onDismiss(currentReport.gameId);
     hide();
     return true;
   });
   guard('postgame-open-history', (gameId) => {
     if (!currentReport || String(gameId) !== String(currentReport.gameId)) throw Error('结算对局已变化');
     const acceptedId = currentReport.gameId;
+    onDismiss(acceptedId);
     hide();
     if (onOpenHistory) onOpenHistory(acceptedId);
     return true;

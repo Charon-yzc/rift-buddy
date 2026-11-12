@@ -477,7 +477,7 @@ async function boot(){
  companion=require('./client-companion.cjs')({root,getWindow:()=>win,showMain:showMainWindow,getClient:()=>latestClient,getPreferences:()=>state.preferences,savePlacement:patch=>saveCurrentState(current=>{const preferences={...current.preferences};for(const [key,value] of Object.entries(patch)){if(value===undefined)delete preferences[key];else preferences[key]=value;}return {...current,preferences};}),placement,diagnostic});
  let postgameOwner=null,postgameTransport=null;
  const {createPostGameLifecycle}=await import('../services/post-game-lifecycle.mjs');
- postgame=require('./postgame-window.cjs')({root,diagnostic,onOpenHistory:gameId=>{
+ postgame=require('./postgame-window.cjs')({root,diagnostic,onDismiss:gameId=>postgameLifecycle?.dismiss(gameId),onOpenHistory:gameId=>{
   pendingMainPage={route:'history',gameId};showMainWindow();
   if(rendererReady&&pendingMainPage){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}
  }});

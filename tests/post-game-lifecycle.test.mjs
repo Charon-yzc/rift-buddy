@@ -33,3 +33,16 @@ test('same-game queue metadata can finish loading before the next real report re
  const lifecycle=createPostGameLifecycle({now:()=>clock,current:()=>client,hide(){},show:r=>shown.push(r),read:async context=>{snapshots.push(context.game);return parsePostGameReport(raw,{own:{puuid:'own-puuid-123'},game:context.game});}});
  await lifecycle.observe();assert.equal(shown.length,0);client.game={gameId:raw.gameId,gameMode:'CLASSIC',queueId:420,mapId:11};clock+=3000;await lifecycle.observe();assert.equal(shown.length,1);assert.equal(snapshots[0].gameMode,'');assert.equal(snapshots[1].queueId,420);await lifecycle.observe();assert.equal(shown.length,1);
 });
+
+test('an explicit dismissal survives reconnect while an undismissed report can recover',async()=>{
+ for(const dismissed of [false,true]){
+  let client=valid(),reads=0;const shown=[];
+  const lifecycle=createPostGameLifecycle({current:()=>client,read:async()=>{reads++;return {gameId:111};},show:report=>shown.push(report),hide(){}});
+  try{
+   await lifecycle.observe();assert.equal(shown.length,1);if(dismissed)lifecycle.dismiss(111);
+   client={...client,connected:false,phase:'Offline'};await lifecycle.observe();
+   client={...client,connected:true,phase:'EndOfGame',transport:{}};await lifecycle.observe();
+   assert.equal(reads,dismissed?1:2);assert.equal(shown.length,dismissed?1:2);
+  }finally{lifecycle.dispose();}
+ }
+});
