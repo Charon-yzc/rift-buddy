@@ -1,6 +1,6 @@
 // A status/recommendation arriving between pointerdown and click must not
 // replace the button under the player. This delays painting, never the action.
-export function holdRenderDuringPointer({document,root,render,selector='button[data-action="build"][data-id],button[data-action="companion-preview"][data-id],button[data-action="hex-quick-pick"],button[data-action="configuration-switch"],[data-drag-role],[data-drag-cell]',setTimer=setTimeout,clearTimer=clearTimeout}){
+export function holdRenderDuringPointer({document,root,render,selector='button[data-action="build"][data-id],button[data-action="companion-preview"][data-id],button[data-action="hex-quick-pick"],button[data-action="configuration-switch"],[data-drag-role],[data-drag-cell],#familiarity-mass',setTimer=setTimeout,clearTimer=clearTimeout}){
  let pressed=null,pending=false,timer=null;
  const release=()=>{clearTimer(timer);timer=null;pressed=null;if(pending){pending=false;render();}};
  const afterClick=()=>{if(!pressed)return;clearTimer(timer);timer=setTimer(release,0);};
