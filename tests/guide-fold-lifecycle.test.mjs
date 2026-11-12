@@ -21,7 +21,7 @@ function fixture(prepareCurrent,{autoShow=true}={}){
  function load(file){const module={exports:{}};vm.runInNewContext(fs.readFileSync(file,'utf8'),{module,process,setTimeout,clearTimeout,setInterval:fn=>{polls.push(fn);return {unref(){}};},clearInterval(){},require:name=>name==='electron'?electron:['./window-peek.cjs','./window-resize.cjs'].includes(name)?load(new URL('../electron/'+name.slice(2),import.meta.url)):['./skill-window.cjs','./jungle-window.cjs','./hex-micro-windows.cjs'].includes(name)?()=>quiet:nativeRequire(name)});return module.exports;}
  const guide=load(source)({root:'D:/isolated-guide',getState:()=>state,setState:async next=>{state=next;},getModel:()=>({mode:'rift',champion:{id:'Ashe'},live:{matched:true}}),currentSelection:()=>state.selection,prepareCurrent,isQuitting:()=>true,showMain(){},diagnostic(){},getPreferences:()=>({guideAutoShow:autoShow})});
  const call=(window,channel,...args)=>handlers.get(channel)({sender:window.webContents,senderFrame:window.webContents.mainFrame},...args);
- return {guide,windows,call,state:()=>state,ready:()=>windows.forEach(window=>window.emit('ready-to-show')),poll:()=>polls.forEach(fn=>fn()),cursor:value=>{cursor=value;}};
+ return {area,screen,guide,windows,call,state:()=>state,ready:()=>windows.forEach(window=>window.emit('ready-to-show')),poll:()=>polls.forEach(fn=>fn()),cursor:value=>{cursor=value;}};
 }
 
 test('folding equipment during delayed automatic preparation preserves the edge tab until explicitly restored',async()=>{
@@ -78,4 +78,21 @@ test('one unanswered guide query does not block a reloaded renderer and its old 
   f.call(f.gear,'guide-hover',true,fresh.id);assert.equal(f.gear.ignored,false,'The real header can recover after load');
   f.guide.destroy();assert.throws(()=>f.call(f.gear,'guide-hover',true,fresh.id),/不允许/);
  }finally{if(!f.gear.isDestroyed())f.guide.destroy();}
+});
+
+test('a folded guide tab follows display changes without another publish, including a pending placement save',async()=>{
+ for(const event of ['display-removed','display-metrics-changed'])for(const pendingSave of [false,true]){
+  const f=fixture(async()=>true,{autoShow:false});try{
+   Object.assign(f.area,{x:1920,y:0,width:1920,height:1040});const saved={x:2100,y:100,width:350,height:260};Object.assign(f.state().compactBounds,saved);
+   f.guide.show();f.ready();const gear=f.guide.window();if(pendingSave)gear.emit('move');
+   await f.call(gear,'guide-control','fold');f.ready();const tab=f.windows.find(window=>window.options.webPreferences.preload.endsWith('peek-preload.cjs')),shows=tab.shows;
+   Object.assign(f.area,{x:0,y:0,width:1280,height:680});
+   for(let i=0;i<3;i++)f.screen.emit(event,{},['bounds','workArea','scaleFactor']);
+   const bounds=tab.getBounds();assert.ok(bounds.x>=f.area.x&&bounds.y>=f.area.y&&bounds.x+bounds.width<=f.area.x+f.area.width&&bounds.y+bounds.height<=f.area.y+f.area.height);
+   assert.equal(tab.isVisible(),true);assert.equal(gear.isVisible(),false);assert.equal(tab.shows,shows);assert.deepEqual(f.state().compactBounds,saved);
+   if(pendingSave)assert.equal(gear.getBounds().x,2100,'Peek placement cannot depend on the pending fit succeeding');
+   await f.call(gear,'guide-control','hide');f.screen.emit(event,{},['workArea']);assert.equal(tab.isVisible(),false);assert.equal(gear.isVisible(),false);
+   f.guide.destroy();for(const name of ['display-added','display-removed','display-metrics-changed'])assert.equal(f.screen.listenerCount(name),0);f.screen.emit(event,{},['workArea']);
+  }finally{if(!f.guide.window()?.isDestroyed())f.guide.destroy();}
+ }
 });

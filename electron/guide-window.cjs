@@ -132,7 +132,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
  // Observation can position overlays, never restore or raise a window over a
  // foreground game. Exclusive fullscreen must not trigger a focus tug-of-war.
  function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;micro.fit();skill.fit();jungle.fit();if(win&&changed)fit(true);}
- const displayChanged=()=>{fit();skill.fit();jungle.fit();micro.fit();};
+ const displayChanged=()=>{fit();peek.sync(visibilityRequested);skill.fit();jungle.fit();micro.fit();};
  for(const event of ['display-added','display-removed','display-metrics-changed'])screen.on(event,displayChanged);
  function toggle(){if(usesHexMicro()){if(micro.visible())hide();else show();return;}if(isStrip()){if(win?.isVisible()||micro.visible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible()||micro.visible()||skill.visible()||jungle.visible())hide();else show();}
  async function interact(){const current=getState();if(!current)return;passiveDisplay=false;await save({...current,clickThrough:!current.clickThrough});inputMode();publish();}
