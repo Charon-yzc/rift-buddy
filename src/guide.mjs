@@ -60,7 +60,10 @@ document.addEventListener('click',async event=>{
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}
 });
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented)api.control('hide').catch(error=>toast(error.message));});
-document.addEventListener('mousemove',event=>{const over=!!event.target?.closest?.('#guide-root>header,[data-window-resize]');if(over!==hoverHeader){hoverHeader=over;api.hover?.(over).catch(()=>{});}});
+const hitHeader=node=>!!node?.closest?.('#guide-root>header,[data-window-resize]');
+const setHeader=(over,ticket)=>{hoverHeader=over;api.hover?.(over,ticket).catch(()=>{});};
+api.onPointer?.(ticket=>setHeader(hitHeader(document.elementFromPoint(ticket.x,ticket.y)),ticket.id));
+document.addEventListener('mousemove',event=>{const over=hitHeader(event.target);if(over!==hoverHeader)setHeader(over);});
 document.addEventListener('mouseleave',()=>{if(hoverHeader){hoverHeader=false;api.hover?.(false).catch(()=>{});}});
 document.addEventListener('error',event=>{const img=event.target;if(img?.tagName!=='IMG')return;if(img.dataset.fallback){const url=img.dataset.fallback;delete img.dataset.fallback;img.src=url;return;}img.classList.add('missing');},true);
 installWindowResize(root,(action,value)=>api.control(action,value));

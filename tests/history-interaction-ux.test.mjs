@@ -41,7 +41,7 @@ function fixture({details=false}={}){
  vm.runInContext(source.slice(helpers>=0?helpers:originalBinding,source.indexOf('function acceptChampionUsage(',originalBinding)),context);history=vm.runInContext('history',context);
  const actionStart=source.indexOf('function historyActionFocus('),originalAction=source.indexOf('async function historyAction(');
  vm.runInContext(source.slice(actionStart>=0?actionStart:originalAction,source.indexOf('let stateRecovery=',originalAction)),context);
- return {document,overlay,history,requests,detailRequests,game,calls,context,body,focusListeners,node,render,view:()=>matchHistoryView(privateHistoryState(history.state),data),searchReads:()=>searchReads,hold(){holdPages=true;},control(action,id,section){return controls.find(node=>node.dataset.action===action&&(id===undefined||node.dataset.id===String(id))&&(section===undefined||node.dataset.section===section));},action(action,el){return context.historyAction(action,el);},search(query='Mock'){history.state.query=query;const input=document.getElementById('history-query');if(input)input.value=query;const pending=context.submitHistorySearch?context.submitHistorySearch():history.search(),gate=searchRequest;return {pending,finish(players=[{name:'Mock#TEST',puuid:'mock-public-search',server:'MOCK'}]){gate.resolve({players});return pending;}};}};
+ return {document,overlay,history,requests,detailRequests,game,calls,context,body,focusListeners,node,render,view:()=>matchHistoryView(privateHistoryState(history.state),data),searchReads:()=>searchReads,hold(){holdPages=true;},control(action,id,section){return controls.find(node=>node.dataset.action===action&&(id===undefined||node.dataset.id===String(id))&&(section===undefined||node.dataset.section===section));},action(action,el){return context.historyAction(action,el);},search(query='Mock'){history.state.query=query;const input=document.getElementById('history-query');if(input)input.value=query;const pending=context.submitHistorySearch?context.submitHistorySearch():history.search(),gate=searchRequest;return {pending,fail(error){gate.reject(error);return pending;},finish(players=[{name:'Mock#TEST',puuid:'mock-public-search',server:'MOCK'}]){gate.resolve({players});return pending;}};}};
 }
 
 test('a late name search retains its results without replacing a newer editor or reopening after it closes',async()=>{
@@ -144,4 +144,45 @@ test('failed match detail releases focus listeners and its explicit retry can su
  assert.match(tab.details[1].error,/offline/);assert.equal(tab.details[1].loading,false);assert.equal(f.document.activeElement,f.control('history-detail',1,'toggle'));assert.equal(f.focusListeners.size,0);
  const retry=f.control('history-detail',1,'summary');retry.focus();const retried=f.action('history-detail',retry);f.detailRequests[1].gate.resolve({game:f.game});await retried;
  assert.equal(tab.details[1].error,'');assert.equal(tab.details[1].complete,true);assert.equal(f.document.activeElement,f.control('history-detail',1,'summary'));assert.equal(f.focusListeners.size,0);
+});
+
+function scopeFixture(){
+ const f=fixture();f.history.state.source='lcu';f.history.state.server='A';f.notices=[];f.context.toast=(...args)=>f.notices.push(args);
+ const start=source.indexOf("if(field==='source'||field==='server')"),end=source.indexOf("if(field==='advanced-mode'",start);assert(start>0&&end>start);
+ vm.runInContext('function changeSearchScope(field,value){const event={target:{value}};'+source.slice(start,end)+'}',f.context);
+ return f;
+}
+for(const field of ['server','source'])test('changing '+field+' invalidates the pending fuzzy result instead of publishing the old scope',async()=>{
+ const f=scopeFixture(),search=f.search('same-name');f.context.changeSearchScope(field,field==='server'?'B':'sgp');
+ await search.finish([{name:'Old-A#TEST',puuid:'synthetic-old-a',server:'A'}]);
+ assert.equal(f.overlay.firstElementChild,null);assert.deepEqual(f.history.state.searchResults,[]);assert.equal(f.history.state.searching,false);assert.equal(f.history.state.query,'same-name');
+ const next=f.search('same-name');await next.finish([{name:'Current#TEST',puuid:'synthetic-current',server:field==='server'?'B':'A'}]);
+ assert.match(f.overlay.innerHTML,/Current#TEST/);const calls=f.calls.filter(call=>call.op==='search');assert.equal(calls.length,2);assert.equal(calls[1][field],field==='server'?'B':'sgp');
+});
+for(const field of ['server','source'])test('a late old-scope failure after changing '+field+' does not become the current-scope error or toast',async()=>{
+ const f=scopeFixture(),search=f.search('same-name');f.context.changeSearchScope(field,field==='server'?'B':'sgp');const notices=f.notices.length;await search.fail(Error('old A unavailable'));assert.equal(f.history.state.error,'');assert.equal(f.history.state.searching,false);assert.equal(f.notices.length,notices);
+});
+test('reselecting the existing scope keeps its explicit fuzzy search alive',async()=>{
+ const f=scopeFixture(),search=f.search('same-name');f.context.changeSearchScope('server','A');await search.finish([{name:'Still-A#TEST',puuid:'synthetic-current-a',server:'A'}]);assert.equal(f.history.state.searchResults.length,1);assert.match(f.overlay.innerHTML,/Still-A#TEST/);assert.equal(f.searchReads(),1);
+});
+test('scope changes do not cancel an explicit complete-ID page request',async()=>{
+ const f=scopeFixture();f.hold();f.history.state.query='Explicit#TEST';const pending=f.context.submitHistorySearch(),tab=f.history.current();f.context.changeSearchScope('server','B');
+ f.requests[0].gate.resolve({...page('Explicit#TEST'),source:'lcu',server:'A'});await pending;assert.equal(f.history.current(),tab);assert.equal(tab.page.player.name,'Explicit#TEST');assert.equal(tab.page.server,'A');assert.equal(tab.error,'');
+});
+test('a current-scope empty result and retry still report their own outcome',async()=>{
+ const f=scopeFixture();await f.search('no-match').finish([]);assert.match(f.history.state.error,/没有找到/);await f.search('retry').finish([{name:'Retry#TEST',puuid:'synthetic-retry',server:'A'}]);assert.equal(f.history.state.error,'');assert.equal(f.history.state.searchResults.length,1);assert.match(f.overlay.innerHTML,/Retry#TEST/);
+});
+test('a current-scope failure remains visible and a new explicit search can recover',async()=>{
+ const f=scopeFixture();await f.search('offline').fail(Error('current A unavailable'));assert.match(f.history.state.error,/current A unavailable/);assert.equal(f.history.state.searching,false);
+ await f.search('retry').finish([{name:'Recovered#TEST',puuid:'synthetic-recovered',server:'A'}]);assert.equal(f.history.state.error,'');assert.match(f.overlay.innerHTML,/Recovered#TEST/);
+});
+for(const field of ['server','source'])test('changing '+field+' after a fuzzy failure clears only that search error without replaying its toast',async()=>{
+ const f=scopeFixture();f.hold();const opened=f.history.open({query:'Explicit#TEST'}),tab=f.history.current();f.requests[0].gate.reject(Error('explicit ID page unavailable'));await opened;assert.match(tab.error,/explicit ID page unavailable/);
+ await f.search('same-name').fail(Error('old A fuzzy search unavailable'));assert.equal(f.history.state.error,'old A fuzzy search unavailable');assert.equal(f.notices.length,1);
+ const notices=f.notices.length;f.context.changeSearchScope(field,field==='server'?'B':'sgp');
+ assert.equal(f.notices.length,notices,'Completed old-scope failure must not be toasted again');assert.equal(f.history.state.error,'');assert.match(tab.error,/explicit ID page unavailable/);assert.equal(tab.loading,false);
+});
+test('reselecting the same scope after a fuzzy failure preserves its own error without replaying it',async()=>{
+ const f=scopeFixture();await f.search('same-name').fail(Error('current A fuzzy unavailable'));const notices=f.notices.length;f.context.changeSearchScope('server','A');
+ assert.equal(f.history.state.error,'current A fuzzy unavailable');assert.equal(f.notices.length,notices);
 });

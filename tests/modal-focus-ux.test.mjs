@@ -105,3 +105,21 @@ test('opening another picker before the previous close finishes does not restore
 test('closing an already empty overlay leaves the current page focus alone',async()=>{
  const f=returnFocusFixture();f.close();await f.flush();assert.equal(f.document.activeElement,f.document.body);
 });
+
+const searchCapture=source.slice(source.indexOf(' const rankingFocus='),source.indexOf(' const disclosureFocus='));
+const searchRestore=source.slice(source.indexOf('  if(rankingFocus){'),source.indexOf('  if(formFocus){'));
+function searchFocusFixture(id,{elsewhere=false}={}){
+ let field;const document={body:{},activeElement:null,getElementById:key=>key===id?field:null};
+ const input=()=>({id,value:'正在搜索',selectionStart:1,selectionEnd:3,matches:()=>false,focus(){document.activeElement=this;},setSelectionRange(start,end){this.selectionStart=start;this.selectionEnd=end;}});
+ field=input();const other={id:'other-button',dataset:{action:'elsewhere'},matches:()=>false};document.activeElement=elsewhere?other:field;
+ const context=vm.createContext({document,app:{contains:node=>node!==document.body,querySelector:()=>null},replace(){field=input();field.selectionStart=field.selectionEnd=0;document.activeElement=document.body;}});
+ return {document,get field(){return field;},paint(){vm.runInContext('(function(){'+searchCapture+'replace();'+searchRestore+'})()',context);}};
+}
+for(const id of ['library-search','hex-search']){
+ test(`${id} keeps focus and its selected text through a background repaint`,()=>{
+  const f=searchFocusFixture(id);f.paint();assert.equal(f.document.activeElement,f.field);assert.equal(f.field.value,'正在搜索');assert.equal(f.field.selectionStart,1);assert.equal(f.field.selectionEnd,3);
+ });
+ test(`${id} does not take focus after the player has moved elsewhere`,()=>{
+  const f=searchFocusFixture(id,{elsewhere:true});f.paint();assert.notEqual(f.document.activeElement,f.field);
+ });
+}
