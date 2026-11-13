@@ -17,22 +17,26 @@ test('current public dictionary is readable while archived reviewed recipes stay
 });
 test('first current source-only card must retain complete source equipment, skill priority and attribution',()=>{
  const model=createGuideModel(data,selectGuide(null,{id:'Camille',role:'top',mode:'hex'}),{available:false});
- assert.equal(model.mode,'hex');assert.equal(model.hexMicroRoutes.length,3);
- const reference=model.hexMicroRoutes[0],ref=data.hexBuilds.Camille;
+ assert.equal(model.mode,'hex');
+ const references=model.hexMicroRoutes.filter(row=>row.kind==='reference');assert.equal(references.length,3);
+ const reference=references[0],ref=data.hexBuilds.Camille;
  assert.equal(reference.kind,'reference');assert.equal(reference.sourceOnly,true);assert.equal(reference.patch,data.patch);
  assert.deepEqual(reference.items.map(i=>Number(i.id)),[...ref.core[0].items,ref.boots[0].items[0]]);
- assert.equal(reference.items.length,4);assert.deepEqual(reference.augments,[]);assert.equal(reference.card.priority,'主Q副E');
+ assert.equal(reference.items.length,4);assert.equal(reference.augments.length,7);assert.equal(reference.card.priority,'主Q副E');
+ assert.deepEqual(reference.augments.map(a=>a.id),ref.augmentIds.filter(id=>![3170,3171,3172,3173,3176].includes(id)).slice(0,7));
+ assert(reference.augments.every(a=>a.core===false&&a.brief.startsWith('当版英雄强化参考，非配套：')));
  assert.equal(reference.card.sourceUrl,ref.sourceUrl);assert.equal(reference.source,ref.sourceUrl);
- assert.deepEqual(model.hexMicroRoutes.map(row=>row.items.map(i=>Number(i.id))),ref.core.map(row=>[...row.items,ref.boots[0].items[0]]));
- assert.equal(new Set(model.hexMicroRoutes.map(row=>row.card.title)).size,3);
- for(const alternative of model.hexMicroRoutes.slice(1)){
+ assert.deepEqual(references.map(row=>row.items.map(i=>Number(i.id))),ref.core.map(row=>[...row.items,ref.boots[0].items[0]]));
+ assert.equal(new Set(references.map(row=>row.card.title)).size,3);
+ for(const alternative of references.slice(1)){
   assert.equal(alternative.kind,'reference');assert.equal(alternative.card.sourceUrl,ref.sourceUrl);
   assert.equal(alternative.card.priority,'主Q副E');assert.deepEqual(alternative.augments,[]);
   assert(alternative.items.every(item=>!item.core));
  }
  const payload=hexMicroPayload({model,referenceRevision:1},'routes');
- const html=hexMicroLineView({...payload,layout:'line'},(kind,id)=>'<img data-kind="'+kind+'" data-id="'+id+'">');
- assert.equal((html.match(/data-micro-kind="item"/g)||[]).length,4);assert.match(html,/主Q副E/);assert.match(html,/OP.GG/);
+ const html=hexMicroLineView({...payload,routes:references,layout:'line'},(kind,id)=>'<img data-kind="'+kind+'" data-id="'+id+'">');
+ assert.equal((html.match(/data-micro-kind="augment"/g)||[]).length,7);assert.equal((html.match(/data-micro-kind="item"/g)||[]).length,4);
+ assert(html.indexOf('data-micro-kind="augment"')<html.indexOf('data-micro-kind="item"'));assert.match(html,/主Q副E/);assert.match(html,/OP.GG/);
  assert.doesNotMatch(html,/data-action="pin"|data-action="expand"/);
 });
 test('current equipment references keep the prepared route first, skip duplicates and omit invalid alternatives',()=>{
@@ -40,9 +44,41 @@ test('current equipment references keep the prepared route first, skip duplicate
  const bundle={...data,hexBuilds:{...data.hexBuilds,Camille:{...ref,core:[core[0],core[1],core[1],{...core[2],items:[core[2].items[0],core[2].items[0],core[2].items[2]]}]}}};
  const selection={id:'Camille',role:'top',mode:'hex',coreIndex:1,coreId:'core-'+core[1].items.join('-'),ownedAugmentIds:[1336]};
  const model=createGuideModel(bundle,selectGuide(null,selection),{available:false});
- assert.deepEqual(model.hexMicroRoutes.map(row=>row.items.slice(0,3).map(item=>Number(item.id))),[core[1].items,core[0].items]);
- assert.deepEqual(model.hexMicroRoutes[0].augments.map(row=>row.id),[1336]);
- assert.deepEqual(model.hexMicroRoutes[1].augments,[]);
+ const references=model.hexMicroRoutes.filter(row=>row.kind==='reference');
+ assert.deepEqual(references.map(row=>row.items.slice(0,3).map(item=>Number(item.id))),[core[1].items,core[0].items]);
+ const actual=references[0].augments;
+ assert.equal(actual[0].id,1336);assert.match(actual[0].brief,/^本局已选，/);assert.equal(actual.filter(row=>row.id===1336).length,1);
+ assert(actual.slice(1).every(row=>row.brief.startsWith('当版英雄强化参考，')));
+ assert.deepEqual(references[1].augments,[]);
+});
+test('opening recommendations skip disabled, unnamed, special and missing catalogue records',()=>{
+ const ref=data.hexBuilds.Camille,known=ref.augmentIds.filter(id=>data.augments.find(a=>a.id===id)?.name.trim());
+ const [disabled,unnamed,valid]=known.filter(id=>![3170,3171,3172,3173,3176].includes(id));
+ const bundle={...data,augments:data.augments.map(a=>a.id===disabled?{...a,catalogEnabled:false}:a.id===unnamed?{...a,name:' '}:a),hexBuilds:{...data.hexBuilds,Camille:{...ref,augmentIds:[disabled,unnamed,3176,999999,valid,valid]}}};
+ const model=createGuideModel(bundle,selectGuide(null,{id:'Camille',role:'top',mode:'hex'}));
+ const fallback=model.hexMicroRoutes.find(row=>row.kind==='reference');
+ assert.deepEqual(fallback.augments.map(a=>a.id),[valid]);assert.equal(fallback.items.length,4);
+});
+test('each current hero opens on a real mechanism pairing with marked core gear and an attributed source',()=>{
+ for(const hero of data.champions){
+  const model=createGuideModel(data,selectGuide(null,{id:hero.id,role:'mid',mode:'hex'}));
+  const first=model.hexMicroRoutes[0],ref=data.hexBuilds[hero.id];
+  assert.equal(first?.kind,'build-pairing',hero.id);
+  assert(first.augments.some(a=>a.core&&ref.augmentIds.includes(a.id)),hero.id);
+  assert(first.items.some(i=>i.core),hero.id);
+  assert(first.items.every(i=>data.items[i.id]?.maps?.['12']),hero.id);
+  assert.equal(first.card.sourceUrl,ref.sourceUrl);
+ }
+});
+test('picked core wins, current offers restrict previews, and removed effects never receive a core border',()=>{
+ const cards=(changes={},bundle=data)=>createGuideModel(bundle,selectGuide(null,{id:'Camille',role:'top',mode:'hex',...changes})).hexMicroRoutes.filter(row=>row.kind==='build-pairing');
+ assert.equal(cards()[0].augments[0].id,1996);assert(cards()[0].items.some(i=>Number(i.id)===3078&&i.core&&i.required));
+ assert.equal(cards({ownedAugmentIds:[2157]})[0].augments[0].id,2157);
+ assert.deepEqual(cards({compareIds:[2157]}).map(row=>row.augments[0].id),[2157]);
+ const changed={...data,augments:data.augments.map(a=>a.id===1996?{...a,description:'已移除联动'}:a)};
+ assert(!cards({},changed).some(row=>row.augments[0].id===1996));
+ const zed=createGuideModel(data,selectGuide(null,{id:'Zed',role:'mid',mode:'hex',ownedAugmentIds:[1004]}));
+ assert(!zed.hexMicroRoutes.some(row=>row.kind==='build-pairing'&&row.items.some(i=>i.core&&Number(i.id)===6696)));
 });
 test('current source favorites stay visible while old patches and authored recipe fields remain hidden',()=>{
  const favorite={type:'build',id:'own-current',champion:'Ashe',role:'bottom',mode:'hex',version:data.version,loadoutId:'default',augmentIds:[],compareIds:[],ownedAugmentIds:[]};

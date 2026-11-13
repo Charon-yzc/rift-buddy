@@ -9,6 +9,8 @@ import {fingerprint} from './content-fingerprint.mjs';
 import {currentHexReview,hexChampionReview} from './hex-review.mjs';
 import {hexRouteItemFingerprint} from './hex-routes.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
+import {hexCurrentAugmentIds} from './hex-acquisition.mjs';
+import {hexBuildPairings} from './hex-build-pairings.mjs';
 
 // Authored paired directions, never a join of independent popularity tables.
 // A changed dependency withdraws its explanation until explicitly reviewed.
@@ -64,7 +66,19 @@ export function hexMicroFallback({data,hero,items=[],augments=[],reference=null,
  const sourceOnly=!isCurrentHexData(data),champion=data.champions.find(c=>c.id===hero),rows=[];
  if(sourceOnly&&!validCurrentHexReference(reference,champion,data))return [];
  const clean=value=>String(value||'').replace(/<br\s*\/?>/gi,'；').replace(/<[^>]+>/g,'').replace(/@[^@]+@/g,'〔动态〕').replace(/\s+/g,' ').slice(0,78);
- const seen=new Set(),choices=augments.filter(a=>{if(seen.has(a.id))return false;seen.add(a.id);const record=data.augments.find(row=>row.id===a.id);return record&&(a.owned||a.offered||!hexCatalogDisabled(data,record));}).slice(0,7).map(a=>{const record=data.augments.find(row=>row.id===a.id),partial=sourceOnly&&record?.descriptionStatus!=='complete';return {id:a.id,name:a.name,core:false,...(partial?{partial:true}:{}),brief:(a.owned?'本局已选，':a.offered?'本轮已录入，':'单项强化参考，')+'非配套：'+(partial?'部分效果待核，以局内为准。':'')+clean(a.description)};});
+ const catalog=new Map(data.augments.map(row=>[row.id,row]));
+ const referenceIds=sourceOnly?hexCurrentAugmentIds(data,reference.augmentIds):[];
+ const references=augments.some(a=>a.offered)?[]:referenceIds.map(id=>catalog.get(id));
+ const choices=[],seen=new Set();
+ for(const a of [...augments,...references]){
+  const record=catalog.get(a.id);
+  if(seen.has(a.id)||!record||!a.name?.trim()||!a.owned&&!a.offered&&hexCatalogDisabled(data,record))continue;
+  seen.add(a.id);
+  const partial=sourceOnly&&record.descriptionStatus!=='complete';
+  const label=a.owned?'本局已选':a.offered?'本轮已录入':sourceOnly?'当版英雄强化参考':'单项强化参考';
+  choices.push({id:a.id,name:a.name,core:false,...(partial?{partial:true}:{}),brief:label+'，非配套：'+(partial?'部分效果待核，以局内为准。':'')+clean(a.description)});
+  if(choices.length===7)break;
+ }
  const purchase=i=>{
   const target=data.items[i.id];if(!validHexRouteTarget(target,hero))return null;
   if(validHexRoutePurchase(target,hero))return {direct:true};
@@ -79,9 +93,9 @@ export function hexMicroFallback({data,hero,items=[],augments=[],reference=null,
   const tip=sourceOnly?itemModeTooltip(target,data.patch,'hex'):null,how=resolved.base?'终态不可直接购买，需先购买'+resolved.base.name+'。':'';
   return [{id:i.id,name:i.name,core:false,brief:how+(sourceOnly?(tip?.status==='complete'?clean(tip.description):'海克斯效果待核，以局内为准。'):clean(i.description))}];
  }).slice(0,8);
- const base={kind:'reference',...(sourceOnly?{sourceOnly:true,source:reference.sourceUrl}:{}),patch:data.patch,basis:sourceOnly?'当版 OP.GG 装备参考与本局强化记录分别列出。':'装备与强化分别参考。'};
+ const base={kind:'reference',...(sourceOnly?{sourceOnly:true,source:reference.sourceUrl}:{}),patch:data.patch,basis:'装备与强化分别参考。'};
  const gear=gearFor(items),gearKey=items=>JSON.stringify(items.map(item=>String(item.id))),seenGear=new Set([gearKey(gear)]);
- if(choices.length||gear.length)rows.push({...base,id:hero+'-references',title:sourceOnly?'当前出装参考':'当前配置与单项参考',augments:choices,items:gear});
+ if(choices.length||gear.length)rows.push({...base,id:hero+'-references',title:sourceOnly?(choices.length?'强化与出装参考':'当前出装参考'):'当前配置与单项参考',augments:choices,items:gear});
  if(sourceOnly&&build){
   const selection={id:hero,role:build.role,mode:'hex',coreIndex:build.selectedCoreIndex,coreId:build.selectedCoreId,loadoutId:'default'};
   const currentIds=gear.map(item=>String(item.id));
@@ -93,6 +107,9 @@ export function hexMicroFallback({data,hero,items=[],augments=[],reference=null,
    const changedItem=alternative.find(item=>!currentIds.includes(String(item.id)))||alternative.find((item,index)=>String(item.id)!==currentIds[index]);
    rows.push({...base,id:hero+'-source-'+choice.id,title:changedItem?changedItem.name+'路线':choice.name.replace(/^OP\.GG · /,''),augments:[],items:alternative});
   }
+  const owned=augments.filter(a=>a.owned).map(a=>a.id),offered=augments.filter(a=>a.offered).map(a=>a.id);
+  const paired=hexBuildPairings({data,hero,referenceIds,equipment:rows,owned,offered,choices:[...new Set([...referenceIds,...owned,...offered])].map(id=>catalog.get(id)).filter(a=>a?.name?.trim()&&a.descriptionStatus==='complete'&&(!hexCatalogDisabled(data,a)||owned.includes(a.id)))});
+  if(paired.length)return [...paired,...rows];
  }
  return rows;
 }

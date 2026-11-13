@@ -60,7 +60,9 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
    if((changes.economy||changes.gear)&&(usesHexMicro()||usesEconomy()))micro.resume(value);
    if(family==='rift'){if(changes.skills)skill.show();if(changes.jungle)jungle.show();if(changes.gear&&equipmentRequested)showEquipment(true);}
   }
-  const hexInGame=isHex()&&currentSelection()?.mode==='hex'&&(inGame(phase)||!connected&&inGame(lastConnectedPhase));
+  // A missing selection can precede the phase notification on a failed read.
+  // Keep the last confirmed Hex game until the client reports a different context.
+  const hexInGame=family==='hex'&&(connected?inGame(phase):inGame(lastConnectedPhase))&&(value.current?value.current.mode==='hex':hexWasInGame);
   if(hexWasInGame&&!hexInGame)hide();hexWasInGame=hexInGame;
   // A refresh changes content only. Migrate an existing display intent once
   // when switching families; never reopen a player-closed window on a poll.

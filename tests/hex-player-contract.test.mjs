@@ -43,8 +43,9 @@ test('archived reviews, saved recipe fields and room strategy never renew curren
   assert.deepEqual(hexItemConversions({data:changed,hero:champion.id,owned:[1205],preparedItems:[1036]}),[]);
  }
  const selection={id:hero.id,role:'top',mode:'hex',comboId:'archived-recipe',loadoutId:'archived-loadout',coreIndex:0,augmentIds:[1058],ownedAugmentIds:[1205]},saved=structuredClone(selection);
- const model=createGuideModel(changed,selectGuide(null,selection));assert.equal(model.hexMicroRoutes.length,3);
- assert(model.hexMicroRoutes.every(route=>route.sourceOnly&&route.kind==='reference'&&route.augments.every(a=>a.core===false)));assert.deepEqual(selection,saved);
+ const model=createGuideModel(changed,selectGuide(null,selection));
+ assert.equal(model.hexMicroRoutes.filter(route=>route.kind==='reference').length,3);
+ assert(model.hexMicroRoutes.every(route=>route.sourceOnly&&['reference','build-pairing'].includes(route.kind)&&!route.communitySource));assert.deepEqual(selection,saved);
  assert.equal(captureRoomStrategy([{role:'top',champion:hero.id}],changed,null,'hex'),null);assert.equal(JSON.stringify(changed),before);
 });
 
@@ -53,8 +54,8 @@ test('source-only equipment remains a prepared reference rather than an automati
  const selection={id:'Camille',role:'top',mode:'hex'},before=structuredClone(selection);
  const live={available:true,at:Date.now(),champion:'Camille',mode:'hex',mapId:12,level:7,skills:{Q:4,W:1,E:1,R:1},gold:1000,inventory:[{id:3078,count:1}],inventoryKnown:true,gameTime:500,enemies:[],allies:[]};
  for(const observed of [{available:false},live,{...live,inventoryKnown:false},{...live,champion:'Ashe'}]){
-  const model=createGuideModel(data,selectGuide(null,selection),observed);assert.equal(model.hexMicroRoutes.length,3);
-  for(const route of model.hexMicroRoutes){
+  const model=createGuideModel(data,selectGuide(null,selection),observed),references=model.hexMicroRoutes.filter(route=>route.kind==='reference');assert.equal(references.length,3);
+  for(const route of references){
    assert.equal(route.kind,'reference');assert.equal(route.sourceOnly,true);
    for(const item of route.items){assert.equal(item.core,false);assert.doesNotMatch(item.brief,/本人已装备|已购买|配套收益/);}
   }
