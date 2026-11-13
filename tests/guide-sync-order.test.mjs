@@ -20,7 +20,7 @@ test('failed guide opening does not retry an old configuration over a queued new
   manualGuideReference:null,detachedGuideSelection:false,
   guard:(name,handler)=>handlers.set(name,handler),guide:{show(){shown++;return {};}},pollLive(){},prepareCurrentGuide(){throw Error('Unexpected implicit selection');}});
  context.setGuideState=next=>{const attempt=++writes,task=queue.then(async()=>{if(attempt===1){await failure.promise;throw Error('storage failed');}context.state.guide=next;});queue=task.catch(()=>{});return task;};
- const reconcileStart=main.indexOf(' const reconcileKnownGuide='),reconcileEnd=main.indexOf(' // A hex guide',reconcileStart);
+ const reconcileStart=main.indexOf(' const reconcileKnownGuide='),reconcileEnd=main.indexOf(' const guideSelectionChanged=',reconcileStart);
  assert.ok(reconcileStart>=0&&reconcileEnd>reconcileStart);
  vm.runInContext(main.slice(reconcileStart,reconcileEnd)+main.slice(helperStart>=0&&helperStart<handlerStart?helperStart:handlerStart,main.indexOf(" guard('update-guide'",handlerStart)),context);
  const opening=handlers.get('open-guide')(page);await tick();
