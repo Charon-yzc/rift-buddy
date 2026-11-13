@@ -10,7 +10,7 @@ function fixture(){
  const calls=[],mock={discover:async()=>discovery===undefined?{port,password:secret}:discovery,now:()=>at,request:async(_a,url)=>{
   calls.push(url);
   if(url.endsWith('gameflow-phase')){if(phaseError)throw phaseError;return phase;}
-  if(url==='/lol-lobby/v2/lobby'){if(lobby instanceof Error)throw lobby;if(afterLobbyPhase)phase=afterLobbyPhase;return lobby;}
+  if(url==='/lol-lobby/v2/lobby'){if(afterLobbyPhase)phase=afterLobbyPhase;if(lobby instanceof Error)throw lobby;return lobby;}
   if(url==='/lol-champ-select/v1/session')return {gameId,localPlayerCellId:1,myTeam:team,theirTeam:[],bans:{}};
   if(url.endsWith('champion-ids')){if(eligibilityError)throw eligibilityError;return [];}
   if(gameError)throw gameError;
@@ -50,6 +50,13 @@ test('a lobby read crossing into selection cannot claim a room with unverified m
  assert.deepEqual(selected.party.members.map(member=>member.cellId),[1]);
 });
 
+test('a disappearing lobby during ready check still yields the selection and previously verified party',async()=>{
+ const f=fixture(),lobby=await clientSnapshot('',f.mock);
+ f.set({phase:'ReadyCheck',afterLobbyPhase:'ChampSelect',lobby:Object.assign(Error('Lobby no longer active'),{status:404})});
+ const selected=await clientSnapshot('',f.mock);
+ assert.equal(selected.phase,'ChampSelect');assert.equal(selected.session?.gameId,'123');assert.equal(selected.party.key,lobby.party.key);
+});
+
 async function interruptedParty(f,prior={}){
  const lobby=await clientSnapshot('',f.mock);
  f.set({phase:'ChampSelect',at:2000,...prior});
@@ -57,7 +64,7 @@ async function interruptedParty(f,prior={}){
  assert.equal(draft.party.key,lobby.party.key);
  f.set({phaseError:interrupted(),at:3000});
  const offline=await clientSnapshot('',f.mock);
- assert.deepEqual(offline,{connected:false,phase:'Offline',message:'isolated phase GET interrupted'});
+ assert.deepEqual(offline,{connected:false,phase:'Offline',message:'isolated phase GET interrupted',transportInterrupted:true});
  f.set({phaseError:null,at:4000});
  return lobby.party.key;
 }

@@ -13,13 +13,13 @@ async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(c=>c.id===id);
- let observer,picked='',assigned='',teammate=false,phase='ChampSelect',requests=0,writes=0,sourceFetches=0,holdRune=false,resumeRune=null,page={id:44,name:'Mock page',isEditable:true,isActive:true,current:true};
+ let observer,picked='',assigned='',teammate=false,phase='ChampSelect',requests=0,writes=0,sourceFetches=0,holdRune=false,resumeRune=null,interruptPhase=false,page={id:44,name:'Mock page',isEditable:true,isActive:true,current:true};
  global.fetch=async()=>{sourceFetches++;throw Error('External source requests disabled in dual-window fixture');};
  const output=options=>{
   requests++;assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   if(options.path==='/lol-game-data/assets/v1/champion-summary.json')return [{id:999999,alias:'FutureHero',name:'测试新英雄'}];
   if(options.path==='/lol-game-data/assets/v1/items.json')return [{id:999998,name:'测试新装备',price:1500,description:'客户端公开说明',iconPath:'/lol-game-data/assets/ASSETS/Items/Icons2D/fixture_item.png'}];
-  if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
+  if(options.path==='/lol-gameflow/v1/gameflow-phase'){if(interruptPhase)throw Error('fixture connection interrupted');return phase;}
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId:'4701',mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离同步玩家',tagLine:'TEST'};
   if(options.path==='/lol-champ-select/v1/session')return {gameId:4701,localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:0,assignedPosition:assigned},...(teammate?[{cellId:2,championId:hero('Garen').key,assignedPosition:'TOP'}]:[])],theirTeam:[{cellId:6,championId:hero('Malphite').key}],actions:[],bans:{myTeamBans:[],theirTeamBans:[]}};
@@ -84,6 +84,16 @@ async function run(){
  assert.equal(await js(side,'window.buddy.bootstrap().then(b=>b.state.preferences.autoSync)'),true,'Disconnected dot must enable automatic connection');
  assert.equal(writes,statusWrites,'Connection action must not write a rune page');
  await js(main,'window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,autoSync:false}},b.state))');await js(main,'window.buddy.client(false)');
+ await click(side,'[data-action=companion-tab][data-tab=room]');
+ interruptPhase=true;
+ const interrupted=await js(main,'window.buddy.client(true)');
+ assert.equal(interrupted.connected,false);assert.equal(interrupted.transportInterrupted,true);assert.equal(side.isDestroyed(),false);
+ await until(()=>js(side,'!!document.querySelector(".companion-footer .client-connection-indicator.disconnected")'),'Interrupted transport did not disable the connected sidebar state');
+ interruptPhase=false;await js(main,'window.buddy.client(true)');
+ await until(()=>js(side,'!!document.querySelector(".companion-footer .client-connection-indicator.connected")'),'Same draft did not reconnect in its existing sidebar');
+ assert.equal(await js(side,'document.querySelector(".companion-shell").dataset.tab'),'room');
+ assert.deepEqual(windows.filter(w=>!w.isDestroyed()&&w.webContents.getURL().includes('surface=companion')),[side]);
+ await click(side,'[data-action=companion-tab][data-tab=recommend]');
  // Palette changes use the shared settings channel, never game preparation.
  const {THEMES,DEFAULT_THEME}=await import(pathToFileURL(path.join(base,'src/core/themes.mjs'))),{readState}=await import(pathToFileURL(path.join(base,'services/storage.mjs')));
  const beforeThemeWrites=writes,modules=await js(side,'window.buddy.bootstrap().then(b=>b.state.preferences.presentation.guideModules)');

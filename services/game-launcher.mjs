@@ -6,10 +6,11 @@ import {promisify} from 'node:util';
 // Installation layout reference: LeagueAkari's client-installation detector
 // (MIT, 56cdfde0). Launch only a local executable, never a shell command/URL.
 const exec=promisify(execFile),win=path.win32;
+export const defaultLeagueRoots=['C','D','E','F'].flatMap(drive=>['英雄联盟','英雄联盟（含经典模式）'].map(name=>`${drive}:/WeGameApps/${name}`)).concat('D:/英雄联盟','C:/Riot Games/League of Legends');
 export const validLaunchPath=value=>typeof value==='string'&&value.length<=500&&/^[A-Za-z]:[\\/]/.test(value)&&/\.exe$/i.test(value)&&!/[\r\n\0"<>|]/.test(value);
 export function launchCandidates({launchPath='',installPath='',roots=[]}={}){
  if(launchPath){if(!validLaunchPath(launchPath))throw Error('请选择本机的 .exe 启动程序');return [{path:win.normalize(launchPath),label:'自定义启动程序'}];}
- const dirs=[installPath,...roots,...['C','D','E','F'].map(d=>d+':/WeGameApps/英雄联盟'),'D:/英雄联盟','C:/Riot Games/League of Legends'].filter(Boolean);
+ const dirs=[installPath,...roots,...defaultLeagueRoots].filter(Boolean);
  const unique=[...new Set(dirs.map(p=>win.normalize(p)))];
  return [['WeGameLauncher/launcher.exe','WeGame 英雄联盟'],['Launcher/Client.exe','英雄联盟登录器'],['LeagueClient.exe','英雄联盟客户端'],['LeagueClient/LeagueClient.exe','英雄联盟客户端']].flatMap(([file,label])=>unique.map(dir=>({path:win.join(dir,file),label})));
 }

@@ -14,7 +14,7 @@
 | 熟悉英雄 | 默认已玩/未玩质量为 0.85/0.15；成员分别归一化后合并；归属明确；100% 已玩权重耗尽后不能为凑多样性补零权重英雄 | `recommendation-familiarity.test.mjs`、`recommendation-player-contract.test.mjs`、`room-champion-usage.test.mjs` |
 | 分数和排序 | 普通候选遵守 60 分门槛，覆盖 59/60/61；社区组合允许例外，带独立标识并显示原分；加权抽样与显示排序分别验证 | `recommendation-policy.test.mjs`、`composition-fit.test.mjs` |
 | 500 场统计 | 有界并发、优先获得摘要；选人时后台进度不重排推荐、不跳滚动；明确刷新时采用本人和房间成员的最新摘要 | `match-history-performance.test.mjs`、`champion-usage-service.test.mjs`、`recommendation-continuity.test.mjs`、`smoke-package-match-history.mjs --room-usage` |
-| 海克斯阵容 | 真实备选池与已选英雄合并排序并区分我/我们/队友；空池、缺失池及不可选英雄行为明确；没有当前统计不能借旧版胜率 | `hex-shared-bench.test.mjs`、`smoke-package-hex-shared-bench.mjs` |
+| 海克斯阵容 | 真实备选池与已选英雄合并排序并区分我/我们/队友；空池、缺失池及不可选英雄行为明确；点击换人先发送备选池请求；当前英雄的强化选取记录可追溯来源，四次候选资格独立核对 | `hex-shared-bench.test.mjs`、`hex-pool.test.mjs`、`smoke-package-hex-shared-bench.mjs` |
 | 海克斯资料 | 总图鉴、英雄观察证据、各次强化的可选资格分别验证；未知资格保留待核；旧社区配置不可自动成为当前推荐；来源变更同步撤回配置、收藏和指引 | `hex-player-contract.test.mjs`、`hex-pool.test.mjs`、`hex-acquisition.test.mjs`、`hex-live-bundle.test.mjs` |
 | 局内小窗 | 收起显示第一套完整配置；展开、置顶、贴边恢复和滚动可用；强化/装备图标及来源、加点不丢；悬停说明避开鼠标和屏幕边缘；不抢游戏焦点 | `hex-micro-windows.test.mjs`、`smoke-package-compact-ingame.mjs` |
 | 阅读和输入 | 装备图鉴在非零滚动位置悬停时插入无关状态刷新，提示和列表位置保留，移开关闭；中文输入过程中保留候选和焦点 | `smoke-package-interaction-ux.mjs`、`pointer-render.test.mjs`、`room-input-interaction-ux.test.mjs` |

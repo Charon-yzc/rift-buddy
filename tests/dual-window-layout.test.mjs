@@ -115,3 +115,19 @@ test('unknown game IDs preserve the manual request but a confirmed replacement g
  for(const gameId of [undefined,101]){f.setClient({connected:true,phase:'ChampSelect',session:{gameId}});f.companion.sync();assert.equal(f.companion.getWindow(),side);assert.ok(side.isVisible());}
  f.setClient({connected:true,phase:'ChampSelect',session:{gameId:202}});f.companion.sync();assert.equal(side.isDestroyed(),true);assert.equal(f.companion.getWindow(),null);assert.equal(f.preferences.clientCompanion,false);f.companion.destroy();
 });
+
+test('a brief transport failure preserves the sidebar only for the same verified draft',async()=>{
+ const timing=placementClock(),f=fixture({timing}),draft=id=>({connected:true,phase:'ChampSelect',session:{gameId:id}}),interrupted={connected:false,phase:'Offline',transportInterrupted:true};
+ f.setClient(draft(101));f.companion.observe(anchor);await Promise.resolve();const side=f.companion.getWindow();
+ f.setClient(interrupted);f.companion.sync();assert.equal(f.companion.getWindow(),side);assert.equal(timing.size(),1);
+ f.companion.observe({...anchor,minimized:true});assert.equal(side.isVisible(),false);assert.equal(timing.size(),1);
+ f.setClient(draft(101));f.companion.observe(anchor);assert.equal(f.companion.getWindow(),side);assert.ok(side.isVisible());assert.equal(timing.size(),0);
+ f.setClient(interrupted);f.companion.sync();f.setClient(draft(202));f.companion.sync();await Promise.resolve();
+ assert.equal(side.isDestroyed(),true);assert.notEqual(f.companion.getWindow(),side);assert.equal(timing.size(),0);f.companion.destroy();
+});
+
+test('a sustained transport failure releases the sidebar instead of extending the grace period',async()=>{
+ const timing=placementClock(),f=fixture({timing});f.setClient({connected:true,phase:'ChampSelect',session:{gameId:101}});f.companion.observe(anchor);await Promise.resolve();const side=f.companion.getWindow();
+ f.setClient({connected:false,phase:'Offline',transportInterrupted:true});f.companion.sync();f.companion.sync();assert.equal(f.companion.getWindow(),side);assert.equal(timing.size(),1);
+ await timing.flush();assert.equal(side.isDestroyed(),true);assert.equal(f.companion.getWindow(),null);f.companion.sync();assert.equal(timing.size(),0);f.companion.destroy();
+});

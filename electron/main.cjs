@@ -1009,7 +1009,7 @@ async function boot(){
    const previousGuide=state.guide,reconcileGame=publicClientGameId(latestClient),reconciled=reconcileKnownGuide(previousGuide,{phase:latestClient.phase,gameId:reconcileGame,enemyIds});
    if(selectionKey(previousGuide)!==selectionKey(reconciled.guide)){try{await setGuideState(reconciled.guide,previousGuide,undefined,false,true,()=>publicClientGameId(latestClient)===reconcileGame);}catch(error){if(error.code!=='GUIDE_CONTEXT_CHANGED')throw error;}}
    else if(reconciled.changed)await saveCurrentState(current=>({...current,guide:reconcileKnownGuide(current.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),enemyIds}).guide}));
-   const readFirstLive=state.preferences.guideAutoShow!==false&&latestClient.connected&&latestClient.phase==='InProgress'&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame);
+   const readFirstLive=state.preferences.guideAutoShow!==false&&latestClient.connected&&['InProgress','Reconnect'].includes(latestClient.phase)&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame);
    try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}
    companion.sync();
    if(inGame()&&!['GameStart','InProgress','Reconnect'].includes(previousPhase)){mainExplicitInGame=false;if(win){win.hide();mainRelease.request(win);}}
@@ -1379,13 +1379,16 @@ async function boot(){
  guard('choose-directory',async()=>{const result=await dialog.showOpenDialog(win,{title:'选择英雄联盟安装目录',properties:['openDirectory']});return result.canceled?null:result.filePaths[0];});
  const {hexCommunitySourceURLs}=await import('../src/core/hex-routes.mjs');
  const {HEX_CHAMPION_SOURCE}=await import('../src/core/hex-champion-statistics.mjs');
+ const {hexHeroPool}=await import('../src/core/hex-pool.mjs');
  guard('open-link',async url=>{
   const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','101.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com','gitee.com'];
   // Exact credited statistics source and its pinned license, never arbitrary GitHub paths.
   const augmentStatisticsURLs=['https://github.com/czgreat/aramhex-data','https://github.com/czgreat/aramhex-data/blob/f4d80d48110951b7319ab74ffaa2c351bc7c8652/LICENSE'];
   const catalogSources=[...data.catalog.duos,...data.catalog.trios].flatMap(c=>c.sources||[]).map(s=>s.url);
   const communitySource=['www.youtube.com','www.bilibili.com','deeparam.com','expcarry.com','www.douyin.com'].includes(parsed.hostname)&&hexCommunitySourceURLs(data).includes(url);
-  if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url)&&!communitySource&&url!==HEX_CHAMPION_SOURCE)throw new Error('不支持的链接');
+  const poolHero=parsed.origin==='https://mayhemmeta.com'?data.champions.find(c=>`/champions/${c.id.toLowerCase()}`===parsed.pathname.replaceAll('-','')):null;
+  const poolSource=poolHero&&hexHeroPool({data,hero:poolHero.id}).evidence?.sourceUrl===url;
+  if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url)&&!communitySource&&!poolSource&&url!==HEX_CHAMPION_SOURCE&&url!=='https://support.riotgames.com/en-us/league-of-legends/events/league-of-legends-aram-mayhem-game-mode')throw new Error('不支持的链接');
   if(['github.com','gitee.com'].includes(parsed.hostname)&&!isReleaseNotesUrl(url)&&!catalogSources.includes(url)&&!augmentStatisticsURLs.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
  });
  guard('export-preparation',async value=>{

@@ -12,6 +12,7 @@ import {publicPlayerIdentity,publicPlayerName,sameIdentity,lobbyPartyMembers,san
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
 import {allowedHistoryRoute} from './match-history-routes.mjs';
 import {normalizeClientDictionary} from '../src/core/client-dictionary.mjs';
+import {defaultLeagueRoots} from './game-launcher.mjs';
 const GET_PATHS=new Set(['/lol-end-of-game/v1/eog-stats-block','/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-chat/v1/conversations','/data-store/v1/install-dir','/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json']);
 const lcuAgent=new https.Agent({keepAlive:true,maxSockets:16,maxFreeSockets:8,timeout:10000,rejectUnauthorized:false});
 const lobbyCaches=new WeakMap();
@@ -63,7 +64,7 @@ export async function discoverClient(installPath='',{includeRegion=false,reuseSn
  // retries a write on another connection if this one has expired.
  if(reuseSnapshot&&!includeRegion&&snapshotAuth&&snapshotPath===installPath&&Date.now()>=snapshotAuthAt&&Date.now()-snapshotAuthAt<30000)return snapshotAuth;
  let lockAuth=null;
- const roots=[installPath,'C:/WeGameApps/英雄联盟','D:/WeGameApps/英雄联盟','D:/英雄联盟','C:/Riot Games/League of Legends'].filter(Boolean);
+ const roots=[...new Set([installPath,...defaultLeagueRoots].filter(Boolean).map(root=>path.normalize(root)))];
  rootsLoop:for(const root of roots)for(const suffix of ['lockfile','LeagueClient/lockfile']) {
     try {const auth=parseLockfile(await fs.readFile(path.join(root,suffix),'utf8'));if(auth){if(!includeRegion)return auth;lockAuth=auth;break rootsLoop;}}catch{}
  }
@@ -155,12 +156,14 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   if(LOBBY_PHASES.includes(phase)){
    // Ready check can turn into selection during the lobby read. Complete
    // that selection snapshot now instead of publishing a phase without it.
-   try{
-    const lobby=await request(auth,'/lol-lobby/v2/lobby'),after=await request(auth,'/lol-gameflow/v1/gameflow-phase');
-    if(after===phase){cache.lobby=sanitizeLobbyParty(lobby,now());cache.gameId=null;}
-    else if(after==='ChampSelect'&&phase!=='None')transitionLobby=sanitizeLobbyParty(lobby,now());
-    phase=after;
-   }catch(error){if(error.status===401)throw error;if(['None','Lobby'].includes(phase))cache.lobby=null;}
+   let lobby,readLobby=false,after=phase;
+   try{lobby=await request(auth,'/lol-lobby/v2/lobby');readLobby=true;}
+   catch(error){if(error.status===401)throw error;if(['None','Lobby'].includes(phase))cache.lobby=null;}
+   if(readLobby||phase==='ReadyCheck')try{after=await request(auth,'/lol-gameflow/v1/gameflow-phase');}
+   catch(error){if(error.status===401)throw error;readLobby=false;if(['None','Lobby'].includes(phase))cache.lobby=null;}
+   if(readLobby&&after===phase){cache.lobby=sanitizeLobbyParty(lobby,now());cache.gameId=null;}
+   else if(readLobby&&after==='ChampSelect'&&phase!=='None')transitionLobby=sanitizeLobbyParty(lobby,now());
+   phase=after;
   }
   if(phase==='ChampSelect'){
    rawSession=await request(auth,'/lol-champ-select/v1/session');session=sanitizeSession(rawSession);
@@ -230,7 +233,7 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
    }else lobbyCaches.delete(request);
   }
   if(native){snapshotAuth=null;snapshotAuthAt=0;}
-  return {connected:false,phase:'Offline',message:e.message};
+  return {connected:false,phase:'Offline',message:e.message,...(!phaseRead&&e.transport===true&&!e.status?{transportInterrupted:true}:{})};
  }
 }
 const dictionaryCaches=new WeakMap();

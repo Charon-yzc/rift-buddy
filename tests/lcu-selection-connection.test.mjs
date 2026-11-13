@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import https from 'node:https';
 import {EventEmitter} from 'node:events';
 import {clientSnapshot,discoverClient} from '../services/lcu.mjs';
@@ -10,6 +11,12 @@ import {clientPreparationPlan} from '../src/client-preparation-view.mjs';
 import {runeWriteContext} from '../src/core/rune-context.mjs';
 
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
+test('the current WeGame installation name is tried before process discovery',async t=>{
+ const target=path.join('C:/WeGameApps/英雄联盟（含经典模式）','LeagueClient/lockfile'),attempts=[];
+ t.mock.method(fs,'readFile',async file=>{attempts.push(file);if(file===target)return 'LeagueClient:1:24680:isolated-only:https';throw Error('isolated missing file');});
+ assert.equal((await discoverClient('C:/WeGameApps/英雄联盟'))?.port,24680);
+ assert.equal(attempts.at(-1),target);assert.equal(new Set(attempts).size,attempts.length);
+});
 test('hero selection reuses only a fresh verified connection and never retries an expired credential write',async t=>{
  let reads=0,fail=false,optionalFailure='',intent=0,writes=0,at=100000;
  const installPath='isolated-selection-client',own={cellId:0,championId:0,assignedPosition:'BOTTOM'},action={id:4,type:'pick',actorCellId:0,championId:0,completed:false,isInProgress:true};
@@ -84,13 +91,13 @@ test('a socket interruption drops cached native auth but can restore a fully ver
  assert.equal((await clientSnapshot(installPath)).party.key,'fixture-premade');
  assert.equal(reads,1);
  interrupt='socket';
- assert.deepEqual(await clientSnapshot(installPath),{connected:false,phase:'Offline',message:'未能连接客户端，请确认游戏已登录到大厅'});
+ assert.deepEqual(await clientSnapshot(installPath),{connected:false,phase:'Offline',message:'未能连接客户端，请确认游戏已登录到大厅',transportInterrupted:true});
  await discoverClient(installPath,{reuseSnapshot:true});
  assert.equal(reads,2,'An interrupted phase cannot keep the native connection verified');
  interrupt='';
  assert.equal((await clientSnapshot(installPath)).party.key,'fixture-premade');
  interrupt='forbidden';
- assert.equal((await clientSnapshot(installPath)).connected,false);
+ const forbidden=await clientSnapshot(installPath);assert.equal(forbidden.connected,false);assert.equal(forbidden.transportInterrupted,undefined);
  interrupt='';
  assert.equal((await clientSnapshot(installPath)).party.key,undefined,'A socket failure after HTTP 403 headers cannot preserve a party');
 });

@@ -100,6 +100,14 @@ async function run(){
  assert.equal(await js('document.querySelector(".hex-companion").dataset.tab'),'recommend');
  const live=await js('window.buddy.hexRound({operation:"snapshot"})');assert(live.live?.context,'Live round missing');await js('window.buddy.hexRound('+JSON.stringify({operation:'own',id:1004,context:live.live.context,revision:live.live.revision})+')');
  benchKnown=false;await js('window.buddy.client(true)');await until(()=>js('!!document.querySelector(".hex-reference-board")'),'Missing-bench hero ranking missing');await click('.hex-reference-board [data-id=Ahri]');await until(()=>js('document.querySelector(".hex-companion").dataset.configHero==="Ahri"'),'Manual preview lost behind live round');assert.equal(writes.length,count);
+ const currentPool=require(path.join(base,'src/core/hex-pool.mjs')).hexHeroPool({data:{...data,hexBuilds:require(path.join(base,'data/hex-builds.json')).entries},hero:'Ahri'}).evidence;
+ if(currentPool){
+  const poolSource=await js('document.querySelector(".hex-config-pool-total [data-action=link]")?.dataset.url');
+  assert.equal(poolSource,`https://mayhemmeta.com/champions/ahri?patch=${data.patch}`);
+  await click('.hex-config-pool-total [data-action=link]');await until(()=>opened.includes(poolSource),'Current pool source could not be opened');
+  assert.equal(await js(`window.buddy.openLink(${JSON.stringify(poolSource+'&next=extra')}).then(()=>false,()=>true)`),true);
+  await until(()=>js('document.querySelector(".hex-config-pool-total [data-hex-pool-status=有选取记录]")?.dataset.hexBrief.includes("样本中有")'),'Current hero observations are missing');
+ }
  const invokeAction=(action,id)=>js('(()=>{const b=document.createElement("button");b.dataset.action='+JSON.stringify(action)+';b.dataset.id='+JSON.stringify(String(id||''))+';document.body.appendChild(b);b.click();b.remove()})()');
  await invokeAction('augment-detail',1004);await until(()=>js('!!document.querySelector(".augment-modal [data-action=own-augment]")'),'Manual augment details missing');assert.equal(await js('document.querySelector(".augment-modal [data-action=own-augment]").disabled'),false,'Live owned state leaked into manual preview');await click('.augment-modal [data-action=close]');
  await invokeAction('companion-current');await invokeAction('augment-detail',1004);await until(()=>js('!!document.querySelector(".augment-modal [data-action=own-augment]")'),'Live augment details missing');assert.equal(await js('document.querySelector(".augment-modal [data-action=own-augment]").disabled'),true,'Returning to live failed to restore owned state');await click('.augment-modal [data-action=close]');await click('[data-action=companion-tab][data-tab=recommend]');

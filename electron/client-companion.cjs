@@ -3,11 +3,12 @@ const {pathToFileURL}=require('node:url');
 const sidebarPlacement=require('./companion-placement.cjs');
 const {publicClientGameId}=require('../src/core/draft.mjs');
 const PREGAME_PHASES=['Lobby','Matchmaking','ReadyCheck','ChampSelect'];
+const DRAFT_RECONNECT_MS=8000;
 // League windows are read-only anchors. The sidebar has its own lifetime and
 // bounds; opening the full assistant never resizes or replaces either window.
 module.exports=function createClientCompanion({root,getWindow,showMain,getClient,getPreferences,savePlacement,placement,diagnostic}){
  const {screen,BrowserWindow}=require('electron');
- let native=null,side=null,ready=false,phase='',gameId=null,dismissed=false,manualRequested=false,manual=false,manualBounds=null,boundMain=null,overlap=false,cancelSidePlacement=()=>{},cancelMainPlacement=()=>{};
+ let native=null,side=null,ready=false,phase='',gameId=null,dismissed=false,manualRequested=false,manual=false,manualBounds=null,boundMain=null,overlap=false,cancelSidePlacement=()=>{},cancelMainPlacement=()=>{},draftReconnectTimer=null;
  const published=new Map();
  const areaFor=b=>screen.getDisplayMatching(b||screen.getPrimaryDisplay().bounds).workArea;
  const limits=area=>({minWidth:Math.min(280,area.width),minHeight:Math.min(320,native?.height||320,area.height),maxWidth:area.width,maxHeight:area.height});
@@ -36,14 +37,23 @@ module.exports=function createClientCompanion({root,getWindow,showMain,getClient
   win.webContents.on('render-process-gone',(_event,detail)=>diagnostic('sidebar renderer gone '+detail.reason));
   win.loadFile(path.join(root,'src/index.html'),{query:{surface:'companion'}});publish();
  }
- function release(){peek.destroy();cancelSidePlacement(true);if(side&&!side.isDestroyed())side.destroy();side=null;ready=false;publish();}
+ function clearReconnect(){clearTimeout(draftReconnectTimer);draftReconnectTimer=null;}
+ function release(){clearReconnect();peek.destroy();cancelSidePlacement(true);if(side&&!side.isDestroyed())side.destroy();side=null;ready=false;publish();}
  function sync(){
   const client=getClient(),next=client.connected?client.phase:'Offline',pregame=PREGAME_PHASES.includes(next),nextGame=next==='ChampSelect'?publicClientGameId(client):null;
+  const keepDraft=next==='Offline'&&client.transportInterrupted===true&&phase==='ChampSelect'&&!!gameId&&!!native&&!!side&&!side.isDestroyed()&&getPreferences().clientCompanion!==false&&!dismissed;
+  if(keepDraft){
+   if(draftReconnectTimer===null)draftReconnectTimer=setTimeout(()=>{phase='Offline';gameId=null;manualRequested=false;release();},DRAFT_RECONNECT_MS);
+  }else if(draftReconnectTimer!==null){
+   if(nextGame!==gameId)release();else clearReconnect();
+  }
   // A manual opening belongs to this pregame cycle, not one polling phase.
-  if(!pregame||(next==='Lobby'&&(phase==='ChampSelect'||gameId))||(gameId&&nextGame&&gameId!==nextGame))manualRequested=false;
-  if(!pregame||next==='Lobby')gameId=null;else if(nextGame)gameId=nextGame;
-  if(next!==phase){const waiting=['Lobby','Matchmaking','ReadyCheck'];if(!waiting.includes(phase)||!waiting.includes(next))dismissed=false;phase=next;}
-  if(!pregame||getPreferences().clientCompanion===false&&!manualRequested||dismissed){release();return;}
+  if(!keepDraft){
+   if(!pregame||(next==='Lobby'&&(phase==='ChampSelect'||gameId))||(gameId&&nextGame&&gameId!==nextGame))manualRequested=false;
+   if(!pregame||next==='Lobby')gameId=null;else if(nextGame)gameId=nextGame;
+   if(next!==phase){const waiting=['Lobby','Matchmaking','ReadyCheck'];if(!waiting.includes(phase)||!waiting.includes(next))dismissed=false;phase=next;}
+   if(!pregame||getPreferences().clientCompanion===false&&!manualRequested||dismissed){release();return;}
+  }
   if(!native||native.minimized){peek.sync(false,false);if(side&&!side.isDestroyed()&&side.isVisible())side.hide();publish();return;}
   if(!side||side.isDestroyed())create();
   const saved=manualBounds||getPreferences().companionBounds,area=areaFor(saved||native),bounds=saved?placement.fitWindow(saved,area,limits(area)):sidebarPlacement(native,area,getPreferences().companionWidth);

@@ -215,15 +215,19 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   // Only an unknown-ID round needs a fresh selection phase to reset its token.
   if(autoShowGame==='unknown'&&!id&&next==='ChampSelect'&&previous!=='ChampSelect')autoShowGame=null;
   const autoGame=String(id||'unknown');
-  if(next==='InProgress'&&(newGame||!['InProgress','Reconnect'].includes(previous))&&autoShowGame!==autoGame&&preferences.guideAutoShow!==false){autoShowGame=autoGame;autoShowPending=true;}
-  if(!['InProgress','Reconnect'].includes(next)){autoShowPending=false;}
+  const playing=['InProgress','Reconnect'].includes(next);
+  if(playing&&(newGame||!['InProgress','Reconnect'].includes(previous))&&autoShowGame!==autoGame&&preferences.guideAutoShow!==false){autoShowGame=autoGame;autoShowPending=true;}
+  if(!playing){autoShowPending=false;}
   if(next===previous&&!newGame&&!needsAutoShow())return;
-  if(next==='InProgress'&&needsAutoShow()&&currentSelection()){
+  if(playing&&needsAutoShow()&&currentSelection()){
    const epoch=displayEpoch,gameId=getState()?.match?.gameId;
    // Loading/live data may arrive after thirty seconds, or model construction
    // may temporarily fail. Consume the one-shot display only for real content.
    // showInactive remains the sole display; closing it cancels the intent.
-   if(await prepareCurrent()&&epoch===displayEpoch&&gameId===getState()?.match?.gameId&&phase===next&&connected&&needsAutoShow()&&payload().model)show(true);
+   if(await prepareCurrent()&&epoch===displayEpoch&&gameId===getState()?.match?.gameId&&phase===next&&connected&&needsAutoShow()){
+    const model=payload().model;
+    if(model&&(next==='InProgress'||model.live?.matched===true))show(true);
+   }
   }
   if(getState()&&['WaitingForStats','PreEndOfGame','EndOfGame'].includes(next)&&!['WaitingForStats','PreEndOfGame','EndOfGame'].includes(previous)){
    const behavior=preferences.guideAfterGame||'hide';if(behavior==='hide')hide();
