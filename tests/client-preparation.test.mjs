@@ -90,6 +90,21 @@ test('a confirmed hover configures the same champion without sending another pic
  const result=await f.run();assert.equal(result.complete,true);assert.equal(result.steps.hover.status,'done');assert.equal(f.items,1);
  assert.ok(!f.calls.some(call=>call.route.includes('/actions/')));assert.equal(f.action.completed,false);
 });
+test('clicking an already hovered champion out of turn confirms it without another client write',async()=>{
+ const f=fixture();f.value.preselectOnly=true;f.own.championPickIntent=22;f.action.championId=22;
+ f.session.timer.phase='BAN_PICK';f.action.isInProgress=false;
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(result.steps.hover.status,'done');
+ assert.equal(f.items,0);assert(f.calls.every(call=>call.method==='GET'));assert.equal(f.action.completed,false);
+});
+test('the same native pick made while a quick click is validating does not trigger another write',async()=>{
+ const f=fixture(),request=f.deps.request;f.value.preselectOnly=true;let reads=0;
+ f.deps.request=async(auth,route,...args)=>{
+  if(route==='/lol-champ-select/v1/session'&&++reads===2){f.own.championId=22;f.action.championId=22;f.action.completed=true;}
+  return request(auth,route,...args);
+ };
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(result.steps.hover.locked,true);
+ assert.equal(f.items,0);assert(f.calls.every(call=>call.method==='GET'));
+});
 test('confirming the same hovered hero before configuration starts keeps the click valid',async()=>{
  const f=fixture({locked:true});f.value.context.championId=0;f.value.context.championPickIntent=22;
  const result=await f.run();assert.equal(result.complete,true);assert.equal(result.steps.hover.locked,true);assert.equal(f.items,1);

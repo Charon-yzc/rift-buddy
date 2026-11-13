@@ -1,4 +1,12 @@
-# 海克斯强化胜率数据
+# 海克斯胜率数据
+
+## 16.22
+
+侧栏使用 [AramHex data-v16](https://github.com/czgreat/aramhex-data/tree/0e2bc89e7e188da55a56819be39a53e3811023cd/patches/16.22/normal)，来源为 czgreat/aramhex-data，按 [CC BY-NC 4.0](https://github.com/czgreat/aramhex-data/blob/0e2bc89e7e188da55a56819be39a53e3811023cd/LICENSE) 署名分发。国服七区合并，常规海克斯大乱斗有效样本 19,790,148 局，窗口为北京时间 2026-11-05 04:08 至 11-09 17:00，含热修前后两个游戏构建。
+
+英雄胜率以该英雄胜场除以出场次数，覆盖 173 位英雄。强化榜按英雄记录的胜场和结算持有次数加总，覆盖 221 项，排除 4 项 Pentakill 技能增强记录。持有占比的分母为 197,901,480 玩家出场人次。结算持有与实际选取、服务器候选资格以及每轮的掉落规则是不同口径。各原表 SHA-256 见 [内置统计快照](../src/core/hex-statistics-16.22.json)。
+
+## 16.21 历史验证
 
 数据来源：[czgreat/aramhex-data](https://github.com/czgreat/aramhex-data)，固定提交 `f4d80d48110951b7319ab74ffaa2c351bc7c8652`、`data-v9`，许可证 [CC BY-NC 4.0](https://github.com/czgreat/aramhex-data/blob/f4d80d48110951b7319ab74ffaa2c351bc7c8652/LICENSE)。本项目免费且不提供订阅，按非商业用途使用；展示或分发时保留上述署名和许可。该快照由项目将原作者英雄×强化记录按胜场和持有局数加总改编，并非原作者提供的英雄配装或胜率预测。
 

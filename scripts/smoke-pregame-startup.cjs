@@ -441,7 +441,9 @@ async function run(){
    assert.ok(configurationChoice?.id&&configurationChoice.fingerprint,'A complete alternative configuration must be available');assert.equal(JSON.parse(configurationChoice.fingerprint)[0].champion,'Ahri');
    await click(side,'.configuration-choice:not(.configuration-current) [data-action=configuration-switch]');
    await completeConfigurationSwitch(configurationBefore,side,configurationChoice);
-   const switched=writes.slice(configurationWrites);assert.equal(switched.length,3,'A complete configuration switch uses one hero write, one rune write and one spell write');assert.equal(switched.filter(write=>write.route==='/lol-champ-select/v1/session/actions/22'&&write.body.championId===hero('Ahri').key&&write.body.completed===false).length,1);assert.equal(switched.filter(write=>write.route==='/lol-perks/v1/pages/44').length,1);assert.equal(switched.filter(write=>write.route==='/lol-champ-select/v1/session/my-selection').length,1);
+   const switched=writes.slice(configurationWrites);
+   assert.deepEqual(switched.map(write=>write.route),['/lol-perks/v1/pages/44','/lol-champ-select/v1/session/my-selection'],
+    'Switching the build of an already previewed hero must update only the rune page and summoner spells');
    assert.equal(intent,hero('Ahri').key,'Switching configuration changed the hero');
    assert.equal(results.at(-1).complete,true);assert.notEqual(attempts.at(-1).preselectOnly,true);
    const writesAfterConfiguration=writes.length;

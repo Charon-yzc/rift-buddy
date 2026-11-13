@@ -33,9 +33,10 @@ test('current total is a compact directory while all four stage panels stay empt
  for(let n=1;n<=4;n++){
   const panel=html.split('data-stage="'+n+'">')[1].split('</div>')[0];
   assert.match(panel,/候选池待核实/);assert.doesNotMatch(panel,/<img|data-game-tooltip-id/);
-  const model=hexHeroPool({data,hero:hero.id,round:n});assert.equal(model.roundsComplete,false);
+  const model=hexHeroPool({data,hero:hero.id,round:n});assert.equal(model.roundsComplete,false);assert.equal(model.round,n);
+  const handbook=hexPoolView(model);assert.match(handbook,new RegExp('data-round="'+n+'" aria-pressed="true"'));assert.match(handbook,new RegExp('第'+n+'次候选池待核实'));assert.doesNotMatch(handbook,/id="hex-pool-filter"/);
  }
- const pool=hexHeroPool({data,hero:hero.id});assert.deepEqual(pool.rules.stages,[]);assert.deepEqual(pool.rules.paths,[]);assert.match(hexPoolView(pool),/尚无完整的英雄／分轮资格表/);
+ const pool=hexHeroPool({data,hero:hero.id});assert.deepEqual(pool.rules.stages.map(stage=>stage.id),[1,2,3,4]);assert.deepEqual(pool.rules.paths,[]);assert.match(hexPoolView(pool),/尚无完整的英雄／分轮资格表/);
 });
 test('disabled catalogue rows stay out of browse without making ranking absence a ban',()=>{
  const disabled=data.augments.filter(a=>a.catalogEnabled===false);assert(disabled.length>0);

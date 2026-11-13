@@ -69,7 +69,7 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  const locked=selected.mode==='hex'||initial.action.completed===true;
  if(selected.mode!=='hex'&&locked&&initial.own.championId!==selected.championId)throw Error('客户端已锁定其他英雄不能预选这位英雄');
  const hexHover=selected.mode==='hex'&&selected.preselectOnly===true;
- const mustPick=hexHover||!locked&&(selected.preselectOnly||!targetMatches(initial));
+ const mustPick=hexHover||!locked&&!targetMatches(initial);
  if(!locked&&mustPick&&initial.timer!=='PLANNING'&&initial.action.isInProgress!==true)throw Error('请在预选阶段或轮到本人选人时点击，不会自动等待或锁定');
  const readEligibility=async()=>{
   const [pickableValue,disabledValue]=await Promise.all([readRequest(auth,'/lol-champ-select/v1/pickable-champion-ids'),readRequest(auth,'/lol-champ-select/v1/disabled-champion-ids')]);
@@ -120,13 +120,14 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
   if(eligibilityRead.status==='rejected')throw eligibilityRead.reason;
   if(beforeRead.status==='rejected')throw beforeRead.reason;
   const eligibility=eligibilityRead.value,before=beforeRead.value;
-  if(mustPick){
+  const needsWrite=mustPick&&(hexHover||!targetMatches(before));
+  if(needsWrite){
    assertSelectable(before.session,eligibility);
    if(!hexHover&&(before.action.completed===true||before.timer!=='PLANNING'&&before.action.isInProgress!==true))throw Error('选人轮次已变化，尚未预选');
    if(hexHover)await currentRequest(auth,`/lol-champ-select/v1/session/bench/swap/${selected.championId}`,'POST');
    else await currentRequest(auth,`/lol-champ-select/v1/session/actions/${before.action.id}`,'PATCH',{championId:selected.championId,completed:false});
   }
-  const after=mustPick?await read():before;
+  const after=needsWrite?await read():before;
   if(after.context.cellId!==initial.context.cellId||after.context.assignedPosition!==initial.context.assignedPosition||(selected.mode!=='hex'&&after.action.id!==initial.action.id)||!targetMatches(after))throw Error('客户端未确认目标英雄，已停止配置；请在客户端核对预选');
   if(!isCurrent()||!isCurrentSession(after.session))return {...result,complete:false,superseded:true};
   expected=after.context;confirmedTarget=true;result.steps.hover={status:'done',locked:selected.mode==='hex'||after.action.completed===true};

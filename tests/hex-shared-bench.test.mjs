@@ -75,10 +75,10 @@ test('known empty bench retains only selected public heroes and removes every st
  assert.match(section,/class="hex-bench-hero self"[^>]*data-id="Lux"/);assert.match(section,/class="hex-bench-hero party"[^>]*data-id="Veigar"/);assert.match(section,/class="hex-bench-hero teammate"[^>]*data-id="Ashe"/);
  assert.match(section,/<small>我<\/small>/);assert.match(section,/<small>我们<\/small>/);assert.match(section,/<small>队友<\/small>/);assert.doesNotMatch(section,/<details|data-id="Malphite"/);
 });
-test('no observed choices falls back to a clearly manual current-roster reference without rates or quick swaps',()=>{
+test('no observed choices falls back to the current-roster reference with rates and without quick swaps',()=>{
  const f=fixture();f.raw.benchChampions=[];f.raw.myTeam=f.raw.myTeam.map(p=>({...p,championId:0}));f.client.session=sanitizeSession(f.raw);
  const html=f.render(),section=html.match(/<section class="hex-reference-board"[^>]*>([\s\S]*?)<\/section>/)?.[1];assert(section);
- assert.equal((section.match(/class="hex-bench-hero /g)||[]).length,data.champions.length);assert.doesNotMatch(section,/hex-quick-pick|data-win-rate="[0-9]|<small>(?:我|我们|队友)<\/small>/);assert.match(section,/data-action="hex-local-pick"/);
+ assert.equal((section.match(/class="hex-bench-hero /g)||[]).length,data.champions.length);assert.doesNotMatch(section,/hex-quick-pick|<small>(?:我|我们|队友)<\/small>/);assert.match(section,/data-action="hex-local-pick" data-id="Yasuo" data-win-rate="0\.590/);
 });
 test('all-ineligible real bench icons stay inspectable while owned heroes keep their player labels',()=>{
  const f=fixture();f.client.eligibility={context:pickEligibilityContext(f.client.session),localPlayerCellId:0,receivedAt:new Date().toISOString(),pickable:[],disabled:pool.map(key)};
@@ -107,9 +107,9 @@ test('historical rates order the observed shared pool and retain me, us and team
  assert.match(section,/<small>我<\/small>/);assert.match(section,/<small>我们<\/small>/);assert.match(section,/<small>队友<\/small>/);assert.doesNotMatch(section,/data-id="Hecarim"/);
  assert.deepEqual(f.client,before);
 });
-test('current unavailable hero statistics stay null and never borrow historical percentages in the shared pool',()=>{
- const historical=hexChampionStatistics(historicalGame);assert(historical);assert.equal(hexChampionStatistics(data),null);
- for(const bundle of [data,{...data,hexChampionStats:historical}]){
+test('unavailable hero statistics stay null and never borrow historical percentages in the shared pool',()=>{
+ const historical=hexChampionStatistics(historicalGame);assert(historical);
+ for(const bundle of [{...data,augmentError:'offline'},{...data,hexChampionStats:historical}]){
   assert.equal(hexChampionStatistics(bundle),null);const f=fixture(bundle),html=f.render();
   const section=html.match(/<section class="hex-shared-bench"[^>]*>([\s\S]*?)<\/section>/)?.[1];assert(section);
   assert.doesNotMatch(section,/\d+\.\d+%|data-win-rate="[0-9]/);assert.equal((section.match(/data-win-rate=""/g)||[]).length,pool.length+5);
