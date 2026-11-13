@@ -10,6 +10,8 @@ for(const entry of ['InProgress','Reconnect'])test(`late game data displays once
  if(entry==='Reconnect'){
   model={mode:'hex',champion:{id:'Ahri'},live:{matched:false}};await guide.phase(entry,true);assert.equal(shows,0,'Do not show over the reconnect screen while the game is still closed');
  }
+ await guide.phase('GameStart',true);
+ assert.equal(shows,0,'Do not show during loading');
  now+=70000;model={mode:'hex',champion:{id:'Ahri'},live:{matched:true}};await guide.phase(entry,true);assert.equal(shows,1);assert.equal(guide.needsAutoShow(),false);
  guide.toggle();assert.equal(visible,false);await guide.phase('InProgress',true);await guide.phase('Reconnect',true);await guide.phase('InProgress',true);assert.equal(shows,1);guide.destroy();
 });

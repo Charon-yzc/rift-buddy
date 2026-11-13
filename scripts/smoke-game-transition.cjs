@@ -4,21 +4,22 @@ async function until(check,label){for(let n=0;n<100;n++){const v=await check();i
 async function run(){
  app.setPath('userData',root);
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8')),base=source?path.resolve('.'):path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));
- let phase='ChampSelect',gameId='101',hero='Ashe',role='BOTTOM',omitOwnPick=false,liveAvailable=false,liveRequests=0,holdLive=false,releaseLive=null;
+ let phase='ChampSelect',gameId='101',hero='Ashe',role='BOTTOM',mode='rift',omitOwnPick=false,liveAvailable=false,liveRequests=0,holdLive=false,releaseLive=null;
+ const mapId=()=>mode==='hex'?12:11,gameMode=()=>mode==='hex'?'KIWI':'CLASSIC';
  // Exercise real discoverClient, sanitizeSession, clientSnapshot and liveSnapshot,
  // replacing only the HTTPS sockets. No real client port is opened or contacted.
  const response=options=>{assert.equal(options.hostname,'127.0.0.1');const p=options.path;
   if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return {value:[{id:999999,name:'隔离字典'}]};}
   if(options.port===2999){liveRequests++;if(!liveAvailable)return {status:503,value:{}};
    if(p==='/liveclientdata/activeplayer')return {value:{riotId:'isolated-player',currentGold:1250,level:8,abilities:Object.fromEntries(['Q','W','E','R'].map(k=>[k,{abilityLevel:k==='Q'?4:1}]))}};
-   if(p==='/liveclientdata/playerlist')return {value:[{riotId:'isolated-player',rawChampionName:'game_character_displayname_'+hero,items:[]}]};
-   if(p==='/liveclientdata/gamestats')return {value:{gameMode:'CLASSIC',mapNumber:11,gameTime:600}};
+   if(p==='/liveclientdata/playerlist')return {value:[{riotId:'isolated-player',rawChampionName:'game_character_displayname_'+hero,team:'ORDER',position:role,items:[]}]};
+   if(p==='/liveclientdata/gamestats')return {value:{gameMode:gameMode(),mapNumber:mapId(),gameTime:600}};
    if(p==='/liveclientdata/eventdata')return {value:{Events:[]}};
   }
   assert.equal(options.port,23456);assert.equal(options.method||'GET','GET','A real rune write must never occur in this test');
   if(p==='/lol-summoner/v1/current-summoner')return {value:{gameName:'隔离阶段玩家',tagLine:'TEST'}};
   if(p==='/lol-gameflow/v1/gameflow-phase')return {value:phase};
-  if(p==='/lol-gameflow/v1/session')return {value:{gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}}};
+  if(p==='/lol-gameflow/v1/session')return gameId?{value:{gameData:{gameId,mapId:mapId(),queue:{id:mode==='hex'?2400:430,gameMode:gameMode()}}}}:{status:404,value:{}};
   if(p==='/lol-champ-select/v1/session'){
    const championId=data.champions.find(c=>c.id===hero).key;
    return {value:{localPlayerCellId:1,myTeam:omitOwnPick?[]:[{cellId:1,championId,assignedPosition:role}],theirTeam:[],actions:gameId==='102'&&!omitOwnPick?[[{actorCellId:1,type:'pick',championId,completed:true}]]:[],bans:{}}};
@@ -83,6 +84,38 @@ async function run(){
  guide.showInactive();await delay(120);const capture=await guide.webContents.capturePage();await fs.writeFile(path.join(root,'formal-role-after-transition.png'),capture.toPNG());
  phase='EndOfGame';await status();phase='Reconnect';gameId='104';hero='Ashe';role='BOTTOM';liveAvailable=false;await status();assert.equal(guide.isVisible(),false,'Reconnect should wait for the current live hero');
  liveAvailable=true;await status();await until(async()=>guide.isVisible()&&(await gjs('window.guide.bootstrap()')).model?.selection.id==='Ashe','Direct reconnect never displayed its verified guide');
- const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,fullMainStatusFlow:true,firstSelectionPrepares:true,freshInstallationAutoShows:true,realLCUSanitizers:true,loadingPreservesManualRole:true,autoShowWithoutLive:true,manualRoleAfterSessionDisappears:true,sameGameHiddenReconnect:true,sameGameLoadingRetainsProgress:true,lastDraftRosterGapBeforeLive:true,preparedGuideBeforeLive:true,liveFillsVisibleGuide:true,directReconnectWaitsForLive:true,retryAfterFirstLiveFailure:true,unknownRosterKeepsExplicitLoadout:true,unknownRosterKeepsUnconfirmedReference:true,unknownFormalRoleKeepsPreparedRole:true,loopbackSocketsMocked:true,actualRuneWrites:false,userSettingsIsolated:true};await fs.writeFile(path.join(root,'game-transition-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
+
+ for(const [nextMode,nextId] of [['rift','105'],['hex','106'],['rift',null]]){
+  phase='EndOfGame';await status();assert.equal(guide.isVisible(),false);
+  const prior=await state();
+  mode=nextMode;hero=mode==='hex'?'Camille':'Jhin';gameId='';phase='GameStart';liveAvailable=false;await status();
+  phase='InProgress';await status();assert.equal(guide.isVisible(),false,'No guide before the current hero is known');
+  phase='GameStart';await status();liveAvailable=true;phase='InProgress';await status();
+  const hexWindows=()=>windows.filter(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/hex-micro.html'));
+  if(mode==='hex'){
+   const shown=await until(()=>{const candidates=hexWindows();return candidates.length===2&&candidates.every(w=>w.isVisible())?candidates:null;},'Mayhem must auto-show both windows even when gameflow session returns 404');
+   const rows=await Promise.all(shown.map(w=>w.webContents.executeJavaScript('window.hexMicro.bootstrap()',true)));
+   assert.ok(rows.every(row=>row.hero.id===hero));
+   assert.ok(rows.find(row=>row.kind==='routes').routes.some(route=>route.augments.length&&route.items.length),'Current Mayhem route needs augments and equipment');
+   assert.ok(rows.find(row=>row.kind==='economy').equipment.available);
+   assert.equal(guide.isVisible(),false,'Mayhem must not show the Rift equipment window');
+  }else{
+   await until(()=>guide.isVisible(),'Rift must auto-show even when gameflow session returns 404');
+   const {model}=await gjs('window.guide.bootstrap()');assert.equal(model.champion.id,hero);assert.equal(model.live.matched,true);assert.equal(model.matchId,null);
+  }
+  assert.equal((await state()).guide.selection.id,prior.guide.selection.id,'Live-only display must not replace the saved guide');
+  if(mode==='rift')await gjs('window.guide.control("hide")');
+  if(!nextId){
+   phase='EndOfGame';await status();
+   gameId='107';hero='Rengar';phase='GameStart';await status();phase='InProgress';await status();
+   await until(async()=>guide.isVisible()&&(await gjs('window.guide.bootstrap()')).model?.selection.id===hero,'Ending an unnumbered game must allow the next numbered game to open');
+  }else{
+   gameId=nextId;await status();
+   if(mode==='rift')assert.equal(guide.isVisible(),false,'A later game id must not reopen a manually closed guide');
+   else assert.ok(hexWindows().every(w=>w.isVisible()),'A later game id must not hide the active Mayhem windows');
+  }
+  phase='EndOfGame';await status();assert.ok(hexWindows().every(w=>!w.isVisible()));
+ }
+ const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,fullMainStatusFlow:true,firstSelectionPrepares:true,freshInstallationAutoShows:true,realLCUSanitizers:true,loadingPreservesManualRole:true,autoShowWithoutLive:true,manualRoleAfterSessionDisappears:true,sameGameHiddenReconnect:true,sameGameLoadingRetainsProgress:true,lastDraftRosterGapBeforeLive:true,preparedGuideBeforeLive:true,liveFillsVisibleGuide:true,directReconnectWaitsForLive:true,retryAfterFirstLiveFailure:true,unknownRosterKeepsExplicitLoadout:true,unknownRosterKeepsUnconfirmedReference:true,unknownFormalRoleKeepsPreparedRole:true,lateRiftAndMayhemIdentityWithoutGameId:true,lateIdPreservesVisibility:true,loopbackSocketsMocked:true,actualRuneWrites:false,userSettingsIsolated:true};await fs.writeFile(path.join(root,'game-transition-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'game-transition-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});
