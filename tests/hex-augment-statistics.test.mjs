@@ -37,14 +37,25 @@ test('historical ranking contract renders every row in rate order with compact a
  assert.equal(ids.length,229);assert.deepEqual(ids,stats.rows.map(r=>r.id));assert.match(html,/结算时持有强化的玩家胜率，不是三选一选择率或可选资格/);assert.match(html,/CC BY-NC 4\.0/);assert.match(html,/data-game-tooltip-compact/);
 });
 test('old holdings statistics stay absent from current ranking rather than becoming a zero rate or offer chance',()=>{
- const before=JSON.stringify(archived);assert.notEqual(archived.patch,game.patch);assert.equal(hexAugmentStatistics(game),null);assert.equal(hexAugmentStatistics({...game,hexAugmentStats:archived}),null);
- const html=hexAugmentRankingView(game);assert.match(html,/暂无当版统计/);assert.doesNotMatch(html,/hex-augment-ranking-entry|[0-9]+[.][0-9]+%/);assert.equal(JSON.stringify(archived),before);
+ const before=JSON.stringify(archived),stale={...game,hexAugmentStats:archived};assert.notEqual(archived.patch,game.patch);assert.equal(hexAugmentStatistics(stale),null);
+ const html=hexAugmentRankingView(stale);assert.match(html,/暂无当版统计/);assert.doesNotMatch(html,/hex-augment-ranking-entry|[0-9]+[.][0-9]+%/);assert.equal(JSON.stringify(archived),before);
+});
+test('current 16.22 ladder uses verified totals and excludes system skill markers',()=>{
+ const stats=hexAugmentStatistics(game),html=hexAugmentRankingView(game);
+ assert.equal(stats.patch,game.patch);assert.equal(stats.validMatches,19790148);assert.equal(stats.rows.length,221);
+ assert(!stats.rows.some(r=>r.id>=3170&&r.id<=3176));
+ assert.equal(stats.rows.find(r=>r.id===1134).winRate,1627700/2816807);
+ const ids=[...html.matchAll(/class="hex-augment-ranking-entry"[^>]*data-id="(\d+)"/g)].map(m=>Number(m[1]));
+ assert.deepEqual(ids,stats.rows.map(row=>row.id));assert.match(html,/16\.22.*19,790,148.*CC BY-NC 4\.0/);
+ assert.equal(hexAugmentStatistics({...game,augmentError:'offline'}),null);
+ assert(!hexAugmentStatistics({...game,augments:game.augments.map(a=>a.id===1134?{...a,catalogEnabled:false}:a)}).rows.some(row=>row.id===1134));
 });
 test('external link handler permits the exact statistics source and license without broadening GitHub access',async()=>{
  const source=fs.readFileSync(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),opened=[];
  const start=source.indexOf(" guard('open-link'"),end=source.indexOf(" guard('export-preparation'");assert(start>=0&&end>start);
  vm.runInNewContext(source.slice(start,end),{URL,Error,data:{catalog:{duos:[],trios:[]}},catalogCore:{safeSourceURL},hexCommunitySourceURLs:()=>[],HEX_CHAMPION_SOURCE:'https://aramgg.com/data/champions-stats.json',isReleaseNotesUrl:()=>false,guard:(name,handler)=>handlers.set(name,handler),shell:{openExternal:async value=>opened.push(value)}});
- const open=handlers.get('open-link');await open(HEX_AUGMENT_STATISTICS_SOURCE);await open(HEX_AUGMENT_STATISTICS_LICENSE);
- assert.deepEqual(opened,[HEX_AUGMENT_STATISTICS_SOURCE,HEX_AUGMENT_STATISTICS_LICENSE]);
+ const open=handlers.get('open-link'),currentLicense=hexAugmentStatistics(game).licenseUrl;
+ for(const url of [HEX_AUGMENT_STATISTICS_SOURCE,HEX_AUGMENT_STATISTICS_LICENSE,currentLicense])await open(url);
+ assert.deepEqual(opened,[HEX_AUGMENT_STATISTICS_SOURCE,HEX_AUGMENT_STATISTICS_LICENSE,currentLicense]);
  for(const url of [HEX_AUGMENT_STATISTICS_SOURCE+'?redirect=elsewhere',HEX_AUGMENT_STATISTICS_SOURCE+'/other',HEX_AUGMENT_STATISTICS_LICENSE+'?x=1','https://github.com.evil.invalid/czgreat/aramhex-data'])await assert.rejects(open(url),/不支持的链接/);
 });

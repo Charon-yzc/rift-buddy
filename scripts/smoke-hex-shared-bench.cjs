@@ -59,6 +59,19 @@ async function run(){
  await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Initial sync missing');
  await until(()=>js('!!document.querySelector(".page .hex-main-workspace .hex-shared-bench")'),'Full main must use the same Hex bench as sidebar');
  assert.equal(await js('!!document.querySelector(".page #solo-role,.page .task-roster")'),false,'Mayhem main must not invent Rift lanes');
+ const numberedStages=require(path.join(base,'src/core/hex-mode-rules.mjs')).hexAcquisitionRules({patch:data.patch}).stages;
+ if(numberedStages.length){
+  main.webContents.send('main-page',{route:'hex-source',id:'Ahri'});
+  await until(()=>js('!!document.querySelector(".hex-handbook #augment-grid .augment-card")'),'Hero handbook missing');
+  for(const {id} of numberedStages){
+   const round=`[data-action=hex-pool-round][data-round="${id}"]`;
+   await click(round);assert.equal(await js(`document.querySelector(${JSON.stringify(round)})?.getAttribute('aria-pressed')`),'true');
+   assert.equal(await js('!!document.querySelector(".hex-handbook #augment-grid")'),false,'A round displayed the overall catalog as candidates');
+   assert.match(await js('document.querySelector(".hex-pool > p").textContent'),new RegExp('第'+id+'次候选池待核实'));
+  }
+  await click('[data-action=hex-pool-round][data-round="0"]');
+  await until(()=>js('!!document.querySelector(".hex-handbook #augment-grid .augment-card")'),'Total catalog did not return');
+ }
  await js('window.buddy.companionMode(true)');await until(()=>js('!!document.querySelector(".hex-companion .hex-shared-bench")'),'Shared bench missing');
  const ids=()=>js('[...document.querySelectorAll(".hex-shared-bench [data-action=hex-quick-pick]")].map(e=>e.dataset.id)');
  const heroStats=require(path.join(base,'src/core/hex-champion-statistics.mjs')).hexChampionStatistics(data),rates=new Map((heroStats?.rows||[]).map(row=>[row.hero,row.winRate]));
@@ -70,11 +83,13 @@ async function run(){
  await until(()=>js('!!document.querySelector(".hex-companion .client-connection-indicator.disconnected")'),'Hex sidebar changed mode during a short disconnect');
  assert.deepEqual(await benchOrder(),beforeDisconnect,'The public bench changed during the short interruption');assert.deepEqual(await ids(),[],'The disconnected bench still offered a client write');
  interrupted=false;await js('window.buddy.client(true)');await until(async()=>JSON.stringify(await ids())===JSON.stringify(expectedPool()),'Same-game recovery did not restore bench controls');assert.equal(writes.length,0);
- const sourceURL='https://github.com/czgreat/aramhex-data',licenseURL=sourceURL+'/blob/f4d80d48110951b7319ab74ffaa2c351bc7c8652/LICENSE';
+ const augmentStats=require(path.join(base,'src/core/hex-augment-statistics.mjs')).hexAugmentStatistics(data);
+ const sourceURL='https://github.com/czgreat/aramhex-data',licenseURL=augmentStats?.licenseUrl||sourceURL+'/blob/f4d80d48110951b7319ab74ffaa2c351bc7c8652/LICENSE';
  for(const url of [sourceURL,licenseURL])await js(`window.buddy.openLink(${JSON.stringify(url)})`);
  assert.deepEqual(opened,[sourceURL,licenseURL]);
  assert.equal(await js(`window.buddy.openLink(${JSON.stringify(sourceURL+'?redirect=bad')}).then(()=>false,()=>true)`),true);
- const expectedAugmentRows=require(path.join(base,'src/core/hex-augment-statistics.mjs')).hexAugmentStatistics(data)?.rows.length||0;
+ const expectedAugmentRows=augmentStats?.rows.length||0;
+ assert.equal(await js('document.querySelectorAll(".hex-augment-ranking-entry").length'),expectedAugmentRows);
  if(expectedAugmentRows){
  await js(`(()=>{const row=document.querySelector('.hex-augment-ranking-entry');row.scrollIntoView({block:'center'});const r=row.getBoundingClientRect();row.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,clientX:r.x+3,clientY:r.y+3}));})()`);
  await until(()=>js('document.querySelector(".game-tooltip:popover-open .game-tooltip-condition")?.textContent.includes("结算持有胜率")'),'Compact augment statistics tooltip missing');

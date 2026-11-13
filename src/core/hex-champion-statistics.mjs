@@ -1,5 +1,6 @@
 import snapshot from './hex-champion-statistics.json' with {type:'json'};
 import {isCurrentHexData} from './hex-data-current.mjs';
+import {currentHexChampionStatistics} from './hex-current-statistics.mjs';
 
 export const HEX_CHAMPION_SOURCE='https://aramgg.com/data/champions-stats.json';
 // This provider attributes its snapshot to Tencent. It does not publish hero
@@ -15,6 +16,7 @@ export function normalizeHexChampionStatistics(rows,{champions,patch,fetchedAt})
  return {schema:1,mode:'aram-mayhem',source:'ARAMGG',sourceUrl:HEX_CHAMPION_SOURCE,region:'CN',patch,fetchedAt,rows:result};
 }
 export function hexChampionStatistics(data){
+ if(data?.hexChampionStats==null){const current=currentHexChampionStatistics(data);if(current)return current;}
  const ref=data.hexChampionStats??snapshot,heroes=new Set(data.champions.map(h=>h.id));
  if(!isCurrentHexData(data)||ref?.schema!==1||ref.mode!=='aram-mayhem'||ref.patch!==data.patch||ref.source!=='ARAMGG'||ref.sourceUrl!==HEX_CHAMPION_SOURCE||ref.region!=='CN'||!Number.isFinite(Date.parse(ref.fetchedAt))||!Array.isArray(ref.rows)||!ref.rows.length||ref.rows.length>300)return null;
  const seen=new Set();

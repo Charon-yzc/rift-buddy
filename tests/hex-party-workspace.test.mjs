@@ -32,7 +32,7 @@ test('fresh local eligibility does not borrow ownership for friends, and stale r
  for(const next of [{...c,connected:false},{...c,phase:'InProgress'},{...c,mode:{id:'rift'}}])assert.equal(hexPartyDraft({data,client:next}).lineups.length,0);
 });
 test('unavailable current statistics never turn archived percentages into current hero or team rates',()=>{
- assert.equal(hexChampionStatistics(data),null);const html=hexDraftView({data,client:client()});
+ const unavailable={...data,augmentError:'offline'};assert.equal(hexChampionStatistics(unavailable),null);const html=hexDraftView({data:unavailable,client:client()});
  assert.doesNotMatch(html,/data-win-rate="[0-9]|阵容胜率\s*[0-9]|样本\s*[1-9]/);assert.match(html,/待核/);
 });
 // These synthetic transport records test parser validation, not live evidence.

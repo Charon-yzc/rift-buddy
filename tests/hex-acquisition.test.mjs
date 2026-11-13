@@ -10,7 +10,8 @@ const data={...game,hexBuilds:builds.entries},manual=hexManualAugments(data);
 test('readable current catalogue is not a reviewed ordinary offer pool or an account unlock claim',()=>{
  assert(manual.length>3);assert(hexHandbookAugments(data).length>0);assert.deepEqual(hexOrdinaryAugments(data),[]);const before=JSON.stringify(data);
  for(const a of manual){const access=hexAugmentAcquisition(data,a);assert.equal(access.kind,'unknown');assert.equal(access.manualOption,true);assert.equal(access.ordinaryOption,false);assert.equal(access.unlock,undefined);}
- assert.equal(JSON.stringify(data),before);const rules=hexAcquisitionRules({patch:data.patch});assert(rules.pending);assert.deepEqual(rules.paths,[]);assert.deepEqual(rules.stages,[]);
+ assert.equal(JSON.stringify(data),before);const rules=hexAcquisitionRules({patch:data.patch,mechanism:'kda'});assert(rules.regularStagesConfirmed);assert(!rules.stageTimingsConfirmed);assert.equal(rules.mechanism,'unknown');assert.deepEqual(rules.paths,[]);assert.deepEqual(rules.stages.map(stage=>stage.id),[1,2,3,4]);
+ assert(hexAcquisitionRules({patch:'99.1'}).pending);
 });
 test('system skill IDs and namespaces never become manual ordinary choices after identity drift',()=>{
  const store=createHexRoundStore({newToken:()=> 'system-boundary'});store.select('Sona',data);const round=store.snapshot().manual,before=store.snapshot();
