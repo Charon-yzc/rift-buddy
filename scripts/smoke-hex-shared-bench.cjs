@@ -19,7 +19,7 @@ async function run(){
  await fs.writeFile(path.join(root,'settings.json'),JSON.stringify(state));
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),key=id=>data.champions.find(c=>c.id===id).key;
  let holdSwap=false,releaseSwap,swapStarted;
- let phase='ChampSelect',benchKnown=true;let ownHero='Lux',bench=['Malphite','Xerath','Teemo','Karma','Trundle','Brand','Morgana','Garen','Nami','Lulu','Kennen','Braum'];
+ let phase='ChampSelect',benchKnown=true,interrupted=false;let ownHero='Lux',bench=['Malphite','Xerath','Teemo','Karma','Trundle','Brand','Morgana','Garen','Nami','Lulu','Kennen','Braum'];
  const raw=()=>({gameId:777,localPlayerCellId:0,myTeam:[ownHero,'Ashe','Veigar','Sona','Jinx'].map((id,cellId)=>({cellId,championId:key(id),assignedPosition:'',spell1Id:4,spell2Id:32})),theirTeam:[],benchEnabled:benchKnown,benchChampions:bench.map(id=>({championId:key(id)})),actions:[],bans:{myTeamBans:[],theirTeamBans:[]},timer:{phase:'FINALIZATION',adjustedTimeLeftInPhase:28000}});
  https.request=(options,callback)=>{
   const request=new EventEmitter();request.write=()=>{throw Error('Unexpected client payload');};request.destroy=error=>{if(error)request.emit('error',error);};
@@ -31,6 +31,7 @@ async function run(){
     assert(index>=0,'Only a current shared-bench swap is allowed');if(holdSwap){holdSwap=false;swapStarted();await new Promise(resolve=>releaseSwap=resolve);}writes.push(options.path);[ownHero,bench[index]]=[bench[index],ownHero];value=null;
    }else{
     assert.equal(options.method||'GET','GET');
+    if(interrupted&&options.path==='/lol-gameflow/v1/gameflow-phase')throw Error('Isolated transport interruption');
     const values={'/lol-game-data/assets/v1/champion-summary.json':[{id:999999,name:'隔离字典'}],'/lol-game-data/assets/v1/items.json':[{id:999999,name:'隔离字典'}],'/lol-gameflow/v1/gameflow-phase':phase,'/lol-gameflow/v1/session':{gameData:{gameId:777,mapId:12,queue:{id:2400,gameMode:'KIWI'}}},'/lol-champ-select/v1/session':raw(),'/lol-champ-select/v1/pickable-champion-ids':data.champions.map(c=>c.key),'/lol-champ-select/v1/disabled-champion-ids':[],'/lol-summoner/v1/current-summoner':{summonerId:1,displayName:'隔离测试'},'/lol-lobby/v2/lobby':{members:[{summonerId:1}],localMember:{summonerId:1}},'/lol-perks/v1/pages':[],'/lol-chat/v1/conversations':[]};
     assert(Object.hasOwn(values,options.path),'Unexpected mock route '+options.path);value=values[options.path];
    }
@@ -63,6 +64,12 @@ async function run(){
  const heroStats=require(path.join(base,'src/core/hex-champion-statistics.mjs')).hexChampionStatistics(data),rates=new Map((heroStats?.rows||[]).map(row=>[row.hero,row.winRate]));
  const expectedPool=()=>[...bench].sort((a,b)=>(rates.get(b)??-1)-(rates.get(a)??-1)||key(a)-key(b));
  assert.deepEqual(await ids(),expectedPool(),'Bench must retain descending win-rate order, with hero key as a stable unknown-rate tie break');assert.equal(writes.length,0);
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.draft.clientGameId==="777")'),'Game identity was not committed');
+ const benchOrder=()=>js('[...document.querySelectorAll(".hex-shared-bench .hex-bench-hero")].map(e=>e.dataset.id)'),beforeDisconnect=await benchOrder();
+ interrupted=true;assert.equal((await js('window.buddy.client(true)')).transportInterrupted,true);
+ await until(()=>js('!!document.querySelector(".hex-companion .client-connection-indicator.disconnected")'),'Hex sidebar changed mode during a short disconnect');
+ assert.deepEqual(await benchOrder(),beforeDisconnect,'The public bench changed during the short interruption');assert.deepEqual(await ids(),[],'The disconnected bench still offered a client write');
+ interrupted=false;await js('window.buddy.client(true)');await until(async()=>JSON.stringify(await ids())===JSON.stringify(expectedPool()),'Same-game recovery did not restore bench controls');assert.equal(writes.length,0);
  const sourceURL='https://github.com/czgreat/aramhex-data',licenseURL=sourceURL+'/blob/f4d80d48110951b7319ab74ffaa2c351bc7c8652/LICENSE';
  for(const url of [sourceURL,licenseURL])await js(`window.buddy.openLink(${JSON.stringify(url)})`);
  assert.deepEqual(opened,[sourceURL,licenseURL]);
@@ -123,7 +130,7 @@ async function run(){
   const bounds=await js(`(()=>{const host=document.getElementById('party-fixture'),rows=[...host.querySelectorAll('.hex-party-lineup')],previews=[...host.querySelectorAll('.hex-party-preview')];return {previewBounds:previews.map(e=>{const r=e.getBoundingClientRect();return {width:r.width,height:r.height};}),maxRowHeight:Math.max(...rows.map(e=>e.getBoundingClientRect().height)),rows:rows.length,members:rows[0]?.querySelectorAll('.hex-party-member').length,overflow:document.documentElement.scrollWidth>innerWidth,contained:rows.every(row=>{const r=row.getBoundingClientRect();return [...row.querySelectorAll('.hex-party-member,.hex-party-preview')].every(e=>{const b=e.getBoundingClientRect();return b.left>=r.left-1&&b.right<=r.right+1;});})}})()`);
   await screenshot(`party-five-${width}-${zoom}.png`);assert.equal(bounds.members,5);assert(bounds.rows>0);assert.equal(bounds.overflow,false);assert(bounds.contained,'Five-member avatar actions overflow');assert(bounds.maxRowHeight<72,'Avatar actions became tall text buttons');assert(bounds.previewBounds.every(r=>r.width<=16&&r.height<=16),'Preview corner must stay small');partyLayouts.push({width,zoom,...bounds});
  }
- const proof={passed:true,source,archiveSha256:release?.archiveSha256||null,initialSharedHeroes:12,teammateUpdates:true,swapRefresh:true,staysOnLineup:true,rankingReadOnly:true,emptyPoolCleared:true,mockedBenchSwaps:writes.length,latestClickWins:true,emptyPickActions:true,emptyDraftRankings:true,localConfigurationWithLiveRound:true,manualOwnedIsolation:true,augmentRanking:expectedAugmentRows,statsTooltip:expectedAugmentRows>0,missingCurrentStatistics:expectedAugmentRows===0,statisticsSourcesExact:true,realClientWrites:0,layouts,partyLayouts};
+ const proof={passed:true,source,archiveSha256:release?.archiveSha256||null,initialSharedHeroes:12,benchRemainsReadOnlyDuringReconnect:true,teammateUpdates:true,swapRefresh:true,staysOnLineup:true,rankingReadOnly:true,emptyPoolCleared:true,mockedBenchSwaps:writes.length,latestClickWins:true,emptyPickActions:true,emptyDraftRankings:true,localConfigurationWithLiveRound:true,manualOwnedIsolation:true,augmentRanking:expectedAugmentRows,statsTooltip:expectedAugmentRows>0,missingCurrentStatistics:expectedAugmentRows===0,statisticsSourcesExact:true,realClientWrites:0,layouts,partyLayouts};
  await fs.writeFile(path.join(root,'proof.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify({...proof,root}));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.mkdir(root,{recursive:true});await fs.writeFile(path.join(root,'error.txt'),error.stack);app.exit(1);});
