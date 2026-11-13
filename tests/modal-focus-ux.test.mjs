@@ -107,15 +107,17 @@ test('closing an already empty overlay leaves the current page focus alone',asyn
 });
 
 const searchCapture=source.slice(source.indexOf(' const rankingFocus='),source.indexOf(' const disclosureFocus='));
-const searchRestore=source.slice(source.indexOf('  if(rankingFocus){'),source.indexOf('  if(formFocus){'));
+const searchRestore=source.slice(source.indexOf('  if(rankingFocus)restoreRankingFocus'),source.indexOf('  if(formFocus){'));
+const restoreRankingFocus=source.slice(source.indexOf('function restoreRankingFocus('),source.indexOf('function mainNavigation('));
 function searchFocusFixture(id,{elsewhere=false}={}){
  let field;const document={body:{},activeElement:null,getElementById:key=>key===id?field:null};
  const input=()=>({id,value:'正在搜索',selectionStart:1,selectionEnd:3,matches:()=>false,focus(){document.activeElement=this;},setSelectionRange(start,end){this.selectionStart=start;this.selectionEnd=end;}});
  field=input();const other={id:'other-button',dataset:{action:'elsewhere'},matches:()=>false};document.activeElement=elsewhere?other:field;
  const context=vm.createContext({document,app:{contains:node=>node!==document.body,querySelector:()=>null},replace(){field=input();field.selectionStart=field.selectionEnd=0;document.activeElement=document.body;}});
+ vm.runInContext(restoreRankingFocus,context);
  return {document,get field(){return field;},paint(){vm.runInContext('(function(){'+searchCapture+'replace();'+searchRestore+'})()',context);}};
 }
-for(const id of ['library-search','hex-search']){
+for(const id of ['library-search','hex-search','ranking-search']){
  test(`${id} keeps focus and its selected text through a background repaint`,()=>{
   const f=searchFocusFixture(id);f.paint();assert.equal(f.document.activeElement,f.field);assert.equal(f.field.value,'正在搜索');assert.equal(f.field.selectionStart,1);assert.equal(f.field.selectionEnd,3);
  });

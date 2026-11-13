@@ -33,8 +33,24 @@ document.addEventListener('click',event=>{const control=event.target.closest('[d
  if(control.dataset.action==='pin'){const list=root.querySelector('.hex-micro-route-list');if(list){list.scrollTop=0;list.scrollLeft=0;}}api.control(control.dataset.action,{context:state?.context,view:state?.view,id:control.dataset.id}).catch(()=>{});
 });
 document.addEventListener('keydown',event=>{if(event.key==='Escape')api.control('tooltip-hide').catch(()=>{});});
-api.onPointer(point=>{const target=point?document.elementFromPoint(point.x,point.y)?.closest('[data-micro-id],[data-micro-hint],[data-micro-pending]'):null;let input=null;
- if(target&&state?.active){const r=target.getBoundingClientRect();if(state.kind==='economy'){const row=target.closest('.ally,.enemy'),side=row?.classList.contains('ally')?'ally':'enemy',index=[...target.parentElement.children].indexOf(target),player=state.equipment?.[side]?.players?.[index];if(player)input={side,id:player.id};}else input=target.dataset.microPending?{kind:'status'}:{kind:target.dataset.microKind,id:target.dataset.microId,route:target.closest('[data-micro-route]')?.dataset.microRoute};if(input)input={...input,context:state.context,rect:{x:r.x,y:r.y,width:r.width,height:r.height}};}
+api.onPointer(point=>{
+ const target=point?document.elementFromPoint(point.x,point.y)?.closest('[data-micro-id],[data-micro-hint],[data-micro-pending],.hex-route-caption'):null;
+ let input=null;
+ if(target&&state?.active){
+  if(state.kind==='economy'){
+   const row=target.closest('.ally,.enemy'),side=row?.classList.contains('ally')?'ally':'enemy';
+   const index=[...target.parentElement.children].indexOf(target),player=state.equipment?.[side]?.players?.[index];
+   if(player)input={side,id:player.id};
+  }else{
+   const route=target.closest('[data-micro-route]')?.dataset.microRoute;
+   if(target.classList.contains('hex-route-caption'))input={kind:'caption',route};
+   else input=target.dataset.microPending?{kind:'status'}:{kind:target.dataset.microKind,id:target.dataset.microId,route};
+  }
+  const r=target.getBoundingClientRect(),viewport=target.closest('.hex-micro-route-list,.hex-micro-line')?.getBoundingClientRect();
+  const x=Math.max(r.left,viewport?.left??0,0),y=Math.max(r.top,viewport?.top??0,0);
+  const width=Math.min(r.right,viewport?.right??innerWidth,innerWidth)-x,height=Math.min(r.bottom,viewport?.bottom??innerHeight,innerHeight)-y;
+  input=input&&width>=1&&height>=1?{...input,context:state.context,rect:{x,y,width,height}}:null;
+ }
  const key=JSON.stringify(input);if(key!==hoverKey){hoverKey=key;api.hover(input).catch(()=>{});}
 });
 api.onUpdate(render);render(await api.bootstrap());

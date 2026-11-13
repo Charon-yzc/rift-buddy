@@ -2,7 +2,7 @@ const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 app.commandLine.appendSwitch('force-device-scale-factor','1');app.disableHardwareAcceleration();
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],attempts=[],hoverAttempts=[],shots=[],geometry=[];
-let fixture,room,main,data;const registered=new Map();
+let fixture,room,main,data;const registered=new Map(),ballotActions=[];
 app.setPath('userData',root);globalShortcut.register=()=>false;
 global.fetch=async()=>{throw Error('Fixture blocks external requests');};https.request=http.request=()=>{throw Error('Fixture blocks real game sockets');};global.WebSocket=class{constructor(){throw Error('Fixture blocks room sockets');}};
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);});
@@ -15,8 +15,9 @@ ipcMain.handle=(name,handler)=>{registered.set(name,handler);return original(nam
  if(name==='room-addresses')return [];
  if(name==='room-publish'||name==='room-share'){room.members[0].share={...args[0],...(room.members[0].share?.ballot?{ballot:room.members[0].share.ballot}:{})};return structuredClone(room);}
  if(name==='room-ballot'){
-  const value=args[0],own=room.members[0];own.share||={};own.share.ballot={...own.share.ballot,...value};
+  const value=args[0],own=room.members[0];ballotActions.push(structuredClone(value));own.share||={};own.share.ballot={...own.share.ballot,...value};
   if(value.proposal){for(const member of room.members)member.share={...member.share,ballot:{version:1,proposal:structuredClone(value.proposal),votes:[value.addVote]}};}
+  if(value.toggleVote){const votes=own.share.ballot.votes||[];own.share.ballot.votes=votes.includes(value.toggleVote)?votes.filter(vote=>vote!==value.toggleVote):[...votes,value.toggleVote];}
   return structuredClone(room);
  }
  if(name==='prepare-selection'){
@@ -64,9 +65,57 @@ async function run(){
  assert.equal(fixture.session.myTeam[0].championId,0);assert.ok(fixture.session.myTeam[0].championPickIntent>0);
  await capture('sidebar-blind-preselected-on.png');
  fixture.session.myTeam[0].assignedPosition='BOTTOM';fixture.session.myTeam[2].assignedPosition='UTILITY';await sync();
+ const testProposal=async()=>{
+  await click('.companion-candidate [data-action=propose-result]');
+  const {proposalKey}=require(path.join(base,'src/core/room.mjs'));
+  const sent=room.members[0].share?.ballot?.proposal;
+  const proposedAshe=sent?.configurations?.find(config=>config.champion==='Ashe'&&config.role==='bottom');
+  assert.ok(proposedAshe,'The proposed hero must carry a sender configuration');
+  for(const member of room.members){
+   const proposal=member.share.ballot.proposal;
+   proposal.configurations.find(config=>config.champion==='Ashe').patch='16.1';
+   member.share.ballot.votes=[proposalKey(proposal)];
+  }
+  main.webContents.send('room-update',structuredClone(room));
+  const avatar='.room-ballot-row [data-action=room-ballot-hero][data-id=Ashe]';
+  const currentKey=proposalKey(room.members[0].share.ballot.proposal);
+  await until(()=>js(`[...document.querySelectorAll('${avatar}')].some(e=>e.dataset.key===${JSON.stringify(currentKey)})`),'The stale sender snapshot did not arrive');
+  const beforeHover=hoverAttempts.length,beforeConfig=attempts.length;
+  await click(avatar);
+  await until(()=>hoverAttempts.length===beforeHover+1,'An old sender configuration blocked the avatar from preselecting');
+  await until(()=>attempts.length===beforeConfig+1,'The proposal avatar did not apply the current role default');
+  assert.equal(hoverAttempts.at(-1).champion,'Ashe');
+  const defaults=attempts[0];
+  assert.deepEqual(attempts.at(-1).page,defaults.page,'A proposal must apply the same default runes as the ordinary avatar');
+  assert.deepEqual(attempts.at(-1).itemSet,defaults.itemSet,'A proposal must apply the same default items as the ordinary avatar');
+  await click('.room-ballot-row [data-action=room-ballot-details]');
+  await click('#overlay-root [data-action=room-ballot-hero][data-id=Ashe]');
+  assert.ok(await js('document.querySelector("#overlay-root [aria-label=发送方配置]")?.textContent.includes("16.1")'),'The original sender snapshot must still be visible on request');
+  assert.equal(hoverAttempts.length,beforeHover+1,'Reviewing the sender snapshot must not send another pick');
+  await click('#overlay-root [data-action=close]');
+  for(const member of room.members)delete member.share.ballot;
+  main.webContents.send('room-update',structuredClone(room));
+  await until(()=>js('!document.querySelector(".room-ballot-row")'),'Test proposal did not clear');
+ };
+ await testProposal();
  await click('#include-preselected');await until(()=>js('document.querySelectorAll(".companion-candidate").length>0&&[...document.querySelectorAll(".companion-candidate")].some(r=>!r.querySelector("[data-id=Ashe]"))'),'Opt-out retained hover anchor');
  fixture.session.myTeam[0].championId=hero('Ashe').key;fixture.session.myTeam[0].championPickIntent=0;fixture.session.myTeam[0].pickState='locked';fixture.session.actions[0][0]={actorCellId:0,type:'pick',championId:hero('Ashe').key,completed:true};await sync();
  await until(()=>js('document.querySelector(".companion-tabs .active")?.dataset.tab==="plan"'),'Lock did not navigate');await capture('sidebar-locked-configuration.png');
+ const pushClient=async change=>{
+  change(fixture);
+  fixture.receivedAt=new Date().toISOString();
+  main.webContents.send('client-update',structuredClone(fixture));
+  await sleep(300);
+ };
+ const restoreClient=structuredClone(fixture);
+ await click('[data-action=companion-tab][data-tab=room]');
+ await pushClient(client=>{client.connected=false;client.phase='Offline';client.session=null;});
+ await pushClient(client=>Object.assign(client,structuredClone(restoreClient)));
+ assert.equal(await js('document.querySelector(".companion-shell").dataset.tab'),'room','A reconnect to the same locked pick must keep the room visible');
+ await pushClient(client=>{client.session.myTeam[0].championId=0;client.session.myTeam[0].championPickIntent=hero('Ashe').key;client.session.myTeam[0].pickState='hovered';client.session.actions[0][0].completed=false;});
+ await pushClient(client=>{Object.assign(client,structuredClone(restoreClient));client.session.myTeam[0].championId=hero('Jinx').key;client.session.actions[0][0].championId=hero('Jinx').key;});
+ assert.equal(await js('document.querySelector(".companion-shell").dataset.tab'),'room','A new client lock must respect the player looking at the room');
+ await pushClient(client=>Object.assign(client,structuredClone(restoreClient)));
  await click('[data-action=companion-tab][data-tab=recommend]');await generate();
  assert.ok(await js('[...document.querySelectorAll(".companion-candidate")].every(r=>r.querySelector("[data-id=Ashe]"))'));
  const written=attempts.length;await click('.companion-candidate [data-action=companion-preview][data-role=mid]');assert.equal(attempts.length,written);assert.match(await js('document.querySelector("#toast").textContent'),/锁定|不能/);
@@ -83,6 +132,17 @@ async function run(){
    top:row.getBoundingClientRect().top};
  })()`);
  const proposed=await proposal();assert.ok(proposed?.key);assert.equal(proposed.heroes.length,3);assert.ok(proposed.heroes.every(Boolean));
+ const voteSelector='.room-ballot-row [data-action=room-vote]';
+ const votePoint=await js(`(()=>{const r=document.querySelector('${voteSelector}').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()`);
+ const mouse=type=>main.webContents.sendInputEvent({type,...votePoint,...(type==='mouseMove'?{}:{button:'left',clickCount:1})});
+ const ballotCount=ballotActions.length;
+ mouse('mouseMove');mouse('mouseDown');await sleep(60);
+ await pushClient(client=>{client.session.myTeam[3].championPickIntent=hero('Garen').key;client.session.timer={remaining:14};});
+ mouse('mouseUp');
+ await until(()=>ballotActions.length===ballotCount+1,'A background render swallowed the vote between mouse down and up');
+ assert.equal(ballotActions.at(-1).toggleVote,proposed.key,'The released click must vote for the pressed proposal');
+ await click(voteSelector);
+ assert.deepEqual(await proposal(),proposed,'Voting twice must restore the original state');
  await generate();
  assert.deepEqual(await proposal(),proposed,'Rerolling candidates must keep the proposed lineup, vote and position');
  await sync();
@@ -103,6 +163,17 @@ async function run(){
    await until(()=>js('document.querySelector(".companion-ranking-context").open'),'Ranking context cannot open by keyboard');assert(await js('document.querySelector(".companion-ranking-context .companion-roster").checkVisibility()'),'Expanded ranking context lost the lineup');
    await capture(`sidebar-rankings-expanded-${width}.png`);
    main.webContents.sendInputEvent({type:'keyDown',keyCode:'Space'});main.webContents.sendInputEvent({type:'keyUp',keyCode:'Space'});await until(()=>js('!document.querySelector(".companion-ranking-context").open'),'Ranking context cannot close by keyboard');
+   if(width===440){
+    await js(`(()=>{const field=document.querySelector('#ranking-search');field.focus();field.value='abcdef';field.setSelectionRange(2,4);field.dispatchEvent(new InputEvent('input',{bubbles:true}));window.__rankingField=document.activeElement;})()`);
+    await pushClient(client=>{client.session.theirTeam=[{cellId:5,championId:hero('Renekton').key,assignedPosition:'TOP',pickState:'locked'}];});
+    await until(()=>js('window.__rankingField!==document.querySelector("#ranking-search")'),'No background redraw reached the ranking input');
+    assert.deepEqual(await js('(()=>{const field=document.querySelector("#ranking-search");return {focused:field===document.activeElement,value:field.value,caret:[field.selectionStart,field.selectionEnd]};})()'),{focused:true,value:'abcdef',caret:[2,4]},'A client update must preserve ranking search and its selected text');
+    await js(`(()=>{const field=document.querySelector('#ranking-search');field.value='';field.dispatchEvent(new InputEvent('input',{bubbles:true}));const pane=document.querySelector('.companion-content');pane.scrollTop=220;})()`);
+    assert.ok(await js('document.querySelector(".companion-content").scrollTop>0'),'Ranking fixture must actually be scrolled');
+    await click('[data-action=ranking-role][data-role=jungle]');
+    assert.equal(await js('document.querySelector(".companion-content").scrollTop'),0,'A new role must start at the top of its ranking');
+    await pushClient(client=>{client.session.theirTeam=[];});
+   }
   }
   await capture(`sidebar-${tab}-${width}.png`);geometry.push({surface:'sidebar',tab,width,...await js('({viewport:innerWidth,scroll:document.documentElement.scrollWidth})')});
  }}
