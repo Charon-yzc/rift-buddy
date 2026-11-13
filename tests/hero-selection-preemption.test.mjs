@@ -107,8 +107,8 @@ for(const kind of ['direct','helper'])test('changing helper writer to '+kind+' w
  finally{f.release();await Promise.allSettled([first,middle,last]);await f.close();}
 });
 for(const outcome of ['success','reject'])test('writer transition waits for an older pending RPC even after the newer RPC settled: '+outcome,{skip:process.platform!=='win32'},async()=>{
- const f=await fixture({holdFirstReply:true});let first,last;
- try{first=f.click('Yasuo');await until(f.held,'Old preflight missing');f.release();await until(f.replyHeld,'Old native helper reply did not reach held delivery');assert.equal((await f.click('Ashe')).steps.hover.status,'done');assert.deepEqual(f.dispatched,[157,22]);await f.switchWriter('direct');last=f.click('Ashe');await pause(50);assert.deepEqual(f.dispatched,[157,22],'Waiting only for the last RPC missed an older still-pending request');f.releaseReply(outcome);assert((await first).superseded);assert.equal((await last).steps.hover.status,'done');assert.deepEqual(f.dispatched,[157,22,22]);}
+ const f=await fixture({holdFirstReply:true});let first,last,settled=false;
+ try{first=f.click('Yasuo');await until(f.held,'Old preflight missing');f.release();await until(f.replyHeld,'Old native helper reply did not reach held delivery');assert.equal((await f.click('Ashe')).steps.hover.status,'done');assert.deepEqual(f.dispatched,[157,22]);await f.switchWriter('direct');last=f.click('Yasuo').finally(()=>{settled=true;});await pause(50);assert.equal(settled,false);assert.deepEqual(f.dispatched,[157,22],'Waiting only for the last RPC missed an older still-pending request');f.releaseReply(outcome);assert((await first).superseded);assert.equal((await last).steps.hover.status,'done');assert.deepEqual(f.dispatched,[157,22,157]);}
  finally{f.release();f.releaseReply();await Promise.allSettled([first,last]);await f.close();}
 });
 

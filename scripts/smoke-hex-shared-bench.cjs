@@ -91,7 +91,11 @@ async function run(){
  const expectedAugmentRows=augmentStats?.rows.length||0;
  assert.equal(await js('document.querySelectorAll(".hex-augment-ranking-entry").length'),expectedAugmentRows);
  if(expectedAugmentRows){
- await js(`(()=>{const row=document.querySelector('.hex-augment-ranking-entry');row.scrollIntoView({block:'center'});const r=row.getBoundingClientRect();row.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,clientX:r.x+3,clientY:r.y+3}));})()`);
+ await js('document.querySelector(".hex-augment-ranking-entry").scrollIntoView({block:"center"})');
+ await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+ const point=await js(`(()=>{const row=document.querySelector('.hex-augment-ranking-entry'),r=row.getBoundingClientRect(),x=Math.round(r.x+r.width/2),y=Math.round(r.y+r.height/2);return {x,y,hit:row.contains(document.elementFromPoint(x,y))};})()`);
+ assert(point.hit,'The first ranking icon must be hit-testable before hovering');
+ main.webContents.sendInputEvent({type:'mouseMove',x:point.x,y:point.y});
  await until(()=>js('document.querySelector(".game-tooltip:popover-open .game-tooltip-condition")?.textContent.includes("结算持有胜率")'),'Compact augment statistics tooltip missing');
  }else {assert.equal(await js('document.querySelectorAll(".hex-augment-ranking-entry").length'),0);assert.match(await js('document.querySelector(".hex-augment-ranking").textContent'),/暂无当版统计/);}
  await js('document.querySelector(".companion-content").scrollTop=0');
