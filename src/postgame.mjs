@@ -146,7 +146,7 @@ root.addEventListener('click', async event => {
   } else if (action === 'review') {
     const gameId = btn.dataset.gameId;
     if (api?.openHistory) await api.openHistory(gameId);
-    if (api?.close) await api.close();
+    else if (api?.close) await api.close();
     else window.close();
   }
 });

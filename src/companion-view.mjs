@@ -43,7 +43,7 @@ import {publicMatchupOpponent} from './core/matchup-plans.mjs';
 import {attributePlanView,attributePriority} from './attribute-plan-view.mjs';
 import {escape as e,portrait,rosterPortrait,asset,button,gameDescription,roleIcon,icon} from './ui.mjs';
 import {ROLES,conventionalRole} from './core/rules.mjs';
-import {SHARDS} from './core/builds.mjs';
+import {SHARDS,validCurrentHexReference} from './core/builds.mjs';
 import {configurationEvidenceView,sourceOpponentNotice} from './build-options-view.mjs';
 import {scopeSlots,clientDraftStatus,CLIENT_POSITION_ROLES,manualPlayerSlot,publicClientGameId} from './core/draft.mjs';
 import {analyzeTeam} from './core/recommend.mjs';
@@ -153,6 +153,32 @@ export function companionView({data,client,hexRound=null,enemyRoles=[],displayed
 
 function hexCompanionView({data,client,slots,round,tab,plan,favorites,configurationStatus,roomContent,preferences,connectionBusy}){
  const hero=data.champions.find(c=>c.id===round?.hero),boundPlan=plan?.selection.mode==='hex'&&plan.selection.id===hero?.id?plan:null;
- const workbench=hexConfigurationView({data,hero,round,plan:boundPlan});
+ let workbench='';
+ if(tab==='plan'){
+  const canSelect=client.connected&&client.phase==='ChampSelect'&&client.mode?.id==='hex'&&
+   client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId)?.championId===hero?.key;
+  const sourceReference=hexSourceReferenceView(data,hero,boundPlan,configurationStatus.pending,canSelect);
+  workbench=hexConfigurationView({data,hero,round,plan:boundPlan,sourceReference});
+ }
  return `<div class="companion-shell sidebar-focused recommendation-ui hex-companion" data-tab="${e(tab)}" data-config-hero="${e(hero?.id||'')}" data-client-phase="${e(client.phase||'')}" data-client-game="${e(publicClientGameId(client)||'')}">${clientConnectionNotice(client,preferences,connectionBusy,{compact:true})}<nav class="companion-tabs" aria-label="海克斯侧栏">${[['recommend','我的阵容'],['plan','我的配置'],['room','开黑房间']].map(([id,label])=>button('companion-tab',label,'',tab===id?'active':'',`data-tab="${id}" aria-pressed="${tab===id}"`)).join('')}<details class="companion-navigation-more"><summary>更多</summary><div>${button('theme-open','配色','','quiet small')}${button('window-fold','收起侧栏','','quiet small')}</div></details></nav><main class="companion-content" id="main">${tab==='room'?roomContent:tab==='plan'?workbench+(boundPlan?'<details class="hex-config-details"><summary>完整配置与加点</summary>'+companionPlanView(data,boundPlan,favorites,configurationStatus)+'</details>':''):hexDraftView({data,client,slots,clickPrepare:preferences.clickPrepare!==false})}</main><footer class="companion-footer"><span class="companion-client-state" role="status">${clientConnectionControl(client,connectionBusy)}</span></footer></div>`;
+}
+
+export function hexSourceReferenceView(data,hero,plan,pending=false,canSelect=false){
+ if(!hero||plan?.selection?.id!==hero.id||plan.selection.mode!=='hex'||plan.build?.mode!=='hex'||!validCurrentHexReference(plan.build.reference,hero,data))return '';
+ const s=plan.selection,seen=new Set(),choices=[];
+ for(const choice of configurationChoices(data,s,plan.build)){
+  const build=choice.build;
+  if(!validCurrentHexReference(build.reference,hero,data)||build.sharedEquipment||build.loadoutId!=='default'||build.sourceCoreChanged||build.adapted)continue;
+  const items=preparationEquipment(data,build,choice.selection),gear=JSON.stringify(items.map(item=>String(item.id)));
+  if(!items.length||seen.has(gear))continue;
+  seen.add(gear);choices.push({...choice,items});
+ }
+ if(!choices.length)return '';
+ const key=e(planKey(s)),readonly=s.readOnly===true||!canSelect;
+ const row=(choice,index)=>{
+  const current=choice.id==='current',label=`${index+1} · ${choice.name}`;
+  return `<section class="configuration-choice hex-source-choice ${current?'is-current':''}" data-source-config="${e(choice.id)}" aria-label="${e(label)}"><div class="hex-source-line"><span class="hex-source-marker" title="${e(label)}">${current?'当前':index+1}</span><ol class="configuration-equipment" aria-label="出装顺序">${choice.items.map(item=>`<li tabindex="0" data-item-id="${e(item.id)}" title="${e(item.name)}">${asset('item',item.id,item.name)}</li>`).join('')}</ol>${choice.build.priority?`<span class="hex-source-skills" title="参考加点">${e(choice.build.priority.split('').join(' › '))}</span>`:''}${current?'':button('configuration-switch','选择','','quiet small',`data-config="${e(choice.id)}" data-plan="${key}" aria-label="选择${e(label)}" ${readonly||pending?'disabled':''}`)}</div></section>`;
+ };
+ const html=`<section class="hex-source-reference" aria-label="当版来源出装参考"><small class="hex-source-meta" title="${e(plan.build.reference.sourceUrl)}">OP.GG · 全球海克斯 · ${e(data.patch)}${readonly?' · 只读':''}</small>${choices.slice(0,3).map(row).join('')}${choices.length>3?`<details class="hex-source-more" data-companion-disclosure="hex-source-${key}"><summary>更多出装 · ${choices.length-3}</summary>${choices.slice(3).map((choice,index)=>row(choice,index+3)).join('')}</details>`:''}</section>`;
+ return s.readOnly?readOnlyConfigurationMarkup(html):html;
 }

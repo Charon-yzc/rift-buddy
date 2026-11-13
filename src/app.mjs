@@ -592,7 +592,7 @@ function changeMatchupTarget(el){
 let buildReturn=null,guideSelection=null,lastGuideSyncKey='',guideSyncChain=Promise.resolve(),guideSyncPending=0,guideSyncBase=null,guideRevision=0,runeApplying=false;const runeAppliedKeys=createRuneApplicationState();
 // Each explicit click replaces one editable page; remember the applied scheme.
 const app=document.getElementById('app'),overlay=document.getElementById('overlay-root');
-const renderInteraction=holdRenderDuringPointer({document,root:app,render});
+const renderInteraction=holdRenderDuringPointer({document,root:app,render,compositionSelector:'input:not([type]),input[type=text],input[type=search],input[type=url],textarea',compositionContext:()=>route+':'+windowLayout.docked});
 const restoredDraftRenderInteraction=holdRenderDuringPointer({document,root:{contains:node=>app.contains(node)&&document.activeElement?.restoredChangeDraft===true},render,selector:'button[data-action]'});
 const buildRenderInteraction=holdRenderDuringPointer({document,root:overlay,render:renderBuild});
 const vueRoutes=createVueRouteHost();

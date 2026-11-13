@@ -93,3 +93,57 @@ test('painted owner zero remains a live identity while blank owners stay unbound
   else assert.equal(f.context.slots.find(slot=>slot.clientCellId===0).role,options.sourceCell===0?'bottom':'mid');
  }
 });
+
+function compositionFixture({tag='INPUT',type=null,inside=true,enabled=true}={}){
+ const listeners=new Map(),windowListeners=new Map(),timers=new Map();let serial=0,paints=0,actions=0,lastPaintValue;
+ // Interpret the actual binding's simple CSS selectors, including type presence
+ // and :not; unsupported syntax fails instead of silently matching a known ID.
+ const matches=(node,selector)=>selector.split(',').some(part=>{
+  let rest=part.trim(),valid=true;
+  rest=rest.replace(/:not\((\[[^\]]+\])\)/g,(_,nested)=>{if(matches(node,nested))valid=false;return '';});
+  const name=rest.match(/^[a-z]+/i);if(name){valid&&=node.tagName===name[0].toUpperCase();rest=rest.slice(name[0].length);}
+  while(rest){const token=rest.match(/^(?:#([\w-]+)|\[([\w-]+)(?:=(?:"([^"]*)"|'([^']*)'|([^\]]+)))?\])/);assert.ok(token,'Unsupported fixture CSS: '+rest);
+   if(token[1])valid&&=node.attrs.id===token[1];else {const value=token[3]??token[4]??token[5];valid&&=Object.hasOwn(node.attrs,token[2])&&(value===undefined||node.attrs[token[2]]===value);}rest=rest.slice(token[0].length);
+  }return valid;
+ });
+ const makeNode=(nodeTag,attrs={})=>{const events=new Map();return {tagName:nodeTag,attrs,isConnected:true,disabled:false,value:'',closest(selector){return matches(this,selector)?this:null;},addEventListener:(name,fn)=>events.set(name,fn),removeEventListener:(name,fn)=>{if(events.get(name)===fn)events.delete(name);},direct(name){events.get(name)?.({target:this});},focus(){assert.fail('The paint gate must not focus controls');}};};
+ const input=makeNode(tag,type===null?{}:{type}),next=makeNode('INPUT',{type:'text'}),hero=makeNode('BUTTON',{'data-action':'build','data-id':'Lux'});
+ const document={activeElement:input,addEventListener:(name,fn)=>{const list=listeners.get(name)||[];list.push(fn);listeners.set(name,list);},defaultView:{addEventListener:(name,fn)=>windowListeners.set(name,fn),focus(){assert.fail('The paint gate must not activate its window');}}};
+ const app={contains:node=>inside&&[input,next,hero].includes(node)},state={route:'builds',windowLayout:{docked:false}},options={document,root:app,render:()=>{paints++;lastPaintValue=input.value;},setTimer:fn=>{timers.set(++serial,fn);return serial;},clearTimer:key=>timers.delete(key)};
+ const binding=appSource.match(/const renderInteraction=holdRenderDuringPointer\([^\n]+/)[0];
+ const context={...state,document,app,render:options.render,holdRenderDuringPointer:captured=>holdRenderDuringPointer({...captured,setTimer:options.setTimer,clearTimer:options.clearTimer})};
+ const gate=enabled?vm.runInNewContext(binding+'\nrenderInteraction',context):holdRenderDuringPointer(options);
+ const emit=(name,target=input)=>{for(const fn of listeners.get(name)||[])fn({target,button:0,isPrimary:true});};
+ return {gate,input,next,hero,document,state:context,emit,start(node=input){document.activeElement=node;emit('compositionstart',node);},windowBlur(){windowListeners.get('blur')?.();},flush(){const due=[...timers.values()];timers.clear();due.forEach(fn=>fn());},click(){emit('click',hero);actions++;},get paints(){return paints;},get actions(){return actions;},get lastPaintValue(){return lastPaintValue;}};
+}
+for(const [name,options] of [['default input',{}],['text',{type:'text'}],['search',{type:'search'}],['url',{type:'url'}],['textarea',{tag:'TEXTAREA'}]])test(`the actual main binding preserves a composing ${name} until final input has run`,async()=>{
+ const f=compositionFixture(options);f.start();assert.equal(f.gate.defer(),true);assert.equal(f.gate.defer(),true);f.emit('compositionend');f.input.value='你';assert.equal(f.paints,0);await Promise.resolve();assert.equal(f.paints,1);assert.equal(f.lastPaintValue,'你');assert.equal(f.gate.defer(),false);
+});
+for(const type of ['number','date','range','checkbox'])test(`the actual main composition selector excludes ${type} inputs`,()=>{
+ const f=compositionFixture({type});f.start();assert.equal(f.gate.defer(),false);
+});
+test('main composition is scoped to its root; overlay and restored-root instances remain opt-in',()=>{
+ const external=compositionFixture({inside:false});external.start();assert.equal(external.gate.defer(),false);
+ const unconfigured=compositionFixture({enabled:false});unconfigured.start();assert.equal(unconfigured.gate.defer(),false);unconfigured.emit('pointerdown',unconfigured.hero);assert.equal(unconfigured.gate.defer(),true);unconfigured.click();unconfigured.flush();assert.equal(unconfigured.paints,1);
+});
+test('composition end keeps the independently pressed hero connected until its action runs',async()=>{
+ const f=compositionFixture();f.start();f.gate.defer();f.emit('pointerdown',f.hero);f.emit('compositionend');await Promise.resolve();assert.equal(f.paints,0);assert.equal(f.gate.defer(),true);f.emit('pointerup',f.hero);f.click();assert.equal(f.actions,1);assert.equal(f.paints,0);f.flush();assert.equal(f.paints,1);assert.equal(f.gate.defer(),false);
+});
+test('pointer release does not clear a still-active composition',async()=>{
+ const f=compositionFixture();f.start();f.emit('pointerdown',f.hero);f.gate.defer();f.emit('pointercancel',f.hero);f.flush();assert.equal(f.paints,0);assert.equal(f.gate.defer(),true);f.emit('compositionend');await Promise.resolve();assert.equal(f.paints,1);
+});
+for(const release of ['focusout','node-blur','window-blur'])test(`${release} releases composing state without focus calls or a stuck paint`,async()=>{
+ const f=compositionFixture();f.start();f.gate.defer();if(release==='node-blur')f.input.direct('blur');else if(release==='window-blur')f.windowBlur();else {f.document.activeElement=f.hero;f.emit('focusout');}await Promise.resolve();f.flush();assert.equal(f.paints,1);assert.equal(f.gate.defer(),false);f.emit('pointerdown',f.hero);assert.equal(f.gate.defer(),true);f.click();f.flush();assert.equal(f.paints,2);
+});
+test('window blur releases composing and pressed state using the existing pointer timer',async()=>{
+ const f=compositionFixture();f.start();f.emit('pointerdown',f.hero);f.gate.defer();f.windowBlur();await Promise.resolve();assert.equal(f.paints,0);f.flush();assert.equal(f.paints,1);assert.equal(f.gate.defer(),false);
+});
+test('an old node end cannot release the new composing node',async()=>{
+ const f=compositionFixture();f.start();f.gate.defer();f.start(f.next);f.emit('compositionend',f.input);f.input.direct('blur');await Promise.resolve();assert.equal(f.paints,0);assert.equal(f.gate.defer(),true);f.emit('compositionend',f.next);await Promise.resolve();assert.equal(f.paints,1);
+});
+for(const change of ['route','layout','detach','focus'])test(`${change} invalidates composing ownership on the next render request`,()=>{
+ const f=compositionFixture();f.start();f.gate.defer();if(change==='route')f.state.route='hex';else if(change==='layout')f.state.windowLayout.docked=true;else if(change==='detach')f.input.isConnected=false;else f.document.activeElement=f.hero;assert.equal(f.gate.defer(),false);
+});
+test('explicit invalidation discards both activities and their pending paint',async()=>{
+ const f=compositionFixture();f.start();f.emit('pointerdown',f.hero);f.gate.defer();f.gate.invalidate();f.emit('compositionend');await Promise.resolve();f.flush();assert.equal(f.paints,0);assert.equal(f.gate.defer(),false);
+});
