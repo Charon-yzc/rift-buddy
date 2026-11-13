@@ -753,7 +753,13 @@ async function boot(){
   if(rendererReady&&pendingMainPage){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}return true;
  });
  guard('window-layout-control',async(action,{surface})=>{if(action==='fold'){if(surface==='main')mainPeek.fold();else companion.fold();return companion.layout(surface);}if(!['follow','reset-side','reset-all'].includes(action))throw Error('窗口布局操作不正确');if(action==='reset-all'&&mainPeek.active())showMainWindow();await companion.reset(action==='reset-all',action!=='follow');if(action==='reset-all'&&state.guide)await guide.recover(true);return companion.layout(surface);},true);
- guard('recover-guide',async()=>{await prepareCurrentGuide();await pollLive(true);return guide.recover();});
+ guard('recover-guide',async()=>{
+  const prepared=await prepareCurrentGuide(),gameId=publicClientGameId(latestClient);
+  if(!state.guide||inGame()&&!prepared&&(!gameId||String(state.guide.match?.gameId)!==gameId)){await pollLive(true);return guide.recover();}
+  const recovered=await guide.recover();
+  pollLive().catch(()=>diagnostic('guide live refresh failed'));
+  return recovered;
+ });
  guard('catalog-source',url=>catalogStore.setSource(url).then(useCatalog));
  guard('catalog-check',()=>catalogStore.check());
  guard('catalog-preview',async raw=>{if(raw!==undefined){if(typeof raw!=='string'||raw.length>catalogCore.CATALOG_LIMIT)throw Error('组合库内容超过限制');return catalogStore.preview(JSON.parse(raw));}

@@ -1101,8 +1101,14 @@ async function selectRiftHero(context,{preserveConfiguration=false}={}){
  const changed=()=>{if(lastTaskSelection?.id===selection.id&&lastTaskSelection?.role===selection.role)lastTaskSelection=null;throw Error('选人或配置已变化，请按当前英雄重新选择配置');};
  // This request contains no build, catalog adoption, rune or equipment work.
  // It remains available while an older configuration is finishing.
- const selected=await api.prepareSelection({champion:selection.id,role:selection.role,mode:'rift',preselectOnly:true,sessionGameId:gameId,context:writeContext});
- if(revision!==riftHeroClickRevision||selected.superseded||selected.steps?.hover?.status!=='done')return selected;
+ let selected;
+ try{selected=await api.prepareSelection({champion:selection.id,role:selection.role,mode:'rift',preselectOnly:true,sessionGameId:gameId,context:writeContext});}
+ catch(error){if(!current())return {complete:false,superseded:true};throw error;}
+ if(revision!==riftHeroClickRevision||selected.superseded)return selected;
+ if(selected.steps?.hover?.status!=='done'){
+  if(current())toast(selected.steps?.hover?.message||'客户端未确认预选，请重试',true);
+  return selected;
+ }
  if(!current())changed();
  lastTaskSelection=selection;
  if(!preserveConfiguration){companionPreview=null;closeOverlay();}
