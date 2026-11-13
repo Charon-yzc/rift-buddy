@@ -2,6 +2,7 @@ import {preparationEquipment} from './complete-gear.mjs';
 const roles={top:'上路',jungle:'打野',mid:'中路',bottom:'下路',support:'辅助'};
 export const ITEM_SET_PREFIX='rift-buddy-';
 const titlePrefix='开黑搭子 · ';
+export const itemSetTitlePrefix=(champion,role,mode)=>`${titlePrefix}${champion.name} · ${roles[role]} · ${mode==='hex'?'海克斯':'峡谷'} · `;
 const cleanText=(value,max)=>typeof value==='string'&&value.length>0&&value.length<=max&&!/[\u0000-\u001f\u007f]/.test(value);
 function shopItem(data,id,champion,map){
  const item=data.items[id];
@@ -36,7 +37,7 @@ export function createItemSet(champion,build,data){
  add('后期备选 · 按局势选择',build.laterOptions?.filter(o=>o.fitsRoute!==false).flatMap(o=>o.items).filter(i=>!equipment.some(selected=>String(selected.id)===String(i.id))).slice(0,6),false);
  if(!blocks.length)throw Error('当前方案没有可购买装备，请刷新资料或切换方案');
  const patch=String(build.displayRulesPatch||build.rulesPatch||data.patch),stale=build.referenceStale||build.stale;
- return validateItemSet({uid:`${ITEM_SET_PREFIX}${champion.key}-${build.role}-${build.mode}`,title:`${titlePrefix}${champion.name} · ${roles[build.role]} · ${build.mode==='hex'?'海克斯':'峡谷'} · ${patch}${stale?' 旧版本参考':''}`,sortrank:0,priority:true,type:'custom',map:map===11?'SR':'HA',mode:'any',blocks,associatedChampions:[champion.key],associatedMaps:[map],preferredItemSlots:[]},data);
+ return validateItemSet({uid:`${ITEM_SET_PREFIX}${champion.key}-${build.role}-${build.mode}`,title:`${itemSetTitlePrefix(champion,build.role,build.mode)}${patch}${stale?' 旧版本参考':''}`,sortrank:0,priority:true,type:'custom',map:map===11?'SR':'HA',mode:'any',blocks,associatedChampions:[champion.key],associatedMaps:[map],preferredItemSlots:[]},data);
 }
 // Both the UI process and the privileged connection process reconstruct this
 // narrow schema. No renderer-supplied path or arbitrary JSON reaches disk.

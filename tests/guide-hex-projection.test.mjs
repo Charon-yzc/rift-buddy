@@ -25,7 +25,7 @@ function setup({guide=guideCore.selectGuide(null,hex('Ashe')),client={connected:
  context.saveCurrentState=async update=>{writes++;context.state=structuredClone(update(structuredClone(context.state)));};
  vm.runInContext(slice('function mergeSavedFields(','function saveCurrentState(')+slice(' const setGuideState=',' const publicEnemyIds='),context);
  // The reconcile step of the periodic client poll, exactly as main.cjs runs it.
- const poll=()=>vm.runInContext('(async()=>{const enemyIds=[];'+slice('   const previousGuide=state.guide,reconcileGame=',"   if(state.preferences.guideAutoShow!==false")+'})()',context);
+ const poll=()=>vm.runInContext('(async()=>{const enemyIds=[];'+slice('   const previousGuide=state.guide,reconcileGame=','   const readFirstLive=')+'})()',context);
  return {context,poll,writes:()=>writes,setGuideState:vm.runInContext('setGuideState',context)};
 }
 

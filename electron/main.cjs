@@ -1009,12 +1009,16 @@ async function boot(){
    const previousGuide=state.guide,reconcileGame=publicClientGameId(latestClient),reconciled=reconcileKnownGuide(previousGuide,{phase:latestClient.phase,gameId:reconcileGame,enemyIds});
    if(selectionKey(previousGuide)!==selectionKey(reconciled.guide)){try{await setGuideState(reconciled.guide,previousGuide,undefined,false,true,()=>publicClientGameId(latestClient)===reconcileGame);}catch(error){if(error.code!=='GUIDE_CONTEXT_CHANGED')throw error;}}
    else if(reconciled.changed)await saveCurrentState(current=>({...current,guide:reconcileKnownGuide(current.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),enemyIds}).guide}));
-   if(state.preferences.guideAutoShow!==false&&latestClient.connected&&latestClient.phase==='InProgress'&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame))await pollLive(true);
+   const readFirstLive=state.preferences.guideAutoShow!==false&&latestClient.connected&&latestClient.phase==='InProgress'&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame);
    try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}
    companion.sync();
    if(inGame()&&!['GameStart','InProgress','Reconnect'].includes(previousPhase)){mainExplicitInGame=false;if(win){win.hide();mainRelease.request(win);}}
    else if(!inGame()){mainExplicitInGame=false;mainRelease.cancel();if(!win&&!mainDismissed)createWindow({automatic:true});}
-   queueRoomAuto();publishWindows('client-update',forRenderer(latestClient));setImmediate(()=>applyStagedSelection());return latestClient;})().finally(()=>statusTask=null);
+   queueRoomAuto();publishWindows('client-update',forRenderer(latestClient));setImmediate(()=>applyStagedSelection());
+   // A confirmed draft can display the plan while the game API is loading.
+   // The same read can supply the hero later when the draft wasn't observed.
+   if(readFirstLive&&!liveTask)pollLive(true).catch(()=>diagnostic('initial live read failed'));
+   return latestClient;})().finally(()=>statusTask=null);
   return statusTask;
  });
  const pollLive=async(force=false)=>{

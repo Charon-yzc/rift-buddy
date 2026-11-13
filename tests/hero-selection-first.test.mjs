@@ -1,11 +1,12 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import vm from 'node:vm';
 import {heroClickSelection} from '../src/core/configuration-choices.mjs';
 import {runeWriteContext} from '../src/core/rune-context.mjs';
+import {CLIENT_POSITION_ROLES} from '../src/core/draft.mjs';
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const implementation=source.slice(source.indexOf('let riftHeroClickRevision='),source.indexOf('\nasync function prepareHeroClick('));
 function setup({busy=false}={}){
  let manualRole='';const calls=[],champions=[{id:'Ashe',key:22},{id:'Jinx',key:222}],client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:'777',localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:0,assignedPosition:'BOTTOM'}]}},context=vm.createContext({
-  client,setTimeout,data:{champions},champ:id=>champions.find(h=>h.id===id),ownManualRole:()=>manualRole,runeWriteContext,preparationGameId:()=>client.session.gameId,heroClickSelection,
+  client,setTimeout,data:{champions},champ:id=>champions.find(h=>h.id===id),ownManualRole:()=>manualRole,runeWriteContext,preparationGameId:()=>client.session.gameId,heroClickSelection,CLIENT_POSITION_ROLES,
   api:{prepareSelection:async value=>{calls.push(value);client.session.myTeam[0].championPickIntent=champions.find(h=>h.id===value.champion).key;return {complete:true,steps:{hover:{status:'done'}}};}},
   clientPreparing:busy,runeApplying:false,itemSetPending:null,lastTaskSelection:null,companionPreview:null,
   closeOverlay(){},render(){},sync:async()=>{},toast(){},prepareHeroClick:async(s,_expected,selectedFirst)=>{calls.push({configuration:s,selectedFirst});return {complete:true};}
@@ -39,9 +40,14 @@ test('a new game cancels a configuration waiting behind an unrelated operation',
 });
 
 test('an explicit complete configuration survives the hero-only fast request',async()=>{
- const f=setup(),selection={id:'Ashe',role:'bottom',mode:'rift',loadoutId:'chosen',customRunePage:{selectedPerkIds:[8439]},summonerIds:['SummonerHeal','SummonerFlash']};
+ const f=setup(),selection={id:'Ashe',role:'support',mode:'rift',loadoutId:'chosen',customRunePage:{selectedPerkIds:[8439]},summonerIds:['SummonerHeal','SummonerFlash']};
  await f.context.selectRiftHero(selection,{preserveConfiguration:true});
  assert.equal(f.calls[0].preselectOnly,true);assert.deepEqual(structuredClone(f.calls[1].configuration),selection);
+});
+test('an ordinary avatar follows a manually swapped lane ahead of the client’s original assignment',async()=>{
+ const f=setup();f.setManual('top');await f.context.selectRiftHero({id:'Ashe',role:'mid',mode:'rift'});
+ assert.equal(f.calls[0].preselectOnly,true);assert.equal(f.calls[0].role,'top');
+ assert.equal(f.calls[1].configuration.role,'top');assert.equal(f.calls[1].configuration.loadoutId,'default');
 });
 test('latest avatar wins without configuring the old hero after its delayed reply',async()=>{
  const f=setup();let firstReply;f.context.api.prepareSelection=value=>{f.calls.push(value);if(value.champion==='Jinx')f.client.session.myTeam[0].championPickIntent=222;return value.champion==='Ashe'?new Promise(r=>firstReply=r):Promise.resolve({steps:{hover:{status:'done'}}});};

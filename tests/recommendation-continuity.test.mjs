@@ -361,16 +361,17 @@ test('explicit avatar clicks ignore lane ownership and replaceable hovers, while
  }
 });
 
-test('one candidate avatar applies its exact build even when its reference lane belongs to another player',async()=>{
+test('a candidate avatar uses the player’s assigned lane when the card shows another lane',async()=>{
  const current=client();current.session.myTeam[0].assignedPosition='MIDDLE';current.session.myTeam.push({cellId:2,championId:hero('Jinx').key,assignedPosition:'BOTTOM'});
  const slots=createSlots().map(s=>({...s,party:['mid','bottom','support'].includes(s.role),...(s.role==='bottom'?{champion:'Jinx',clientCellId:2,locked:true}:{} )}));
  const planned=createSlots().map(s=>({...s,party:['mid','bottom','support'].includes(s.role),champion:({mid:'Ahri',bottom:'Ashe',support:'Braum'})[s.role]||null,locked:!!({mid:1,bottom:1,support:1})[s.role]}));
  const result=recommend({slots:planned,champions:data.champions,scope:'party',limit:1})[0];result.creativePlan=captureCreativePlan(result,data);
  const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[result]});c.soloRole='mid';c.resultsSignature=c.recommendationKey(c.recommendationInput());
- const expected={id:'Ashe',role:'bottom',mode:'rift',...creativeComboContext(creativeMemberCombo(result.creativePlan,'Ashe','bottom'))};
+ const expected={id:'Ashe',role:'mid',mode:'rift',loadoutId:'default',coreAuto:true};
  await c.prepareCandidate({dataset:{id:'Ashe',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});
- assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Ashe');assert.equal(calls.prepared[0].role,'bottom');
- assert.deepEqual(calls.prepared[0].page,getBuild(hero('Ashe'),'bottom',data,expected).runePage);
+ assert.equal(calls.hovered.length,1);assert.equal(calls.hovered[0].champion,'Ashe');
+ assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Ashe');assert.equal(calls.prepared[0].role,'mid');
+ assert.deepEqual(calls.prepared[0].page,getBuild(hero('Ashe'),'mid',data,expected).runePage);
  assert.equal(c.slots.find(s=>s.role==='bottom').champion,'Jinx');assert.equal(c.slots.find(s=>s.role==='bottom').clientCellId,2);
  assert.equal(c.lastTaskSelection.id,'Ashe');assert.equal(c.activeCreativePlan,null,'Preparing one champion must not replace an incompatible whole lineup');
 });

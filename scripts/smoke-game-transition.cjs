@@ -1,10 +1,10 @@
 const {app}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],delay=ms=>new Promise(r=>setTimeout(r,ms));app.on('browser-window-created',(_e,w)=>windows.push(w));
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],delay=ms=>new Promise(r=>setTimeout(r,ms));app.on('browser-window-created',(_e,w)=>{windows.push(w);w.webContents.setBackgroundThrottling(false);});
 async function until(check,label){for(let n=0;n<100;n++){const v=await check();if(v)return v;await delay(80);}throw Error(label);}
 async function run(){
  app.setPath('userData',root);
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8')),base=source?path.resolve('.'):path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));
- let phase='ChampSelect',gameId='101',hero='Ashe',role='BOTTOM',liveAvailable=false,liveRequests=0;
+ let phase='ChampSelect',gameId='101',hero='Ashe',role='BOTTOM',liveAvailable=false,liveRequests=0,holdLive=false,releaseLive=null;
  // Exercise real discoverClient, sanitizeSession, clientSnapshot and liveSnapshot,
  // replacing only the HTTPS sockets. No real client port is opened or contacted.
  const response=options=>{assert.equal(options.hostname,'127.0.0.1');const p=options.path;
@@ -23,7 +23,10 @@ async function run(){
   if(['/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids'].includes(p))return {status:404,value:{message:'Optional selection scope unavailable in this fixture'}};
   throw Error('Unexpected test route '+p);
  };
- https.request=(options,callback)=>{const req=new EventEmitter();req.end=()=>queueMicrotask(()=>{const output=response(options),res=new EventEmitter();res.statusCode=output.status||200;res.resume=()=>{};callback(res);res.emit('data',Buffer.from(JSON.stringify(output.value)));res.emit('end');req.emit('close');});req.write=()=>{};req.destroy=e=>{if(e)req.emit('error',e);req.emit('close');};return req;};
+ https.request=(options,callback)=>{const req=new EventEmitter();req.end=()=>queueMicrotask(()=>{
+  const output=response(options),send=()=>{const res=new EventEmitter();res.statusCode=output.status||200;res.resume=()=>{};callback(res);res.emit('data',Buffer.from(JSON.stringify(output.value)));res.emit('end');req.emit('close');};
+  if(holdLive&&options.port===2999&&options.path==='/liveclientdata/eventdata')releaseLive=send;else send();
+ });req.write=()=>{};req.destroy=e=>{if(e)req.emit('error',e);req.emit('close');};return req;};
  https.get=(options,callback)=>{const req=https.request(options,callback);req.end();return req;};
  require(path.join(base,'electron/main.cjs'));let main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing');
  const js=async code=>{
@@ -57,13 +60,22 @@ async function run(){
  if((await state()).guide.clickThrough)await gjs('window.guide.control("interaction")');
  await gjs('window.guide.control("hide")');phase='Reconnect';await status();phase='GameStart';await status();phase='InProgress';await status();assert.equal(guide.isVisible(),false,'Same-game loading on reconnect must preserve a deliberately hidden window');
  const retained=(await state()).guide;assert.deepEqual(retained.completedItems,[route[0].id]);assert.equal(retained.purchaseTarget,route[1].id);assert.equal(retained.stage,'key');assert.equal(retained.clickThrough,false);await prefs({autoLive:true});
- phase='EndOfGame';await status();phase='ChampSelect';gameId='102';hero='Jhin';role='MIDDLE';liveAvailable=false;await status();phase='GameStart';await status();phase='InProgress';await status();assert.equal(guide.isVisible(),true,'Unavailable first live must still show this game\'s confirmed preparation');assert.equal((await state()).guide.selection.id,'Jhin');assert.equal((await state()).guide.selection.role,'mid');
+ phase='EndOfGame';await status();phase='ChampSelect';gameId='102';hero='Jhin';role='MIDDLE';liveAvailable=true;await status();phase='GameStart';await status();
+ holdLive=true;phase='InProgress';const entering=status();entering.catch(()=>{});
+ try{
+  await until(()=>releaseLive,'First live read did not start');
+  await until(async()=>guide.isVisible()&&(await gjs('window.guide.bootstrap()')).model?.selection.id==='Jhin','Already prepared guide must appear before the first live read finishes');
+  await entering;
+  const model=(await gjs('window.guide.bootstrap()')).model;assert.equal(model.selection.role,'mid');assert.equal(model.live.matched,false);
+  await until(()=>gjs('!!document.querySelector(".compact-route .compact-slot img")'),'Prepared equipment did not appear in the first visible card');
+ }finally{holdLive=false;releaseLive?.();}
+ await until(()=>gjs('window.guide.bootstrap().then(snapshot=>snapshot.model.live.matched)'),'Live data did not fill the visible guide');
  // In-game preparation with an unknown roster cannot disprove a saved combo.
  phase='EndOfGame';await status();const empty=await state();for(const s of empty.draft.slots){s.champion=null;s.locked=false;delete s.clientCellId;delete s.manualPosition;}await js(`window.buddy.saveState(${JSON.stringify(empty)})`);
  hero='Rengar';gameId='103';role='BOTTOM';liveAvailable=false;phase='ChampSelect';await status();await js('window.buddy.openGuide({id:"Rengar",role:"bottom",mode:"rift",comboId:"rengar-ivern",loadoutId:"rengar-bush"})');await gjs('window.guide.control("hide")');role='';phase='InProgress';await status();assert.equal(guide.isVisible(),true,'This game has a confirmed own Rengar preparation even while the first live read is unavailable');
  liveAvailable=true;await status();assert.equal(guide.isVisible(),true,'First unavailable live must retry after identity is ready');let unknown=(await state()).guide.selection;assert.equal(unknown.role,'bottom','Unknown formal role must preserve prepared role');assert.equal(unknown.loadoutId,'rengar-bush','Missing roster removed the explicitly selected loadout');assert.equal(unknown.comboId,'rengar-ivern','An explicitly opened reference in this confirmed game remains readable when the roster is missing');await until(()=>gjs('window.guide.bootstrap().then(snapshot=>snapshot.model.live.matched)'),'Recovered current live identity missing');assert.equal((await gjs('window.guide.bootstrap()')).model.comboConfirmed,false);
  await gjs('window.guide.control("hide")');await status();assert.equal(guide.isVisible(),false,'Retried auto-show must not repeat after manual hide');
  guide.showInactive();await delay(120);const capture=await guide.webContents.capturePage();await fs.writeFile(path.join(root,'formal-role-after-transition.png'),capture.toPNG());
- const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,fullMainStatusFlow:true,firstSelectionPrepares:true,freshInstallationAutoShows:true,realLCUSanitizers:true,loadingPreservesManualRole:true,autoShowWithoutLive:true,manualRoleAfterSessionDisappears:true,sameGameHiddenReconnect:true,sameGameLoadingRetainsProgress:true,newGameUnavailableLivePreparesCurrent:true,retryAfterFirstLiveFailure:true,unknownRosterKeepsExplicitLoadout:true,unknownRosterKeepsUnconfirmedReference:true,unknownFormalRoleKeepsPreparedRole:true,loopbackSocketsMocked:true,actualRuneWrites:false,userSettingsIsolated:true};await fs.writeFile(path.join(root,'game-transition-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
+ const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,fullMainStatusFlow:true,firstSelectionPrepares:true,freshInstallationAutoShows:true,realLCUSanitizers:true,loadingPreservesManualRole:true,autoShowWithoutLive:true,manualRoleAfterSessionDisappears:true,sameGameHiddenReconnect:true,sameGameLoadingRetainsProgress:true,preparedGuideBeforeLive:true,liveFillsVisibleGuide:true,retryAfterFirstLiveFailure:true,unknownRosterKeepsExplicitLoadout:true,unknownRosterKeepsUnconfirmedReference:true,unknownFormalRoleKeepsPreparedRole:true,loopbackSocketsMocked:true,actualRuneWrites:false,userSettingsIsolated:true};await fs.writeFile(path.join(root,'game-transition-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'game-transition-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});

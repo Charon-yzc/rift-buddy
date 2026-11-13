@@ -1092,7 +1092,11 @@ function reflectSwitchedConfiguration(selection){
  if(windowLayout.docked&&companionTab==='plan'&&(same(companionPreview)||!companionPreview&&selection.mode!=='hex'))companionPreview=structuredClone(selection);
 }
 async function selectRiftHero(context,{preserveConfiguration=false}={}){
- const revision=++riftHeroClickRevision,selection=preserveConfiguration?{...context,mode:'rift'}:heroClickSelection(data,context),gameId=preparationGameId(client),writeContext=runeWriteContext(client),manualRole=ownManualRole();
+ const revision=++riftHeroClickRevision,gameId=preparationGameId(client),writeContext=runeWriteContext(client),manualRole=ownManualRole();
+ // A candidate can show this hero in another player's lane. Its avatar
+ // chooses the hero, while the player's confirmed position chooses the build.
+ const role=manualRole||CLIENT_POSITION_ROLES[writeContext.assignedPosition]||context.role;
+ const selection=preserveConfiguration?{...context,mode:'rift'}:heroClickSelection(data,{...context,role});
  const current=()=>revision===riftHeroClickRevision&&client.connected&&client.phase==='ChampSelect'&&client.mode?.id==='rift'&&preparationGameId(client)===gameId&&client.session?.localPlayerCellId===writeContext.cellId&&ownManualRole()===manualRole&&String(client.session?.myTeam?.find(player=>player.cellId===writeContext.cellId)?.assignedPosition||'').toUpperCase()===writeContext.assignedPosition;
  const changed=()=>{if(lastTaskSelection?.id===selection.id&&lastTaskSelection?.role===selection.role)lastTaskSelection=null;throw Error('选人或配置已变化，请按当前英雄重新选择配置');};
  // This request contains no build, catalog adoption, rune or equipment work.

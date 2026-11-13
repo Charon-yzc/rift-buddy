@@ -151,7 +151,17 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   const recovery=cache.recovery;
   let phase=await request(auth,'/lol-gameflow/v1/gameflow-phase'),session=null,rawSession=null,eligibility=null;
   phaseRead=true;delete cache.recovery;
-  let denied=false;
+  let denied=false,transitionLobby=null;
+  if(LOBBY_PHASES.includes(phase)){
+   // Ready check can turn into selection during the lobby read. Complete
+   // that selection snapshot now instead of publishing a phase without it.
+   try{
+    const lobby=await request(auth,'/lol-lobby/v2/lobby'),after=await request(auth,'/lol-gameflow/v1/gameflow-phase');
+    if(after===phase){cache.lobby=sanitizeLobbyParty(lobby,now());cache.gameId=null;}
+    else if(after==='ChampSelect'&&phase!=='None')transitionLobby=sanitizeLobbyParty(lobby,now());
+    phase=after;
+   }catch(error){if(error.status===401)throw error;if(['None','Lobby'].includes(phase))cache.lobby=null;}
+  }
   if(phase==='ChampSelect'){
    rawSession=await request(auth,'/lol-champ-select/v1/session');session=sanitizeSession(rawSession);
    const context=pickEligibilityContext(session);
@@ -173,16 +183,9 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   const draftId=phase==='ChampSelect'&&session&&!(session.gameId&&flowId&&session.gameId!==flowId)?session.gameId||flowId:null;
   const identities=session?{...session,myTeam:session.myTeam.map(p=>{const raw=rawSession.myTeam?.find(m=>Number(m.cellId)===p.cellId);return {...p,identity:publicPlayerIdentity(raw),displayName:publicPlayerName(raw)};})}:null;
   const canRecover=!!recovery&&!denied&&draftId===recovery.gameId&&freshDraftLobby(recovery.lobby,now())&&verifiedDraftParty(identities,recovery.lobby);
-  if(['None','Lobby','Matchmaking','ReadyCheck'].includes(phase)){
-   // Read the pre-match party only. A champ-select chat contains all allies,
-   // which is not evidence that they queued together. No chat/JWT is retained.
-   try{const lobby=await request(auth,'/lol-lobby/v2/lobby'),after=await request(auth,'/lol-gameflow/v1/gameflow-phase');
-    if(after===phase){cache.lobby=sanitizeLobbyParty(lobby,now());cache.gameId=null;}
-    phase=after;
-   }catch(error){if(error.status===401)throw error;if(['None','Lobby'].includes(phase))cache.lobby=null;}
-  }
   const gameId=String(session?.gameId||game.gameId||'');
   if(session&&cache.gameId&&gameId&&cache.gameId!==gameId)cache.lobby=null;
+  if(!denied&&draftId&&transitionLobby&&verifiedDraftParty(identities,transitionLobby))cache.lobby=transitionLobby;
   if(session&&gameId)cache.gameId=gameId;
   const partyAt=now(),lobbyFresh=freshLobby(cache.lobby,partyAt)&&LOBBY_PHASES.includes(phase);
   const ownIdentity=lobbyFresh?cache.lobby.local:publicPlayerIdentity(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId));
@@ -246,7 +249,7 @@ export async function liveClientDictionary(auth,{request=lcuRequest,force=false,
   entry.value=value;entry.at=now();entry.ttl=value?.champions.length&&value?.items.length?300000:value?5000:2000;return value;
  }).finally(()=>{entry.pending=null;});return entry.pending;
 }
-export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {
+export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest,contextMatches=sameRuneWriteContext}={}) {
  const {validateRunePage}=await import('../src/core/builds.mjs');
  if(!validateRunePage(page,trees))throw new Error('符文组合与当前资料不匹配，已取消写入');
  const auth=await discover(installPath);if(!auth?.port)throw new Error('请先连接英雄联盟客户端，并确认 Windows 权限');
@@ -258,7 +261,7 @@ export async function writeRunePage({page,context,ownedPageId,installPath='',tre
   session:currentPhase==='ChampSelect'?await request(auth,'/lol-champ-select/v1/session'):null,
   game:supplied?.gameId?sanitizeGame(await request(auth,'/lol-gameflow/v1/session')):null});
  const initial=await readContext(phase),expected=supplied||initial;
- if(!sameRuneWriteContext(initial,expected))throw Error('选人对象或对局已变化，尚未写入符文；请核对后重新点击应用');
+ if(!contextMatches(initial,expected))throw Error('选人对象或对局已变化，尚未写入符文；请核对后重新点击应用');
  const pages=await request(auth,'/lol-perks/v1/pages');
  if(!Array.isArray(pages))throw new Error('无法读取符文页，已取消写入');
  const editable=pages.filter(p=>Number.isInteger(p?.id)&&p.id>0&&p.isEditable===true);
@@ -272,7 +275,7 @@ export async function writeRunePage({page,context,ownedPageId,installPath='',tre
  let dispatchContext,dispatchPhase;
  try{dispatchContext=await readContext(phase);dispatchPhase=await request(auth,'/lol-gameflow/v1/gameflow-phase');}
  catch{throw Error('未能再次确认符文应用对象，尚未写入符文；请同步后重新点击');}
- if(dispatchPhase!==phase||!sameRuneWriteContext(dispatchContext,expected))throw Error('选人对象、对局或阶段已变化，尚未写入符文；请核对后重新点击应用');
+ if(dispatchPhase!==phase||!contextMatches(dispatchContext,expected))throw Error('选人对象、对局或阶段已变化，尚未写入符文；请核对后重新点击应用');
  try{
   const result=target?await request(auth,`/lol-perks/v1/pages/${target.id}`,'PUT',payload):await request(auth,'/lol-perks/v1/pages','POST',payload);
   const newId=target?.id||result?.id;
@@ -287,7 +290,7 @@ export async function writeRunePage({page,context,ownedPageId,installPath='',tre
    let currentPhase;try{currentPhase=await request(auth,'/lol-gameflow/v1/gameflow-phase');}catch{throw new Error('符文已保存，但未能确认当前阶段，尚未选用该页；请在客户端核对。');}
    if(!allowedPhases.includes(currentPhase))throw new Error('符文已保存，但已离开可应用阶段，尚未选用该页；请在客户端核对。');
    let selectionContext;try{selectionContext=await readContext(currentPhase);currentPhase=await request(auth,'/lol-gameflow/v1/gameflow-phase');}catch{throw Error('符文已保存，但未能确认选人对象，尚未选用该页；请在客户端核对。');}
-   if(currentPhase!==expected.phase||!sameRuneWriteContext(selectionContext,expected))throw Error('符文已保存，但选人对象或对局已变化，尚未选用该页；请在客户端核对。');
+   if(currentPhase!==expected.phase||!contextMatches(selectionContext,expected))throw Error('符文已保存，但选人对象或对局已变化，尚未选用该页；请在客户端核对。');
    try{await request(auth,'/lol-perks/v1/currentpage','PUT',newId);}catch{throw new Error('符文已保存，但客户端未能选用该页；请在客户端手动选用后核对。');}
    let selected;try{selected=await request(auth,'/lol-perks/v1/pages');}catch{throw new Error('符文已保存，但无法确认选用结果；请在客户端核对当前符文页。');}
    confirmed=Array.isArray(selected)?selected.find(p=>p.id===newId):null;
