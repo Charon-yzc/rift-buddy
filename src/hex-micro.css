@@ -37,6 +37,7 @@ html{width:100%;height:100%}
 .hex-micro-route .hex-micro-items img,[data-kind=routes] .hex-micro-line .hex-micro-items img{width:20px;height:20px}
 .hex-micro-line .hex-route-caption,.hex-micro-route .hex-route-caption{grid-column:2;min-width:72px;max-width:110px}
 .hex-micro-route-list{overflow-x:auto}
+.hex-micro-route .hex-micro-augments:empty{display:none}
 [data-kind=routes][data-layout=line] .hex-micro-grip{z-index:2}
 [data-kind=routes][data-layout=line] #hex-micro-root{height:100%;padding-right:0}
 [data-kind=routes] .hex-micro-line:not(.hex-micro-pending){height:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#516472 transparent;color:#c2cbd1}

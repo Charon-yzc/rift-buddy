@@ -17,16 +17,32 @@ test('current public dictionary is readable while archived reviewed recipes stay
 });
 test('first current source-only card must retain complete source equipment, skill priority and attribution',()=>{
  const model=createGuideModel(data,selectGuide(null,{id:'Camille',role:'top',mode:'hex'}),{available:false});
- assert.equal(model.mode,'hex');assert.equal(model.hexMicroRoutes.length,1);
+ assert.equal(model.mode,'hex');assert.equal(model.hexMicroRoutes.length,3);
  const reference=model.hexMicroRoutes[0],ref=data.hexBuilds.Camille;
  assert.equal(reference.kind,'reference');assert.equal(reference.sourceOnly,true);assert.equal(reference.patch,data.patch);
  assert.deepEqual(reference.items.map(i=>Number(i.id)),[...ref.core[0].items,ref.boots[0].items[0]]);
  assert.equal(reference.items.length,4);assert.deepEqual(reference.augments,[]);assert.equal(reference.card.priority,'主Q副E');
  assert.equal(reference.card.sourceUrl,ref.sourceUrl);assert.equal(reference.source,ref.sourceUrl);
+ assert.deepEqual(model.hexMicroRoutes.map(row=>row.items.map(i=>Number(i.id))),ref.core.map(row=>[...row.items,ref.boots[0].items[0]]));
+ assert.equal(new Set(model.hexMicroRoutes.map(row=>row.card.title)).size,3);
+ for(const alternative of model.hexMicroRoutes.slice(1)){
+  assert.equal(alternative.kind,'reference');assert.equal(alternative.card.sourceUrl,ref.sourceUrl);
+  assert.equal(alternative.card.priority,'主Q副E');assert.deepEqual(alternative.augments,[]);
+  assert(alternative.items.every(item=>!item.core));
+ }
  const payload=hexMicroPayload({model,referenceRevision:1},'routes');
  const html=hexMicroLineView({...payload,layout:'line'},(kind,id)=>'<img data-kind="'+kind+'" data-id="'+id+'">');
  assert.equal((html.match(/data-micro-kind="item"/g)||[]).length,4);assert.match(html,/主Q副E/);assert.match(html,/OP.GG/);
  assert.doesNotMatch(html,/data-action="pin"|data-action="expand"/);
+});
+test('current equipment references keep the prepared route first, skip duplicates and omit invalid alternatives',()=>{
+ const ref=data.hexBuilds.Camille,core=ref.core.map(row=>({...row,items:[...row.items]}));
+ const bundle={...data,hexBuilds:{...data.hexBuilds,Camille:{...ref,core:[core[0],core[1],core[1],{...core[2],items:[core[2].items[0],core[2].items[0],core[2].items[2]]}]}}};
+ const selection={id:'Camille',role:'top',mode:'hex',coreIndex:1,coreId:'core-'+core[1].items.join('-'),ownedAugmentIds:[1336]};
+ const model=createGuideModel(bundle,selectGuide(null,selection),{available:false});
+ assert.deepEqual(model.hexMicroRoutes.map(row=>row.items.slice(0,3).map(item=>Number(item.id))),[core[1].items,core[0].items]);
+ assert.deepEqual(model.hexMicroRoutes[0].augments.map(row=>row.id),[1336]);
+ assert.deepEqual(model.hexMicroRoutes[1].augments,[]);
 });
 test('current source favorites stay visible while old patches and authored recipe fields remain hidden',()=>{
  const favorite={type:'build',id:'own-current',champion:'Ashe',role:'bottom',mode:'hex',version:data.version,loadoutId:'default',augmentIds:[],compareIds:[],ownedAugmentIds:[]};

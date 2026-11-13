@@ -48,6 +48,8 @@ test('micro window fits compact two-row recipes, scales and keeps narrow display
  const narrow=hexMicroPlacement('routes',null,area,null,1,[route(1,3)]),full=hexMicroPlacement('routes',null,area,null,1,[route(7,8)]),line=hexMicroPlacement('routes',null,area,null,1,[route(7,8)],false,'line');
  assert.equal(narrow.width,282);assert.equal(narrow.x+narrow.width,1908);
  assert.equal(full.width,349);assert.equal(full.height,111);assert.equal(line.width,340);assert.equal(line.height,92);
+ const references=hexMicroPlacement('routes',null,area,null,1,[route(1,4),route(0,4),route(0,4)]);
+ assert.equal(references.height,215);
  assert.equal(hexMicroPlacement('routes',null,area,null,1,Array(30).fill(route(7,8)),true).height,480);
  assert.equal(hexMicroPlacement('routes',null,area,null,1.25,[route(7,8)],false,'line').width,425);
  const tiny={x:0,y:0,width:320,height:236};assert.equal(hexMicroPlacement('routes',null,tiny,null,1,[route(7,8)],false,'line').width,320);
