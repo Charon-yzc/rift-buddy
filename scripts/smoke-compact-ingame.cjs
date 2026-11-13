@@ -40,11 +40,20 @@ async function run(){
  await j(main,'window.buddy.openGuide({id:"Camille",role:"top",mode:"hex"})');
  const micros=await until(async()=>{const found=windows.filter(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/hex-micro.html'));return found.length===2?found:null;},'Hex micro pair missing');
  const values=await Promise.all(micros.map(w=>j(w,'window.hexMicro.bootstrap()'))),routes=micros[values.findIndex(v=>v.kind==='routes')],economy=micros[values.findIndex(v=>v.kind==='economy')];
- await until(()=>j(routes,'document.querySelectorAll(".hex-micro-route").length===1'),'Current source reference missing');
- const original=await j(routes,'window.hexMicro.bootstrap()');assert.equal(original.routes.length,1);const reference=original.routes[0];assert.equal(reference.kind,'reference');assert.equal(reference.sourceOnly,true);assert.equal(reference.patch,data.patch);assert.equal(reference.id,'Camille-references');assert.deepEqual(reference.items.map(item=>String(item.id)),['3078','6610','6333','3111']);assert(reference.items.every(item=>item.core===false));assert.deepEqual(reference.augments.map(augment=>augment.id),[1336]);assert(reference.augments.every(augment=>augment.core===false&&augment.brief.includes('非配套')));assert.equal(reference.card.priority,'主Q副E');assert.equal(new URL(reference.card.sourceUrl).searchParams.get('patch'),data.patch);assert.equal(reference.card.source,'OP.GG 来源');
+ await until(()=>j(routes,'document.querySelectorAll(".hex-micro-route").length===3'),'The three current source equipment references are missing');
+ const original=await j(routes,'window.hexMicro.bootstrap()'),source=JSON.parse(await fs.readFile(path.join(base,'data/hex-builds.json'))).entries.Camille;
+ assert.equal(original.routes.length,3);
+ assert.deepEqual(original.routes.map(route=>route.items.map(item=>Number(item.id))),source.core.map(core=>[...core.items,source.boots[0].items[0]]));
+ const reference=original.routes[0];
+ assert(original.routes.every(route=>route.kind==='reference'&&route.sourceOnly&&route.patch===data.patch&&route.items.every(item=>!item.core)&&route.card.sourceUrl===source.sourceUrl&&route.card.priority==='主Q副E'));
+ assert.deepEqual(original.routes.slice(1).map(route=>route.augments),[[],[]]);
+ assert.equal(new Set(original.routes.map(route=>route.card.title)).size,3);
+ assert.equal(reference.id,'Camille-references');assert.deepEqual(reference.augments.map(augment=>augment.id),[1336]);assert(reference.augments.every(augment=>augment.core===false&&augment.brief.includes('非配套')));
+ assert.equal(new URL(reference.card.sourceUrl).searchParams.get('patch'),data.patch);assert.equal(reference.card.source,'OP.GG 来源');
  const cardInfo=()=>j(routes,'(()=>{const card=document.querySelector("[data-micro-route]"),caption=card.querySelector(".hex-route-caption");return {id:card.dataset.microRoute,items:[...card.querySelectorAll("[data-micro-kind=item]")].map(item=>item.dataset.microId),augments:[...card.querySelectorAll("[data-micro-kind=augment]")].map(item=>item.dataset.microId),title:caption.querySelector("b").textContent,source:caption.querySelector("small").textContent,sourceTitle:caption.querySelector("small").title,skills:caption.querySelector("span").textContent,skillNote:caption.querySelector("span").title};})()');
  const fullInfo=await cardInfo();assert.deepEqual(fullInfo.items,reference.items.map(item=>String(item.id)));assert.equal(fullInfo.title,reference.card.title);assert.equal(fullInfo.source,reference.card.source);assert(fullInfo.sourceTitle.includes(reference.card.sourceUrl));assert.equal(fullInfo.skills,reference.card.priority);assert(fullInfo.skillNote.includes('未单独提供此路线的专属加点'));
- assert.equal(await j(routes,'document.querySelectorAll(".hex-micro-pin,[data-action=expand]").length'),0,'One source-only reference must not invent recipe controls');assert.equal(await j(routes,'window.hexMicro.bootstrap().then(p=>window.hexMicro.control("expand",{context:p.context,view:p.view}))'),false);assert.equal(routes.__createdFocusable,false);assert.equal(economy.__createdFocusable,false);
+ assert.equal(await j(routes,'document.querySelectorAll(".hex-micro-pin,[data-action=expand]").length'),0,'Three visible references need no extra expansion control');assert.equal(await j(routes,'window.hexMicro.bootstrap().then(p=>window.hexMicro.control("expand",{context:p.context,view:p.view}))'),false);assert.equal(routes.__createdFocusable,false);assert.equal(economy.__createdFocusable,false);
+ assert(await j(routes,'(()=>{const cards=[...document.querySelectorAll(".hex-micro-route")];return cards.slice(1).every(card=>card.offsetHeight<cards[0].offsetHeight);})()'),'Equipment-only references reserved an empty augment row');
  await capture('micro-source-only.png',routes);
  let cursor={x:-1000,y:-1000};screen.getCursorScreenPoint=()=>cursor;
  const nativeClick=async(selector,window=routes)=>{
@@ -74,8 +83,7 @@ async function run(){
   await capture('hover-'+kind+'.png',tip);cursor={x:-1000,y:-1000};await until(()=>!tip.isVisible(),'Hover did not hide');
  }
 
- // A short, narrow work area clips the one complete current reference. Its
- // scrollbar must remain interactive without inventing additional recipes.
+ // The short, narrow work area scrolls the same equipment cards.
  const displayMatching=screen.getDisplayMatching.bind(screen);
  screen.getDisplayMatching=rect=>{const display=displayMatching(rect);return {...display,workArea:{...display.workArea,width:220,height:120}};};
  await j(routes,'window.hexMicro.bootstrap()');
@@ -130,7 +138,7 @@ async function run(){
 
  for(const kind of ['skill','jungle']){const w=await until(()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/'+kind+'.html')),'Retained '+kind+' widget');await until(()=>j(w,'!!document.querySelector("header")'),'Widget ready');assert.equal(await j(w,'!!document.querySelector("[data-action=details]")'),false);await capture('rift-'+kind+'.png',w);}
  assert.equal(writes,0);assert.equal(badImageRequests,0);assert.deepEqual(external,[]);assert.equal(nativeEdge.expectedFullyInside,true,'Native edge handle extends outside the real work area: '+JSON.stringify(nativeEdge));
- const proof={passed:true,archiveSha256:release.archiveSha256,patch:data.patch,routeCount:original.routes.length,defaultCards:1,sourceOnly:true,fourSourceItems:true,firstConfigurationComplete:true,noInventedRecipeControls:true,nativeLineFoldRestore:true,edgeNativeOverflow,edgeBounds,nonActivating:true,sourceAndSkills:true,nativeHovers:3,shortNarrowAreaScrollbar:true,iconBodyClickThrough:true,sameContextKeyboardFocus:true,crossHeroFocusReset:true,fourStagesNoInventedIcons:true,noLargeWindow:true,riftSkillJungleRetained:true,riftRecoveryBeforeLiveData:true,zeroRealClientWrites:writes,externalNetwork:0};
+ const proof={passed:true,archiveSha256:release.archiveSha256,patch:data.patch,routeCount:original.routes.length,defaultCards:3,sourceOnly:true,fourSourceItems:true,firstConfigurationComplete:true,noInventedRecipeControls:true,nativeLineFoldRestore:true,edgeNativeOverflow,edgeBounds,nonActivating:true,sourceAndSkills:true,nativeHovers:3,shortNarrowAreaScrollbar:true,iconBodyClickThrough:true,sameContextKeyboardFocus:true,crossHeroFocusReset:true,fourStagesNoInventedIcons:true,noLargeWindow:true,riftSkillJungleRetained:true,riftRecoveryBeforeLiveData:true,zeroRealClientWrites:writes,externalNetwork:0};
  await fs.writeFile(path.join(root,'proof.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify({...proof,root}));anchor.destroy();app.quit();
 
 }

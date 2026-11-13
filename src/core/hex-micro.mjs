@@ -14,7 +14,7 @@ export function hexMicroPlacement(kind,offset,area,game,scale=1,routes=[],expand
  // controls beside the augment row. Full cards use the same icon geometry.
  const lineWidth=routes.length?Math.max(282,12+rowWidth(routes[0],58)):282;
  const routeWidth=all.length?Math.max(282,...all.map(r=>20+rowWidth(r,0,110)+(expanded?18:0))):64;
- const routeHeight=visible.length?30+visible.length*81+Math.max(0,visible.length-1)*7+(routes.length>3?20:0):64;
+ const routeHeight=visible.length?30+visible.reduce((height,route)=>height+(route.augments.length?81:45),0)+(visible.length-1)*7+(routes.length>3?20:0):64;
  // Native frameless windows can have a 64 DIP minimum. fitWindow caps width
  // to the working area; the renderer provides horizontal scrolling if needed.
  const s=scaleOf(scale),anchor=game||area,[w,h]=layout==='line'?[kind==='economy'?356:lineWidth,kind==='economy'?44:92]:kind==='economy'?[168,118]:[routeWidth,Math.min(routeHeight,Math.min(480,area.height*.65/s))],width=Math.ceil(w*s),height=Math.max(64,Math.ceil(h*s));

@@ -1,5 +1,7 @@
 import {isCurrentHexData} from './hex-data-current.mjs';
 import {validCurrentHexReference} from './builds.mjs';
+import {configurationChoices} from './configuration-choices.mjs';
+import {preparationEquipment} from './complete-gear.mjs';
 import {itemModeTooltip} from './item-mode-tooltip.mjs';
 import {validHexRoutePurchase,validHexRouteTarget} from './community-item-review.mjs';
 import review from './hex-micro-routes.json' with {type:'json'};
@@ -58,8 +60,8 @@ export function hexPairedMicroRoutes({data,hero,owned=[],options=[],routes=[],li
 // When no paired recipe has been reviewed, retain the player's actual loadout
 // and separately sourced augment references. Never manufacture three recipes
 // by joining independent item and augment rankings.
-export function hexMicroFallback({data,hero,items=[],augments=[],reference=null}){
- const sourceOnly=!isCurrentHexData(data),champion=data.champions.find(c=>c.id===hero);
+export function hexMicroFallback({data,hero,items=[],augments=[],reference=null,build=null}){
+ const sourceOnly=!isCurrentHexData(data),champion=data.champions.find(c=>c.id===hero),rows=[];
  if(sourceOnly&&!validCurrentHexReference(reference,champion,data))return [];
  const clean=value=>String(value||'').replace(/<br\s*\/?>/gi,'；').replace(/<[^>]+>/g,'').replace(/@[^@]+@/g,'〔动态〕').replace(/\s+/g,' ').slice(0,78);
  const seen=new Set(),choices=augments.filter(a=>{if(seen.has(a.id))return false;seen.add(a.id);const record=data.augments.find(row=>row.id===a.id);return record&&(a.owned||a.offered||!hexCatalogDisabled(data,record));}).slice(0,7).map(a=>{const record=data.augments.find(row=>row.id===a.id),partial=sourceOnly&&record?.descriptionStatus!=='complete';return {id:a.id,name:a.name,core:false,...(partial?{partial:true}:{}),brief:(a.owned?'本局已选，':a.offered?'本轮已录入，':'单项强化参考，')+'非配套：'+(partial?'部分效果待核，以局内为准。':'')+clean(a.description)};});
@@ -71,11 +73,26 @@ export function hexMicroFallback({data,hero,items=[],augments=[],reference=null}
   const base=data.items[target.specialRecipe];
   return Number.isSafeInteger(target.specialRecipe)&&target.specialRecipe>0&&String(i.purchaseBase?.id)===String(target.specialRecipe)&&validHexRoutePurchase(base,hero)?{base}:null;
  };
- const gear=[...new Map(items.map(i=>[i.id,i])).values()].flatMap(i=>{
+ const gearFor=items=>[...new Map(items.map(i=>[String(i.id),i])).values()].flatMap(i=>{
   const target=data.items[i.id],resolved=sourceOnly?purchase(i):target?.maps?.['12']&&target.inStore&&target.gold?.purchasable!==false?{direct:true}:null;
   if(!resolved)return [];
   const tip=sourceOnly?itemModeTooltip(target,data.patch,'hex'):null,how=resolved.base?'终态不可直接购买，需先购买'+resolved.base.name+'。':'';
-  return [{id:i.id,name:i.name,core:false,brief:'当前准备的装备，非强化配套：'+how+(sourceOnly?(tip?.status==='complete'?'海克斯公开参数：'+clean(tip.description):'海克斯效果待核，以局内为准。'):clean(i.description))}];
+  return [{id:i.id,name:i.name,core:false,brief:how+(sourceOnly?(tip?.status==='complete'?clean(tip.description):'海克斯效果待核，以局内为准。'):clean(i.description))}];
  }).slice(0,8);
- return choices.length||gear.length?[{id:hero+'-references',title:sourceOnly?'来源装备与本局记录（非配套）':'当前配置与单项参考（非配套路线）',kind:'reference',...(sourceOnly?{sourceOnly:true,source:reference.sourceUrl}:{}),patch:data.patch,basis:sourceOnly?'当版 OP.GG 装备参考与本局实际强化记录分别列出，不代表配套或胜率。':'保留当前配置；强化与装备分别参考，不代表共同使用率或三套热门组合。',augments:choices,items:gear}]:[];
+ const base={kind:'reference',...(sourceOnly?{sourceOnly:true,source:reference.sourceUrl}:{}),patch:data.patch,basis:sourceOnly?'当版 OP.GG 装备参考与本局强化记录分别列出。':'装备与强化分别参考。'};
+ const gear=gearFor(items),gearKey=items=>JSON.stringify(items.map(item=>String(item.id))),seenGear=new Set([gearKey(gear)]);
+ if(choices.length||gear.length)rows.push({...base,id:hero+'-references',title:sourceOnly?'当前出装参考':'当前配置与单项参考',augments:choices,items:gear});
+ if(sourceOnly&&build){
+  const selection={id:hero,role:build.role,mode:'hex',coreIndex:build.selectedCoreIndex,coreId:build.selectedCoreId,loadoutId:'default'};
+  const currentIds=gear.map(item=>String(item.id));
+  for(const choice of configurationChoices(data,selection,build)){
+   if(choice.id==='current'||choice.build.sourceCoreChanged||choice.build.adapted)continue;
+   const alternative=gearFor(preparationEquipment(data,choice.build,choice.selection)),key=gearKey(alternative);
+   if(!alternative.length||seenGear.has(key))continue;
+   seenGear.add(key);
+   const changedItem=alternative.find(item=>!currentIds.includes(String(item.id)))||alternative.find((item,index)=>String(item.id)!==currentIds[index]);
+   rows.push({...base,id:hero+'-source-'+choice.id,title:changedItem?changedItem.name+'路线':choice.name.replace(/^OP\.GG · /,''),augments:[],items:alternative});
+  }
+ }
+ return rows;
 }
