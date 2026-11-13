@@ -25,7 +25,7 @@ const renderBindings=extract("const app=document.getElementById('app')",'const v
 
 function configurationFixture(docked,choice){
  let drawerOpen=!docked,finishConfiguration;
- const configured=[],hovered=[],completion=new Promise(resolve=>{finishConfiguration=resolve;});
+ const configured=[],hovered=[],notices=[],completion=new Promise(resolve=>{finishConfiguration=resolve;});
  const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:'777',localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:22,assignedPosition:'BOTTOM'}]}};
  const previous={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,runeId:'old-rune',customRunePage:{old:true},startId:'old-start',laterIds:[123]};
  const context=vm.createContext({
@@ -35,6 +35,7 @@ function configurationFixture(docked,choice){
   companionPreview:structuredClone(previous),buildView:docked?null:{...structuredClone(previous),quickConfiguration:true,build:{}},overlay:{contains:()=>!docked},
   lastTaskSelection:null,clientPreparing:false,runeApplying:false,itemSetPending:'',clickedHeroPreparation:null,
   api:{prepareSelection:async value=>{hovered.push(value);return {complete:true,steps:{hover:{status:'done'}}};}},sync:async()=>{},
+  toast:(...args)=>notices.push(args),
   closeOverlay(){drawerOpen=false;context.buildView=null;},showBuild(id,role,mode,selection){drawerOpen=true;context.buildView={id,role,mode,...selection};},render(){},renderBuild(){},
   memberHeroAction:()=>({prepare:true}),localPickLocked:()=>false,getBuild:()=>({mode:'rift',reference:{},loadoutId:'default'}),
   selectionReviewStamp:()=> 'stable',pendingReviewChanged:()=>false,saved:{draft:{},preferences:{}},companionScroll:new Map(),draftComparing:false,positionClaim:null,
@@ -49,7 +50,7 @@ function configurationFixture(docked,choice){
   },
  });
  vm.runInContext(selectionFunctions+`\nasync function switchConfiguration(el){const action='configuration-switch';${switchBranch}}`,context);
- return {context,configured,hovered,finish:finishConfiguration,get drawerOpen(){return drawerOpen;}};
+ return {context,configured,hovered,notices,finish:finishConfiguration,get drawerOpen(){return drawerOpen;}};
 }
 
 for(const docked of [true,false])test(`explicit configuration switching keeps the ${docked?'sidebar configuration tab':'main configuration drawer'} while applying and after success`,async()=>{
@@ -59,6 +60,7 @@ for(const docked of [true,false])test(`explicit configuration switching keeps th
  try{
   assert.equal(f.hovered.length,1,'The real hero-selection path must still run');
   assert.equal(f.configured.length,1,'The complete configuration must still be applied');
+  assert.deepEqual(f.notices,[],'Changing a configuration should not show a second pick notification');
   assert.deepEqual(f.configured[0].summonerIds,choice.summonerIds);
   const visible=docked?f.context.companionPreview:f.context.buildView;
   assert.equal(visible.coreId,'core-new');assert.equal(visible.runeId,'explicit-rune');

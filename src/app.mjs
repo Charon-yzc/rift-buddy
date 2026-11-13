@@ -1119,7 +1119,10 @@ async function selectRiftHero(context,{preserveConfiguration=false}={}){
  }
  if(!current())changed();
  lastTaskSelection=selection;
- if(!preserveConfiguration){companionPreview=null;closeOverlay();}
+ if(!preserveConfiguration){
+  companionPreview=null;closeOverlay();
+  if(!selected.steps.hover.locked)toast(`${champ(selection.id)?.name||selection.id}已预选，正在准备配置`);
+ }
  render();
  const previous=riftHeroConfigurationFlight;
  const preparing=(async()=>{
