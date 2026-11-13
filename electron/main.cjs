@@ -329,7 +329,7 @@ async function boot(){
   const tracked=currentGame.current(latestClient,latestLive,data.champions,[]);if(!tracked)return null;
   const session=latestClient.phase==='ChampSelect'?latestClient.session:null,sameDraft=state.draft?.clientGameId===gameId,position=sameDraft?state.draft?.playerPosition:null,cell=session?.localPlayerCellId??(manualGuideReference?.gameId===gameId?manualGuideReference.cellId:undefined)??(appliedGuideSelection?.gameId===gameId?appliedGuideSelection.cellId:undefined)??position?.cellId;
   const formal=session?guideCore.currentPlayerSelection(session,data.champions,[]):null;
-  if(session&&!formal)return null;
+  if(latestClient.phase==='ChampSelect'&&!formal)return null;
   const id=formal?.id||tracked.id,manual=Number.isInteger(cell)&&(session||sameDraft)?state.draft?.slots?.find(slot=>slot.manualPosition&&slot.clientCellId===cell&&slot.champion===id&&(!position||position.cellId!==cell||position.role===slot.role)):null;
   const liveRole=!session&&latestLive?.available&&latestLive.champion===id&&Number.isFinite(latestLive.at)&&Date.now()>=latestLive.at&&Date.now()-latestLive.at<=12000&&['top','jungle','mid','bottom','support'].includes(latestLive.position)?latestLive.position:null;
   const role=manual?.role||formal?.role&&formal.positionKnown&&formal.role||!session&&tracked.formalRole||liveRole,own={...tracked,id,role:role||tracked.role,positionKnown:!!role,...(session?{formalRole:formal.positionKnown?formal.role:undefined}:{})};
@@ -435,8 +435,10 @@ async function boot(){
   const result=guideCore.reconcileGuide(guideCore.clearUnknownGuideProgress(value),options);
   return {...result,reset:true,changed:true};
  };
- // A hex guide keeps the round's compare/owned lists even when empty, while reconciliation output omits them. Empty lists are not a change.
- const selectionKey=guide=>{const s=guide?.selection;return JSON.stringify(s?.mode==='hex'?{...s,compareIds:s.compareIds?.length?s.compareIds:undefined,ownedAugmentIds:s.ownedAugmentIds?.length?s.ownedAugmentIds:undefined}:s);};
+ const guideSelectionChanged=(before,after)=>{
+  const selection=guide=>guide?.selection?guideCore.validateGuideSelection(guide.selection):null;
+  return !isDeepStrictEqual(selection(before),selection(after));
+ };
  const prepareCurrentGuide=async({matchingOnly=false}={})=>{
   const own=currentGuideSelection(),previous=state.guide;
   // An ordinary preference save can refresh this hero's role/configuration,
@@ -1018,7 +1020,7 @@ async function boot(){
    if(latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide();
    const enemyIds=publicEnemyIds();observeOpponentContext();await bindPendingOpponent();
    const previousGuide=state.guide,reconcileGame=publicClientGameId(latestClient),reconciled=reconcileKnownGuide(previousGuide,{phase:latestClient.phase,gameId:reconcileGame,enemyIds});
-   if(selectionKey(previousGuide)!==selectionKey(reconciled.guide)){try{await setGuideState(reconciled.guide,previousGuide,undefined,false,true,()=>publicClientGameId(latestClient)===reconcileGame);}catch(error){if(error.code!=='GUIDE_CONTEXT_CHANGED')throw error;}}
+   if(guideSelectionChanged(previousGuide,reconciled.guide)){try{await setGuideState(reconciled.guide,previousGuide,undefined,false,true,()=>publicClientGameId(latestClient)===reconcileGame);}catch(error){if(error.code!=='GUIDE_CONTEXT_CHANGED')throw error;}}
    else if(reconciled.changed)await saveCurrentState(current=>({...current,guide:reconcileKnownGuide(current.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),enemyIds}).guide}));
    const readFirstLive=state.preferences.guideAutoShow!==false&&latestClient.connected&&['InProgress','Reconnect'].includes(latestClient.phase)&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame);
    try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}

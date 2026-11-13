@@ -17,6 +17,7 @@
 | 海克斯阵容 | 真实备选池与已选英雄合并排序并区分我/我们/队友；空池、缺失池及不可选英雄行为明确；点击换人先发送备选池请求；当前英雄的强化选取记录可追溯来源，四次候选资格独立核对 | `hex-shared-bench.test.mjs`、`hex-pool.test.mjs`、`smoke-package-hex-shared-bench.mjs` |
 | 海克斯资料 | 总图鉴、英雄观察证据、各次强化的可选资格分别验证；未知资格保留待核；旧社区配置不可自动成为当前推荐；来源变更同步撤回配置、收藏和指引 | `hex-player-contract.test.mjs`、`hex-pool.test.mjs`、`hex-acquisition.test.mjs`、`hex-live-bundle.test.mjs` |
 | 局内小窗 | 收起显示第一套完整配置；展开、置顶、贴边恢复和滚动可用；强化/装备图标及来源、加点不丢；悬停说明避开鼠标和屏幕边缘；不抢游戏焦点 | `hex-micro-windows.test.mjs`、`smoke-package-compact-ingame.mjs` |
+| 从选人进游戏 | 最后一份同局名单漏掉本人，已锁定的英雄与分路仍能在开局展示；遇到新局、换位或冲突选人时清除旧身份 | `game-context.test.mjs`、`smoke-package-game-transition.mjs` |
 | 阅读和输入 | 装备图鉴在非零滚动位置悬停时插入无关状态刷新，提示和列表位置保留，移开关闭；中文输入过程中保留候选和焦点 | `smoke-package-interaction-ux.mjs`、`pointer-render.test.mjs`、`room-input-interaction-ux.test.mjs` |
 | 增量升级 | 兼容增量存在但所有渠道失败时不得静默下载全量；没有兼容增量时才允许完整包；校验原文件及重建结果；取消不留半成品；保留个人设置 | `app-update-failures.test.mjs`、`incremental-update.test.mjs`、`smoke-package-incremental-update.mjs` |
 | 隐私和写入 | 原始战绩、身份和凭据不进入设置、导出、房间或安装包；仅自己的有界匿名英雄摘要按授权保存/共享；SGP 固定来源、不跟随重定向；符文/回放/反馈写入必须显式触发并模拟 | `privacy-export-contract.test.mjs`、`sgp-transport-contract.test.mjs`、既有 rune/room/feedback/preparation 套件 |

@@ -4,7 +4,7 @@ async function until(check,label){for(let n=0;n<100;n++){const v=await check();i
 async function run(){
  app.setPath('userData',root);
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8')),base=source?path.resolve('.'):path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));
- let phase='ChampSelect',gameId='101',hero='Ashe',role='BOTTOM',liveAvailable=false,liveRequests=0,holdLive=false,releaseLive=null;
+ let phase='ChampSelect',gameId='101',hero='Ashe',role='BOTTOM',omitOwnPick=false,liveAvailable=false,liveRequests=0,holdLive=false,releaseLive=null;
  // Exercise real discoverClient, sanitizeSession, clientSnapshot and liveSnapshot,
  // replacing only the HTTPS sockets. No real client port is opened or contacted.
  const response=options=>{assert.equal(options.hostname,'127.0.0.1');const p=options.path;
@@ -19,7 +19,10 @@ async function run(){
   if(p==='/lol-summoner/v1/current-summoner')return {value:{gameName:'隔离阶段玩家',tagLine:'TEST'}};
   if(p==='/lol-gameflow/v1/gameflow-phase')return {value:phase};
   if(p==='/lol-gameflow/v1/session')return {value:{gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}}};
-  if(p==='/lol-champ-select/v1/session')return {value:{localPlayerCellId:1,myTeam:[{cellId:1,championId:data.champions.find(c=>c.id===hero).key,assignedPosition:role}],theirTeam:[],actions:[],bans:{}}};
+  if(p==='/lol-champ-select/v1/session'){
+   const championId=data.champions.find(c=>c.id===hero).key;
+   return {value:{localPlayerCellId:1,myTeam:omitOwnPick?[]:[{cellId:1,championId,assignedPosition:role}],theirTeam:[],actions:gameId==='102'&&!omitOwnPick?[[{actorCellId:1,type:'pick',championId,completed:true}]]:[],bans:{}}};
+  }
   if(['/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids'].includes(p))return {status:404,value:{message:'Optional selection scope unavailable in this fixture'}};
   throw Error('Unexpected test route '+p);
  };
@@ -60,7 +63,9 @@ async function run(){
  if((await state()).guide.clickThrough)await gjs('window.guide.control("interaction")');
  await gjs('window.guide.control("hide")');phase='Reconnect';await status();phase='GameStart';await status();phase='InProgress';await status();assert.equal(guide.isVisible(),false,'Same-game loading on reconnect must preserve a deliberately hidden window');
  const retained=(await state()).guide;assert.deepEqual(retained.completedItems,[route[0].id]);assert.equal(retained.purchaseTarget,route[1].id);assert.equal(retained.stage,'key');assert.equal(retained.clickThrough,false);await prefs({autoLive:true});
- phase='EndOfGame';await status();phase='ChampSelect';gameId='102';hero='Jhin';role='MIDDLE';liveAvailable=true;await status();phase='GameStart';await status();
+ phase='EndOfGame';await status();phase='ChampSelect';gameId='102';hero='Jhin';role='MIDDLE';liveAvailable=true;await status();
+ omitOwnPick=true;const incomplete=await status();assert.equal(incomplete.phase,'ChampSelect');assert.deepEqual(incomplete.session.myTeam,[]);
+ omitOwnPick=false;phase='GameStart';await status();
  holdLive=true;phase='InProgress';const entering=status();entering.catch(()=>{});
  try{
   await until(()=>releaseLive,'First live read did not start');
@@ -78,6 +83,6 @@ async function run(){
  guide.showInactive();await delay(120);const capture=await guide.webContents.capturePage();await fs.writeFile(path.join(root,'formal-role-after-transition.png'),capture.toPNG());
  phase='EndOfGame';await status();phase='Reconnect';gameId='104';hero='Ashe';role='BOTTOM';liveAvailable=false;await status();assert.equal(guide.isVisible(),false,'Reconnect should wait for the current live hero');
  liveAvailable=true;await status();await until(async()=>guide.isVisible()&&(await gjs('window.guide.bootstrap()')).model?.selection.id==='Ashe','Direct reconnect never displayed its verified guide');
- const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,fullMainStatusFlow:true,firstSelectionPrepares:true,freshInstallationAutoShows:true,realLCUSanitizers:true,loadingPreservesManualRole:true,autoShowWithoutLive:true,manualRoleAfterSessionDisappears:true,sameGameHiddenReconnect:true,sameGameLoadingRetainsProgress:true,preparedGuideBeforeLive:true,liveFillsVisibleGuide:true,directReconnectWaitsForLive:true,retryAfterFirstLiveFailure:true,unknownRosterKeepsExplicitLoadout:true,unknownRosterKeepsUnconfirmedReference:true,unknownFormalRoleKeepsPreparedRole:true,loopbackSocketsMocked:true,actualRuneWrites:false,userSettingsIsolated:true};await fs.writeFile(path.join(root,'game-transition-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
+ const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,fullMainStatusFlow:true,firstSelectionPrepares:true,freshInstallationAutoShows:true,realLCUSanitizers:true,loadingPreservesManualRole:true,autoShowWithoutLive:true,manualRoleAfterSessionDisappears:true,sameGameHiddenReconnect:true,sameGameLoadingRetainsProgress:true,lastDraftRosterGapBeforeLive:true,preparedGuideBeforeLive:true,liveFillsVisibleGuide:true,directReconnectWaitsForLive:true,retryAfterFirstLiveFailure:true,unknownRosterKeepsExplicitLoadout:true,unknownRosterKeepsUnconfirmedReference:true,unknownFormalRoleKeepsPreparedRole:true,loopbackSocketsMocked:true,actualRuneWrites:false,userSettingsIsolated:true};await fs.writeFile(path.join(root,'game-transition-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'game-transition-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});
