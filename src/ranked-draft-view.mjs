@@ -29,24 +29,24 @@ const noticeKey=(client,companion)=>String(client.session?.gameId||client.game?.
 export function acknowledgeRankedCurve(client,{companion=false}={}){noticedCurves.add(noticeKey(client,companion));if(noticedCurves.size>16)noticedCurves.delete(noticedCurves.values().next().value);}
 function curveReference(draft,data){
  const options={patch:data.patch,source:data.buildSource};
- return draft.complete?rankedDurationReference(draft,data.builds,options):teamDurationReference(draft.allies,data.builds,options);
+ return (draft.complete?rankedDurationReference(draft,data.builds,options):null)||teamDurationReference(draft.allies,data.builds,options);
 }
 export function rankedCurveLink(client,data,{companion=false,slots=[],enemyRoles=[]}={}){
  const raw=publicCurveDraft(client,data.champions,slots),draft={...raw,enemies:resolvedRankedDraft(client,data,enemyRoles).enemies};
- if(!draft.alliesReady||!curveReference(draft,data))return '';
+ if(!draft.alliesReady)return '';
+ const curve=curveReference(draft,data);if(!curve)return '';
  const attention=!noticedCurves.has(noticeKey(client,companion));
- return button('ranked-curve',draft.complete?'双方曲线已生成 · 查看':'全队曲线已生成 · 查看','arrow', 'ranked-curve-link small',`aria-label="查看阵容与时长走势" data-companion="${companion}" data-attention="${attention}"`);
+ return button('ranked-curve',curve.enemies?'双方曲线已生成 · 查看':'全队曲线已生成 · 查看','arrow', 'ranked-curve-link small',`aria-label="查看阵容与时长走势" data-companion="${companion}" data-attention="${attention}"`);
 }
 export function rankedCurveView(client,data,{slots=[],enemyRoles=[]}={}){
  const raw=publicCurveDraft(client,data.champions,slots),draft={...raw,enemies:resolvedRankedDraft(client,data,enemyRoles).enemies};if(!draft.alliesReady)return '';
  const personal=draft.own?championStatisticsView(client,data,{id:draft.own.champion,role:draft.own.role||draft.own.displayRole,mode:'rift'}):'';
- const paired=draft.complete,team=draft.alliesReady;
- const curve=curveReference(draft,data);
- const title=paired?'双方相对走势':team?'全队时长走势':`${data.champions.find(hero=>hero.id===draft.own.champion)?.name||'我的英雄'}走势`;
- if(!curve)return `<section class="ranked-curve" aria-label="${e(title)}"><div class="ranked-roster-caption"><b>${e(title)}</b><span role="status">暂无完整统计</span></div><p class="ranked-curve-note">当前版本、来源或分路的时长统计不足。</p>${paired?laneReferencesView(draft,data):''}</section>`+personal;
+ const curve=curveReference(draft,data),paired=!!curve?.enemies;
+ const title=paired?'双方相对走势':'全队时长走势';
+ if(!curve)return `<section class="ranked-curve" aria-label="${e(title)}"><div class="ranked-roster-caption"><b>${e(title)}</b><span role="status">暂无完整统计</span></div><p class="ranked-curve-note">当前版本、来源或分路的时长统计不足。</p>${draft.complete?laneReferencesView(draft,data):''}</section>`+personal;
  // Round one side first so the displayed pair also sums to exactly 100.0%.
  const ally=paired?curve.allies.points.map(point=>({...point,winRate:Math.round(point.winRate*10)/10})):curve.points;
- const series=paired?[{name:'我方',points:ally,id:'ally'},{name:'敌方',points:ally.map(point=>({...point,winRate:100-point.winRate})),id:'enemy'}]:[{name:team?'成员历史均值':'英雄历史胜率',points:ally,id:'ally'}];
- const method=paired?'同一时长区间内，先对每位英雄相应分路的历史胜率取 log-odds，双方各取五人均值，再将两队之差映射为互补的相对指数。没有加入契合分或个人熟练度，尚未用整局阵容数据校准，不能视为本场胜率。':team?'五位英雄各自对应分路的历史胜率均值，未知分路按公开分路频率加权。不是这套阵容在本局的预测胜率。':'该英雄当前分路、按对局结束时长分组的历史胜率。不是本场预测。';
- return `<section class="ranked-curve" aria-label="${e(title)}"><div class="ranked-roster-caption"><b>${e(title)}</b><span>${paired?'<i class="curve-legend ally"></i>我方 <i class="curve-legend enemy"></i>敌方':team?'成员历史均值':'历史胜率'}</span></div>${durationChart(series,{label:title+'；悬停查看原始时长区间数值'})}<details class="ranked-curve-method"><summary>${paired?'相对模型 · 非本场胜率':'数据口径'}${curve.estimatedRoles?' · 分路估计':''}</summary><p>${method}</p><p>OP.GG ${curve.source.region==='kr'?'韩国':'全球'} · ${e(curve.source.tier)} · ${e(curve.patch)} 单双排参考。</p>${statisticsSourceDates(curve)}<p>0–25 分钟为同一结束时长区间；来源没有更早细分及各区间样本量。平滑连线仅辅助阅读，不是逐分钟数据。</p></details>${paired?laneReferencesView(draft,data):''}</section>`+personal;
+ const series=paired?[{name:'我方',points:ally,id:'ally'},{name:'敌方',points:ally.map(point=>({...point,winRate:100-point.winRate})),id:'enemy'}]:[{name:'成员历史均值',points:ally,id:'ally'}];
+ const method=paired?'同一时长区间内，先对每位英雄相应分路的历史胜率取 log-odds，双方各取五人均值，再将两队之差映射为互补的相对指数。没有加入契合分或个人熟练度，尚未用整局阵容数据校准，不能视为本场胜率。':'五位英雄各自对应分路的历史胜率均值，未知分路按公开分路频率加权。';
+ return `<section class="ranked-curve" aria-label="${e(title)}"><div class="ranked-roster-caption"><b>${e(title)}</b><span>${paired?'<i class="curve-legend ally"></i>我方 <i class="curve-legend enemy"></i>敌方':'成员历史均值'}</span></div>${durationChart(series,{label:title+'；悬停查看原始时长区间数值'})}<details class="ranked-curve-method"><summary>${paired?'相对模型 · 非本场胜率':'数据口径'}${curve.estimatedRoles?' · 分路估计':''}</summary><p>${method}</p><p>OP.GG ${curve.source.region==='kr'?'韩国':'全球'} · ${e(curve.source.tier)} · ${e(curve.patch)} 单双排参考。</p>${statisticsSourceDates(curve)}<p>0–25 分钟为同一结束时长区间；来源没有更早细分及各区间样本量。平滑连线仅辅助阅读，不是逐分钟数据。</p></details>${draft.complete?laneReferencesView(draft,data):''}</section>`+personal;
 }

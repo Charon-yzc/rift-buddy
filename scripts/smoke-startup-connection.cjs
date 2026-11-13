@@ -39,9 +39,16 @@ async function run(){
  cp.spawn=file=>{assert(file.endsWith('window-observer.exe'),'No real authorization or game process may launch');observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){clearInterval(heartbeat);observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();queueMicrotask(observe);heartbeat=setInterval(observe,250);return observer;};
  syncBuiltinESMExports();require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Application failed to create its main window');
- const js=code=>main.webContents.executeJavaScript(code,true);await until(()=>js('!!window.buddy&&!!document.querySelector("[data-action=navigate]")'),'Application failed to render its main page');await until(()=>main.__displayRequests>0,'Application rendered but never requested showing its main window');await until(()=>observer,'Window observation did not start');
+ const js=code=>main.webContents.executeJavaScript(code,true);await until(()=>js('!!window.buddy&&!!document.querySelector("[data-action=navigate]")'),'Application failed to render its main page');await until(()=>observer,'Window observation did not start');
+ if(!scenario.startsWith('game-'))await until(()=>main.__displayRequests>0,'Application rendered but never requested showing its main window');
  if(scenario!=='safe'){
   await pause(6200);assert.equal(permissionRequests,scenario==='refused'?1:0,'Unsafe/disabled startup or refused permission must not repeat an automatic request');assert.equal(actualWrites,0);
+  if(scenario.startsWith('game-')){
+   const requests=()=>windows.reduce((total,window)=>total+window.__displayRequests,0),before=requests();
+   assert.equal(before,0,'An observed game must not receive an automatic main-window display request');
+   app.emit('second-instance',{},[]);await until(()=>requests()===before+1,'Explicitly reopening the assistant during a game did not show its window');
+   assert.equal(permissionRequests,0);
+  }
   const result={passed:true,order,scenario,source,automaticPermissionRequests:permissionRequests,realWindowsPermissionPrompts:false,realClientAccess:false,actualWrites,root};await fs.writeFile(path.join(root,'result.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));await manager.shutdown();clearInterval(heartbeat);if(helperServer?.listening)helperServer.close();app.quit();return;
  }
  if(order==='client-first')assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.guide?.selection.id)'),'Ahri','Restored configuration must survive startup without a comparison list');
