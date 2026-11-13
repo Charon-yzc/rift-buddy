@@ -18,7 +18,8 @@ export function validateClientPreparation(value,data){
  const sessionGameId=String(value.sessionGameId||'');
  if(!/^[1-9]\d{0,19}$/.test(sessionGameId)||context.gameId&&context.gameId!==sessionGameId)throw Error('尚未确认本局编号，请同步客户端后重试');
  if(hexHover)return {champion:champion.id,championId:champion.key,role:null,mode:'hex',context,sessionGameId,preselectOnly:true};
- if(value.preselectOnly===true)return {champion:champion.id,championId:champion.key,role:value.role,mode:'rift',context,sessionGameId,preselectOnly:true,claimPosition:value.claimPosition===true};
+ const preserveExistingPick=value.preserveExistingPick===true?{preserveExistingPick:true}:{};
+ if(value.preselectOnly===true)return {champion:champion.id,championId:champion.key,role:value.role,mode:'rift',context,sessionGameId,preselectOnly:true,claimPosition:value.claimPosition===true,...preserveExistingPick};
  if(!validateRunePage(value.page,data.runes))throw Error('当前符文页不可用，请重新选择方案');
  const summoners=validateSummonerIds(value.summoners,'rift');
  if(!summoners||!summoners.every(id=>summonerOptions(data,'rift').includes(id)))throw Error('当前召唤师技能不可用');
@@ -26,7 +27,7 @@ export function validateClientPreparation(value,data){
  if(itemSet.associatedChampions[0]!==champion.key||itemSet.associatedMaps[0]!==11||itemSet.uid!==`rift-buddy-${champion.key}-${value.role}-rift`)throw Error('装备集与当前英雄、位置不一致');
  return {champion:champion.id,championId:champion.key,role:value.role,mode:'rift',context,sessionGameId,
   page:{name:champion.name,primaryStyleId:value.page.primaryStyleId,subStyleId:value.page.subStyleId,selectedPerkIds:[...value.page.selectedPerkIds]},
-  summoners:[...summoners],preserveFlashSlot:value.preserveFlashSlot!==false,preselectOnly:value.preselectOnly===true,claimPosition:value.claimPosition===true,itemSet,
+  summoners:[...summoners],preserveFlashSlot:value.preserveFlashSlot!==false,preselectOnly:value.preselectOnly===true,claimPosition:value.claimPosition===true,itemSet,...preserveExistingPick,
   ...(value.notice?{notice:value.notice}:{})};
 }
 export async function prepareClientSelection({value,data,installPath='',ownedPageId},{discover=path=>discoverClient(path,{reuseSnapshot:true}),request=lcuRequest,writeRunes=writeRunePage,writeItems=importItemSet,isCurrent=()=>true,isCurrentSession=()=>true,signal,beforeWrite=()=>{}}={}){
@@ -50,6 +51,8 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
   const context=runeWriteContext({connected:true,phase:'ChampSelect',session,game}),own=raw.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
   const actions=(Array.isArray(raw.actions)?raw.actions:[]).flat().filter(a=>a?.type==='pick'&&a.actorCellId===session.localPlayerCellId);
   if(!own||selected.mode!=='hex'&&(actions.length!==1||!Number.isSafeInteger(actions[0].id)||actions[0].id<0))throw Error('未能确认本人的选人操作，请同步后重试');
+  const picked=Number(own.championId)||Number(own.championPickIntent)||Number(actions[0]?.championId)||0;
+  if(selected.preserveExistingPick&&picked&&picked!==selected.championId)throw Error('客户端已有选择，保留当前英雄');
   return {context,session,own,action:selected.mode==='hex'?null:actions[0],timer:raw.timer?.phase};
  };
  const initial=await read();

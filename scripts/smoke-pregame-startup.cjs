@@ -31,7 +31,7 @@ async function run(){
  data.rankings=JSON.parse(await fs.readFile(path.join(base,'data/rankings.json'))).entries;const {roleClaimChoice}=require(path.join(base,'src/core/role-claim.mjs'));
  const {projectBuildSources}=require(path.join(base,'src/core/build-source.mjs'));data.builds=projectBuildSources(JSON.parse(await fs.readFile(path.join(base,'data/builds.json'))).entries,initial.preferences.buildSource,data.patch);
  assert.equal(initial.preferences.autoSync,true);assert.equal(initial.preferences.clickPrepare,true);assert.equal(initial.draft.playerPosition,undefined);assert.equal(initial.draft.soloRole,'');assert.equal(initial.draft.slots.filter(slot=>slot.champion).length,5,'Startup fixture needs a saved local lineup on every lane');
- let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,friendPicked=0,outsidePicked=0,ownAssigned='',friendAssigned='',completed=false,requests=0,spell1Id=12,spell2Id=4,soloParty=false,unknownAllyRoles=false;
+ let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,friendPicked=0,outsidePicked=0,ownAssigned='',friendAssigned='',completed=false,requests=0,spell1Id=12,spell2Id=4,soloParty=false,unknownAllyRoles=false,eligibilityReady=true;
  let page={id:44,name:'Synthetic editable page',isEditable:true,isActive:true,current:true};
  const ownIdentity={puuid:'startup-synthetic-own-identity',summonerId:530001,gameName:'合成测试本人',tagLine:'TEST'},friendIdentity={puuid:'startup-synthetic-friend-identity',summonerId:530002,gameName:'合成测试队友',tagLine:'TEST'};
  const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:friendPicked,championPickIntent:friendIntent,assignedPosition:friendAssigned,...friendIdentity},{cellId:1,championId:0,championPickIntent:0,assignedPosition:''},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:ownAssigned,spell1Id,spell2Id,...ownIdentity},{cellId:3,championId:outsidePicked,championPickIntent:0,assignedPosition:outsidePicked?'TOP':''},{cellId:4,championId:0,championPickIntent:0,assignedPosition:''}],theirTeam:[],actions:[[{id:21,type:'pick',actorCellId:0,championId:friendPicked||friendIntent,completed:!!friendPicked},{id:22,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',adjustedTimeLeftInPhase:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
@@ -53,7 +53,7 @@ async function run(){
     return snapshot;
    }
    if(route.endsWith('/pickable-champion-ids'))return data.champions.map(champion=>champion.key);
-   if(route.endsWith('/disabled-champion-ids'))return [];
+   if(route.endsWith('/disabled-champion-ids'))return eligibilityReady?[]:null;
    if(route==='/lol-perks/v1/pages')return [page];
    if(route==='/lol-champ-select/v1/session/my-selection')return {spell1Id,spell2Id};
    if(route==='/lol-chat/v1/conversations')return [];
@@ -423,10 +423,15 @@ async function run(){
    await capture(main,'lobby-selected-hero-cancel.png');await click(main,'.pregame-hero-choice [data-action=pregame-clear]');
    await until(async()=>!(await state()).draft.preselection?.champion,'Corner cancel did not clear the hero intent');assert.equal((await state()).draft.preselection?.role||'',role);assert.equal((await state()).draft.slots.filter(slot=>slot.party).length,marked);assert.equal(writes.length,before,'Cancelling a lobby hero wrote to the client');
    await click(main,'[data-action=pregame-hero]');await click(main,'.champ-option[data-id=Ahri]');await until(async()=>(await state()).draft.preselection?.champion==='Ahri','Hero choice did not save after cancellation');
-   gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId));
+   gameId++;phase='ChampSelect';eligibilityReady=false;ownAssigned='MIDDLE';
+   await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId)&&snapshot.eligibility?.disabled===null);
+   await delay(300);assert.equal(writes.length,before,'The partial snapshot dispatched client writes');
+   assert.equal((await state()).draft.preselection?.attemptedGameId,undefined,'The partial snapshot consumed the lobby choice');
+   eligibilityReady=true;
    await until(()=>intent===hero('Ahri').key,'Explicit lobby hero did not hover on entry');await delay(2600);
    assert.equal(writes.length,before+3,'Explicit lobby hero must prepare hover, runes and spells exactly once');
    assert.equal(page.selectedPerkIds.length,9);
+   assert.equal((await state()).preparations.find(p=>p.id==='Ahri')?.role,'mid','The lobby avatar did not use the client-assigned lane');
    side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
    await until(()=>js(side,'!!document.querySelector(".companion-shell[data-tab=recommend]")'),'Explicit hero hover must remain on recommendations');await click(side,'[data-action=companion-tab][data-tab=plan]');await until(()=>js(side,'!!document.querySelector(".configuration-current")'),'Explicit configuration navigation failed');
    side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));

@@ -63,6 +63,19 @@ test('a queued hero-only click can replace an earlier hover while full configura
  await assert.rejects(locked.run(),/已锁定其他英雄/);
 });
 
+test('staged preparation preserves a native pick made while eligibility is loading',async()=>{
+ for(const preselectOnly of [true,false]){
+  const f=fixture(),request=f.deps.request;Object.assign(f.value,{preselectOnly,preserveExistingPick:true});
+  f.deps.request=async(auth,route,...args)=>{
+   const result=await request(auth,route,...args);
+   if(route.endsWith('/pickable-champion-ids'))f.action.championId=1;
+   return result;
+  };
+  const result=await f.run();assert.equal(result.complete,false);assert.match(result.steps.hover.message,/保留当前英雄/);
+  assert.equal(f.action.championId,1);assert.ok(f.calls.every(call=>call.method==='GET'));assert.equal(f.items,0);
+ }
+});
+
 test('reference lane differs from the actual client lane without preventing a complete explicit preparation',async()=>{
  const f=fixture();f.own.assignedPosition='MIDDLE';f.value.context=runeWriteContext({connected:true,phase:'ChampSelect',session:f.session,game:{gameId:777}});
  const result=await f.run();assert.equal(result.complete,true);assert.equal(f.own.championPickIntent,22);assert.equal(f.own.assignedPosition,'MIDDLE');assert.equal(f.action.completed,false);assert.equal(f.items,1);
