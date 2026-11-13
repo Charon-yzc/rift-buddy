@@ -16,16 +16,17 @@ function fixture(){
   constructor(options){super();this.bounds=options;this.visible=false;this.destroyed=false;this.minimized=false;this.focused=0;this.webContents=new EventEmitter();Object.assign(this.webContents,{id:windows.length+1,mainFrame:{},setWindowOpenHandler(){},send(){}});windows.push(this);}
   loadFile(){loads.push({id:this.webContents.id,bootstrapRegistered:ipc.has('bootstrap')});}
   isDestroyed(){return this.destroyed;}isVisible(){return this.visible;}isMinimized(){return this.minimized;}
-  show(){this.visible=true;}showInactive(){this.visible=true;}focus(){this.focused++;}restore(){this.minimized=false;}
+  show(){this.visible=true;}showInactive(){this.visible=true;}hide(){this.visible=false;}focus(){this.focused++;}restore(){this.minimized=false;}
   getBounds(){return this.bounds;}destroy(){this.destroyed=true;this.visible=false;this.emit('closed');}
  }
  const peek={folded:false,unfold(){this.folded=false;},destroy(){this.folded=false;}};
  const c=vm.createContext({win:undefined,data:{champions:[]},state:{preferences:{}},rendererReady:false,mainBootReady:false,mainDismissed:false,mainExplicitInGame:false,quitting:false,
-  root:'D:/fixture',__dirname:'D:/fixture/electron',path,pathToFileURL,process:{env:{}},BrowserWindow:Window,mainRequests:new Map(),companion:null,inGame:()=>false,mainPeek:peek,mainRelease:{cancel(){},activity(){}},diagnostic(){},latestClient:{connected:false,phase:'Offline'},
+  root:'D:/fixture',__dirname:'D:/fixture/electron',path,pathToFileURL,process:{env:{}},BrowserWindow:Window,mainRequests:new Map(),companion:null,inGame:()=>false,observedWindows:null,observedAt:0,OBSERVATION_MAX_AGE_MS:5000,mainPeek:peek,mainRelease:{cancel(){},activity(){},request(){}},diagnostic(){},latestClient:{connected:false,phase:'Offline'},
   screen:{getPrimaryDisplay:()=>({bounds:{x:0,y:0,width:1920,height:1080}}),getDisplayMatching:()=>({workArea:{x:0,y:0,width:1920,height:1080}})},require:()=>placement,app:{on:(name,fn)=>events.set(name,fn)},ipcMain:{handle:(name,fn)=>ipc.set(name,fn)},Menu:{setApplicationMenu(){}}
  });
  const start=source.indexOf('function showMainWindow(){'),end=source.indexOf('async function boot(){');assert(start>=0&&end>start);
- vm.runInContext(source.split('\n').find(line=>line.startsWith('function appWindows()'))+'\n'+source.slice(start,end),c);
+ const helpers=source.split('\n').filter(line=>line.startsWith('function appWindows()')||line.startsWith('const shouldHideMainForGame='));assert.equal(helpers.length,2);
+ vm.runInContext(helpers.join('\n')+'\n'+source.slice(start,end),c);
  const open=()=>events.get('second-instance')(null,[]);
  const bootstrap=window=>ipc.get('bootstrap')({sender:window.webContents,senderFrame:window.webContents.mainFrame});
  const finishBoot=()=>{vm.runInContext('guard("bootstrap",()=>({ok:true}));'+bootWindowLine,c);windows.at(-1)?.emit('ready-to-show');};
@@ -46,4 +47,10 @@ test('second-instance still restores the existing minimized or folded main, then
 
 test('the original window guard continues to reject an unrelated sender',async()=>{
  const f=fixture();f.finishBoot();const stranger={webContents:{mainFrame:{}}};await assert.rejects(f.bootstrap(stranger),/不允许此操作/);
+});
+
+test('a fresh native game observation keeps automatic startup hidden while an explicit open still works',()=>{
+ const f=fixture();f.c.observedWindows={game:{}};f.c.observedAt=Date.now();f.finishBoot();assert.equal(f.windows[0].visible,false);
+ f.open();assert.equal(f.windows[0].visible,true);assert.equal(f.windows[0].focused,1);
+ const stale=fixture();stale.c.observedWindows={game:{}};stale.c.observedAt=Date.now()-6000;stale.finishBoot();assert.equal(stale.windows[0].visible,true);
 });
