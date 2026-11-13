@@ -32,9 +32,10 @@ const {installClientDictionary}=require('../src/core/client-dictionary.mjs');
 let dictionaryRevision=0;
 function mergeLiveGameData(live){if(live&&installClientDictionary(data,live))publishData(['clientDictionary']);}
 let importingItemSet=false;
-let mainExplicitInGame=false,mainDismissed=false,mainBootReady=false;
+let mainExplicitInGame=false,mainDismissed=false,mainBootReady=false,mainHeldForGame=false;
 const mainRequests=new Map(),inGame=()=>latestClient.connected&&['GameStart','InProgress','Reconnect'].includes(latestClient.phase);
-const mainRelease=require('./main-window-release.cjs')({getWindow:()=>win,canRelease:()=>inGame()&&!mainExplicitInGame&&!!tray&&!quitting,isBusy:window=>!!mainRequests.get(window.webContents.id)||applyingRunes||importingItemSet||updating,getSaveTask:()=>saveTask,release:window=>{rendererReady=false;diagnostic('released hidden main renderer for game');window.destroy();},diagnostic});
+const shouldHideMainForGame=()=>{const age=Date.now()-observedAt;return inGame()||!latestClient.connected&&!!observedWindows?.game&&age>=0&&age<OBSERVATION_MAX_AGE_MS;};
+const mainRelease=require('./main-window-release.cjs')({getWindow:()=>win,canRelease:()=>shouldHideMainForGame()&&!mainExplicitInGame&&!!tray&&!quitting,isBusy:window=>!!mainRequests.get(window.webContents.id)||applyingRunes||importingItemSet||updating,getSaveTask:()=>saveTask,release:window=>{rendererReady=false;diagnostic('released hidden main renderer for game');window.destroy();},diagnostic});
 let synchronizeSavedState=()=>{},observeRoomPreferences=()=>{};
 function mergeSavedFields(current,previous,next,message){
  const merged={...current};for(const field of new Set([...Object.keys(previous),...Object.keys(next)])){if(isDeepStrictEqual(next[field],previous[field]))continue;if(!isDeepStrictEqual(current[field],previous[field])&&!isDeepStrictEqual(current[field],next[field]))throw Error(message);if(next[field]===undefined)delete merged[field];else merged[field]=next[field];}return merged;
@@ -58,7 +59,7 @@ const quitRequested=process.argv.includes('--quit');
 const lock=app.requestSingleInstanceLock();if(!lock||quitRequested)app.quit();
 if(quitRequested)return;
 const mainPeek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:()=>screen.getDisplayMatching(win?.getBounds()||screen.getPrimaryDisplay().bounds).workArea,title:'完整助手',onRestore:()=>showMainWindow()});
-function showMainWindow(){mainDismissed=false;mainExplicitInGame=inGame();mainRelease.cancel();mainPeek.unfold();if(!win){if(mainBootReady)createWindow();}else{if(win.isMinimized())win.restore();win.show();win.focus();}diagnostic(`show-main-window ${!!win?.isVisible()}`);}
+function showMainWindow(){mainDismissed=false;mainExplicitInGame=shouldHideMainForGame();mainRelease.cancel();mainPeek.unfold();if(!win){if(mainBootReady)createWindow();}else{if(win.isMinimized())win.restore();win.show();win.focus();}diagnostic(`show-main-window ${!!win?.isVisible()}`);}
 app.on('second-instance',(_event,argv)=>{if(argv.includes('--quit')){quitting=true;app.quit();}else if(argv.includes('--show-guide'))guide?.show();else showMainWindow();});
 function createWindow({automatic=false}={}){
  rendererReady=false;
@@ -70,7 +71,7 @@ function createWindow({automatic=false}={}){
  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
  window.webContents.on('will-navigate',(event,url)=>{if(url!==pathToFileURL(path.join(root,'src/index.html')).href)event.preventDefault();});
  window.loadFile(path.join(root,'src/index.html'));
- window.once('ready-to-show',()=>{if(inGame()&&!mainExplicitInGame){window.hide();mainRelease.request(window);}else if(automatic||latestClient.phase==='ChampSelect'&&state.preferences.clientCompanion!==false)window.showInactive();else window.show();companion?.sync();diagnostic(`ready-to-show visible=${window.isVisible()} bounds=${JSON.stringify(window.getBounds())}`);});
+ window.once('ready-to-show',()=>{if(shouldHideMainForGame()&&!mainExplicitInGame){window.hide();mainRelease.request(window);}else if(automatic||latestClient.phase==='ChampSelect'&&state.preferences.clientCompanion!==false)window.showInactive();else window.show();companion?.sync();diagnostic(`ready-to-show visible=${window.isVisible()} bounds=${JSON.stringify(window.getBounds())}`);});
  window.webContents.on('did-fail-load',(_e,code,desc)=>diagnostic(`load failed ${code} ${desc}`));
  window.webContents.on('render-process-gone',(_e,detail)=>diagnostic(`renderer gone ${detail.reason}`));
  window.webContents.on('did-finish-load',async()=>{
@@ -1012,8 +1013,10 @@ async function boot(){
    const readFirstLive=state.preferences.guideAutoShow!==false&&latestClient.connected&&['InProgress','Reconnect'].includes(latestClient.phase)&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame);
    try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}
    companion.sync();
-   if(inGame()&&!['GameStart','InProgress','Reconnect'].includes(previousPhase)){mainExplicitInGame=false;if(win){win.hide();mainRelease.request(win);}}
-   else if(!inGame()){mainExplicitInGame=false;mainRelease.cancel();if(!win&&!mainDismissed)createWindow({automatic:true});}
+   const keepMainHidden=shouldHideMainForGame();
+   if(keepMainHidden&&!mainHeldForGame&&!mainExplicitInGame&&win){win.hide();mainRelease.request(win);}
+   else if(!keepMainHidden){mainExplicitInGame=false;mainRelease.cancel();if(!win&&!mainDismissed)createWindow({automatic:true});}
+   mainHeldForGame=keepMainHidden;
    queueRoomAuto();publishWindows('client-update',forRenderer(latestClient));setImmediate(()=>applyStagedSelection());
    // A confirmed draft can display the plan while the game API is loading.
    // The same read can supply the hero later when the draft wasn't observed.
