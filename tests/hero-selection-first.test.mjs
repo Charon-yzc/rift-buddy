@@ -20,6 +20,7 @@ test('avatar chooses a hero before any build or lineup adoption and configures t
 test('an older busy configuration cannot block a new explicit hero selection',async()=>{
  const f=setup({busy:true}),pending=f.context.selectRiftHero({id:'Jinx',role:'bottom',mode:'rift'});await new Promise(done=>setImmediate(done));
  assert.equal(f.calls.length,1);assert.equal(f.calls[0].champion,'Jinx');assert.equal(f.context.lastTaskSelection.id,'Jinx');
+ assert.deepEqual(f.notices,[['Jinx已预选，正在准备配置']]);
  f.context.clientPreparing=false;await pending;assert.equal(f.calls[1].configuration.id,'Jinx');assert.equal(f.calls[1].configuration.loadoutId,'default');
 });
 
@@ -64,7 +65,7 @@ test('a rejected avatar shows the client reason while a superseded rejection sta
  f.context.api.prepareSelection=value=>value.champion==='Ashe'?new Promise((_resolve,reject)=>{rejectFirst=reject;}):prepare(value);
  const first=f.context.selectRiftHero({id:'Ashe',role:'bottom',mode:'rift'});
  await f.context.selectRiftHero({id:'Jinx',role:'bottom',mode:'rift'});rejectFirst(Error('旧请求失败'));
- assert.equal((await first).superseded,true);assert.equal(f.notices.length,1);assert.equal(f.context.lastTaskSelection.id,'Jinx');
+ assert.equal((await first).superseded,true);assert.deepEqual(f.notices,[['英雄已被队友选择',true],['Jinx已预选，正在准备配置']]);assert.equal(f.context.lastTaskSelection.id,'Jinx');
 });
 test('a reply from a previous game cannot restore a hero or configure the new game',async()=>{
  const f=setup();f.context.api.prepareSelection=async value=>{f.calls.push(value);f.client.session.gameId='778';return {steps:{hover:{status:'done'}}};};
