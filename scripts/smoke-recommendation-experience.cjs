@@ -198,7 +198,42 @@ async function run(){
  await js('window.buddy.presentation({field:"textScale",value:1})');await sleep(180);
  await js('window.buddy.companionMode(false)');await until(()=>js('!document.querySelector(".companion-shell")'),'Main did not expand');
  for(const width of [1180,900]){main.setContentSize(width,820);for(const route of ['draft','room','builds','reference','rankings','patches','hex','favorites','settings']){await click(`[data-action=navigate][data-route=${route}]`);await until(()=>js(`document.querySelector("#main")?.dataset.page===${JSON.stringify(route)}`),'Wrong main route');await capture(`main-${route}-${width}.png`);geometry.push({surface:'main',route,width,...await js('({viewport:innerWidth,scroll:document.documentElement.scrollWidth})')});}}
+ const roles=['TOP','JUNGLE','MIDDLE','BOTTOM','UTILITY'];
+ const locked=(id,role,cellId)=>({cellId,championId:hero(id).key,assignedPosition:role,pickState:'locked'});
+ // Start a fresh draft so the manual roles exercised above cannot change
+ // the measured lane references.
+ await pushClient(client=>{
+  client.phase='Lobby';client.session=null;
+ });
+ await until(async()=>!(await js('!!document.querySelector(".ranked-curve")')),'Previous draft is still visible');
+ await pushClient(client=>{
+  client.phase='ChampSelect';
+  client.game.gameId=660002;
+  client.game.queueId=420;
+  client.session={...restoreClient.session,gameId:660002,localPlayerCellId:0,actions:[],
+   myTeam:[['Ashe','BOTTOM'],['Ahri','MIDDLE'],['Nami','UTILITY'],['Garen','TOP'],['Vi','JUNGLE']].map(([id,role],i)=>locked(id,role,i)),
+   theirTeam:['Blitzcrank','LeeSin','Syndra','Jinx','Braum'].map((id,i)=>locked(id,roles[i],5+i))};
+ });
+ await click('[data-action=navigate][data-route=draft]');
+ const chartTitle=()=>js('document.querySelector(".ranked-curve")?.getAttribute("aria-label")');
+ const ourCurve=async()=>await chartTitle()==='全队时长走势'&&await js('document.querySelectorAll(".ranked-curve .duration-hit").length===5&&!!document.querySelector(".champion-statistics svg")');
+ await until(ourCurve,'Complete allies lost their chart when enemy lane statistics were unavailable');
+ await capture('ranked-ally-chart.png');
+ await click('[data-action=companion-attach]');
+ await click('[data-action=companion-tab][data-tab=recommend]');
+ await until(ourCurve,'Side panel lost the allied and personal charts');
+ await pushClient(client=>{client.session.theirTeam[0]=locked('Renekton','TOP',5);});
+ await until(async()=>await chartTitle()==='双方相对走势','Complete opponent coverage did not restore the comparison');
+ const points=await js('[...document.querySelectorAll(".ranked-curve .duration-tooltip")].map(tooltip=>[...tooltip.querySelectorAll("b")].map(value=>parseFloat(value.textContent)))');
+ assert.equal(points.length,5);assert(points.every(row=>row.length===2&&Math.abs(row[0]+row[1]-100)<1e-9));
+ await js('document.querySelector(".ranked-curve .duration-hit").scrollIntoView({block:"center"})');
+ await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+ const curvePoint=await js(`(()=>{const button=document.querySelector('.ranked-curve .duration-hit'),r=button.getBoundingClientRect(),x=Math.round(r.x+r.width/2),y=Math.round(r.y+r.height/2);return {x,y,hit:button.contains(document.elementFromPoint(x,y))};})()`);
+ assert(curvePoint.hit,'The chart interval must be hit-testable');
+ main.webContents.sendInputEvent({type:'mouseMove',x:curvePoint.x,y:curvePoint.y});
+ await until(()=>js('document.querySelector(".ranked-curve .duration-tooltip").checkVisibility()'),'Hover did not show the interval values');
+ await capture('ranked-paired-chart.png');
  assert.ok(geometry.every(row=>row.scroll<=row.viewport+1),'Page overflow: '+JSON.stringify(geometry.filter(row=>row.scroll>row.viewport+1)));
- await fs.writeFile(path.join(root,'report.json'),JSON.stringify({passed:true,source,archiveSha256:release?.archiveSha256||null,attempts:attempts.length,hoverAttempts:hoverAttempts.length,proposalKeptAcrossRerollAndSync:true,conflictingProposalHidden:true,realLcuWrites:0,shots,geometry},null,2));console.log('RECOMMENDATION EXPERIENCE PASS '+root);app.quit();
+ await fs.writeFile(path.join(root,'report.json'),JSON.stringify({passed:true,source,archiveSha256:release?.archiveSha256||null,attempts:attempts.length,hoverAttempts:hoverAttempts.length,proposalKeptAcrossRerollAndSync:true,conflictingProposalHidden:true,rankedCurveFallback:true,rankedPairedPoints:points,realLcuWrites:0,shots,geometry},null,2));console.log('RECOMMENDATION EXPERIENCE PASS '+root);app.quit();
 }
 run().catch(async error=>{console.error(error);if(main){await fs.writeFile(path.join(root,'failure.png'),(await main.webContents.capturePage()).toPNG());await fs.writeFile(path.join(root,'failure-state.json'),JSON.stringify(await main.webContents.executeJavaScript('({workers:window.__workers,toast:document.querySelector("#toast")?.textContent,body:document.body.innerText})'),null,2));}await fs.writeFile(path.join(root,'failure.txt'),error.stack);app.exit(1);});
