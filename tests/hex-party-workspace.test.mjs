@@ -35,6 +35,17 @@ test('unavailable current statistics never turn archived percentages into curren
  const unavailable={...data,augmentError:'offline'};assert.equal(hexChampionStatistics(unavailable),null);const html=hexDraftView({data:unavailable,client:client()});
  assert.doesNotMatch(html,/data-win-rate="[0-9]|阵容胜率\s*[0-9]|样本\s*[1-9]/);assert.match(html,/待核/);
 });
+test('unchanged current kit evidence gives frontline alternatives a real coverage score; changed sources stay pending',()=>{
+ const c=client();c.party.members=[{cellId:0}];
+ c.session.myTeam=['Ahri','Ashe','Ezreal','Sona','Jinx'].map((id,cellId)=>({cellId,championId:key(id)}));
+ c.session.bench.championIds=['Teemo','Malphite','Garen','Trundle'].map(key);
+ const fit=bundle=>new Map(hexPartyDraft({data:bundle,client:c}).lineups.map(row=>[row.members[0].hero.id,row.fit]));
+ const current=fit(data);assert.deepEqual([current.get('Malphite').minimum,current.get('Malphite').maximum],[100,100]);
+ assert.deepEqual(current.get('Teemo').missing,['承伤手段']);assert.equal(current.get('Teemo').minimum,70);
+ const changed=structuredClone(data);changed.champions.find(hero=>hero.id==='Malphite').mechanicSource.character.sha256='0'.repeat(64);
+ const uncertain=fit(changed).get('Malphite');assert.deepEqual([uncertain.minimum,uncertain.maximum],[70,100]);assert.deepEqual(uncertain.pending,['承伤手段']);
+ const html=hexDraftView({data,client:c});assert.match(html,/基础机制覆盖，非胜率/);assert.match(html,/契合 100/);
+});
 // These synthetic transport records test parser validation, not live evidence.
 test('hero statistics parser keeps unknown samples and rejects changed source, patch, future time and percentage units',()=>{
  const row={championId:String(key('Lux')),version:data.patch,date:'2026-11-08',winRate:.51,numGames:null,numWinGames:null,source:'tencent',region:'CN'},options={champions:data.champions,patch:data.patch,fetchedAt:'2026-11-09T00:00:00Z'};

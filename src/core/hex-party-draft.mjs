@@ -1,6 +1,6 @@
 import {hexDraft} from './hex-draft.mjs';
 import {hexDraftProfile,HEX_DRAFT_TRAITS} from './hex-draft-profiles.mjs';
-import {isCurrentHexData} from './hex-data-current.mjs';
+import {isCurrentHexData,isReadableHexData} from './hex-data-current.mjs';
 import {hexChampionStatistics} from './hex-champion-statistics.mjs';
 import {pickEligibilityContext,normalizeChampionIds} from './pick-eligibility.mjs';
 
@@ -39,7 +39,7 @@ export function hexPartyDraft({data,client,slots=[]}){
  // the selection service re-reads the session and eligibility before swapping.
  const board=data.champions.filter(hero=>bench.has(hero.key)).map(hero=>({hero,statistics:rates.get(hero.id)||null,selected:selected.get(hero.id)||null,inBench:true,available:!!base.own&&!occupied.has(hero.key)&&!selected.has(hero.id)&&(pickable===null||pickable.includes(hero.key))&&!disabled.has(hero.key)})).sort((a,b)=>(b.statistics?.winRate??-1)-(a.statistics?.winRate??-1)||a.hero.key-b.hero.key);
  if(!base.active||!base.benchKnown||!base.own||!party.length)return {...base,party,board,statistics,lineups:[]};
- const profiles=new Map(),traits=hero=>{if(!hero||!isCurrentHexData(data))return null;if(!profiles.has(hero.id))profiles.set(hero.id,hexDraftProfile(hero,data.patch));return profiles.get(hero.id);};
+ const profileAvailable=isCurrentHexData(data)||isReadableHexData(data),profiles=new Map(),traits=hero=>{if(!hero||!profileAvailable)return null;if(!profiles.has(hero.id))profiles.set(hero.id,hexDraftProfile(hero,data.patch));return profiles.get(hero.id);};
  const all=new Map(data.champions.map(h=>[h.key,h])),pool=[...new Set([...bench,...party.filter(p=>p.hero).map(p=>p.hero.key)])].map(id=>all.get(id)).filter(h=>h&&!occupied.has(h.key)&&!disabled.has(h.key));
  const localAllowed=new Set(board.filter(r=>r.available).map(r=>r.hero.key));if(base.own.hero)localAllowed.add(base.own.hero.key);
  // Compare a mechanism only when every possible member has a definite value.

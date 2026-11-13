@@ -1,4 +1,4 @@
-// Current public bench contracts; no archived hero coverage is adopted.
+// Current public bench contracts; changed hero sources cannot renew prior coverage.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -33,12 +33,14 @@ test('Hex lineup and configuration pages have separate content and preserve roun
 });
 
 test('same-patch hero source changes withdraw mechanical claims without hiding the real bench',()=>{
+ const selected=()=>{const c=client();c.session.myTeam[0].championId=key('Ahri');c.session.myTeam[2].championId=key('Ezreal');return c;};
+ assert.deepEqual(hexDraft({data,client:selected()}).candidates.find(c=>c.hero.id==='Malphite').added,['补承伤手段']);
  for(const id of ['Malphite','Ashe'])for(const change of [h=>{h.mechanicSource.character.sha256='0'.repeat(64);},h=>{delete h.mechanicSource;}]){
-  const changed=structuredClone(data);change(changed.champions.find(c=>c.id===id));const m=hexDraft({data:changed,client:client()}),row=m.candidates.find(c=>c.hero.id==='Malphite');assert.equal(row.comparable,false);assert.deepEqual(row.added,[]);assert.deepEqual(row.lost,[]);assert.equal(row.priority,0);assert.equal(m.candidates.length,2);
+  const changed=structuredClone(data);change(changed.champions.find(c=>c.id===id));const m=hexDraft({data:changed,client:selected()}),row=m.candidates.find(c=>c.hero.id==='Malphite');assert.equal(row.comparable,false);assert.deepEqual(row.added,[]);assert.deepEqual(row.lost,[]);assert.equal(row.priority,0);assert.equal(m.candidates.length,3);
   if(id==='Ashe'){assert.equal(m.reviewed,false);assert.equal(m.coverage.length,0);assert(m.candidates.every(c=>!c.comparable));}
  }
- const transport=structuredClone(data);transport.champions.find(c=>c.id==='Malphite').mechanicSource.observedAt='2026-10-21T00:00:00Z';assert.deepEqual(hexDraft({data:transport,client:client()}).candidates.map(c=>[c.hero.id,c.priority]),hexDraft({data,client:client()}).candidates.map(c=>[c.hero.id,c.priority]));
- const partial=client();partial.session.myTeam[4].championId=0;const m=hexDraft({data,client:partial});assert(m.candidates.every(c=>!c.comparable&&!c.added.length&&!c.lost.length));assert.doesNotMatch(hexDraftView({data,client:partial}),/承伤手段 缺/);
+ const transport=structuredClone(data);transport.champions.find(c=>c.id==='Malphite').mechanicSource.observedAt='2026-10-21T00:00:00Z';assert.deepEqual(hexDraft({data:transport,client:selected()}).candidates.map(c=>[c.hero.id,c.priority]),hexDraft({data,client:selected()}).candidates.map(c=>[c.hero.id,c.priority]));
+ const partial=selected();partial.session.myTeam[4].championId=0;const m=hexDraft({data,client:partial});assert(m.candidates.every(c=>!c.comparable&&!c.added.length&&!c.lost.length));assert.doesNotMatch(hexDraftView({data,client:partial}),/承伤手段 缺/);
 });
 test('fresh own availability removes unowned and disabled bench heroes; stale eligibility is never reused',()=>{
  const c=client();c.eligibility={context:pickEligibilityContext(c.session),localPlayerCellId:0,receivedAt:new Date().toISOString(),pickable:[key('Xerath')],disabled:[]};assert.deepEqual(hexDraft({data,client:c}).candidates.map(c=>c.hero.id),['Xerath']);
