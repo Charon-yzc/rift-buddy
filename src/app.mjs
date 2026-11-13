@@ -365,6 +365,7 @@ function repaintNationalDetail(){
 let patchVersion='',patchQuery='';
 let referenceHero='',referenceQuery='',referenceRole='all',referenceTab='skills',referenceSkill='Q',referenceVariant=0;
 let referenceKind='champions',referenceItem='',referenceItemQuery='',referenceItemMode='rift',referenceItemScope='shop',referenceRuneId='',referenceShardRow='';
+let renderedItemReference=null;
 function renderReference(){
  const tabs=[['champions','英雄'],['items','装备'],['runes','符文']].map(([id,name])=>`<button type="button" class="segment ${referenceKind===id?'active':''}" data-action="reference-kind" data-kind="${id}" aria-pressed="${referenceKind===id}">${name}</button>`).join('');
  return `<nav class="segmented reference-kind" aria-label="图鉴分类">${tabs}</nav>`+(referenceKind==='items'?itemReferenceView(data,{id:referenceItem,query:referenceItemQuery,mode:referenceItemMode,scope:referenceItemScope}):referenceKind==='runes'?runeReferenceView(data,{id:referenceRuneId,shardRow:referenceShardRow}):championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}));
@@ -768,6 +769,7 @@ const dataState=createRendererDataState({getSource:()=>lockedBuildSource||saved?
  onChange:acceptDataState,onError:error=>{if(dataReady)toast('资料同步未完成，继续保留已接受的资料：'+error.message,true);}});
 function acceptDataState(change,before){
  const factoryChanged=change.baseChanged||change.catalogChanged||change.sourceChanged||change.keys.includes('pairStatistics');if(factoryChanged)recommendationFactoryGeneration++;
+ if(change.baseChanged||change.assetsChanged||change.keys.includes('patchNotes'))renderedItemReference=null;
  data=change.data;bindPlayerBuildPreferences();
  if(!dataReady||change.origin!=='remote')return;
  if(change.statusOnly){if(route==='settings')render();return;}
@@ -947,6 +949,7 @@ function render(){
  const old=document.querySelector('.companion-content');if(old&&!selectionUiReset){
    companionScroll.set(old.dataset.view,old.scrollTop);
  }
+ if(windowLayout.docked||selectionUiReset)renderedItemReference=null;
  selectionUiReset=false;
  document.body.classList.toggle('companion-mode',windowLayout.docked);
  const lockedNavigation=localPickLocked(client.session)?preparationGameId(client)+':'+client.session.myTeam.find(p=>p.cellId===client.session.localPlayerCellId)?.championId:'';
@@ -988,9 +991,16 @@ function render(){
   renderedSelectContext=appSelectionContext(prepared);reflectRunePending();
   if(focus&&(focus.room&&companionTab==='room'||old?.dataset.focusScope===focusScope)){const target=focus.id?document.getElementById(focus.id):[...app.querySelectorAll('button,input,select')].find(control=>control.tagName===focus.tag&&Object.keys(focus.data).length&&Object.entries(focus.data).every(([key,value])=>control.dataset[key]===value));if(target&&!target.disabled&&(!focus.room||!target.readOnly)){if(focus.room){target.value=focus.value;if(['room-nick','room-relay-url'].includes(target.id))target.restoredChangeDraft=true;}target.focus({preventScroll:true});if(focus.room)try{target.setSelectionRange(focus.start,focus.end);}catch{}}}return;
  }
-   const keptScroll=captureScroll(app);
-   const navigationScroll=app.querySelector('.sidebar>nav')?.scrollTop||0,navigationFocus=document.activeElement?.closest('.sidebar [data-action="navigate"]')?.dataset.route;
-   historyTooltips.close();ongoingTooltips.close();replacingApp=true;try{vueRoutes.render(app,`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item" data-action="feedback-open">${icon('feedback')}反馈</button><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,manualSyncing)}<main class="page" id="main" data-page="${route}" aria-label="${e(nav.find(([id])=>id===route)?.[1]||'开黑搭子')}">${stateRecoveryView(stateRecovery)}${route==='ongoing'?ongoingGameView(ongoing.state,data):route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?renderReference():route==='rankings'?rankingContent():route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings()}</main></div></div>`,{route,props:route==='favorites'?{data,favorites:saved.favorites}:route==='history'?currentHistoryCards():undefined});}finally{replacingApp=false;}
+ const shell=`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item" data-action="feedback-open">${icon('feedback')}反馈</button><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,manualSyncing)}<main class="page" id="main" data-page="${route}" aria-label="${e(nav.find(([id])=>id===route)?.[1]||'开黑搭子')}">${stateRecoveryView(stateRecovery)}`;
+ // Search already updates its live input, tiles and count without repainting the page.
+ const itemReference=route==='reference'&&referenceKind==='items'?[shell,referenceItem,referenceItemMode,referenceItemScope]:null;
+ if(itemReference&&renderedItemReference&&itemReference.every((value,index)=>value===renderedItemReference[index]))return;
+ const keptScroll=captureScroll(app);
+ const navigationScroll=app.querySelector('.sidebar>nav')?.scrollTop||0,navigationFocus=document.activeElement?.closest('.sidebar [data-action="navigate"]')?.dataset.route;
+ const content=route==='ongoing'?ongoingGameView(ongoing.state,data):route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?renderReference():route==='rankings'?rankingContent():route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings();
+ historyTooltips.close();ongoingTooltips.close();replacingApp=true;
+ try{vueRoutes.render(app,shell+content+'</main></div></div>',{route,props:route==='favorites'?{data,favorites:saved.favorites}:route==='history'?currentHistoryCards():undefined});}finally{replacingApp=false;}
+ renderedItemReference=itemReference;
  const navigation=app.querySelector('.sidebar>nav');if(navigation)navigation.scrollTop=navigationScroll;
  if(navigationFocus)app.querySelector('.sidebar [data-action="navigate"][data-route="'+CSS.escape(navigationFocus)+'"]')?.focus({preventScroll:true});
  renderedDisclosureScope='main:'+route+':'+(route==='draft'?activeCreativePlan?.id||'':route==='reference'?(referenceKind==='items'?['items',referenceItemMode,referenceItem].join(':'):referenceKind==='runes'?['runes',referenceRuneId].join(':'):[referenceHero,referenceRole,referenceTab].join(':')):'');disclosureState.restore(renderedDisclosureScope,app);restoreScroll(app,keptScroll);markNewRoomProposals(previousProposals);

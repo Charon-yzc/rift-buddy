@@ -8,7 +8,7 @@ import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
 import {publicDraftTeam} from '../src/core/ranked-draft.mjs';
 import {RUNE_PHASES,runeWriteContext,validateRuneWriteContext,sameRuneWriteContext} from '../src/core/rune-context.mjs';
 import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
-import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
+import {publicPlayerIdentity,publicPlayerName,sameIdentity,lobbyPartyMembers,sanitizeLobbyParty,freshDraftLobby,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
 import {allowedHistoryRoute} from './match-history-routes.mjs';
 import {normalizeClientDictionary} from '../src/core/client-dictionary.mjs';
@@ -17,6 +17,26 @@ const lcuAgent=new https.Agent({keepAlive:true,maxSockets:16,maxFreeSockets:8,ti
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
 const failedConnections=new WeakSet();
+const accessDenied=error=>error?.status===401||error?.status===403;
+const freshLobby=(lobby,at)=>Number.isFinite(lobby?.receivedAt)&&at>=lobby.receivedAt&&at-lobby.receivedAt<=LOBBY_AUTO_FRESH_MS;
+function verifiedDraftParty(session,lobby){
+ if(!lobby?.key)return false;
+ const own=session.myTeam.find(player=>player.cellId===session.localPlayerCellId);
+ if(!sameIdentity(own?.identity,lobby.local))return false;
+ const cells=new Set(),matched=new Set();
+ for(const player of session.myTeam){
+  if(!Number.isInteger(player.cellId)||player.cellId<0||player.cellId>=30||cells.has(player.cellId))return false;
+  cells.add(player.cellId);
+  const matches=lobby.members.filter(member=>sameIdentity(member.identity,player.identity));
+  if(matches.length>1)return false;
+  const [member]=matches;
+  if(player===own&&!sameIdentity(member?.identity,lobby.local))return false;
+  if(!member)continue;
+  if(matched.has(member))return false;
+  matched.add(member);
+ }
+ return matched.size===lobby.members.length;
+}
 // A display name read back from the client: trimmed, bounded, no control
 // characters. Anything else is treated as no name, never guessed.
 const cleanDisplayName=value=>{const text=typeof value==='string'?value.trim().normalize('NFKC'):'';return /^[^\r\n\0]{1,64}$/.test(text)?text:'';};
@@ -69,20 +89,27 @@ export function lcuRequest(auth,route,method='GET',body,{signal}={}) {
  return new Promise((resolve,reject)=>{
   if(cancelled()){reject(signal.reason);return;}
   const payload=body?JSON.stringify(body):null;
+  let responseStatus;
+  const readError=(message,transport=false)=>{
+   const error=new Error(message);
+   if(method==='GET'&&(responseStatus===401||responseStatus===403))error.status=responseStatus;
+   else if(transport&&route==='/lol-gameflow/v1/gameflow-phase'&&!(responseStatus>=400))error.transport=true;
+   return error;
+  };
   const request=https.request({hostname:'127.0.0.1',port:auth.port,path:route,method,agent:lcuAgent,...(signal?{signal}:{}),
    // The League client exposes a self-signed loopback certificate. This exception is scoped to this socket only.
    rejectUnauthorized:false,auth:`riot:${auth.password}`,timeout:4500,
    headers:{Accept:'application/json',...(payload?{'Content-Type':'application/json','Content-Length':Buffer.byteLength(payload)}:{})}},res=>{
-    let raw='',size=0;
-    res.on('error',()=>reject(cancelled()?signal.reason:new Error('客户端读取已中断')));
-    res.on('data',chunk=>{if(cancelled()){reject(signal.reason);return;}size+=chunk.length;if(size>2_000_000){request.destroy();reject(new Error('客户端响应过大'));return;}raw+=chunk;});
-    res.on('end',()=>{if(cancelled()){reject(signal.reason);return;}let value;try{value=raw?JSON.parse(raw):null;}catch{return reject(new Error('客户端返回格式异常'));}
+    let raw='',size=0;responseStatus=res.statusCode;
+    res.on('error',()=>reject(cancelled()?signal.reason:readError('客户端读取已中断',true)));
+    res.on('data',chunk=>{if(cancelled()){reject(signal.reason);return;}size+=chunk.length;if(size>2_000_000){reject(readError('客户端响应过大'));request.destroy();return;}raw+=chunk;});
+    res.on('end',()=>{if(cancelled()){reject(signal.reason);return;}let value;try{value=raw?JSON.parse(raw):null;}catch{return reject(readError('客户端返回格式异常'));}
      if(res.statusCode>=400){const error=new Error(res.statusCode===404?'当前没有可读取的选人信息':res.statusCode===401?'客户端连接已变化，请重新连接':`客户端暂未接受操作（${res.statusCode}）`);error.status=res.statusCode;return reject(error);}
      resolve(value);
     });
    });
   request.on('timeout',()=>request.destroy(new Error('客户端连接超时')));
-  request.on('error',()=>reject(cancelled()?signal.reason:new Error('未能连接客户端，请确认游戏已登录到大厅')));
+  request.on('error',()=>reject(cancelled()?signal.reason:readError('未能连接客户端，请确认游戏已登录到大厅',true)));
   if(payload)request.write(payload);request.end();
  }).catch(error=>{
   if(cancelled()&&error===signal.reason)throw error;
@@ -112,17 +139,25 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
  const native=discover===discoverClient&&request===lcuRequest;
  const cached=native&&!!snapshotAuth&&snapshotPath===installPath&&now()>=snapshotAuthAt&&now()-snapshotAuthAt<30000;
  const auth=cached?snapshotAuth:await discover(installPath);
- if(!auth){lobbyCaches.delete(request);return {connected:false,phase:'Offline',message:'未发现客户端，可先手动选人'};}
- if(auth.unreadable)return {connected:false,phase:'Offline',needsElevation:true,message:'已发现客户端；需要 Windows 权限确认才能读取公开选人信息'};
+ if(!auth||auth.unreadable){
+  lobbyCaches.delete(request);
+  if(native){snapshotAuth=null;snapshotAuthAt=0;}
+  return auth?{connected:false,phase:'Offline',needsElevation:true,message:'已发现客户端；需要 Windows 权限确认才能读取公开选人信息'}:{connected:false,phase:'Offline',message:'未发现客户端，可先手动选人'};
+ }
+ let cache,phaseRead=false;
  try{
-  let cache=lobbyCaches.get(request);
+  cache=lobbyCaches.get(request);
   if(!cache||cache.port!==auth.port||cache.password!==auth.password||cache.installPath!==installPath){cache={port:auth.port,password:auth.password,installPath,lobby:null,gameId:null};lobbyCaches.set(request,cache);}
+  const recovery=cache.recovery;
   let phase=await request(auth,'/lol-gameflow/v1/gameflow-phase'),session=null,rawSession=null,eligibility=null;
+  phaseRead=true;delete cache.recovery;
+  let denied=false;
   if(phase==='ChampSelect'){
    rawSession=await request(auth,'/lol-champ-select/v1/session');session=sanitizeSession(rawSession);
    const context=pickEligibilityContext(session);
    const reads=await Promise.allSettled(['pickable-champion-ids','disabled-champion-ids'].map(name=>request(auth,'/lol-champ-select/v1/'+name)));
    if(reads.some(r=>r.status==='rejected'&&r.reason?.status===401))throw Error('客户端连接已变化，请重新连接');
+   denied=reads.some(r=>r.status==='rejected'&&accessDenied(r.reason));
    const [pickable,disabled]=reads.map(r=>r.status==='fulfilled'?normalizeChampionIds(r.value):null);
    eligibility={pickable,disabled,context,localPlayerCellId:session.localPlayerCellId,receivedAt:new Date(now()).toISOString()};
    if(pickable!==null||disabled!==null){
@@ -133,7 +168,11 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
     if(context!==pickEligibilityContext(session))eligibility=null;
    }
   }
-  let game={};try{game=sanitizeGame(await request(auth,'/lol-gameflow/v1/session'));}catch{}
+  let game={};try{game=sanitizeGame(await request(auth,'/lol-gameflow/v1/session'));}catch(error){denied||=accessDenied(error);}
+  const flowId=/^[1-9]\d{0,19}$/.test(game.gameId)?game.gameId:null;
+  const draftId=phase==='ChampSelect'&&session&&!(session.gameId&&flowId&&session.gameId!==flowId)?session.gameId||flowId:null;
+  const identities=session?{...session,myTeam:session.myTeam.map(p=>{const raw=rawSession.myTeam?.find(m=>Number(m.cellId)===p.cellId);return {...p,identity:publicPlayerIdentity(raw),displayName:publicPlayerName(raw)};})}:null;
+  const canRecover=!!recovery&&!denied&&draftId===recovery.gameId&&freshDraftLobby(recovery.lobby,now())&&verifiedDraftParty(identities,recovery.lobby);
   if(['None','Lobby','Matchmaking','ReadyCheck'].includes(phase)){
    // Read the pre-match party only. A champ-select chat contains all allies,
    // which is not evidence that they queued together. No chat/JWT is retained.
@@ -145,21 +184,14 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   const gameId=String(session?.gameId||game.gameId||'');
   if(session&&cache.gameId&&gameId&&cache.gameId!==gameId)cache.lobby=null;
   if(session&&gameId)cache.gameId=gameId;
-  const identities=session?{...session,myTeam:session.myTeam.map(p=>{const raw=rawSession.myTeam?.find(m=>Number(m.cellId)===p.cellId);return {...p,identity:publicPlayerIdentity(raw),displayName:publicPlayerName(raw)};})}:null;
-  // A relay room code is derived from this key, so it is exposed only while
-  // the phase is pre-match and the lobby evidence is fresh. It is an
-  // identifier, never a credential, and it stays on this machine.
-  const lobbyFresh=!!cache.lobby&&Number.isFinite(cache.lobby.receivedAt)&&now()>=cache.lobby.receivedAt&&now()-cache.lobby.receivedAt<=LOBBY_AUTO_FRESH_MS&&LOBBY_PHASES.includes(phase);
-  const baseParty=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),now()):{status:lobbyFresh?'lobby':'unknown',members:lobbyFresh?lobbyPartyMembers(cache.lobby):[],lobbyCount:lobbyFresh?cache.lobby?.members.length:null,unmatched:0};
-  const roomEvidence=lobbyFresh||session&&baseParty.status==='known'||['GameStart','InProgress','Reconnect'].includes(phase)&&cache.gameId===gameId;
-  const party=roomEvidence&&cache.lobby?.key?{...baseParty,key:cache.lobby.key,lobbyCount:baseParty.lobbyCount??cache.lobby.members.length}:baseParty;
+  const partyAt=now(),lobbyFresh=freshLobby(cache.lobby,partyAt)&&LOBBY_PHASES.includes(phase);
   const ownIdentity=lobbyFresh?cache.lobby.local:publicPlayerIdentity(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId));
   const baseName=ownIdentity?.riotId||(lobbyFresh?cache.lobby.localName:publicPlayerName(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId)))||'';
   let nameIdentity={...ownIdentity},detectedName=baseName;
   const identityKey=value=>value?.puuid||value?.summonerId||'';
   const seed=identityKey(nameIdentity);
   if(seed&&cache.own?.seed&&seed!==cache.own.seed){cache.own=null;cache.ownReadAt=0;}
-  const readDisplay=async route=>{try{const player=await request(auth,route),identity=publicPlayerIdentity(player);nameIdentity={...nameIdentity,...identity};return identity.riotId||publicPlayerName(player)||cleanDisplayName(player?.displayName);}catch{return '';}};
+  const readDisplay=async route=>{try{const player=await request(auth,route),identity=publicPlayerIdentity(player);nameIdentity={...nameIdentity,...identity};return identity.riotId||publicPlayerName(player)||cleanDisplayName(player?.displayName);}catch(error){denied||=accessDenied(error);return '';}};
   // Optional name lookups are throttled and cached per account. A temporary
   // legacy display name must not downgrade a previously verified Riot ID.
   if(!baseName&&(!cache.ownReadAt||now()<cache.ownReadAt||now()-cache.ownReadAt>=60000)){
@@ -173,9 +205,30 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   // Validated account IDs stay in main only, including PUUID-only clients.
   // They seed a stable fallback nickname; forRenderer strips raw identity.
   const own={...(ownName?{riotId:ownName}:{}),...(nameIdentity.summonerId?{summonerId:nameIdentity.summonerId}:{}),...(nameIdentity.puuid&&!nameIdentity.summonerId?{puuid:nameIdentity.puuid}:{})};
+  // The party read can straddle a phase transition. Check again before
+  // exposing the original room key, only on the verified recovery path.
+  if(canRecover&&!denied){
+   phase=await request(auth,'/lol-gameflow/v1/gameflow-phase');
+   if(phase!=='ChampSelect'){session=null;eligibility=null;cache.gameId=null;}
+   else if(freshDraftLobby(recovery.lobby,now()))cache.lobby=recovery.lobby;
+  }
+  cache.verifiedDraftId=!denied&&draftId&&session&&freshDraftLobby(cache.lobby,now())&&verifiedDraftParty(identities,cache.lobby)?draftId:null;
+  const baseParty=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),partyAt):{status:lobbyFresh?'lobby':'unknown',members:lobbyFresh?lobbyPartyMembers(cache.lobby):[],lobbyCount:lobbyFresh?cache.lobby?.members.length:null,unmatched:0};
+  const roomEvidence=lobbyFresh||session&&baseParty.status==='known'||['GameStart','InProgress','Reconnect'].includes(phase)&&cache.gameId===gameId;
+  const party=roomEvidence&&cache.lobby?.key?{...baseParty,key:cache.lobby.key,lobbyCount:baseParty.lobbyCount??cache.lobby.members.length}:baseParty;
   if(native&&!failedConnections.has(auth)){snapshotAuth=auth;snapshotPath=installPath;snapshotAuthAt=now();}
   return {connected:true,phase,session,eligibility,game,party,...(Object.keys(own).length?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
- }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
+ }catch(e){
+  if(lobbyCaches.get(request)===cache){
+   const recovery=cache?.recovery||(cache?.verifiedDraftId?{lobby:cache.lobby,gameId:cache.verifiedDraftId}:null);
+   if(!phaseRead&&e.transport===true&&!e.status&&freshDraftLobby(recovery?.lobby,now())){
+    const {port,password,installPath}=cache;
+    lobbyCaches.set(request,{port,password,installPath,lobby:null,gameId:null,recovery});
+   }else lobbyCaches.delete(request);
+  }
+  if(native){snapshotAuth=null;snapshotAuthAt=0;}
+  return {connected:false,phase:'Offline',message:e.message};
+ }
 }
 const dictionaryCaches=new WeakMap();
 export async function liveClientDictionary(auth,{request=lcuRequest,force=false,now=Date.now}={}){
