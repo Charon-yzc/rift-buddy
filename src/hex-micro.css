@@ -29,6 +29,7 @@ html{width:100%;height:100%}
 /* The first recipe and every full card share the same two-row geometry. */
 .hex-micro-route,[data-kind=routes] .hex-micro-line:not(.hex-micro-pending){display:grid;grid-template-columns:max-content minmax(72px,1fr);align-items:center;column-gap:6px;row-gap:4px}
 .hex-micro-route{width:max-content;min-width:100%;padding:0 0 4px}
+.hex-micro-route[hidden]{display:none}
 .hex-micro-route .hex-micro-augments,[data-kind=routes] .hex-micro-line .hex-micro-augments{grid-column:1/-1;display:flex;gap:3px;margin:0}
 .hex-micro-route .hex-micro-items,[data-kind=routes] .hex-micro-line .hex-micro-items{grid-column:1;display:flex;gap:3px;margin:0}
 .hex-micro-route .hex-micro-augments .hex-micro-icon,[data-kind=routes] .hex-micro-line .hex-micro-augments .hex-micro-icon{width:36px;height:36px}

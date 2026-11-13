@@ -11,7 +11,7 @@ test('wishlist, offers and actual owned records stay independent and missing own
  const selection={id:'Ashe',role:'bottom',mode:'hex',augmentIds:[ids[0]],compareIds:[ids[1]],ownedAugmentIds:[ids[2],999999]},before=structuredClone(selection);
  const model=createGuideModel(data,selectGuide(null,selection));assert.deepEqual(model.ownedAugments.map(a=>a.id),[ids[2],999999]);assert.equal(model.ownedAugments[1].status,'missing');assert.match(model.ownedAugments[1].description,/当前资料未收录/);
  assert.deepEqual(model.augments.map(a=>a.id),[ids[0]]);assert.deepEqual(model.comparison,[]);
- const row=model.hexMicroRoutes[0];assert.equal(row.sourceOnly,true);assert.deepEqual(row.augments.map(a=>a.id),[ids[2],ids[1]]);assert(!row.augments.some(a=>a.id===ids[0]));
+ const row=model.hexMicroRoutes.find(route=>route.kind==='reference');assert.equal(row.sourceOnly,true);assert.deepEqual(row.augments.map(a=>a.id),[ids[2],ids[1]]);assert(!row.augments.some(a=>a.id===ids[0]));
  assert(row.augments.every(a=>a.core===false));assert.match(row.augments[1].brief,/本轮已录入，非配套/);assert.match(row.augments[0].brief,/本局已选，非配套/);
  assert.deepEqual(selection,before);
  const restored=createGuideModel(data,selectGuide(null,structuredClone(selection)));assert.deepEqual(restored.ownedAugments,model.ownedAugments);

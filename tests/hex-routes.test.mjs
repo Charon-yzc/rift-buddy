@@ -12,9 +12,11 @@ test('owned and offered records never manufacture current paired routes',()=>{
  for(const extra of [{},{owned:[id]},{options:[id]},{owned:[id],options:[1004]}]){
   assert.deepEqual(hexPlayerRoutes({data,hero:'Sona',...extra}),[]);
   const model=createGuideModel(data,selectGuide(null,{id:'Sona',role:'support',mode:'hex',ownedAugmentIds:extra.owned||[],compareIds:extra.options||[]}));
-  assert.deepEqual(model.hexRoutes,[]);assert.equal(model.hexMicroRoutes.length,3);
-  assert(model.hexMicroRoutes.every(route=>route.kind==='reference'&&route.augments.every(a=>a.core===false)));
-  assert(model.hexMicroRoutes.slice(1).every(route=>route.augments.length===0));
+  const references=model.hexMicroRoutes.filter(route=>route.kind==='reference');
+  assert.deepEqual(model.hexRoutes,[]);assert.equal(references.length,3);
+  assert(references.every(route=>route.augments.every(a=>a.core===false)));
+  assert(references.slice(1).every(route=>route.augments.length===0));
+  if(extra.options)assert(model.hexMicroRoutes.filter(route=>route.kind==='build-pairing').every(route=>route.augments.filter(a=>a.core).every(a=>extra.options.includes(a.id)||(extra.owned||[]).includes(a.id))));
  }
  assert.equal(JSON.stringify(data),before);assert.deepEqual(hexPlayerRoutes({data,hero:'Unknown',owned:[id]}),[]);
 });

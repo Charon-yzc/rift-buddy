@@ -184,14 +184,20 @@ test('Hex manual preview and game use only two micro windows and preserve indepe
  const s=guideOwner();try{
   s.guide.show();s.ready();assert.equal(s.legacy(),undefined);assert.equal(s.micro().length,2);
   await s.guide.phase('GameStart',true);s.ready();assert(s.micro().every(w=>w.isVisible()));
+  s.current(null);
   await s.guide.phase('Offline',false);s.guide.publish();s.restore();s.ready();assert.equal(s.legacy(),undefined);
   assert(s.micro().every(w=>w.isVisible()),'disconnect during first loading must retain micro windows');
   await assert.rejects(s.call(s.micro()[1],'hex-micro-control','routes','main'),/不支持/);
+  s.current({id:'Yasuo',mode:'hex'});
   await s.guide.phase('InProgress',true);s.ready();assert.equal(s.micro().length,2);assert(s.micro().every(w=>w.isVisible()));assert.equal(s.legacy(),undefined);
   s.restore();s.ready();assert.equal(s.legacy(),undefined);
-  await s.guide.phase('Offline',false);s.guide.publish();assert(s.micro().every(w=>w.isVisible()));assert.equal(s.legacy(),undefined);
-  await s.guide.phase('Reconnect',true);assert(s.micro().every(w=>w.isVisible()));
-  for(const w of s.micro()){const kind=w.options.webPreferences.additionalArguments[0].split('=').at(-1);s.call(w,'hex-micro-control',kind,'hide');}
+  const [economy,routes]=s.micro();
+  await s.call(economy,'hex-micro-control','economy','hide');
+  s.current(null);
+  await s.guide.phase('Offline',false);s.guide.publish();assert(routes.isVisible());assert(!economy.isVisible());assert.equal(s.legacy(),undefined);
+  s.current({id:'Yasuo',mode:'hex'});
+  await s.guide.phase('Reconnect',true);assert(routes.isVisible());assert(!economy.isVisible());
+  await s.call(routes,'hex-micro-control','routes','hide');
   await s.guide.phase('GameStart',true);await s.guide.phase('InProgress',true);s.ready();assert(!s.guide.isVisible(),'same-game reconnect must preserve manual hide');
  }finally{s.guide.destroy();}
 });
@@ -201,7 +207,7 @@ test('Hex game exits hide overlays; a subsequent explicit preview works even aft
   const s=guideOwner();try{
    await s.guide.phase('InProgress',true);s.ready();assert(s.micro().every(w=>w.isVisible()));
    await s.guide.phase('Offline',false);
-   if(clearBeforePublish){s.current(null);s.guide.publish();assert(!s.guide.isVisible(),'identity cleared before phase notification');}
+   if(clearBeforePublish){s.current(null);s.guide.publish();assert(s.guide.isVisible(),'a failed read cannot confirm game exit');}
    await s.guide.phase(exit,true);s.guide.publish();s.ready();assert(!s.guide.isVisible(),exit);
    s.guide.show();s.ready();assert.equal(s.legacy(),undefined);assert(s.micro().every(w=>w.isVisible()),'an explicit out-of-game preview is still available');
    await s.guide.phase(exit,true);s.guide.publish();assert(s.micro().every(w=>w.isVisible()),'ordinary same-phase polling retains the explicit preview');

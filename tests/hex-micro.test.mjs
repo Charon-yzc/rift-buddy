@@ -24,6 +24,8 @@ test('micro routes retain all paired icons and expose every route to scrolling',
  const routes=Array.from({length:4},(_,i)=>({id:'route-'+i,title:'路线'+i,augments:Array.from({length:9},(_,j)=>({id:i*10+j,name:'强化'+j,core:j===0})),items:[{id:1001+i,name:'装备'+i,core:true}]}));
  const html=hexMicroRoutesView(routes,image);assert.equal((html.match(/class="hex-micro-route"/g)||[]).length,4);assert.equal((html.match(/data-micro-kind="augment"/g)||[]).length,36);assert.equal((html.match(/is-core/g)||[]).length,8);
  assert.match(html,/item\/1002.png/);assert.match(html,/augment\/20.png/);assert.match(html,/item\/1004.png/);assert.match(html,/路线0/);assert.match(html,/来源待核/);assert.doesNotMatch(html,/hex-micro-pin/);assert.match(html,/data-action="expand"/);
+ assert.match(html,/data-micro-route="route-3"[^>]+ hidden/);
+ assert.doesNotMatch(hexMicroRoutesView(routes,image,{expanded:true}),/ hidden>/);
 });
 
 test('one-line route keeps all paired icons and provenance',()=>{
@@ -47,9 +49,9 @@ test('micro window fits compact two-row recipes, scales and keeps narrow display
  const area={x:0,y:0,width:1920,height:1080},route=(a,i)=>({augments:Array(a).fill({}),items:Array(i).fill({})});
  const narrow=hexMicroPlacement('routes',null,area,null,1,[route(1,3)]),full=hexMicroPlacement('routes',null,area,null,1,[route(7,8)]),line=hexMicroPlacement('routes',null,area,null,1,[route(7,8)],false,'line');
  assert.equal(narrow.width,282);assert.equal(narrow.x+narrow.width,1908);
- assert.equal(full.width,349);assert.equal(full.height,111);assert.equal(line.width,340);assert.equal(line.height,92);
+ assert.equal(full.width,349);assert.equal(full.height,115);assert.equal(line.width,340);assert.equal(line.height,92);
  const references=hexMicroPlacement('routes',null,area,null,1,[route(1,4),route(0,4),route(0,4)]);
- assert.equal(references.height,215);
+ assert.equal(references.height,219);
  assert.equal(hexMicroPlacement('routes',null,area,null,1,Array(30).fill(route(7,8)),true).height,480);
  assert.equal(hexMicroPlacement('routes',null,area,null,1.25,[route(7,8)],false,'line').width,425);
  const tiny={x:0,y:0,width:320,height:236};assert.equal(hexMicroPlacement('routes',null,tiny,null,1,[route(7,8)],false,'line').width,320);
