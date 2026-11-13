@@ -16,23 +16,24 @@ import {validHexPoolRecord} from '../src/core/hex-pool-evidence.mjs';
 import {syncHexPools} from '../scripts/sync-hex-pools.mjs';
 import {createHexRoundStore,hexRoundForHero} from '../src/core/hex-round.mjs';
 const data={...game,hexBuilds:builds.entries};
-test('current directory, hero source shortlist and complete acquisition eligibility remain separate',()=>{
+test('current directory, hero source observations and complete acquisition eligibility remain separate',()=>{
  const before=JSON.stringify(data),catalog=hexHeroPool({data,hero:null}),hero=hexHeroPool({data,hero:'Yasuo'});
  assert(catalog.rows.length>0);assert.equal(catalog.hero,null);assert.equal(hero.hero.id,'Yasuo');
  assert.deepEqual(hero.rows.map(r=>r.id),catalog.rows.map(r=>r.id));assert.equal(hero.complete,false);assert.equal(hero.roundsComplete,false);
- assert.equal(hero.evidence,null);assert.equal(hero.counts.observed,0);assert.equal(hero.counts.unobserved,0);
+ assert.equal(hero.evidence.source,'Mayhem:Meta');assert.equal(hero.evidence.sourceUrl,builds.entries.Yasuo.poolEvidence.sourceUrl);
+ assert(hero.counts.observed>0);assert(hero.counts.unobserved>0);assert.equal(catalog.evidence,null);
  const unknown=hero.rows.find(r=>r.status==='unknown');assert(unknown);assert.match(unknown.reason,/未上榜.*不代表拿不到/);
  assert.equal(JSON.stringify(data),before);
 });
 test('current total is a compact directory while all four stage panels stay empty and explicitly unverified',()=>{
  const hero=data.champions.find(c=>c.id==='Yasuo'),round={hero:hero.id,context:'pool-contract',revision:0,owned:[],options:[]};
  const html=hexConfigurationView({data,hero,round}),count=hexManualAugments(data).length;
- assert.match(html,/当前目录 · 英雄资格待核/);assert(count>28);assert.equal((html.match(/data-hex-pool-status=/g)||[]).length,count);
+ assert.match(html,/有选取记录 · Mayhem:Meta/);assert.match(html,/data-hex-brief="[^\"]*样本中有 \d+ 局选取记录/);assert(count>28);assert.equal((html.match(/data-hex-pool-status=/g)||[]).length,count);
  assert.match(html,/data-game-tooltip-compact/);assert.match(html,/全部 /);assert.equal((html.match(/data-stage=/g)||[]).length,4);
  for(let n=1;n<=4;n++){
   const panel=html.split('data-stage="'+n+'">')[1].split('</div>')[0];
   assert.match(panel,/候选池待核实/);assert.doesNotMatch(panel,/<img|data-game-tooltip-id/);
-  const model=hexHeroPool({data,hero:hero.id,round:n});assert.equal(model.roundsComplete,false);assert.equal(model.evidence,null);
+  const model=hexHeroPool({data,hero:hero.id,round:n});assert.equal(model.roundsComplete,false);
  }
  const pool=hexHeroPool({data,hero:hero.id});assert.deepEqual(pool.rules.stages,[]);assert.deepEqual(pool.rules.paths,[]);assert.match(hexPoolView(pool),/尚无完整的英雄／分轮资格表/);
 });
@@ -45,7 +46,7 @@ test('genuine older selected-count evidence validates its own source but cannot 
  const historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/hex-hero-observations.json',import.meta.url)));
  const record=validHexPoolEvidence(historical,'Yasuo',historical.patch);assert(record);assert(record.rows.every(r=>Object.keys(r).sort().join(',')==='games,id,withheld'));
  assert.equal(validHexPoolEvidence(historical,'Yasuo',data.patch),null);
- const pool=hexHeroPool({data:{...data,hexPoolObservations:historical},hero:'Yasuo'});assert.equal(pool.evidence,null);assert.equal(pool.counts.observed,0);
+ const pool=hexHeroPool({data:{...data,hexBuilds:{},hexPoolObservations:historical},hero:'Yasuo'});assert.equal(pool.evidence,null);assert.equal(pool.counts.observed,0);
  const changed=structuredClone(record);changed.rows.push(changed.rows[0]);assert.equal(validHexPoolRecord(changed,'Yasuo',historical.patch),null);
 });
 test('collector reads inert selected-count rows, rejects cross-patch pages, and never adopts site zero-as-disabled wording',()=>{

@@ -32,9 +32,10 @@ const {installClientDictionary}=require('../src/core/client-dictionary.mjs');
 let dictionaryRevision=0;
 function mergeLiveGameData(live){if(live&&installClientDictionary(data,live))publishData(['clientDictionary']);}
 let importingItemSet=false;
-let mainExplicitInGame=false,mainDismissed=false,mainBootReady=false;
+let mainExplicitInGame=false,mainDismissed=false,mainBootReady=false,mainHeldForGame=false;
 const mainRequests=new Map(),inGame=()=>latestClient.connected&&['GameStart','InProgress','Reconnect'].includes(latestClient.phase);
-const mainRelease=require('./main-window-release.cjs')({getWindow:()=>win,canRelease:()=>inGame()&&!mainExplicitInGame&&!!tray&&!quitting,isBusy:window=>!!mainRequests.get(window.webContents.id)||applyingRunes||importingItemSet||updating,getSaveTask:()=>saveTask,release:window=>{rendererReady=false;diagnostic('released hidden main renderer for game');window.destroy();},diagnostic});
+const shouldHideMainForGame=()=>{const age=Date.now()-observedAt;return inGame()||!latestClient.connected&&!!observedWindows?.game&&age>=0&&age<OBSERVATION_MAX_AGE_MS;};
+const mainRelease=require('./main-window-release.cjs')({getWindow:()=>win,canRelease:()=>shouldHideMainForGame()&&!mainExplicitInGame&&!!tray&&!quitting,isBusy:window=>!!mainRequests.get(window.webContents.id)||applyingRunes||importingItemSet||updating,getSaveTask:()=>saveTask,release:window=>{rendererReady=false;diagnostic('released hidden main renderer for game');window.destroy();},diagnostic});
 let synchronizeSavedState=()=>{},observeRoomPreferences=()=>{};
 function mergeSavedFields(current,previous,next,message){
  const merged={...current};for(const field of new Set([...Object.keys(previous),...Object.keys(next)])){if(isDeepStrictEqual(next[field],previous[field]))continue;if(!isDeepStrictEqual(current[field],previous[field])&&!isDeepStrictEqual(current[field],next[field]))throw Error(message);if(next[field]===undefined)delete merged[field];else merged[field]=next[field];}return merged;
@@ -58,7 +59,7 @@ const quitRequested=process.argv.includes('--quit');
 const lock=app.requestSingleInstanceLock();if(!lock||quitRequested)app.quit();
 if(quitRequested)return;
 const mainPeek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:()=>screen.getDisplayMatching(win?.getBounds()||screen.getPrimaryDisplay().bounds).workArea,title:'完整助手',onRestore:()=>showMainWindow()});
-function showMainWindow(){mainDismissed=false;mainExplicitInGame=inGame();mainRelease.cancel();mainPeek.unfold();if(!win){if(mainBootReady)createWindow();}else{if(win.isMinimized())win.restore();win.show();win.focus();}diagnostic(`show-main-window ${!!win?.isVisible()}`);}
+function showMainWindow(){mainDismissed=false;mainExplicitInGame=shouldHideMainForGame();mainRelease.cancel();mainPeek.unfold();if(!win){if(mainBootReady)createWindow();}else{if(win.isMinimized())win.restore();win.show();win.focus();}diagnostic(`show-main-window ${!!win?.isVisible()}`);}
 app.on('second-instance',(_event,argv)=>{if(argv.includes('--quit')){quitting=true;app.quit();}else if(argv.includes('--show-guide'))guide?.show();else showMainWindow();});
 function createWindow({automatic=false}={}){
  rendererReady=false;
@@ -70,7 +71,7 @@ function createWindow({automatic=false}={}){
  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
  window.webContents.on('will-navigate',(event,url)=>{if(url!==pathToFileURL(path.join(root,'src/index.html')).href)event.preventDefault();});
  window.loadFile(path.join(root,'src/index.html'));
- window.once('ready-to-show',()=>{if(inGame()&&!mainExplicitInGame){window.hide();mainRelease.request(window);}else if(automatic||latestClient.phase==='ChampSelect'&&state.preferences.clientCompanion!==false)window.showInactive();else window.show();companion?.sync();diagnostic(`ready-to-show visible=${window.isVisible()} bounds=${JSON.stringify(window.getBounds())}`);});
+ window.once('ready-to-show',()=>{if(shouldHideMainForGame()&&!mainExplicitInGame){window.hide();mainRelease.request(window);}else if(automatic||latestClient.phase==='ChampSelect'&&state.preferences.clientCompanion!==false)window.showInactive();else window.show();companion?.sync();diagnostic(`ready-to-show visible=${window.isVisible()} bounds=${JSON.stringify(window.getBounds())}`);});
  window.webContents.on('did-fail-load',(_e,code,desc)=>diagnostic(`load failed ${code} ${desc}`));
  window.webContents.on('render-process-gone',(_e,detail)=>diagnostic(`renderer gone ${detail.reason}`));
  window.webContents.on('did-finish-load',async()=>{
@@ -1009,12 +1010,18 @@ async function boot(){
    const previousGuide=state.guide,reconcileGame=publicClientGameId(latestClient),reconciled=reconcileKnownGuide(previousGuide,{phase:latestClient.phase,gameId:reconcileGame,enemyIds});
    if(selectionKey(previousGuide)!==selectionKey(reconciled.guide)){try{await setGuideState(reconciled.guide,previousGuide,undefined,false,true,()=>publicClientGameId(latestClient)===reconcileGame);}catch(error){if(error.code!=='GUIDE_CONTEXT_CHANGED')throw error;}}
    else if(reconciled.changed)await saveCurrentState(current=>({...current,guide:reconcileKnownGuide(current.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),enemyIds}).guide}));
-   if(state.preferences.guideAutoShow!==false&&latestClient.connected&&latestClient.phase==='InProgress'&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame))await pollLive(true);
+   const readFirstLive=state.preferences.guideAutoShow!==false&&latestClient.connected&&['InProgress','Reconnect'].includes(latestClient.phase)&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame);
    try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}
    companion.sync();
-   if(inGame()&&!['GameStart','InProgress','Reconnect'].includes(previousPhase)){mainExplicitInGame=false;if(win){win.hide();mainRelease.request(win);}}
-   else if(!inGame()){mainExplicitInGame=false;mainRelease.cancel();if(!win&&!mainDismissed)createWindow({automatic:true});}
-   queueRoomAuto();publishWindows('client-update',forRenderer(latestClient));setImmediate(()=>applyStagedSelection());return latestClient;})().finally(()=>statusTask=null);
+   const keepMainHidden=shouldHideMainForGame();
+   if(keepMainHidden&&!mainHeldForGame&&!mainExplicitInGame&&win){win.hide();mainRelease.request(win);}
+   else if(!keepMainHidden){mainExplicitInGame=false;mainRelease.cancel();if(!win&&!mainDismissed)createWindow({automatic:true});}
+   mainHeldForGame=keepMainHidden;
+   queueRoomAuto();publishWindows('client-update',forRenderer(latestClient));setImmediate(()=>applyStagedSelection());
+   // A confirmed draft can display the plan while the game API is loading.
+   // The same read can supply the hero later when the draft wasn't observed.
+   if(readFirstLive&&!liveTask)pollLive(true).catch(()=>diagnostic('initial live read failed'));
+   return latestClient;})().finally(()=>statusTask=null);
   return statusTask;
  });
  const pollLive=async(force=false)=>{
@@ -1375,13 +1382,16 @@ async function boot(){
  guard('choose-directory',async()=>{const result=await dialog.showOpenDialog(win,{title:'选择英雄联盟安装目录',properties:['openDirectory']});return result.canceled?null:result.filePaths[0];});
  const {hexCommunitySourceURLs}=await import('../src/core/hex-routes.mjs');
  const {HEX_CHAMPION_SOURCE}=await import('../src/core/hex-champion-statistics.mjs');
+ const {hexHeroPool}=await import('../src/core/hex-pool.mjs');
  guard('open-link',async url=>{
   const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','101.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com','gitee.com'];
   // Exact credited statistics source and its pinned license, never arbitrary GitHub paths.
   const augmentStatisticsURLs=['https://github.com/czgreat/aramhex-data','https://github.com/czgreat/aramhex-data/blob/f4d80d48110951b7319ab74ffaa2c351bc7c8652/LICENSE'];
   const catalogSources=[...data.catalog.duos,...data.catalog.trios].flatMap(c=>c.sources||[]).map(s=>s.url);
   const communitySource=['www.youtube.com','www.bilibili.com','deeparam.com','expcarry.com','www.douyin.com'].includes(parsed.hostname)&&hexCommunitySourceURLs(data).includes(url);
-  if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url)&&!communitySource&&url!==HEX_CHAMPION_SOURCE)throw new Error('不支持的链接');
+  const poolHero=parsed.origin==='https://mayhemmeta.com'?data.champions.find(c=>`/champions/${c.id.toLowerCase()}`===parsed.pathname.replaceAll('-','')):null;
+  const poolSource=poolHero&&hexHeroPool({data,hero:poolHero.id}).evidence?.sourceUrl===url;
+  if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url)&&!communitySource&&!poolSource&&url!==HEX_CHAMPION_SOURCE&&url!=='https://support.riotgames.com/en-us/league-of-legends/events/league-of-legends-aram-mayhem-game-mode')throw new Error('不支持的链接');
   if(['github.com','gitee.com'].includes(parsed.hostname)&&!isReleaseNotesUrl(url)&&!catalogSources.includes(url)&&!augmentStatisticsURLs.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
  });
  guard('export-preparation',async value=>{

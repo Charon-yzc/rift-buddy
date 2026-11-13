@@ -13,13 +13,13 @@ async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(c=>c.id===id);
- let observer,picked='',assigned='',teammate=false,phase='ChampSelect',requests=0,writes=0,sourceFetches=0,holdRune=false,resumeRune=null,page={id:44,name:'Mock page',isEditable:true,isActive:true,current:true};
+ let observer,picked='',assigned='',teammate=false,phase='ChampSelect',requests=0,writes=0,sourceFetches=0,holdRune=false,resumeRune=null,interruptPhase=false,page={id:44,name:'Mock page',isEditable:true,isActive:true,current:true};
  global.fetch=async()=>{sourceFetches++;throw Error('External source requests disabled in dual-window fixture');};
  const output=options=>{
   requests++;assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   if(options.path==='/lol-game-data/assets/v1/champion-summary.json')return [{id:999999,alias:'FutureHero',name:'测试新英雄'}];
   if(options.path==='/lol-game-data/assets/v1/items.json')return [{id:999998,name:'测试新装备',price:1500,description:'客户端公开说明',iconPath:'/lol-game-data/assets/ASSETS/Items/Icons2D/fixture_item.png'}];
-  if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
+  if(options.path==='/lol-gameflow/v1/gameflow-phase'){if(interruptPhase)throw Error('fixture connection interrupted');return phase;}
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId:'4701',mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离同步玩家',tagLine:'TEST'};
   if(options.path==='/lol-champ-select/v1/session')return {gameId:4701,localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:0,assignedPosition:assigned},...(teammate?[{cellId:2,championId:hero('Garen').key,assignedPosition:'TOP'}]:[])],theirTeam:[{cellId:6,championId:hero('Malphite').key}],actions:[],bans:{myTeamBans:[],theirTeamBans:[]}};
@@ -84,6 +84,16 @@ async function run(){
  assert.equal(await js(side,'window.buddy.bootstrap().then(b=>b.state.preferences.autoSync)'),true,'Disconnected dot must enable automatic connection');
  assert.equal(writes,statusWrites,'Connection action must not write a rune page');
  await js(main,'window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,autoSync:false}},b.state))');await js(main,'window.buddy.client(false)');
+ await click(side,'[data-action=companion-tab][data-tab=room]');
+ interruptPhase=true;
+ const interrupted=await js(main,'window.buddy.client(true)');
+ assert.equal(interrupted.connected,false);assert.equal(interrupted.transportInterrupted,true);assert.equal(side.isDestroyed(),false);
+ await until(()=>js(side,'!!document.querySelector(".companion-footer .client-connection-indicator.disconnected")'),'Interrupted transport did not disable the connected sidebar state');
+ interruptPhase=false;await js(main,'window.buddy.client(true)');
+ await until(()=>js(side,'!!document.querySelector(".companion-footer .client-connection-indicator.connected")'),'Same draft did not reconnect in its existing sidebar');
+ assert.equal(await js(side,'document.querySelector(".companion-shell").dataset.tab'),'room');
+ assert.deepEqual(windows.filter(w=>!w.isDestroyed()&&w.webContents.getURL().includes('surface=companion')),[side]);
+ await click(side,'[data-action=companion-tab][data-tab=recommend]');
  // Palette changes use the shared settings channel, never game preparation.
  const {THEMES,DEFAULT_THEME}=await import(pathToFileURL(path.join(base,'src/core/themes.mjs'))),{readState}=await import(pathToFileURL(path.join(base,'services/storage.mjs')));
  const beforeThemeWrites=writes,modules=await js(side,'window.buddy.bootstrap().then(b=>b.state.preferences.presentation.guideModules)');
@@ -172,7 +182,13 @@ async function run(){
  phase='GameStart';await js(main,'window.buddy.client(true)');assert.equal(side.isDestroyed(),true);assert.deepEqual(main.getBounds(),normal);await delay(1400);assert.equal(main.isDestroyed(),false,'Main renderer was destroyed during an in-flight IPC');const gameBeforeMainRelease=metrics();resumeDialog({canceled:true,filePaths:[]});await busyDialog;
  await until(()=>main.isDestroyed(),'Hidden main renderer was not released after operations settled');await delay(300);const game=metrics();assert.equal(game.surfaces.length,0);
  const mainWindow=()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/index.html'));
+ const gameSnapshot=()=>observer.stdout.emit('data',JSON.stringify({client:null,game:{...screen.dipToScreenRect(null,anchor),foreground:true,minimized:false}})+'\n');
+ gameSnapshot();trayMenu.items[0].click();await until(()=>{main=mainWindow();return main;},'Main did not reopen for the game disconnect fixture');
+ await until(()=>js(main,'!!document.querySelector("#solo-role")'),'Reopened game fixture not ready');
+ interruptPhase=true;const dropping=handlers.get('client-status')(event(main),true);main.destroy();
+ assert.equal((await dropping).transportInterrupted,true);assert.equal(windows.some(w=>!w.isDestroyed()),false,'A transport interruption must not recreate a main window over the active game');
  assert.ok(trayMenu?.items[0]?.click);trayMenu.items[0].click();await until(()=>{main=mainWindow();return main;},'Tray did not recreate main');await until(()=>js(main,'!!document.querySelector("#solo-role")'),'Tray-reopened main UI missing');await delay(1300);assert.equal(main.isDestroyed(),false);assert.equal(main.fixtureHideCount,0,'Explicit game reopen was hidden at ready-to-show');
+ interruptPhase=false;await js(main,'window.buddy.client(true)');assert.equal(main.fixtureHideCount,0,'Recovery must leave the explicitly reopened window available');
  const restored=await js(main,'window.buddy.bootstrap().then(b=>b.state)');assert.deepEqual(restored.preparations,savedBeforeGame.preparations);assert.equal(restored.preferences.clickPrepare,savedBeforeGame.preferences.clickPrepare);assert.equal(restored.ownedPageId,savedBeforeGame.ownedPageId);
  main.destroy();shortcuts.get('Control+Shift+Space')();await until(()=>{main=mainWindow();return main;},'Hotkey did not recreate main');await until(()=>js(main,'!!document.querySelector("#solo-role")'),'Hotkey-reopened main UI missing');assert.equal(main.fixtureHideCount,0);
  // A normal status read also restores main automatically after a game, even
@@ -180,7 +196,7 @@ async function run(){
  phase='Lobby';const returnToLobby=handlers.get('client-status')(event(main),true);main.destroy();await returnToLobby;await until(()=>{main=mainWindow();return main;},'Returning from game did not recreate main');await until(()=>js(main,'!!document.querySelector("#solo-role")'),'Lobby main UI missing');assert.equal(writes,1);assert.equal(sourceFetches,0);
  const report={passed:true,source,archiveSha256:release?.archiveSha256||null,autoSync:savedBeforeGame.preferences.autoSync,dualSurfacesLoaded:true,fixedWidth:440,heightMatchesClient:true,stableRounding:true,mainBoundsPreserved:true,mutualLaneSync:true,concurrentUnrelatedSaveMerged:true,conflictingDraftRejected:true,topFrameGuard:true,explicitRuneClickOnly:true,crossWindowRuneConfirmation:true,sidebarRendererReleasedInGame:true,mainRendererReleasedInGame:true,inFlightOperationPreventsRelease:true,trayAndHotkeyRecreateMain:true,explicitReopenNotAutoHidden:true,savedStateRetainedAfterRecreate:true,lobbyRecreatesMain:true,noTickBootstrap:true,noTickRequests:true,actualRuneWrites:false,loopbackSocketsMocked:true,windowGeometryMocked:true,testWindowsHidden:true,memory:{mainOnly,both,afterGC,heaps,gameBeforeMainRelease,game}};
  report.startupBufferedCatalogRevision=startupCatalogRevision;report.startupRuleIndexCurrent=true;report.initialCandidatesWithoutExtraRead=true;report.sidebarNavigationToMain=true;report.backgroundInferencePreservesExplicitLane=true;report.independentFoldAndRestore=true;report.restoredPeekRenderersReleased=true;report.restoreTabRecreatedOnNextFold=true;
- report.footerConnectionAction=true;report.footerReconnectEnablesSync=true;report.footerHeight=footerHeight;report.connectionClickRuneWrites=0;
+ report.footerConnectionAction=true;report.footerReconnectEnablesSync=true;report.footerHeight=footerHeight;report.connectionClickRuneWrites=0;report.gameTransportLossKeepsMainHidden=true;
  report.actualDragKeepsPlayerAndUsMarkAcrossRepeatedSync=true;
  await fs.writeFile(path.join(root,'dual-windows.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }

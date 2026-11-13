@@ -138,14 +138,15 @@ async function run(){
   assert.ok(clientBroadcasts.every(phase=>phase==='ChampSelect'),'The main process published a client snapshot that disagrees with the synthetic pick');
   await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');
  try{await until(()=>prepares.length===2,'An unlocked hero must be selected before its default configuration is prepared');}catch(error){console.error('UNLOCKED_REFERENCE_CONTEXT',JSON.stringify({prepares:prepares.map(p=>({champion:p.champion,role:p.role,preselectOnly:p.preselectOnly})),publicPhase:publicFixture.phase,syntheticReads,ui:await js('({toast:document.querySelector("#toast")?.textContent,route:document.querySelector("main[data-page]")?.dataset.page,pending:document.querySelector("[data-action=sync]")?.disabled,drawer:!!document.querySelector(".drawer")})')}));throw error;}
- for(const prepared of prepares){assert.equal(prepared.champion,'Seraphine');assert.equal(prepared.role,'bottom');assert.equal(prepared.sessionGameId,'6601');}
+ // The library was filtered to bottom, while the client assigned this player top.
+ for(const prepared of prepares){assert.equal(prepared.champion,'Seraphine');assert.equal(prepared.role,'top');assert.equal(prepared.sessionGameId,'6601');}
  assert.equal(prepares[0].preselectOnly,true);assert.equal(prepares[0].page,undefined);assert.equal(prepares[0].itemSet,undefined);
  assert.equal(prepares[1].preselectOnly,undefined);assert.equal(prepares[1].selection.loadoutId,'default');assert.equal(prepares[1].selection.comboId,undefined,'A fresh avatar inherited a former private configuration');assert.equal(prepares[1].page.selectedPerkIds.length,9);assert.ok(prepares[1].itemSet.blocks.length);
  await until(()=>js('!document.querySelector(".drawer")'),'Unconfirmed hero click must keep configuration closed');
  await click('[data-action=navigate][data-route=draft]');await until(()=>js('!!document.querySelector("[data-action=task-configuration]")'),'Prepared hero configuration entry missing');await click('[data-action=task-configuration]');
  await until(()=>js('!!document.querySelector(".configuration-current [data-action=configuration-switch]")'),'Explicit configuration navigation failed');
  assert.equal(prepares.length,2,'Opening the configuration repeated the client preparation');
- assert.equal(await js('document.querySelectorAll(".rune-target-warning").length'),0,'The reference lane must not block an explicit unlocked hero choice');
+ assert.equal(await js('document.querySelectorAll(".rune-target-warning").length'),0,'The hero configuration should follow the actual assigned lane');
  // Changing the arranged partner must not leak a former combo's private build.
  // Return to manual planning and explicitly choose our own bottom role first.
  // A disconnected client is Offline, not None (the connected lobby phase).

@@ -4,20 +4,20 @@ import {clientSnapshot} from '../services/lcu.mjs';
 const identity=(id,extra={})=>({summonerId:id,puuid:'public-player-id-'+id,gameName:'Player'+id,tagLine:'CN1',...extra});
 const interrupted=()=>Object.assign(Error('isolated phase GET interrupted'),{transport:true});
 function fixture(){
- const own=identity(11),friend=identity(22);let phase='Lobby',gameId=123,secret='mock-auth',at=1000,port=23456,discovery,phaseError,gameError,eligibilityError,flowId,afterGamePhase;
+ const own=identity(11),friend=identity(22);let phase='Lobby',gameId=123,secret='mock-auth',at=1000,port=23456,discovery,phaseError,gameError,eligibilityError,flowId,afterGamePhase,afterLobbyPhase;
  let lobby={localMember:own,members:[own,friend],partyId:'party-3ee56b17',chatPassword:'do-not-export',jwt:'do-not-export',chatRoomId:'11111111-2222-3333-4444-555555555555',chatRoomKey:'11111111-2222-3333-4444-666666666666',multiUserChatPassword:'do-not-export-pass',mucJwtDto:{jwt:'do-not-export-jwt'}};
  let team=[{...own,cellId:1,championId:0,assignedPosition:'MIDDLE'},{...friend,cellId:2,championId:99,assignedPosition:'UTILITY'}, {...identity(33),cellId:3,championId:22}];
  const calls=[],mock={discover:async()=>discovery===undefined?{port,password:secret}:discovery,now:()=>at,request:async(_a,url)=>{
   calls.push(url);
   if(url.endsWith('gameflow-phase')){if(phaseError)throw phaseError;return phase;}
-  if(url==='/lol-lobby/v2/lobby'){if(lobby instanceof Error)throw lobby;return lobby;}
+  if(url==='/lol-lobby/v2/lobby'){if(afterLobbyPhase)phase=afterLobbyPhase;if(lobby instanceof Error)throw lobby;return lobby;}
   if(url==='/lol-champ-select/v1/session')return {gameId,localPlayerCellId:1,myTeam:team,theirTeam:[],bans:{}};
   if(url.endsWith('champion-ids')){if(eligibilityError)throw eligibilityError;return [];}
   if(gameError)throw gameError;
   if(afterGamePhase)phase=afterGamePhase;
   return {gameData:{gameId:flowId??gameId,queue:{id:420},gameMode:'CLASSIC'}};
  }};
- return {mock,calls,set:v=>{({phase=phase,gameId=gameId,secret=secret,lobby=lobby,team=team,at=at,port=port,discovery=discovery,phaseError=phaseError,gameError=gameError,eligibilityError=eligibilityError,flowId=flowId,afterGamePhase=afterGamePhase}=v);},friend,team};
+ return {mock,calls,set:v=>{({phase=phase,gameId=gameId,secret=secret,lobby=lobby,team=team,at=at,port=port,discovery=discovery,phaseError=phaseError,gameError=gameError,eligibilityError=eligibilityError,flowId=flowId,afterGamePhase=afterGamePhase,afterLobbyPhase=afterLobbyPhase}=v);},friend,team};
 }
 
 test('current summoner provides the default room name when lobby names are unavailable',async()=>{
@@ -35,6 +35,28 @@ test('one verified group retains the same room key during selection and game, ne
  f.set({gameId:456});assert.equal((await clientSnapshot('',f.mock)).party.key,undefined);
 });
 
+test('a first read crossing ready check into selection includes the draft and verified room',async()=>{
+ const f=fixture();f.set({phase:'ReadyCheck',afterLobbyPhase:'ChampSelect'});
+ const selected=await clientSnapshot('',f.mock);
+ assert.equal(selected.phase,'ChampSelect');assert.equal(selected.session?.gameId,'123');
+ assert.equal(selected.eligibility.localPlayerCellId,1);assert.equal(selected.party.key,'party-3ee56b17');
+ assert.deepEqual(selected.party.members.map(member=>member.cellId),[1,2]);
+});
+
+test('a lobby read crossing into selection cannot claim a room with unverified members',async()=>{
+ const f=fixture();f.set({phase:'ReadyCheck',afterLobbyPhase:'ChampSelect',team:[f.team[0],f.team[2]]});
+ const selected=await clientSnapshot('',f.mock);
+ assert.equal(selected.session?.gameId,'123');assert.equal(selected.party.key,undefined);
+ assert.deepEqual(selected.party.members.map(member=>member.cellId),[1]);
+});
+
+test('a disappearing lobby during ready check still yields the selection and previously verified party',async()=>{
+ const f=fixture(),lobby=await clientSnapshot('',f.mock);
+ f.set({phase:'ReadyCheck',afterLobbyPhase:'ChampSelect',lobby:Object.assign(Error('Lobby no longer active'),{status:404})});
+ const selected=await clientSnapshot('',f.mock);
+ assert.equal(selected.phase,'ChampSelect');assert.equal(selected.session?.gameId,'123');assert.equal(selected.party.key,lobby.party.key);
+});
+
 async function interruptedParty(f,prior={}){
  const lobby=await clientSnapshot('',f.mock);
  f.set({phase:'ChampSelect',at:2000,...prior});
@@ -42,7 +64,7 @@ async function interruptedParty(f,prior={}){
  assert.equal(draft.party.key,lobby.party.key);
  f.set({phaseError:interrupted(),at:3000});
  const offline=await clientSnapshot('',f.mock);
- assert.deepEqual(offline,{connected:false,phase:'Offline',message:'isolated phase GET interrupted'});
+ assert.deepEqual(offline,{connected:false,phase:'Offline',message:'isolated phase GET interrupted',transportInterrupted:true});
  f.set({phaseError:null,at:4000});
  return lobby.party.key;
 }

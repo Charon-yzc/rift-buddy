@@ -24,7 +24,7 @@ function setup({fresh=false,phase='ChampSelect'}={}){
   liveService:{liveSnapshot:async()=>({available:false})},guard:(name,handler)=>handlers.set(name,handler)});
  context.saveCurrentState=(update,_exclude,onCommitted)=>{const task=queue.catch(()=>{}).then(()=>{if(writeError){const error=writeError;writeError=null;throw error;}context.state=structuredClone(update(structuredClone(context.state)));onCommitted?.();});queue=task;return task;};
  vm.runInContext(slice('function mergeSavedFields(', 'function saveCurrentState(')+slice(' const guideConfirmedSlots=', ' const rememberAppliedGuide=')+slice(' const setGuideState=', ' const publicEnemyIds=')+slice(' const pollLive=', " guard('client-status'")+slice(" guard('open-guide'", " guard('matchup-focus'"),context);
- const sync=vm.runInContext('(async()=>{const enemyIds=[];'+slice('   const previousGuide=state.guide,reconcileGame=', '   if(state.preferences.guideAutoShow')+'})',context);
+ const sync=vm.runInContext('(async()=>{const enemyIds=[];'+slice('   const previousGuide=state.guide,reconcileGame=', '   const readFirstLive=')+'})',context);
  return {context,handlers,sync,prepare:()=>vm.runInContext('prepareCurrentGuide()',context),live:()=>vm.runInContext('pollLive()',context),failNextWrite:error=>{writeError=error;},hold(){const gate=deferred();queue=queue.catch(()=>{}).then(()=>gate.promise);return gate;}};
 }
 

@@ -1,11 +1,11 @@
 import observations from '../../data/hex-hero-observations.json' with {type:'json'};
 import {hexCatalogDisabled} from './hex-catalog.mjs';
 export {hexCatalogDisabled} from './hex-catalog.mjs';
-import {validHexReference} from './builds.mjs';
+import {validCurrentHexReference,validHexReference} from './builds.mjs';
 import {hexAcquisitionRules} from './hex-mode-rules.mjs';
 import {validHexPoolRecord} from './hex-pool-evidence.mjs';
 import {hexAugmentAcquisition,hexHandbookAugments} from './hex-acquisition.mjs';
-import {isCurrentHexData} from './hex-data-current.mjs';
+import {isCurrentHexData,isReadableHexData} from './hex-data-current.mjs';
 
 // A reference table can be truncated; absence never proves exclusion.
 // AugmentLevelData describes augment upgrades, not selection rounds.
@@ -13,8 +13,8 @@ export function hexHeroPool({data,hero,round=0,mechanism='unknown'}){
  const rules=hexAcquisitionRules({patch:data.patch,mechanism});
  const path=rules.paths.find(stage=>stage.id===round);round=path?round:0;
  const champion=data.champions.find(c=>c.id===hero),ref=data.hexBuilds?.[hero];
- const compatible=isCurrentHexData(data),current=compatible&&!!champion&&validHexReference(ref,champion,data)&&ref.patch===data.patch;
- const reference=new Set(current?ref.augmentIds:[]),bundled=compatible?validHexPoolEvidence(data.hexPoolObservations||observations,hero,data.patch):null,remote=current?validHexPoolRecord(ref.poolEvidence,hero,data.patch):null,evidence=remote&&(!bundled||Date.parse(remote.fetchedAt)>Date.parse(bundled.fetchedAt))?remote:bundled,selected=new Map((evidence?.rows||[]).map(r=>[r.id,r]));
+ const reviewed=isCurrentHexData(data),readable=reviewed||isReadableHexData(data),current=!!champion&&(reviewed?validHexReference(ref,champion,data):validCurrentHexReference(ref,champion,data));
+ const reference=new Set(current?ref.augmentIds:[]),bundled=readable&&champion?validHexPoolEvidence(data.hexPoolObservations||observations,hero,data.patch):null,remote=current?validHexPoolRecord(ref.poolEvidence,hero,data.patch):null,evidence=remote&&(!bundled||Date.parse(remote.fetchedAt)>Date.parse(bundled.fetchedAt))?remote:bundled,selected=new Map((evidence?.rows||[]).map(r=>[r.id,r]));
  const source=`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`;
  const rows=hexHandbookAugments(data,{includeDisabled:true}).map(a=>{
   const acquisition=hexAugmentAcquisition(data,a);

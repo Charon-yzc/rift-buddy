@@ -242,23 +242,23 @@ async function run(){
    await click(window,'[data-action=pregame-hero]');await until(()=>js(window,'!!document.querySelector("#overlay-root [data-action=pick-champion][data-id='+choice.id+']")'),'Champion picker missing on '+choice.surface);assert.equal(attempts.length,before,'Opening the picker unexpectedly wrote to the client');
    await click(window,'#overlay-root [data-action=pick-champion][data-id='+choice.id+']');await completeHeroClick(before,window,choice.id,choice.role);
    await until(async()=>(await state()).preparations.some(value=>value.id===choice.id&&value.role===choice.role),'Picker configuration was not saved');assert.equal(spell2Id,4,'Picker preparation moved the original Flash F key');
-   const changed=writes.slice(writeBefore),hovers=changed.filter(write=>write.route==='/lol-champ-select/v1/session/actions/22');assert.equal(hovers.length,2,'The hero request and complete configuration each recheck and preselect the same target');for(const hover of hovers)assert.deepEqual(hover.body,{championId:hero(choice.id).key,completed:false});assert.equal(changed.filter(write=>write.route==='/lol-perks/v1/pages/44').length,1,'One click must write its complete rune page only once');assert.equal(changed.filter(write=>write.route==='/lol-champ-select/v1/session/my-selection').length,1,'One click must write its summoner pair only once');
+   const changed=writes.slice(writeBefore),hovers=changed.filter(write=>write.route==='/lol-champ-select/v1/session/actions/22');assert.equal(hovers.length,1,'Configuration should reuse the confirmed hero without sending a second pick');assert.deepEqual(hovers[0].body,{championId:hero(choice.id).key,completed:false});assert.equal(changed.filter(write=>write.route==='/lol-perks/v1/pages/44').length,1,'One click must write its complete rune page only once');assert.equal(changed.filter(write=>write.route==='/lol-champ-select/v1/session/my-selection').length,1,'One click must write its summoner pair only once');
    if(choice.surface==='sidebar')await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),'Picker hover must stay on recommendations');
   });
  }
  ownAssigned='BOTTOM';friendAssigned='MIDDLE';await resetRound(430);
- await checkpoint('main-reference-lane-click-prepares-without-requiring-whole-lineup',async()=>{
+ await checkpoint('main-reference-lane-avatar-configures-the-player-current-lane',async()=>{
   await click(main,'[data-action=draft-filters]');await click(main,'[data-action=reset-draft]');await click(main,'[data-action=close]');
   await until(async()=>(await state()).draft.slots.every(slot=>!slot.champion),'Explicit reset did not clear the previous local plan');
   const sources=JSON.stringify(Object.keys(data.builds));
-  await until(()=>js(main,'[...document.querySelectorAll(".result-card .candidate-member[data-role=mid]")].some(el=>'+sources+'.includes(el.dataset.id+":"+el.dataset.role))'),'A visible middle-lane candidate with a bundled current selected source is required for full configuration');
-  const candidate=await js(main,'(()=>{const el=[...document.querySelectorAll(".result-card .candidate-member[data-role=mid]")].find(el=>'+sources+'.includes(el.dataset.id+":"+el.dataset.role));const card=el.closest(".result-card");return {id:el.dataset.id,role:el.dataset.role,index:el.dataset.resultIndex,members:[...card.querySelectorAll(".candidate-member")].map(member=>({id:member.dataset.id,role:member.dataset.role}))};})()');
+  await until(()=>js(main,'[...document.querySelectorAll(".result-card .candidate-member[data-role=mid]")].some(el=>'+sources+'.includes(el.dataset.id+":bottom"))'),'A middle-lane card with a current bottom-lane source is required');
+  const candidate=await js(main,'(()=>{const el=[...document.querySelectorAll(".result-card .candidate-member[data-role=mid]")].find(el=>'+sources+'.includes(el.dataset.id+":bottom"));return {id:el.dataset.id,role:el.dataset.role,index:el.dataset.resultIndex};})()');
   const before=attempts.length;
   await click(main,'.result-card [data-action=build][data-id='+candidate.id+'][data-role='+candidate.role+'][data-result-index="'+candidate.index+'"]');
-  await completeHeroClick(before,main,candidate.id,candidate.role);
+  await completeHeroClick(before,main,candidate.id,'bottom');
   await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championPickIntent===hero(candidate.id).key);
   await delay(1200); // The next automatic public-hover sync must preserve this plan, too.
-  const saved=await state();assert.ok(saved.preparations.some(value=>value.id===candidate.id&&value.role===candidate.role),'The reference configuration was not retained');
+  const saved=await state();assert.ok(saved.preparations.some(value=>value.id===candidate.id&&value.role==='bottom'),'The actual player lane configuration was not retained');
   assert.equal(spell2Id,4);assert.equal(friendAssigned,'MIDDLE','Applying a reference build changed a teammate position');
  });
  soloParty=true;ownAssigned='BOTTOM';await resetRound(430);
@@ -435,9 +435,10 @@ async function run(){
    assert.ok(configurationChoice?.id&&configurationChoice.fingerprint,'A complete alternative configuration must be available');assert.equal(JSON.parse(configurationChoice.fingerprint)[0].champion,'Ahri');
    await click(side,'.configuration-choice:not(.configuration-current) [data-action=configuration-switch]');
    await completeConfigurationSwitch(configurationBefore,side,configurationChoice);
-   const switched=writes.slice(configurationWrites);assert.equal(switched.length,4,'A complete configuration switch must perform both hero checks, one rune write and one spell write');assert.equal(switched.filter(write=>write.route==='/lol-champ-select/v1/session/actions/22'&&write.body.championId===hero('Ahri').key&&write.body.completed===false).length,2);assert.equal(switched.filter(write=>write.route==='/lol-perks/v1/pages/44').length,1);assert.equal(switched.filter(write=>write.route==='/lol-champ-select/v1/session/my-selection').length,1);
+   const switched=writes.slice(configurationWrites);assert.equal(switched.length,3,'A complete configuration switch uses one hero write, one rune write and one spell write');assert.equal(switched.filter(write=>write.route==='/lol-champ-select/v1/session/actions/22'&&write.body.championId===hero('Ahri').key&&write.body.completed===false).length,1);assert.equal(switched.filter(write=>write.route==='/lol-perks/v1/pages/44').length,1);assert.equal(switched.filter(write=>write.route==='/lol-champ-select/v1/session/my-selection').length,1);
    assert.equal(intent,hero('Ahri').key,'Switching configuration changed the hero');
    assert.equal(results.at(-1).complete,true);assert.notEqual(attempts.at(-1).preselectOnly,true);
+   const writesAfterConfiguration=writes.length;
    const stale=structuredClone(await state());
    await lobby();await until(async()=>!(await state()).draft.preselection,'Dodge did not clear the consumed intent');
    // A delayed renderer can rebase on the accepted lobby state before its
@@ -448,7 +449,7 @@ async function run(){
    assert.equal(afterLateSave.preselection,undefined);assert.equal(afterLateSave.partyCount,undefined);assert.equal(afterLateSave.clientGameId,undefined);
    assert.equal(afterLateSave.slots.some(slot=>slot.champion||Number.isInteger(slot.clientCellId)),false,'Delayed old draft restored picks in the lobby');
    gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId));await delay(2800);
-   assert.equal(intent,0);assert.equal(writes.length,configurationWrites+4,'A new draft repeated the previous round\'s preselection');
+   assert.equal(intent,0);assert.equal(writes.length,writesAfterConfiguration,'A new draft repeated the previous round\'s preselection');
   });
  }
  if(handlers.has('stage-selection'))await checkpoint('recommendation-popup-menus-dismiss-without-changing-the-draft',async()=>{

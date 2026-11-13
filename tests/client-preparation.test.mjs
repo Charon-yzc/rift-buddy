@@ -71,6 +71,33 @@ test('locked same hero applies configuration without selecting or unlocking, loc
  const f=fixture({locked:true});f.session.myTeam.push({cellId:1,championId:0,championPickIntent:22});assert.equal((await f.run()).complete,true);assert(!f.calls.some(c=>c.route.includes('/actions/')));assert.equal(f.action.completed,true);
  const other=fixture({locked:true});other.own.championId=1;other.value.context.championId=1;await assert.rejects(other.run(),/锁定其他英雄/);assert(!other.calls.some(c=>c.method!=='GET'));
 });
+test('a confirmed hover configures the same champion without sending another pick',async()=>{
+ const f=fixture();f.own.championPickIntent=22;f.action.championId=22;f.session.timer.phase='BAN_PICK';f.action.isInProgress=false;
+ f.value.context.championPickIntent=22;
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(result.steps.hover.status,'done');assert.equal(f.items,1);
+ assert.ok(!f.calls.some(call=>call.route.includes('/actions/')));assert.equal(f.action.completed,false);
+});
+test('confirming the same hovered hero before configuration starts keeps the click valid',async()=>{
+ const f=fixture({locked:true});f.value.context.championId=0;f.value.context.championPickIntent=22;
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(result.steps.hover.locked,true);assert.equal(f.items,1);
+ assert.ok(!f.calls.some(call=>call.route.includes('/actions/')));
+});
+test('locking the same hero while its rune page is loading completes the original configuration',async()=>{
+ const f=fixture(),request=f.deps.request;f.own.championPickIntent=22;f.action.championId=22;f.value.context.championPickIntent=22;
+ f.deps.request=async(auth,route,...args)=>{
+  const result=await request(auth,route,...args);
+  if(route==='/lol-perks/v1/pages'){f.own.championId=22;f.own.championPickIntent=0;f.action.completed=true;}
+  return result;
+ };
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(f.items,1);
+ assert.deepEqual(f.calls.filter(call=>call.method!=='GET').map(call=>call.route),['/lol-perks/v1/pages/11','/lol-champ-select/v1/session/my-selection']);
+});
+test('a teammate taking the previously hovered hero blocks configuration without another pick',async()=>{
+ const f=fixture();f.own.championPickIntent=22;f.action.championId=22;f.value.context.championPickIntent=22;
+ f.session.myTeam.push({cellId:1,championId:22});
+ const result=await f.run();assert.equal(result.complete,false);assert.equal(result.steps.hover.status,'failed');assert.equal(f.items,0);
+ assert.ok(f.calls.every(call=>call.method==='GET'));
+});
 test('default preparation preserves the latest client Flash key, including a change while runes are applied',async()=>{
  for(const flashSlot of [0,1]){
   const f=fixture();f.value.summoners=['SummonerFlash','SummonerBarrier'];f.own.spell1Id=4;f.own.spell2Id=7;

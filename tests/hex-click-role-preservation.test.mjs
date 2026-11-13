@@ -7,9 +7,10 @@ test('actual Hex avatar handler leaves manual Rift roles, slots, preselection an
   const before=structuredClone(state);let calls=0;
   const context=vm.createContext({...state,client:{connected:true,phase:'ChampSelect',mode:{id:'hex'}},runeApplying:true,itemSetPending:'old-items',pregamePhase:()=>false,
    memberHeroAction:()=>({prepare:true,hexHover:true}),taskOwnRole:()=>'support',setCompanionRole:()=>{throw Error('Hex must never change Rift roles');},
-   data:{},champ:id=>({id}),getBuild:()=>({}),clickedHeroPreparation:null,companionPreview:null,companionTab:'recommend',closeOverlay(){},render(){},
-   useClientPreparation:async()=>{calls++;if(failed)throw Error('mock unavailable hero');return {complete:true};}});
-  vm.runInContext(implementation,context);const promise=context.prepareHeroClick({id:'Malphite',role:'top',mode:'hex',quickSwitch:true});
+   data:{},champ:id=>({id}),getBuild:()=>{throw Error('Hex bench selection must not build a configuration');},clickedHeroPreparation:null,companionPreview:null,companionTab:'recommend',
+   closeOverlay(){throw Error('Hex bench selection must not close a reference before dispatch');},render(){throw Error('Hex bench selection must not redraw before dispatch');},
+   useHexQuickSelection:async plan=>{assert.equal(plan.selection.id,'Malphite');calls++;if(failed)throw Error('mock unavailable hero');return {complete:true};}});
+  vm.runInContext(implementation,context);const promise=context.prepareHeroClick({id:'Malphite',role:'top',mode:'hex'});
   if(failed)await assert.rejects(promise,/unavailable/);else assert.equal((await promise).complete,true);
   assert.equal(calls,1);for(const key of Object.keys(before))assert.deepEqual(context[key],before[key],key);assert.equal(context.clickedHeroPreparation,null);
  }
