@@ -4,7 +4,7 @@ import {holdRenderDuringPointer} from '../src/pointer-render.mjs';
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const slice=(from,to)=>source.slice(source.indexOf(from),source.indexOf(to,source.indexOf(from)));
 const capture=slice(' const formFocus=',' const rankingFocus='),restore=slice('  if(formFocus){','  restoreItemReferenceFocus(');
-const mainPaint=source.split('\n').find(line=>line.includes('replacingApp=true;try{vueRoutes.render')).replace(/vueRoutes\.render.*;\}finally/,'replaceInput();}finally');
+const mainPaint=slice(' historyTooltips.close();ongoingTooltips.close();replacingApp=true;', ' renderedItemReference=itemReference;').replace(/vueRoutes\.render.*;\}finally/,'replaceInput();}finally');
 const sidePaint=source.split('\n').find(line=>line.includes('app.innerHTML=companionView(')).replace(/companionView\(.*\)\.replaceAll\('loading="lazy"','loading="eager"'\)/,'roomMarkup()');
 const sideCapture=slice('  const focused=document.activeElement,focus=','  const preparation='),sideRestore=source.split('\n').find(line=>line.startsWith('  if(focus&&'));
 const change=slice("if(el.id==='room-nick')",'\n').replace(/\}\);\s*$/,'');

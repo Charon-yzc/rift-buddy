@@ -53,3 +53,44 @@ test('hero selection reuses only a fresh verified connection and never retries a
   await discoverClient(installPath,{reuseSnapshot:true});assert.equal(reads,beforeOptional+1,'An optional failed read must not revive an invalidated connection: '+failure);
  }
 });
+
+test('a socket interruption drops cached native auth but can restore a fully verified draft party',async t=>{
+ const installPath='isolated-draft-recovery',phaseRoute='/lol-gameflow/v1/gameflow-phase';
+ const own={summonerId:11,gameName:'Fixture',tagLine:'TEST'},friend={summonerId:22,gameName:'Partner',tagLine:'TEST'};
+ let phase='Lobby',reads=0,interrupt='';
+ t.mock.method(fs,'readFile',async file=>{assert.ok(String(file).endsWith('lockfile'));reads++;return 'LeagueClient:1:23456:isolated-only:https';});
+ t.mock.method(https,'request',(options,callback)=>{
+  assert.equal(options.hostname,'127.0.0.1');assert.equal(options.method,'GET');
+  const req=new EventEmitter();req.end=()=>queueMicrotask(()=>{
+   const response=new EventEmitter();response.statusCode=200;
+   let value;
+   switch(options.path){
+    case phaseRoute:value=phase;break;
+    case '/lol-lobby/v2/lobby':value={localMember:own,members:[own,friend],partyId:'fixture-premade'};break;
+    case '/lol-gameflow/v1/session':value={gameData:{gameId:777}};break;
+    case '/lol-champ-select/v1/session':value={gameId:'777',localPlayerCellId:1,myTeam:[{...own,cellId:1},{...friend,cellId:2}]};break;
+    case '/lol-champ-select/v1/pickable-champion-ids':case '/lol-champ-select/v1/disabled-champion-ids':value=[];break;
+    default:assert.fail('Unexpected loopback request '+options.path);
+   }
+   if(options.path===phaseRoute&&interrupt==='socket'){req.emit('error',Error('fixture socket closed'));return;}
+   if(options.path===phaseRoute&&interrupt==='forbidden')response.statusCode=403;
+   callback(response);
+   if(response.statusCode===403){response.emit('error',Error('fixture forbidden body interrupted'));return;}
+   response.emit('data',Buffer.from(JSON.stringify(value)));response.emit('end');
+  });return req;
+ });
+ assert.equal((await clientSnapshot(installPath)).party.key,'fixture-premade');
+ phase='ChampSelect';
+ assert.equal((await clientSnapshot(installPath)).party.key,'fixture-premade');
+ assert.equal(reads,1);
+ interrupt='socket';
+ assert.deepEqual(await clientSnapshot(installPath),{connected:false,phase:'Offline',message:'未能连接客户端，请确认游戏已登录到大厅'});
+ await discoverClient(installPath,{reuseSnapshot:true});
+ assert.equal(reads,2,'An interrupted phase cannot keep the native connection verified');
+ interrupt='';
+ assert.equal((await clientSnapshot(installPath)).party.key,'fixture-premade');
+ interrupt='forbidden';
+ assert.equal((await clientSnapshot(installPath)).connected,false);
+ interrupt='';
+ assert.equal((await clientSnapshot(installPath)).party.key,undefined,'A socket failure after HTTP 403 headers cannot preserve a party');
+});
