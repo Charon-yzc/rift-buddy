@@ -75,6 +75,26 @@ async function run(){
  assert.deepEqual(new Set((await js('document.querySelector(".ballot-proposers").title')).split('、')),new Set(room.members.map(m=>m.nick)));
  const hoverPoint=await js('(()=>{const r=document.querySelector(".room-ballot-row .lineup-fit-number").getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)}})()');main.webContents.sendInputEvent({type:'mouseMove',...hoverPoint});await until(()=>js('getComputedStyle(document.querySelector(".room-ballot-row .lineup-fit-hover")).display==="grid"'),'Score hover missing');const fit=await js('(()=>{const e=document.querySelector(".room-ballot-row .lineup-fit-number");return {tip:e.querySelector(".lineup-fit-hover").textContent,visible:getComputedStyle(e.querySelector(".lineup-fit-hover")).display};})()');assert.match(fit.tip,/成员衔接|共同战术/);assert.equal(fit.visible,'grid');assert.ok(await js('(()=>{const r=document.querySelector(".room-ballot-row .lineup-fit-hover").getBoundingClientRect();return r.x>=0&&r.right<=innerWidth&&r.y>=0&&r.bottom<=innerHeight})()'));await capture('sidebar-proposal-score-hover.png');main.webContents.sendInputEvent({type:'mouseMove',x:2,y:2});
  await js('document.activeElement.blur()');await click('[data-action=room-vote]');assert.equal(attempts.length,written,'Voting wrote a client configuration');
+ const proposal=()=>js(`(()=>{
+  const row=document.querySelector('.room-ballot-row'),vote=row?.querySelector('[data-action=room-vote]');
+  if(!row||!vote)return null;
+  return {key:row.dataset.proposalKey,vote:vote.textContent,pressed:vote.getAttribute('aria-pressed'),
+   heroes:[...row.querySelectorAll('.ballot-member')].map(member=>member.dataset.id),
+   top:row.getBoundingClientRect().top};
+ })()`);
+ const proposed=await proposal();assert.ok(proposed?.key);assert.equal(proposed.heroes.length,3);assert.ok(proposed.heroes.every(Boolean));
+ await generate();
+ assert.deepEqual(await proposal(),proposed,'Rerolling candidates must keep the proposed lineup, vote and position');
+ await sync();
+ assert.deepEqual(await proposal(),proposed,'Background synchronization must keep the proposed lineup, vote and position');
+ const occupied=fixture.session.myTeam.find(player=>player.cellId===3),previous=structuredClone(occupied);
+ try{
+  occupied.championId=hero(proposed.heroes.find(id=>id!=='Ashe')).key;
+  await sync();
+  await until(async()=>!(await proposal()),'A teammate locking a proposed hero must remove the conflicting proposal');
+ }finally{Object.assign(occupied,previous);}
+ await sync();
+ await until(async()=>(await proposal())?.key===proposed.key,'The isolated proposal did not return after restoring the public draft');
  for(const width of [440,520]){main.setContentSize(width,820);for(const tab of ['recommend','plan','rankings','room']){
   await click(`[data-action=companion-tab][data-tab=${tab}]`);
   if(tab==='rankings'){
@@ -108,6 +128,6 @@ async function run(){
  await js('window.buddy.companionMode(false)');await until(()=>js('!document.querySelector(".companion-shell")'),'Main did not expand');
  for(const width of [1180,900]){main.setContentSize(width,820);for(const route of ['draft','room','builds','reference','rankings','patches','hex','favorites','settings']){await click(`[data-action=navigate][data-route=${route}]`);await until(()=>js(`document.querySelector("#main")?.dataset.page===${JSON.stringify(route)}`),'Wrong main route');await capture(`main-${route}-${width}.png`);geometry.push({surface:'main',route,width,...await js('({viewport:innerWidth,scroll:document.documentElement.scrollWidth})')});}}
  assert.ok(geometry.every(row=>row.scroll<=row.viewport+1),'Page overflow: '+JSON.stringify(geometry.filter(row=>row.scroll>row.viewport+1)));
- await fs.writeFile(path.join(root,'report.json'),JSON.stringify({passed:true,source,archiveSha256:release?.archiveSha256||null,attempts:attempts.length,hoverAttempts:hoverAttempts.length,realLcuWrites:0,shots,geometry},null,2));console.log('RECOMMENDATION EXPERIENCE PASS '+root);app.quit();
+ await fs.writeFile(path.join(root,'report.json'),JSON.stringify({passed:true,source,archiveSha256:release?.archiveSha256||null,attempts:attempts.length,hoverAttempts:hoverAttempts.length,proposalKeptAcrossRerollAndSync:true,conflictingProposalHidden:true,realLcuWrites:0,shots,geometry},null,2));console.log('RECOMMENDATION EXPERIENCE PASS '+root);app.quit();
 }
 run().catch(async error=>{console.error(error);if(main){await fs.writeFile(path.join(root,'failure.png'),(await main.webContents.capturePage()).toPNG());await fs.writeFile(path.join(root,'failure-state.json'),JSON.stringify(await main.webContents.executeJavaScript('({workers:window.__workers,toast:document.querySelector("#toast")?.textContent,body:document.body.innerText})'),null,2));}await fs.writeFile(path.join(root,'failure.txt'),error.stack);app.exit(1);});
