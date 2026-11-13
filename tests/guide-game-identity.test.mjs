@@ -19,7 +19,7 @@ function setup({fresh=false,phase='ChampSelect'}={}){
   guideCore:{...guideCore,createGuideModel:(_data,guide)=>({completedItems:guide.completedItems})},data:{champions:[]},
   state:{guide:fresh?null:selected,preparations:[],preferences:{autoLive:false}},guideRevision:0,selectionWriteRevision:0,manualGuideReference:null,detachedGuideSelection:false,
   actualGuideSelection:()=>own,guideManualRole:()=>null,
-  latestClient:{connected:true,phase,game:{gameId:470000},session:{gameId:471001}},latestLive:null,liveTask:null,liveOnlyGuide:null,syncLiveOnlyGuide(){},
+  latestClient:{connected:true,phase,game:{gameId:470000},session:{gameId:471001}},latestLive:null,liveTask:null,liveOnlyGuide:null,syncLiveOnlyGuide(){},clientPlaying:()=>true,observedGuideActive:false,gameWindowRevision:0,
   hexRounds:createHexRoundStore(),currentGame:{current:()=>own},guideHexContext:null,currentGuideSelection:()=>own,appWindows:()=>[],guide:{show:()=>({}),publish(){},isVisible:()=>true,needsAutoShow:()=>false},
   liveService:{liveSnapshot:async()=>({available:false})},guard:(name,handler)=>handlers.set(name,handler)});
  context.saveCurrentState=(update,_exclude,onCommitted)=>{const task=queue.catch(()=>{}).then(()=>{if(writeError){const error=writeError;writeError=null;throw error;}context.state=structuredClone(update(structuredClone(context.state)));onCommitted?.();});queue=task;return task;};
