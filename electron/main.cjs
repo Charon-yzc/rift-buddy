@@ -35,12 +35,12 @@ let importingItemSet=false;
 let mainExplicitInGame=false,mainDismissed=false,mainBootReady=false;
 const mainRequests=new Map(),inGame=()=>latestClient.connected&&['GameStart','InProgress','Reconnect'].includes(latestClient.phase);
 const mainRelease=require('./main-window-release.cjs')({getWindow:()=>win,canRelease:()=>inGame()&&!mainExplicitInGame&&!!tray&&!quitting,isBusy:window=>!!mainRequests.get(window.webContents.id)||applyingRunes||importingItemSet||updating,getSaveTask:()=>saveTask,release:window=>{rendererReady=false;diagnostic('released hidden main renderer for game');window.destroy();},diagnostic});
-let synchronizeSavedState=()=>{};
+let synchronizeSavedState=()=>{},observeRoomPreferences=()=>{};
 function mergeSavedFields(current,previous,next,message){
  const merged={...current};for(const field of new Set([...Object.keys(previous),...Object.keys(next)])){if(isDeepStrictEqual(next[field],previous[field]))continue;if(!isDeepStrictEqual(current[field],previous[field])&&!isDeepStrictEqual(current[field],next[field]))throw Error(message);if(next[field]===undefined)delete merged[field];else merged[field]=next[field];}return merged;
 }
 function saveCurrentState(update,exclude,onCommitted){
- saveTask=saveTask.catch(()=>{}).then(async()=>{const snapshot=structuredClone(update?update(structuredClone(state)):state);await storage.saveState(storeRoot,snapshot);state=snapshot;if(onCommitted)onCommitted(state);synchronizeSavedState();publishWindows('state-update',{state,revision:++stateRevision},exclude);return state;});return saveTask;
+ saveTask=saveTask.catch(()=>{}).then(async()=>{const snapshot=structuredClone(update?update(structuredClone(state)):state);await storage.saveState(storeRoot,snapshot);const previous=state.preferences;state=snapshot;observeRoomPreferences(previous,state.preferences);if(onCommitted)onCommitted(state);synchronizeSavedState();publishWindows('state-update',{state,revision:++stateRevision},exclude);return state;});return saveTask;
 }
 app.setName('开黑搭子');
 if(process.platform==='win32')app.setAppUserModelId('local.rift-buddy');
@@ -494,7 +494,19 @@ async function boot(){
  const {deriveAutoRoom,autoRoomNick,autoRoomDecision,decorateAutoRoom,AUTO_ROOM_PHASES,AUTO_RETRY_MS}=await import('../src/core/room-auto.mjs');
  const {createBallotRoundObserver}=await import('../src/core/room-ballot.mjs');
  const ballotRoundChanged=createBallotRoundObserver();
- let roomNickInUse='',roomNickSourceRank=0;
+ let roomNickInUse='',roomNickSourceRank=0,roomActionRevision=0;
+ let enablingRoomReconnect=null;
+ const pendingRoomSwitchOff=new Set();
+ const trackRoomSwitchOff=task=>{
+  pendingRoomSwitchOff.add(task);
+  const finished=()=>pendingRoomSwitchOff.delete(task);
+  task.then(finished,finished);
+ };
+ observeRoomPreferences=(previous,next)=>{
+  if(previous.roomAuto===true&&next.roomAuto===false||previous.autoSync!==false&&next.autoSync===false){
+   roomActionRevision++;
+  }
+ };
  // Automatic party room (CHA-71): the lobby identifier the current auto room
  // was derived from, plus the state needed to decide when to stop. Manual
  // rooms never set roomAutoKey and are never touched by the poll below.
@@ -545,10 +557,13 @@ async function boot(){
  // public game id wins whenever the client provides one, and the typed
  // "我的昵称" is only the fallback for when it does not.
  const forcedRoomNick=wanted=>autoRoomNick({identity:latestClient?.own,savedNick:wanted||state.preferences.roomNick});
- guard('room-host',async nick=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).host());});
- guard('room-join',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).join(target||{}));});
- guard('room-relay',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).relay(target||{}));});
+ guard('room-host',async nick=>{roomActionRevision++;closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).host());});
+ guard('room-join',async(target,nick)=>{roomActionRevision++;closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).join(target||{}));});
+ guard('room-relay',async(target,nick)=>{roomActionRevision++;closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).relay(target||{}));});
  guard('room-leave',()=>{
+  const pendingParty=enablingRoomReconnect?.key;
+  roomActionRevision++;
+  if(!roomAutoKey&&pendingParty)roomAutoBlockedKey=pendingParty;
   // Leaving by hand must not be undone by the next poll: remember the party
   // this auto room came from until the lobby identifier changes.
   if(roomAutoKey){roomAutoBlockedKey=roomAutoKey;closeAutoRoom('manual');}
@@ -633,6 +648,11 @@ async function boot(){
   }
   if(decision.action==='hold')return;
   if(decision.action==='leave'){closeAutoRoom(decision.reason);return;}
+  if(pendingRoomSwitchOff.size){
+   await Promise.allSettled(pendingRoomSwitchOff);
+   roomAutoRequested=true;
+   return;
+  }
   const key=decision.key;
   if(decision.action==='switch'){try{roomService?.leave();}catch{}roomAutoCode=null;roomAutoPin=null;}
   // Claim the key before the (async) derivation so a manual leave or a
@@ -643,6 +663,11 @@ async function boot(){
   // A manual leave or a preference change during the derivation releases the
   // claim; a failure the player caused is not a failure to report.
   if(roomAutoKey!==key)return;
+  // A save can start while room-code derivation is in flight.
+  while(pendingRoomSwitchOff.size){
+   await Promise.allSettled(pendingRoomSwitchOff);
+   if(roomAutoKey!==key)return;
+  }
   if(!derived){
    roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;roomAutoError='房间码派生失败';
    publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[],transport:'relay'}));
@@ -684,15 +709,29 @@ async function boot(){
   return roomAutoTask;
  };
  guard('room-reconnect',async()=>{
-  await status(true);await roomAutoTask;
+  const roomAction=++roomActionRevision;
+  const requireCurrent=()=>{if(roomAction!==roomActionRevision)throw Error('房间操作已变化，已取消重新连接');};
+  await status(true);requireCurrent();
+  await roomAutoTask;requireCurrent();
+  await saveTask.catch(()=>{});requireCurrent();
   const party=latestClient.party;
   if(!latestClient.connected)throw Error('请先连接游戏客户端，再连接组队房间');
   if(!party?.key||Number(party.lobbyCount)<1)throw Error('尚未读取到当前组队标识；请回到组队大厅同步，或使用房间码加入');
-  closeAutoRoom('reconnect');
+  if(state.preferences.roomAuto!==true||state.preferences.autoSync===false){
+   const enable={key:party.key};
+   try{
+    await saveCurrentState(current=>{
+     requireCurrent();
+     enablingRoomReconnect=enable;
+     return {...current,preferences:{...current.preferences,roomAuto:true,autoSync:true}};
+    });
+    await saveTask.catch(()=>{});requireCurrent();
+   }finally{if(enablingRoomReconnect===enable)enablingRoomReconnect=null;}
+  }
   // Explicit reconnect chooses the current game party over a manually joined room.
+  closeAutoRoom('reconnect');
   roomService?.leave();roomAutoBlockedKey=null;roomAutoFailedKey=null;roomAutoFailedUntil=0;roomAutoError='';
-  if(state.preferences.roomAuto!==true||state.preferences.autoSync===false)await saveCurrentState(current=>({...current,preferences:{...current.preferences,roomAuto:true,autoSync:true}}));
-  await queueRoomAuto();
+  await queueRoomAuto();requireCurrent();
   const snapshot=roomService&&decorateRoom(roomService.snapshot());
   if(!snapshot||snapshot.mode==='idle'||snapshot.link!=='connected')throw Error(roomAutoError||'房间暂未连接，请稍后重试');
   return snapshot;
@@ -743,7 +782,7 @@ async function boot(){
   // Enemy-role constraints belong to the main-owned edit operation. A stale
   // ordinary renderer save cannot resurrect a withdrawn/traded hero binding.
   if(next.draft)delete next.draft.enemyRoles;if(before.draft)delete before.draft.enemyRoles;
-  await saveCurrentState(current=>{
+  const saved=saveCurrentState(current=>{
    if(preparationGuard&&!isDeepStrictEqual(preparationGuard.expected,storedPreparation(current.preparations,preparationGuard.selection)))throw Error('这位英雄的准备已变化，请核对后重新应用');
    const merged={...current,preferences:{...current.preferences}};
    for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide','preparations'].includes(key)||same(next[key],before[key]))continue;if(key==='draft'&&next.draft&&before.draft&&current.draft){
@@ -782,6 +821,8 @@ async function boot(){
    }
    return merged;
   },sender);
+  if(['roomAuto','autoSync'].some(key=>before.preferences[key]===true&&next.preferences[key]===false))trackRoomSwitchOff(saved);
+  await saved;
    // Turning the switch (or client sync) off must not leave a room behind:
    // with sync off no poll will run to notice the new preference.
    closeAutoRoomIfRevoked();
