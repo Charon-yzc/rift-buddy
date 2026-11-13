@@ -20,7 +20,7 @@ function setup({guide=guideCore.selectGuide(null,hex('Ashe')),client={connected:
  const context=vm.createContext({isDeepStrictEqual,structuredClone,publicClientGameId,upsertPreparation,hexRoundSelection,
   guideCore:{...guideCore,createGuideModel:(_data,value)=>({completedItems:value.completedItems||[]})},data:{champions:[]},
   state:{guide:{...guide,selection:hexRoundSelection(guide.selection,null)},preparations:[],preferences:{}},latestClient:client,hexGuideRecord:()=>null,guideHexContext:null,
-  guideRevision:0,selectionWriteRevision:0,manualGuideReference:null,detachedGuideSelection:false,liveOnlyGuide:null,appWindows:()=>[],
+  guideRevision:0,selectionWriteRevision:0,manualGuideReference:null,detachedGuideSelection:false,liveOnlyGuide:null,observedGuideActive:false,appWindows:()=>[],
   guideSnapshot:()=>({}),guideRosterKey:()=>'',guideConfirmedSlots:()=>null,guard(){}});
  context.saveCurrentState=async update=>{writes++;context.state=structuredClone(update(structuredClone(context.state)));};
  vm.runInContext(slice('function mergeSavedFields(','function saveCurrentState(')+slice(' const setGuideState=',' const publicEnemyIds='),context);

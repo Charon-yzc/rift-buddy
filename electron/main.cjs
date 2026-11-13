@@ -242,7 +242,7 @@ async function boot(){
  const getGuideReferenceRevision=()=>{if(data!==guideReferenceBase){guideReferenceBase=data;guideReferenceRevision++;}return guideReferenceRevision;};
  const guideRefresh=new Map(),guideRefreshKey=s=>s&&buildSourcePendingKey(data.patch,s.id,s.mode==='hex'?'hex':s.role,data.buildSource);
  const getGuideModel=()=>{
-  if(liveOnlyGuide)return guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot},liveOnlyGuide,latestLive,liveOnlyGuide.selection);
+  if(liveOnlyGuide)return guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot},liveOnlyGuide,state.preferences.autoLive===false?null:observedGuideActive?observedGuideLive:latestLive,liveOnlyGuide.selection);
   currentGuideSelection();const selection=actualGuideSelection(),unknownRole=!!manualGuideReference&&(!selection||!selection.positionKnown),unbound=!!manualGuideReference&&!publicClientGameId(latestClient)||detachedGuideSelection||state.guide?.progressGameUnknown===true||!!state.guide?.progressGameId||unknownRole,live=unbound?{available:false,reason:'尚不能确认此参考对应的本局身份'}:state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,guideSource=!!appliedGuideSelection?.source&&!manualGuideReference&&!detachedGuideSelection&&appliedGuideSelection.gameId===publicClientGameId(latestClient)&&state.guide?.selection&&guideCore.guideIdentity(state.guide.selection)===guideCore.guideIdentity(appliedGuideSelection.selection)?appliedGuideSelection.source:null,guideData=guideSource?projectPreparationData(guideSource,state.guide.selection):data,m=guideCore.createGuideModel({...guideData,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,live,selection);if(m){if(m.mode==='hex'){const record=hexGuideRecord(m.selection);m.hexRound=record?{context:record.context,revision:record.revision}:null;}const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;if(unbound)m.status.build=unknownRole&&publicClientGameId(latestClient)?'本人位置尚未确认，当前仅供阅读。':'尚不能确认此参考所属对局，当前仅供阅读。';}return m;
  };
  const recommendationCore=await import('../src/core/recommend.mjs');
@@ -278,17 +278,25 @@ async function boot(){
  const {clientPreparationPlan}=await import('../src/client-preparation-view.mjs');
  const {createCurrentGameTracker}=await import('../src/core/game-context.mjs');const currentGame=createCurrentGameTracker({flashId:Number(data.spells.SummonerFlash.key)});
  const {liveMatchesGuide}=await import('../src/core/purchase.mjs');
- let liveOnlyGuide=null;
- const syncLiveOnlyGuide=live=>{
-  if((!liveOnlyGuide&&!guide.needsAutoShow())||publicClientGameId(latestClient)||!inGame()||!live?.available||latestClient.game?.modeConflict||
-   !['rift','hex'].includes(live.mode)||latestClient.mode?.id&&latestClient.mode.id!==live.mode)return;
-  const own=currentGame.current(latestClient,live,data.champions,[]);
-  if(!own||!liveMatchesGuide(live,own))return;
+ const liveWindowGame=createCurrentGameTracker();
+ let liveOnlyGuide=null,observedGuideLive=null,observedGuideActive=false,observedGuideEnded=false,gameWindowAt=0,gameWindowRevision=0,gameWindowLostAt=0;
+ const clientPlaying=()=>latestClient.connected&&['InProgress','Reconnect'].includes(latestClient.phase);
+ const confirmedGameExit=()=>latestClient.connected&&['WaitingForStats','PreEndOfGame','EndOfGame'].includes(latestClient.phase);
+ const hasGameWindow=()=>gameWindowAt>0&&Date.now()-gameWindowAt>=0&&Date.now()-gameWindowAt<OBSERVATION_MAX_AGE_MS;
+ const observeGuidePhase=()=>guide.phase(observedGuideActive&&!clientPlaying()?'InProgress':latestClient.phase,observedGuideActive||latestClient.connected);
+ const syncLiveOnlyGuide=(live,windowFallback=false)=>{
+  if(!live?.available||!['rift','hex'].includes(live.mode))return false;
+  if(!windowFallback&&((!liveOnlyGuide&&!guide.needsAutoShow())||publicClientGameId(latestClient)||!inGame()||latestClient.game?.modeConflict||latestClient.mode?.id&&latestClient.mode.id!==live.mode))return false;
+  // The native window and the local Live Client Data API can confirm play
+  // before LCU reports it. Do not use stale draft or lobby evidence here.
+  const own=(windowFallback?liveWindowGame:currentGame).current(latestClient,live,data.champions,[]);
+  if(!own||!liveMatchesGuide(live,own))return false;
   const selection={id:own.id,role:own.role,mode:own.mode,...(own.mode==='rift'?{coreAuto:true}:{})};
-  if(liveOnlyGuide&&guideCore.guideIdentity(liveOnlyGuide.selection)===guideCore.guideIdentity(selection))return;
+  if(liveOnlyGuide&&guideCore.guideIdentity(liveOnlyGuide.selection)===guideCore.guideIdentity(selection))return true;
   // Live data proves the current hero and mode, but cannot own saved progress.
   const {compactBounds,hexWindows,skillWidget,jungleWidget,opacity}=state.guide||{};
   liveOnlyGuide={...guideCore.selectGuide(null,selection),compactBounds,hexWindows,skillWidget,jungleWidget,opacity,liveOnly:true};
+  return true;
  };
  const {createOpponentFocusTracker}=await import('../src/core/opponent-focus.mjs');const opponentFocus=createOpponentFocusTracker({newToken:require('node:crypto').randomUUID});
  let appliedGuideSelection=null,manualGuideReference=null,detachedGuideSelection=false;
@@ -486,7 +494,7 @@ async function boot(){
   if(expected?.context!==record.context||expected?.revision!==record.revision)throw Error('本局强化记录已变化，请按当前页面重试');
   const next=hexRounds.reset(expected);publishHexRound();syncHexGuide({from:record.context,to:next.context,hero:record.hero}).catch(error=>diagnostic('hex guide projection unavailable: '+error.message));return next.context;
  };
- guide=require('./guide-window.cjs')({root,getState:()=>liveOnlyGuide||state.guide,getModel:getGuideModel,getGameId:()=>publicClientGameId(latestClient),isQuitting:()=>quitting,diagnostic,
+ guide=require('./guide-window.cjs')({root,getState:()=>liveOnlyGuide||state.guide,getModel:getGuideModel,getGameId:()=>observedGuideActive&&!clientPlaying()?null:publicClientGameId(latestClient),isQuitting:()=>quitting,diagnostic,
   currentSelection:()=>liveOnlyGuide?.selection||actualGuideSelection(),prepareCurrent:()=>!!liveOnlyGuide||prepareCurrentGuide(),
   setState:(next,base,...args)=>{
    if(!base?.liveOnly)return setGuideState(next,base,...args);
@@ -1019,7 +1027,7 @@ async function boot(){
    postgameLifecycle.observe();
    if(ballotRoundChanged(latestClient))clearRoomBallot();
    observeFeedPhase(latestClient);feedIdle=observeSignedFeedPhase(latestClient);dataFeed.activate().catch(()=>{});
-   observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
+   observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!clientPlaying()||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId,{phase:latestClient.phase,previousPhase});if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId,{phase:latestClient.phase,previousPhase}).draft}));
    if(state.draft?.enemyRoles&&!isDeepStrictEqual(state.draft.enemyRoles,currentEnemyRoles(latestClient,data.champions,state.draft.enemyRoles)))await saveCurrentState(current=>{const roles=currentEnemyRoles(latestClient,data.champions,current.draft?.enemyRoles);if(current.draft){if(roles.length)current.draft.enemyRoles=roles;else delete current.draft.enemyRoles;}return current;});
    const claim=state.draft?.preselection;
@@ -1042,12 +1050,13 @@ async function boot(){
    const previousGuide=state.guide,reconcileGame=publicClientGameId(latestClient),reconciled=reconcileKnownGuide(previousGuide,{phase:latestClient.phase,gameId:reconcileGame,enemyIds});
    if(guideSelectionChanged(previousGuide,reconciled.guide)){try{await setGuideState(reconciled.guide,previousGuide,undefined,false,true,()=>publicClientGameId(latestClient)===reconcileGame);}catch(error){if(error.code!=='GUIDE_CONTEXT_CHANGED')throw error;}}
    else if(reconciled.changed)await saveCurrentState(current=>({...current,guide:reconcileKnownGuide(current.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),enemyIds}).guide}));
-   if(liveOnlyGuide&&latestClient.connected){
+   if(observedGuideActive&&confirmedGameExit()){guide.hide();observedGuideActive=false;observedGuideEnded=true;observedGuideLive=null;liveOnlyGuide=null;}
+   if(liveOnlyGuide&&latestClient.connected&&!observedGuideActive){
     if(!inGame()){guide.hide();liveOnlyGuide=null;}
     else if(reconcileGame&&await prepareCurrentGuide())liveOnlyGuide=null;
    }
    const readFirstLive=state.preferences.guideAutoShow!==false&&latestClient.connected&&['InProgress','Reconnect'].includes(latestClient.phase)&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame);
-   try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}
+   try{await observeGuidePhase();}catch(error){diagnostic(`guide phase failed ${error.message}`);}
    companion.sync();
    const keepMainHidden=shouldHideMainForGame();
    if(keepMainHidden&&!mainHeldForGame&&!mainExplicitInGame&&win){win.hide();mainRelease.request(win);}
@@ -1062,20 +1071,48 @@ async function boot(){
  });
  const pollLive=async(force=false)=>{
   if(liveTask){await liveTask;if(!force)return;}
-  const canRead=()=>state.preferences.autoLive!==false&&(force||guide.isVisible()||guide.needsAutoShow());
+  const windowFallback=()=>!clientPlaying()&&!confirmedGameExit()&&hasGameWindow()&&!observedGuideEnded&&state.preferences.guideAutoShow!==false&&(!observedGuideActive||liveOnlyGuide&&(guide.isVisible()||guide.needsAutoShow()));
+  const canRead=()=>state.preferences.autoLive!==false&&(force||guide.isVisible()||guide.needsAutoShow()||windowFallback());
   if(!canRead())return;
+  if(observedGuideActive&&!clientPlaying()&&!windowFallback())return;
+  const fromWindow=windowFallback(),revision=gameWindowRevision;
   const {phase,connected}=latestClient,gameId=publicClientGameId(latestClient);
   const sameContext=()=>phase===latestClient.phase&&connected===latestClient.connected&&gameId===publicClientGameId(latestClient);
-  liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{
+  liveTask=liveService.liveSnapshot(data.champions,fromWindow?{}:latestClient.game||{}).then(async result=>{
    if(!canRead()||!sameContext())return;
+   if(fromWindow){
+    if(revision!==gameWindowRevision||!windowFallback())return;
+    observedGuideLive=result;
+    if(syncLiveOnlyGuide(result,true)){observedGuideActive=true;await observeGuidePhase();}
+    else guide.publish();
+    return;
+   }
    latestLive=result;syncLiveOnlyGuide(result);await observeHexRound();
-   if(await prepareCurrentGuide()&&sameContext())liveOnlyGuide=null;
+   if(await prepareCurrentGuide()&&sameContext()){liveOnlyGuide=null;observedGuideActive=false;observedGuideLive=null;}
    if(!sameContext())return;
    const options={phase,gameId,live:result};
    const reconciled=reconcileKnownGuide(state.guide,options);
    if(reconciled.changed)await saveCurrentState(current=>sameContext()?{...current,guide:reconcileKnownGuide(current.guide,options).guide}:current);
-   guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);
+   guide.publish();if(guide.needsAutoShow())await observeGuidePhase();
   }).finally(()=>liveTask=null);await liveTask;
+ };
+ const observeGameWindow=(present,observerLost=false)=>{
+  if(present)gameWindowLostAt=0;
+  else if(!observerLost&&observedGuideActive&&gameWindowAt){
+   // One missing sample can be a display-mode switch or a minimized game.
+   gameWindowLostAt||=Date.now();if(Date.now()-gameWindowLostAt<OBSERVATION_MAX_AGE_MS)return;
+  }
+  const changed=present!==!!gameWindowAt;
+  if(changed)gameWindowRevision++;
+  gameWindowAt=present?Date.now():0;
+  if(present){if(changed)pollLive().catch(()=>diagnostic('game window live read failed'));return;}
+  observedGuideEnded=false;
+  if(!observedGuideActive)return;
+  if(!clientPlaying()){if(liveOnlyGuide)guide.hide();liveOnlyGuide=null;}
+  observedGuideActive=false;
+  observedGuideLive=null;
+  const update=clientPlaying()?observeGuidePhase():guide.phase('EndOfGame',true);
+  update.catch(()=>diagnostic('game window guide phase failed'));
  };
  guard('client-status',async force=>forRenderer(await status(force)));
  guard('enemy-role',async value=>{
@@ -1472,7 +1509,7 @@ async function boot(){
  const checkStatistics=()=>{if(state.preferences.autoCheck!==false&&!quitting)dataFeed.check().catch(()=>{});};
  dataFeedStartup=setTimeout(checkStatistics,10000);dataFeedTimer=setInterval(checkStatistics,60000);
  diagnostic(`guide-hotkey-registered ${guideHotkeyAvailable}`);
- try{const {observeWindows}=await import('../services/window-observer.mjs');windowObserver=await observeWindows({root,onSnapshot:value=>{const previousObservationAge=Date.now()-observedAt,previousSafeClient=!!observedWindows?.client&&!observedWindows?.game&&previousObservationAge>=0&&previousObservationAge<OBSERVATION_MAX_AGE_MS;const dip=rect=>rect?{...rect,...screen.screenToDipRect(null,rect)}:null;const clientBounds=dip(value.client),gameBounds=dip(value.game);observedWindows={client:value.client?{pixels:value.client,dip:clientBounds,minimized:value.client.minimized,foreground:value.client.foreground}:null,game:value.game?{pixels:value.game,dip:gameBounds,minimized:value.game.minimized,foreground:value.game.foreground}:null};observedAt=Date.now();const safeClient=!!observedWindows.client&&!observedWindows.game;if(!safeClient)clientWakePending=false;else if(!previousSafeClient)clientWakePending=true;mainPeek.sync(true,!!clientBounds?.foreground||!!gameBounds?.foreground);companion.observe(clientBounds);guide.setGameBounds(gameBounds);if(wakeClientRead())status().catch(()=>{});},onError:message=>{observedWindows=null;observedAt=0;clientWakePending=false;mainPeek.sync(true,false);companion.observe(null);diagnostic(message);}});}catch{diagnostic('window observer unavailable');}
+ try{const {observeWindows}=await import('../services/window-observer.mjs');windowObserver=await observeWindows({root,onSnapshot:value=>{const previousObservationAge=Date.now()-observedAt,previousSafeClient=!!observedWindows?.client&&!observedWindows?.game&&previousObservationAge>=0&&previousObservationAge<OBSERVATION_MAX_AGE_MS;const dip=rect=>rect?{...rect,...screen.screenToDipRect(null,rect)}:null;const clientBounds=dip(value.client),gameBounds=dip(value.game);observedWindows={client:value.client?{pixels:value.client,dip:clientBounds,minimized:value.client.minimized,foreground:value.client.foreground}:null,game:value.game?{pixels:value.game,dip:gameBounds,minimized:value.game.minimized,foreground:value.game.foreground}:null};observedAt=Date.now();const safeClient=!!observedWindows.client&&!observedWindows.game;if(!safeClient)clientWakePending=false;else if(!previousSafeClient)clientWakePending=true;mainPeek.sync(true,!!clientBounds?.foreground||!!gameBounds?.foreground);companion.observe(clientBounds);guide.setGameBounds(gameBounds);observeGameWindow(!!gameBounds);if(wakeClientRead())status().catch(()=>{});},onError:message=>{observedWindows=null;observedAt=0;clientWakePending=false;mainPeek.sync(true,false);companion.observe(null);observeGameWindow(false,true);diagnostic(message);}});}catch{diagnostic('window observer unavailable');}
  if(process.argv.includes('--show-guide'))guide.show();
  diagnostic(`hotkey-registered ${hotkeyAvailable}`);
 }

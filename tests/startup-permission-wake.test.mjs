@@ -17,7 +17,7 @@ function fixture({known=false,autoSync=true,refuse=false,response}={}){
  const current={connected:false,phase:'Offline',...(known?{needsElevation:true}:{})};
  const context=vm.createContext({...gates,shouldRequestElevatedRead:options=>gates.shouldRequestElevatedRead({...options,now:clock}),shouldWakeClientRead:options=>gates.shouldWakeClientRead({...options,now:clock}),createClientSync,Date:{now:()=>clock},state:{preferences:{autoSync}},latestClient:current,lastStatus:9900,
   elevatedReadAttempted:false,observedWindows:null,observedAt:0,mainExplicitInGame:false,clientWakePending:false,statusTask:null,
-  screen:{screenToDipRect:(_win,bounds)=>bounds},mainPeek:{sync(){}},companion:{observe(){}},guide:{setGameBounds(){}},
+  screen:{screenToDipRect:(_win,bounds)=>bounds},mainPeek:{sync(){}},companion:{observe(){}},guide:{setGameBounds(){}},observeGameWindow(){},
   diagnostic(){},forRenderer:value=>value,guard:(_name,fn)=>{context.authorize=fn;},
   readClientStatus:async()=>{reads++;const answer=nextResponse?structuredClone(nextResponse):{connected:false,phase:'Offline',needsElevation:true};afterRead();if(readGate)await readGate;return answer;},
   helper:{ensure:async()=>{asks++;if(refuse)throw Error('isolated permission refusal');}}});

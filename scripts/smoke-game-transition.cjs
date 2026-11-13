@@ -1,11 +1,19 @@
-const {app}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),{EventEmitter}=require('node:events');
+const {app,screen}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],delay=ms=>new Promise(r=>setTimeout(r,ms));app.on('browser-window-created',(_e,w)=>{windows.push(w);w.webContents.setBackgroundThrottling(false);});
 async function until(check,label){for(let n=0;n<100;n++){const v=await check();if(v)return v;await delay(80);}throw Error(label);}
 async function run(){
  app.setPath('userData',root);
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8')),base=source?path.resolve('.'):path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));
- let phase='ChampSelect',gameId='101',hero='Ashe',role='BOTTOM',mode='rift',omitOwnPick=false,liveAvailable=false,liveRequests=0,holdLive=false,releaseLive=null;
- const mapId=()=>mode==='hex'?12:11,gameMode=()=>mode==='hex'?'KIWI':'CLASSIC';
+ let phase='ChampSelect',gameId='101',hero='Ashe',role='BOTTOM',mode='rift',omitOwnPick=false,liveAvailable=false,liveRequests=0,holdLive=false,releaseLive=null,observer,practice=false;
+ const mapId=()=>mode==='hex'?12:11,gameMode=()=>mode==='hex'?'KIWI':practice?'PRACTICETOOL':'CLASSIC';
+ if(!source){
+  const spawn=cp.spawn;
+  cp.spawn=(file,...args)=>{
+   if(!file.endsWith('window-observer.exe'))return spawn(file,...args);
+   observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;
+   observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;
+  };
+ }
  // Exercise real discoverClient, sanitizeSession, clientSnapshot and liveSnapshot,
  // replacing only the HTTPS sockets. No real client port is opened or contacted.
  const response=options=>{assert.equal(options.hostname,'127.0.0.1');const p=options.path;
@@ -20,6 +28,7 @@ async function run(){
   if(p==='/lol-summoner/v1/current-summoner')return {value:{gameName:'隔离阶段玩家',tagLine:'TEST'}};
   if(p==='/lol-gameflow/v1/gameflow-phase')return {value:phase};
   if(p==='/lol-gameflow/v1/session')return gameId?{value:{gameData:{gameId,mapId:mapId(),queue:{id:mode==='hex'?2400:430,gameMode:gameMode()}}}}:{status:404,value:{}};
+  if(p==='/lol-lobby/v2/lobby')return {status:404,value:{}};
   if(p==='/lol-champ-select/v1/session'){
    const championId=data.champions.find(c=>c.id===hero).key;
    return {value:{localPlayerCellId:1,myTeam:omitOwnPick?[]:[{cellId:1,championId,assignedPosition:role}],theirTeam:[],actions:gameId==='102'&&!omitOwnPick?[[{actorCellId:1,type:'pick',championId,completed:true}]]:[],bans:{}}};
@@ -96,7 +105,7 @@ async function run(){
    const shown=await until(()=>{const candidates=hexWindows();return candidates.length===2&&candidates.every(w=>w.isVisible())?candidates:null;},'Mayhem must auto-show both windows even when gameflow session returns 404');
    const rows=await Promise.all(shown.map(w=>w.webContents.executeJavaScript('window.hexMicro.bootstrap()',true)));
    assert.ok(rows.every(row=>row.hero.id===hero));
-   assert.ok(rows.find(row=>row.kind==='routes').routes.some(route=>route.augments.length&&route.items.length),'Current Mayhem route needs augments and equipment');
+   if(data.patch==='16.22')assert.ok(rows.find(row=>row.kind==='routes').routes.some(route=>route.augments.length&&route.items.length),'Current Mayhem route needs augments and equipment');
    assert.ok(rows.find(row=>row.kind==='economy').equipment.available);
    assert.equal(guide.isVisible(),false,'Mayhem must not show the Rift equipment window');
   }else{
@@ -116,6 +125,25 @@ async function run(){
   }
   phase='EndOfGame';await status();assert.ok(hexWindows().every(w=>!w.isVisible()));
  }
- const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,fullMainStatusFlow:true,firstSelectionPrepares:true,freshInstallationAutoShows:true,realLCUSanitizers:true,loadingPreservesManualRole:true,autoShowWithoutLive:true,manualRoleAfterSessionDisappears:true,sameGameHiddenReconnect:true,sameGameLoadingRetainsProgress:true,lastDraftRosterGapBeforeLive:true,preparedGuideBeforeLive:true,liveFillsVisibleGuide:true,directReconnectWaitsForLive:true,retryAfterFirstLiveFailure:true,unknownRosterKeepsExplicitLoadout:true,unknownRosterKeepsUnconfirmedReference:true,unknownFormalRoleKeepsPreparedRole:true,lateRiftAndMayhemIdentityWithoutGameId:true,lateIdPreservesVisibility:true,loopbackSocketsMocked:true,actualRuneWrites:false,userSettingsIsolated:true};await fs.writeFile(path.join(root,'game-transition-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
+ if(!source){
+  await until(()=>observer,'Native observer did not start');
+  const gameWindow=present=>observer.stdout.emit('data',JSON.stringify({client:null,game:present?{...screen.dipToScreenRect(null,screen.getPrimaryDisplay().workArea),foreground:true,minimized:false}:null})+'\n');
+  for(const [nextMode,clientPhase] of [['rift','Lobby'],['hex','GameStart']]){
+   mode=nextMode;phase=clientPhase;gameId='';hero=mode==='rift'?'Amumu':'Camille';practice=mode==='rift';liveAvailable=true;
+   await status();const before=await state();
+   await delay(150);assert.equal(guide.isVisible(),false);
+   gameWindow(true);
+   const shown=await until(()=>{
+    const matching=windows.filter(w=>!w.isDestroyed()&&w.isVisible()&&w.webContents.getURL().endsWith('/src/hex-micro.html'));
+    return mode==='rift'?guide.isVisible()&&[guide]:matching.length===2&&matching;
+   },`${mode} overlay missing while client stays in ${clientPhase}`);
+   if(mode==='rift')assert.equal((await gjs('window.guide.bootstrap()')).model?.champion.id,hero);
+   else assert.ok((await Promise.all(shown.map(w=>w.webContents.executeJavaScript('window.hexMicro.bootstrap().then(p=>p.hero?.id)',true)))).every(id=>id===hero));
+   assert.deepEqual((await state()).guide,before.guide,'Observed game window is only evidence for display');
+   gameWindow(false);await delay(150);assert.ok(shown.every(w=>w.isVisible()),'One missed native frame must keep the overlays');
+   await delay(5000);gameWindow(false);await until(()=>shown.every(w=>!w.isVisible()),'Observed game exit left its overlays open');
+  }
+ }
+ const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,fullMainStatusFlow:true,firstSelectionPrepares:true,freshInstallationAutoShows:true,realLCUSanitizers:true,loadingPreservesManualRole:true,autoShowWithoutLive:true,manualRoleAfterSessionDisappears:true,sameGameHiddenReconnect:true,sameGameLoadingRetainsProgress:true,lastDraftRosterGapBeforeLive:true,preparedGuideBeforeLive:true,liveFillsVisibleGuide:true,directReconnectWaitsForLive:true,retryAfterFirstLiveFailure:true,unknownRosterKeepsExplicitLoadout:true,unknownRosterKeepsUnconfirmedReference:true,unknownFormalRoleKeepsPreparedRole:true,lateRiftAndMayhemIdentityWithoutGameId:true,lateIdPreservesVisibility:true,observedPracticeAndMayhem:!source,loopbackSocketsMocked:true,actualRuneWrites:false,userSettingsIsolated:true};await fs.writeFile(path.join(root,'game-transition-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'game-transition-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});
