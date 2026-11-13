@@ -94,7 +94,13 @@ module.exports=function createHexMicroWindows({root,getState,setState,getPayload
    name=player.name;brief=player.known&&Number.isFinite(player.value)?'公开装备标价 '+Math.floor(player.value)+' 金；不含未花金币。':'装备尚未读全。';
   }else if(input.kind==='status'&&!p.routes.length){name=p.hero?.name;brief=p.pending;}else{
    const route=p.routes.find(row=>row.id===input.route);if(!route)return false;
-   if(input.kind==='pending'&&route.pendingItems){name='装备待核';brief='部分装备组待核对。';}
+   if(input.kind==='caption'){
+    const card=route.card;
+    name=card?.title||route.title;
+    const skills=card?.priority||(card?.referencePriority?card.referencePriority+'（英雄参考）':'加点待核');
+    brief=[card?.source||'来源待核',skills,card?.priority?card.skillNote:card?.referenceSkillNote].filter(Boolean).join(' · ');
+   }
+   else if(input.kind==='pending'&&route.pendingItems){name='装备待核';brief='部分装备组待核对。';}
    else if(input.kind==='group'&&/^[1-9]\d*$/.test(input.id||'')){const group=route.gearGroups?.[Number(input.id)];if(!group)return false;name=group.when;brief=group.items.map(item=>item.name).join('、')+'。'+group.why;}
    else{const list=input.kind==='augment'?route.augments:input.kind==='item'?route.items:null,entry=list?.find(row=>String(row.id)===String(input.id));if(!entry)return false;({name,brief}=hexMicroHint(route,entry,input.kind));}
   }

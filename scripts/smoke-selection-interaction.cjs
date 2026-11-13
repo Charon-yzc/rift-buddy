@@ -16,16 +16,17 @@ async function run(){
  await fs.writeFile(path.join(root,'preload.cjs'),`
  const fs=require('node:fs'),path=require('node:path');
  const boot=JSON.parse(fs.readFileSync(path.join(__dirname,'boot.json'),'utf8'));
- let revision=0,roundRevision=0,dataRevision=0,dataListener,clientListener,mainPageListener,openBuildListener;
+ let revision=0,roundRevision=0,dataRevision=0,dataListener,stateListener,clientListener,mainPageListener,openBuildListener;
  window.selectionFixture={pending:[],saved:null,
   redraw(){dataListener({revision:++dataRevision,changes:{rankings:boot.data.rankings||{}}});},
+  refreshRoomNick(){const state=structuredClone(this.saved||boot.state);state.preferences.roomNick='隔离测试队友';stateListener({state,revision:++revision});},
   changeGame(){boot.client={...boot.client,game:{gameId:'102'},receivedAt:new Date().toISOString()};clientListener(structuredClone(boot.client));},
   hexMode(){boot.client={...boot.client,mode:{id:'hex'},receivedAt:new Date().toISOString()};clientListener(structuredClone(boot.client));},
   source(id){mainPageListener({route:'hex-source',id});},configuration(){openBuildListener({id:'Jinx',role:'bottom',mode:'hex',readOnly:true});},
   finish(index){const pending=this.pending[index];pending.resolve({revision:++roundRevision,live:null,manual:{hero:pending.hero,context:'manual-'+roundRevision,revision:0,options:[],owned:[]}});}};
  window.buddy={
   bootstrap:async()=>structuredClone(boot),saveState:async state=>{selectionFixture.saved=structuredClone(state);return {state:structuredClone(state),revision:++revision};},
-  onData:listener=>{dataListener=listener;},onClient:listener=>{clientListener=listener;},
+  onData:listener=>{dataListener=listener;},onState:listener=>{stateListener=listener;},onClient:listener=>{clientListener=listener;},
   onMainPage:listener=>{mainPageListener=listener;},onOpenBuild:listener=>{openBuildListener=listener;},
   hexRound:input=>new Promise(resolve=>selectionFixture.pending.push({hero:input.hero,resolve})),client:async()=>structuredClone(boot.client),
   refreshBuild:async()=>{throw Error('Isolated smoke blocks build requests');},updateGuide:async()=>({updated:false}),presentation:async()=>boot.state.preferences.presentation,
@@ -82,6 +83,26 @@ async function run(){
   checks.push({method:'local-choice-after-'+destination,preserved:await js('document.getElementById("overlay-root").firstElementChild===selectionFixture.replacement')});
   if(await js('!!document.querySelector("#overlay-root [data-action=close]")'))await click('#overlay-root [data-action=close]');
  }
+ await click('.sidebar [data-action=navigate][data-route=reference]');
+ await click('[data-action=reference-kind][data-kind=items]');
+ await js(`(()=>{const list=document.querySelector('#item-reference-grid');list.scrollTop=24;document.activeElement.blur();})()`);
+ const anchor='#item-reference-grid [data-game-tooltip-id="2503"]';
+ const open='document.querySelector("#game-tooltip").matches(":popover-open")';
+ const snapshot=()=>js(`(()=>{const node=document.querySelector(${JSON.stringify(anchor)}),list=document.querySelector('#item-reference-grid');return {same:node===selectionFixture.hoveredItem,open:${open},text:document.querySelector('#game-tooltip').textContent,scroll:list.scrollTop};})()`);
+ const point=await js(`(()=>{const node=selectionFixture.hoveredItem=document.querySelector(${JSON.stringify(anchor)}),r=node.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
+ win.webContents.debugger.attach('1.3');
+ const move=position=>win.webContents.debugger.sendCommand('Input.dispatchMouseEvent',{type:'mouseMoved',...position});
+ try{
+  await win.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});
+  await move({x:8,y:8});await move(point);
+  await until(open+'&&document.querySelector("#game-tooltip header b")?.textContent.includes("黯炎火炬")','Equipment hover did not open');
+  const before=await snapshot();assert.ok(before.scroll>0,'Equipment list must actually be scrolled');
+  await js('selectionFixture.refreshRoomNick()');await delay(220);
+  const after=await snapshot();
+  assert.deepEqual(after,before,'An unrelated room update must preserve the open tooltip and list position');
+  await move({x:8,y:8});await until('!'+open,'Leaving the equipment must close its tooltip');
+  checks.push({method:'stationary-equipment-hover-across-refresh',preserved:true,before,after});
+ }finally{win.webContents.debugger.detach();}
  const passed=checks.slice(0,3).every(check=>check.sameLogicalNewDomFocused&&check.focus.action==='pregame-hero')&&checks.slice(3,5).every(check=>check.focus.tag==='BODY')&&checks.slice(5).every(check=>check.preserved)&&errors.length===0;
  const result={passed,source,loadedModule,appSha256:crypto.createHash('sha256').update(await fs.readFile(path.join(source,'src/app.mjs'))).digest('hex'),checks,errors,actualClientAccess:false,actualRuneWrites:false,actualFeedbackUploads:false,allExternalRequestsBlocked:true,blockedRequests,root};
  await fs.writeFile(path.join(root,'result.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));assert.equal(passed,true,'Selection interaction checks failed');app.quit();

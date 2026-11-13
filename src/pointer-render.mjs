@@ -1,6 +1,6 @@
 // A status/recommendation arriving between pointerdown and click must not
 // replace the button under the player. This delays painting, never the action.
-export function holdRenderDuringPointer({document,root,render,selector='button[data-action="build"][data-id],button[data-action="companion-preview"][data-id],button[data-action="hex-quick-pick"],button[data-action="configuration-switch"],[data-drag-role],[data-drag-cell],#familiarity-mass',compositionSelector='',compositionContext=()=>null,setTimer=setTimeout,clearTimer=clearTimeout}){
+export function holdRenderDuringPointer({document,root,render,selector='button[data-action="build"][data-id],button[data-action="companion-preview"][data-id],button[data-action="room-ballot-hero"],button[data-action="room-vote"],button[data-action="hex-quick-pick"],button[data-action="configuration-switch"],[data-drag-role],[data-drag-cell],#familiarity-mass',compositionSelector='',compositionContext=()=>null,setTimer=setTimeout,clearTimer=clearTimeout}){
  let pressed=null,composing=null,composingScope=null,pending=false,timer=null;
  const validComposition=()=>composing?.isConnected&&root.contains(composing)&&document.activeElement===composing&&compositionContext()===composingScope;
  const clearComposition=()=>{if(composing){composing.removeEventListener('compositionend',endComposition,true);composing.removeEventListener('blur',endComposition,true);}composing=null;composingScope=null;};

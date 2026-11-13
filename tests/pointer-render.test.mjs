@@ -27,6 +27,10 @@ test('docked candidate portraits are protected; proposal buttons keep their ordi
  const docked=fixture('companion-preview');docked.emit('pointerdown');assert.equal(docked.gate.defer(),true);docked.emit('click');docked.flush();assert.equal(docked.painted,1);
  const proposal=fixture('propose-result');proposal.emit('pointerdown');assert.equal(proposal.gate.defer(),false);
 });
+for(const action of ['room-ballot-hero','room-vote'])test(`${action} remains clickable during a room update`,()=>{
+ const f=fixture(action);f.emit('pointerdown');assert.equal(f.gate.defer(),true);
+ f.emit('pointerup');assert.equal(f.painted,0);f.emit('click');f.flush();assert.equal(f.painted,1);
+});
 
 function rangeFixture(rangeId='familiarity-mass'){
  const listeners=new Map(),tasks=new Map();let id=0,painted=0;
