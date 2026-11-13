@@ -431,7 +431,8 @@ async function run(){
    await until(()=>intent===hero('Ahri').key,'Explicit lobby hero did not hover on entry');await delay(2600);
    assert.equal(writes.length,before+3,'Explicit lobby hero must prepare hover, runes and spells exactly once');
    assert.equal(page.selectedPerkIds.length,9);
-   assert.equal((await state()).preparations.find(p=>p.id==='Ahri')?.role,'mid','The lobby avatar did not use the client-assigned lane');
+   const shop=path.join(root,'client-fixture','Game','Config','Champions','Ahri','Recommended');
+   assert.deepEqual((await fs.readdir(shop)).filter(name=>name.startsWith('rift-buddy-')),['rift-buddy-103-mid-rift.json'],'The lobby avatar did not write the client-assigned lane set');
    side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
    await until(()=>js(side,'!!document.querySelector(".companion-shell[data-tab=recommend]")'),'Explicit hero hover must remain on recommendations');await click(side,'[data-action=companion-tab][data-tab=plan]');await until(()=>js(side,'!!document.querySelector(".configuration-current")'),'Explicit configuration navigation failed');
    side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
