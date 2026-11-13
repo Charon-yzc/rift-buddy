@@ -21,7 +21,7 @@ function cursorInBounds(cursor,bounds,margin=2){
      &&cursor.y>=bounds.y-m&&cursor.y<=bounds.y+bounds.height+m;
 }
 
-module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,showHexSource=()=>{},getReference=()=>null,referenceRevision=()=>0,diagnostic,resetHexRound=()=>undefined,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
+module.exports=function createGuideWindow({root,getState,setState,getModel,getGameId=()=>getState()?.match?.gameId||null,isQuitting,showMain,showHexSource=()=>{},getReference=()=>null,referenceRevision=()=>0,diagnostic,resetHexRound=()=>undefined,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,hoverHeader=false;
  let pointerPending=null,pointerSerial=0,pointerPass=false;
@@ -40,7 +40,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
   const b=compactGuidePlacement(recover?null:getState()?.compactBounds||current,area,gameBounds,stripScale()),l=guideWindowLimits('compact',area,stripScale());adjusting=true;win.setMinimumSize(l.minWidth,l.minHeight);if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>2))win.setBounds(b);adjusting=false;}
  const isBall=()=>false,isStrip=()=>false,isCompact=()=>true;
  const stripScale=()=>[1,1.1,1.25].includes(getPreferences().presentation?.textScale)?getPreferences().presentation.textScale:1;
- const needsAutoShow=()=>autoShowPending&&getPreferences().guideAutoShow!==false;
+ const needsAutoShow=()=>autoShowPending&&phase!=='GameStart'&&getPreferences().guideAutoShow!==false;
 const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&publishedModel?.live?.matched)&&interactionHotkeyAvailable);
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
 const inputMode=()=>{const currentPass=mousePassThrough();if(currentPass!==pointerPass){pointerPass=currentPass;pointerSerial++;}if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough(),focusable=!pass&&!passiveDisplay;win.setIgnoreMouseEvents(ignore,{forward:true});if(win.isFocusable?.()!==focusable)win.setFocusable(focusable);if(ignore&&win.isFocused())win.blur();}};
@@ -207,26 +207,32 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   throw Error('不支持此操作');
  });
  async function changePhase(next,isConnected){
-  const previous=lastConnectedPhase,id=getState()?.match?.gameId,newGame=!!(id&&lastGameId&&id!==lastGameId);phase=next;connected=!!isConnected;if(newGame){displayEpoch++;micro.suspend();}if(isHex()&&ended()&&!['WaitingForStats','PreEndOfGame','EndOfGame'].includes(previous))hide();inputMode();publish();
+  const previous=lastConnectedPhase,id=getGameId();
+  const bindUnknown=!!(isConnected&&id&&autoShowGame==='unknown'&&inGame(previous)&&inGame(next));
+  if(bindUnknown)autoShowGame=String(id);
+  const newGame=!!(id&&lastGameId&&id!==lastGameId&&!bindUnknown);
+  phase=next;connected=!!isConnected;if(newGame){displayEpoch++;micro.suspend();}if(isHex()&&ended()&&!['WaitingForStats','PreEndOfGame','EndOfGame'].includes(previous))hide();inputMode();publish();
   // Same-game loading must not turn a deliberately hidden reconnect into a
   // first entry. A changed id still starts a new game's visibility decision.
   if(connected){if(next!=='GameStart'||newGame||!inGame(previous))lastConnectedPhase=next;if(id)lastGameId=id;}
   if(!connected)return;
   const preferences=getPreferences();
-  // Transient lobby/None snapshots may still carry this game's identity.
-  // Only an unknown-ID round needs a fresh selection phase to reset its token.
-  if(autoShowGame==='unknown'&&!id&&next==='ChampSelect'&&previous!=='ChampSelect')autoShowGame=null;
+  // Keep known-game dismissals through phase jitter. Once an unnumbered game
+  // ends or a new draft starts, its token can no longer be bound to a new id.
+  if(autoShowGame==='unknown'&&(ended()||next==='ChampSelect'&&previous!=='ChampSelect'))autoShowGame=null;
   const autoGame=String(id||'unknown');
   const playing=['InProgress','Reconnect'].includes(next);
+  // A loading snapshot pauses an unfinished attempt. Returning to the same
+  // game can finish it, while an already dismissed guide stays dismissed.
+  if(!inGame(next)||newGame){if(autoShowPending)autoShowGame=null;autoShowPending=false;}
   if(playing&&(newGame||!['InProgress','Reconnect'].includes(previous))&&autoShowGame!==autoGame&&preferences.guideAutoShow!==false){autoShowGame=autoGame;autoShowPending=true;}
-  if(!playing){autoShowPending=false;}
   if(next===previous&&!newGame&&!needsAutoShow())return;
   if(playing&&needsAutoShow()&&currentSelection()){
-   const epoch=displayEpoch,gameId=getState()?.match?.gameId;
+   const epoch=displayEpoch,gameId=getGameId();
    // Loading/live data may arrive after thirty seconds, or model construction
    // may temporarily fail. Consume the one-shot display only for real content.
    // showInactive remains the sole display; closing it cancels the intent.
-   if(await prepareCurrent()&&epoch===displayEpoch&&gameId===getState()?.match?.gameId&&phase===next&&connected&&needsAutoShow()){
+   if(await prepareCurrent()&&epoch===displayEpoch&&gameId===getGameId()&&phase===next&&connected&&needsAutoShow()){
     const model=payload().model;
     if(model&&(next==='InProgress'||model.live?.matched===true))show(true);
    }
@@ -236,7 +242,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
    else if(behavior==='collapse'&&!isHex()&&!isStrip()){await save({...getState(),compact:true,collapsed:false});applyMode();}
   }
  }
- return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);peek.destroy();skill.destroy();jungle.destroy();micro.destroy();win?.destroy();},isVisible:()=>micro.visible()||peek.visible()||!!win?.isVisible()||skill.visible()||jungle.visible(),window:()=>win,windowInfo:()=>usesHexMicro()?{hexWindows:micro.info(),visible:micro.visible(),mode:'hex'}:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),compact:isCompact(),skillWidget:skill.info(),jungleWidget:jungle.info(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
+ return {show,hide,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);peek.destroy();skill.destroy();jungle.destroy();micro.destroy();win?.destroy();},isVisible:()=>micro.visible()||peek.visible()||!!win?.isVisible()||skill.visible()||jungle.visible(),window:()=>win,windowInfo:()=>usesHexMicro()?{hexWindows:micro.info(),visible:micro.visible(),mode:'hex'}:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),compact:isCompact(),skillWidget:skill.info(),jungleWidget:jungle.info(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
 };
 module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;
 module.exports.cursorInBounds=cursorInBounds;
