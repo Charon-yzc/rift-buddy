@@ -753,7 +753,13 @@ async function boot(){
   if(rendererReady&&pendingMainPage){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}return true;
  });
  guard('window-layout-control',async(action,{surface})=>{if(action==='fold'){if(surface==='main')mainPeek.fold();else companion.fold();return companion.layout(surface);}if(!['follow','reset-side','reset-all'].includes(action))throw Error('窗口布局操作不正确');if(action==='reset-all'&&mainPeek.active())showMainWindow();await companion.reset(action==='reset-all',action!=='follow');if(action==='reset-all'&&state.guide)await guide.recover(true);return companion.layout(surface);},true);
- guard('recover-guide',async()=>{await prepareCurrentGuide();await pollLive(true);return guide.recover();});
+ guard('recover-guide',async()=>{
+  const prepared=await prepareCurrentGuide(),gameId=publicClientGameId(latestClient);
+  if(!state.guide||inGame()&&!prepared&&(!gameId||String(state.guide.match?.gameId)!==gameId)){await pollLive(true);return guide.recover();}
+  const recovered=await guide.recover();
+  pollLive().catch(()=>diagnostic('guide live refresh failed'));
+  return recovered;
+ });
  guard('catalog-source',url=>catalogStore.setSource(url).then(useCatalog));
  guard('catalog-check',()=>catalogStore.check());
  guard('catalog-preview',async raw=>{if(raw!==undefined){if(typeof raw!=='string'||raw.length>catalogCore.CATALOG_LIMIT)throw Error('组合库内容超过限制');return catalogStore.preview(JSON.parse(raw));}
@@ -897,7 +903,9 @@ async function boot(){
   try{
    // A pregame click belongs to its current local party. Restarting the app
    // does not silently revive an unconsumed choice from another lobby.
-   if(!stagedSelectionParty||stagedSelectionParty!==stagedPartyIdentity()){await saveCurrentState(current=>{if(current.draft)delete current.draft.preselection;return current;});return;}
+   const currentParty=stagedPartyIdentity();
+   if(stagedSelectionParty&&!currentParty)return;
+   if(stagedSelectionParty!==currentParty||!stagedSelectionParty){await saveCurrentState(current=>{if(isDeepStrictEqual(current.draft?.preselection,intent))delete current.draft.preselection;return current;});return;}
    const choice=pregameIntentChoice(intent,latestClient,data),cellId=latestClient.session?.localPlayerCellId;
    if(choice.waiting)return;
    await saveCurrentState(current=>{
@@ -909,6 +917,7 @@ async function boot(){
    if(!choice.champion){publishWindows('preselection-status',{message:choice.reason});return;}
    const [{getBuild},{clientPreparationPlan},{runeWriteContext},service]=await Promise.all([import('../src/core/builds.mjs'),import('../src/client-preparation-view.mjs'),import('../src/core/rune-context.mjs'),import('../services/client-preparation.mjs')]);
    await saveTask;if(stagedSourceBinding!==committedBinding||!isDeepStrictEqual(state.draft?.preselection,attemptedIntent))return;if(!stageBindingCurrent())throw Error('预选执行期间配置来源已变化，请重新选择配置');
+   if(latestClient.session?.localPlayerCellId!==cellId)return;
    const requestSource=attemptedIntent.buildSource===undefined?normalizeBuildSource(data.buildSource):requireBuildSource(attemptedIntent.buildSource);
    const baseSelection=intent.kind==='hero'&&intent.selection?intent.selection:{id:choice.champion,role:choice.role,mode:'rift'},hero=data.champions.find(value=>value.id===choice.champion),sourceData=()=>projectPreparationData(requestSource,baseSelection);
    if(intent.reviewStamp&&intent.reviewStamp!==selectionReviewStamp(baseSelection,state,requestSource))throw Error('组合或资料复核状态已变化，请重新选择配置');
@@ -916,10 +925,11 @@ async function boot(){
    const hoverOnly=!!intent.catalogChoiceToken&&(!matched||helperReady)||derived.required&&(!derived.current||helperReady);
    const requested=matched?{...baseSelection,comboId:matched.id}:baseSelection;
    const priorSelection=()=>{const stored=storedPreparation(state.preparations,requested),previous=state.guide?.selection;return stored||(previous&&preparationIdentity(previous)===preparationIdentity(requested)?previous:null);};
-   const remembered=priorSelection();
+   const defaultHero=intent.kind==='hero'&&!intent.selection&&!matched;
+   const remembered=defaultHero?null:priorSelection();
    const explicitFields=intent.selection?intent.selectionFields||CONFIGURATION_FIELDS:[];
    const fresh=!remembered&&(!intent.selection||Array.isArray(intent.selectionFields)&&intent.selectionFields.every(field=>['comboId','creativePlan'].includes(field)));
-   const selection=hoverOnly?{id:choice.champion,role:choice.role,mode:'rift'}:{...(fresh?{coreAuto:true}:{}),...remembered,id:requested.id,role:requested.role,mode:requested.mode};
+   const selection=hoverOnly?{id:choice.champion,role:choice.role,mode:'rift'}:{...(fresh?{coreAuto:true}:{}),...(defaultHero?{loadoutId:'default'}:{}),...remembered,id:requested.id,role:requested.role,mode:requested.mode};
    if(!hoverOnly){for(const field of explicitFields){if(!CONFIGURATION_FIELDS.includes(field))continue;if(Object.hasOwn(baseSelection,field))selection[field]=baseSelection[field];else delete selection[field];}if(matched)selection.comboId=matched.id;}
    const dispatchStamp=selectionReviewStamp(selection,state,requestSource);
    const buildData=preparationData(requestSource,selection),plan=hoverOnly?{value:{champion:choice.champion,role:choice.role,mode:'rift',preselectOnly:true}}:clientPreparationPlan(buildData,{selection,build:getBuild(hero,choice.role,buildData,selection)});if(!plan)throw Error('预选英雄资料暂不可用，请直接选择英雄');
@@ -929,9 +939,9 @@ async function boot(){
    if(stageSelectionRevision!==heroSelectionRevision||applyingRunes||importingItemSet||!latestClient.connected||latestClient.phase!=='ChampSelect'||publicClientGameId(latestClient)!==gameId||state.draft?.preselection?.attemptedGameId!==gameId||state.draft.preselection.champion!==choice.champion)return;
    if(matched&&stagedCatalogChoice(intent,choice.champion,latestClient.session,sourceData())?.id!==matched.id)throw Error('组合成员或资料状态已变化，请重新选择配置');
    if(intent.reviewStamp&&intent.reviewStamp!==selectionReviewStamp(baseSelection,state,requestSource)||dispatchStamp!==selectionReviewStamp(selection,state,requestSource))throw Error('组合或资料复核状态已变化，请重新选择配置');
-   const value=service.validateClientPreparation({...plan.value,sessionGameId:gameId,context:runeWriteContext(latestClient),claimPosition:intent.kind!=='hero'},data);
+   const value=service.validateClientPreparation({...plan.value,sessionGameId:gameId,context:runeWriteContext(latestClient),claimPosition:intent.kind!=='hero',preserveExistingPick:true},data);
    const selectionWriteAtDispatch=selectionWriteRevision;
-   const stillCurrent=()=>stageBindingCurrent()&&latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&buildData.flashSlot===state.preferences.flashSlot&&(hoverOnly||stageSelectionRevision===heroSelectionRevision&&selectionWriteAtDispatch===selectionWriteRevision)&&isDeepStrictEqual(state.draft?.preselection,attemptedIntent)&&(!intent.reviewStamp||intent.reviewStamp===selectionReviewStamp(baseSelection,state,requestSource))&&dispatchStamp===selectionReviewStamp(selection,state,requestSource)&&(hoverOnly||isDeepStrictEqual(remembered,priorSelection()))&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion,latestClient.session,sourceData())?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection,latestClient.session,sourceData()).current);
+   const stillCurrent=()=>stageBindingCurrent()&&latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&buildData.flashSlot===state.preferences.flashSlot&&(hoverOnly||stageSelectionRevision===heroSelectionRevision&&selectionWriteAtDispatch===selectionWriteRevision)&&isDeepStrictEqual(state.draft?.preselection,attemptedIntent)&&(!intent.reviewStamp||intent.reviewStamp===selectionReviewStamp(baseSelection,state,requestSource))&&dispatchStamp===selectionReviewStamp(selection,state,requestSource)&&(hoverOnly||defaultHero||isDeepStrictEqual(remembered,priorSelection()))&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion,latestClient.session,sourceData())?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection,latestClient.session,sourceData()).current);
    const guideCurrent=()=>selectionWriteAtDispatch===selectionWriteRevision&&stillCurrent();
    const operation=beginPreparation('selection',{value,selection,context:value.context});applyingRunes=true;importingItemSet=true;
    let hovered;

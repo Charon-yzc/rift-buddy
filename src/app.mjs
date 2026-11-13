@@ -438,6 +438,7 @@ async function changeHexRound(operation,id,element){
 }
 let toastTimer,saveChain=Promise.resolve(),favoriteSaving=false,updateMessage='',appUpdate={phase:'idle',release:null,received:0,total:null,error:'',via:null},lastSyncStarted=0,restoringSave=false;const pendingSaves=new Set();
 let windowLayout={docked:false},companionTab='recommend',companionPreview=null,lastCompanionOwn='',lastCompanionIntent='',lastCompanionLocked='',autoRecommendTimer,autoRecommendationKey='';
+let lastHexDraft=null;
 const companionScroll=new Map();
 const disclosureState=createDisclosureState();let renderedDisclosureScope='',renderedDraftResults=null,selectionUiReset=false;
 let pendingIntentPreparation=null,pendingIntentPlanId='';
@@ -470,6 +471,7 @@ let itemSetPending='',clientPreparing=false,lastAdoptedRoomShare='',preparationP
 const selectionRequestContext=()=>JSON.stringify([selectionUiRevision,dataState.baseGeneration(),client.connected,client.phase,publicClientGameId(client),client.session?.localPlayerCellId,client.mode?.id]);
 function clearSelectionUi(){
  selectionUiRevision++;pairRefreshErrors.clear();pairRefreshOpen=false;opponentRefreshErrors.clear();buildErrors.clear();matchupFocusError=null;
+ lastHexDraft=null;
  lastTaskSelection=null;lastAdoptedRoomShare='';clickedRoomPlan=null;roomRoleChoice=null;positionClaim=null;draftComparing=false;
  companionTab='recommend';companionPreview=null;lastCompanionOwn='';lastCompanionIntent='';if(windowLayout.docked)lastCompanionLocked='';
  pendingIntentPreparation=null;pendingIntentPlanId='';showAllCandidates=false;recommendationError='';
@@ -972,9 +974,15 @@ function render(){
  }
  if(windowLayout.docked){
   vueRoutes.unmount();
+  // Keep this snapshot in the sidebar presentation only. All writes and room
+  // state continue to use the current, disconnected client until it recovers.
+  const gameId=publicClientGameId(client);
+  if(client.connected&&client.phase==='ChampSelect'&&client.mode?.id==='hex'&&client.session&&gameId)lastHexDraft=client;
+  else if(client.transportInterrupted!==true)lastHexDraft=null;
+  const reconnectDraft=!client.connected&&client.transportInterrupted===true&&lastHexDraft&&publicClientGameId(lastHexDraft)===saved.draft?.clientGameId&&Date.now()-Date.parse(lastHexDraft.receivedAt)<8000?lastHexDraft:null;
   const focused=document.activeElement,focus=formFocus?.room?formFocus:app.contains(focused)&&['INPUT','SELECT'].includes(focused.tagName)?{id:focused.id,tag:focused.tagName,data:{...focused.dataset}}:null;
   const preparation=selectPreparation.own,own=preparation?.own.id||'',claiming=activeRoleClaim(positionClaim,client);
-  if(own!==lastCompanionOwn){lastCompanionOwn=own;companionPreview=null;lastCompanionIntent='';companionScroll.delete('plan');}
+  if(!reconnectDraft&&own!==lastCompanionOwn){lastCompanionOwn=own;companionPreview=null;lastCompanionIntent='';companionScroll.delete('plan');}
   // A missing session during reconnect cannot turn the same lock into a new one.
   if(lockedNavigation&&lockedNavigation!==lastCompanionLocked){
    lastCompanionLocked=lockedNavigation;
@@ -990,7 +998,7 @@ function render(){
   const ownPrepared=clientPreparationPlan(data,preparation||prepared.currentOnly);
   const focusScope=JSON.stringify([client.connected,client.phase,client.game?.gameId||'',own,client.mode?.id||'']);
   if(plan)maybeRefreshBuild(plan.selection.id,plan.selection.role,plan.selection.mode);
-  lastRenderedClient=clientRenderIdentity(client);replacingApp=true;try{app.innerHTML=companionView({data,client,partyRangeMode:partyRangeMode(saved.draft?.partyRangeMode),displayedRoster:companionDisplayRoster(),hexRound:hexRoundForHero(hexRoundSnapshot,companionPreview?.id)||hexRoundSnapshot.live||hexRoundSnapshot.manual,enemyRoles:saved.draft?.enemyRoles,connectionBusy:manualSyncing,slots,unassigned,enemy,bans:clientBans,scope,soloRole,playerPosition:saved.draft?.playerPosition,preselection:displayedPreselection(),style,tab:companionTab,results,ballotKeys:room?.mode!=='idle'&&room?.ballots?results.map(r=>proposalKey(roomResultProposal(r))):[],generating,error:recommendationError,preparation,plan,favorites:saved.favorites,preferences:saved.preferences,room,roomContent:companionTab==='room'?roomPanelHTML():'',rankings:companionTab==='rankings'?rankingContent(true):'',activePlan:activeCreativePlan,adoptedShare:lastAdoptedRoomShare,draftNotice:creativePlanNotice,preparationStatus:clientPreparing?{message:'正在预选并配置…'}:ownPrepared&&clientPreparationStatuses.get(clientPreparationKey(client,ownPrepared)),configurationStatus:{heroStatistics:plan?championStatisticsView(client,data,plan.selection):'',rankedAdvice:plan?rankedConfigurationAdvice(client,data,plan.selection,plan.build,saved.draft?.enemyRoles):null,pending:clientPreparing||runeApplying||!!itemSetPending,itemSetStatuses,clientControls:clientControls(plan,'companion'),refreshing:refreshingBuilds.has(configurationKey),error:buildErrors.get(configurationKey),enemyIds:publicMatchupIds(),publicContext:matchupPreparationContext(),opponentId:plan?chosenMatchupOpponent(plan.selection)?.id||'':'',matchupStatus:plan?matchupFocusStatus(plan.selection):'',opponentRefresh:plan?opponentRefreshStatus(plan.selection):{}},applied:!!preparation&&runeAppliedKeys.has(runeApplicationKey(own,preparation.build.role,preparation.build.runePage)),guideAutoShow:saved.preferences.guideAutoShow!==false,appVersion:boot.version,pairRefresh:pairRefreshStatus(),overlap:windowLayout.overlap,recovery:stateRecovery,taskControls:taskControls(prepared.task),taskPlan:prepared.task,taskComparing:draftComparing,claimingPosition:claiming,showAllCandidates}).replaceAll('loading="lazy"','loading="eager"');}finally{replacingApp=false;}
+  lastRenderedClient=clientRenderIdentity(client);replacingApp=true;try{app.innerHTML=companionView({data,client,reconnectDraft,partyRangeMode:partyRangeMode(saved.draft?.partyRangeMode),displayedRoster:companionDisplayRoster(),hexRound:hexRoundForHero(hexRoundSnapshot,companionPreview?.id)||hexRoundSnapshot.live||hexRoundSnapshot.manual,enemyRoles:saved.draft?.enemyRoles,connectionBusy:manualSyncing,slots,unassigned,enemy,bans:clientBans,scope,soloRole,playerPosition:saved.draft?.playerPosition,preselection:displayedPreselection(),style,tab:companionTab,results,ballotKeys:room?.mode!=='idle'&&room?.ballots?results.map(r=>proposalKey(roomResultProposal(r))):[],generating,error:recommendationError,preparation,plan,favorites:saved.favorites,preferences:saved.preferences,room,roomContent:companionTab==='room'?roomPanelHTML():'',rankings:companionTab==='rankings'?rankingContent(true):'',activePlan:activeCreativePlan,adoptedShare:lastAdoptedRoomShare,draftNotice:creativePlanNotice,preparationStatus:clientPreparing?{message:'正在预选并配置…'}:ownPrepared&&clientPreparationStatuses.get(clientPreparationKey(client,ownPrepared)),configurationStatus:{heroStatistics:plan?championStatisticsView(client,data,plan.selection):'',rankedAdvice:plan?rankedConfigurationAdvice(client,data,plan.selection,plan.build,saved.draft?.enemyRoles):null,pending:clientPreparing||runeApplying||!!itemSetPending,itemSetStatuses,clientControls:clientControls(plan,'companion'),refreshing:refreshingBuilds.has(configurationKey),error:buildErrors.get(configurationKey),enemyIds:publicMatchupIds(),publicContext:matchupPreparationContext(),opponentId:plan?chosenMatchupOpponent(plan.selection)?.id||'':'',matchupStatus:plan?matchupFocusStatus(plan.selection):'',opponentRefresh:plan?opponentRefreshStatus(plan.selection):{}},applied:!!preparation&&runeAppliedKeys.has(runeApplicationKey(own,preparation.build.role,preparation.build.runePage)),guideAutoShow:saved.preferences.guideAutoShow!==false,appVersion:boot.version,pairRefresh:pairRefreshStatus(),overlap:windowLayout.overlap,recovery:stateRecovery,taskControls:taskControls(prepared.task),taskPlan:prepared.task,taskComparing:draftComparing,claimingPosition:claiming,showAllCandidates}).replaceAll('loading="lazy"','loading="eager"');}finally{replacingApp=false;}
   const content=document.querySelector('.companion-content');content.dataset.view=view;content.dataset.disclosureScope=disclosureScope;content.dataset.focusScope=focusScope;
   renderedDisclosureScope='companion:'+disclosureScope;disclosureState.restore(renderedDisclosureScope,app);markNewRoomProposals(previousProposals);
   if(poolSelection){const input=[...app.querySelectorAll('.hex-config-pool-tabs input')].find(node=>node.name===poolSelection.name&&node.value===poolSelection.value);if(input)input.checked=true;}
@@ -1101,8 +1109,14 @@ async function selectRiftHero(context,{preserveConfiguration=false}={}){
  const changed=()=>{if(lastTaskSelection?.id===selection.id&&lastTaskSelection?.role===selection.role)lastTaskSelection=null;throw Error('选人或配置已变化，请按当前英雄重新选择配置');};
  // This request contains no build, catalog adoption, rune or equipment work.
  // It remains available while an older configuration is finishing.
- const selected=await api.prepareSelection({champion:selection.id,role:selection.role,mode:'rift',preselectOnly:true,sessionGameId:gameId,context:writeContext});
- if(revision!==riftHeroClickRevision||selected.superseded||selected.steps?.hover?.status!=='done')return selected;
+ let selected;
+ try{selected=await api.prepareSelection({champion:selection.id,role:selection.role,mode:'rift',preselectOnly:true,sessionGameId:gameId,context:writeContext});}
+ catch(error){if(!current())return {complete:false,superseded:true};throw error;}
+ if(revision!==riftHeroClickRevision||selected.superseded)return selected;
+ if(selected.steps?.hover?.status!=='done'){
+  if(current())toast(selected.steps?.hover?.message||'客户端未确认预选，请重试',true);
+  return selected;
+ }
  if(!current())changed();
  lastTaskSelection=selection;
  if(!preserveConfiguration){companionPreview=null;closeOverlay();}

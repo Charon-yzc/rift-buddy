@@ -5,12 +5,12 @@ import {CLIENT_POSITION_ROLES} from '../src/core/draft.mjs';
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const implementation=source.slice(source.indexOf('let riftHeroClickRevision='),source.indexOf('\nasync function prepareHeroClick('));
 function setup({busy=false}={}){
- let manualRole='';const calls=[],champions=[{id:'Ashe',key:22},{id:'Jinx',key:222}],client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:'777',localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:0,assignedPosition:'BOTTOM'}]}},context=vm.createContext({
+ let manualRole='';const calls=[],notices=[],champions=[{id:'Ashe',key:22},{id:'Jinx',key:222}],client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:'777',localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:0,assignedPosition:'BOTTOM'}]}},context=vm.createContext({
   client,setTimeout,data:{champions},champ:id=>champions.find(h=>h.id===id),ownManualRole:()=>manualRole,runeWriteContext,preparationGameId:()=>client.session.gameId,heroClickSelection,CLIENT_POSITION_ROLES,
   api:{prepareSelection:async value=>{calls.push(value);client.session.myTeam[0].championPickIntent=champions.find(h=>h.id===value.champion).key;return {complete:true,steps:{hover:{status:'done'}}};}},
   clientPreparing:busy,runeApplying:false,itemSetPending:null,lastTaskSelection:null,companionPreview:null,
-  closeOverlay(){},render(){},sync:async()=>{},toast(){},prepareHeroClick:async(s,_expected,selectedFirst)=>{calls.push({configuration:s,selectedFirst});return {complete:true};}
- });vm.runInContext(implementation,context);return {calls,context,client,setManual:role=>manualRole=role};
+  closeOverlay(){},render(){},sync:async()=>{},toast:(...notice)=>notices.push(notice),prepareHeroClick:async(s,_expected,selectedFirst)=>{calls.push({configuration:s,selectedFirst});return {complete:true};}
+ });vm.runInContext(implementation,context);return {calls,notices,context,client,setManual:role=>manualRole=role};
 }
 test('avatar chooses a hero before any build or lineup adoption and configures the role default',async()=>{
  const f=setup();await f.context.selectRiftHero({id:'Ashe',role:'bottom',mode:'rift',comboId:'old-combo',loadoutId:'old-loadout',runeId:'old-rune'});
@@ -53,6 +53,18 @@ test('latest avatar wins without configuring the old hero after its delayed repl
  const f=setup();let firstReply;f.context.api.prepareSelection=value=>{f.calls.push(value);if(value.champion==='Jinx')f.client.session.myTeam[0].championPickIntent=222;return value.champion==='Ashe'?new Promise(r=>firstReply=r):Promise.resolve({steps:{hover:{status:'done'}}});};
  const first=f.context.selectRiftHero({id:'Ashe',role:'bottom',mode:'rift'});await f.context.selectRiftHero({id:'Jinx',role:'bottom',mode:'rift'});firstReply({steps:{hover:{status:'done'}}});await first;
  assert.equal(f.context.lastTaskSelection.id,'Jinx');assert.deepEqual(f.calls.filter(c=>c.configuration).map(c=>c.configuration.id),['Jinx']);
+});
+
+test('a rejected avatar shows the client reason while a superseded rejection stays quiet',async()=>{
+ const f=setup(),prepare=f.context.api.prepareSelection;
+ f.context.api.prepareSelection=async()=>({complete:false,steps:{hover:{status:'failed',message:'英雄已被队友选择'}}});
+ await f.context.selectRiftHero({id:'Ashe',role:'bottom',mode:'rift'});
+ assert.deepEqual(f.notices,[['英雄已被队友选择',true]]);assert.equal(f.context.lastTaskSelection,null);assert.equal(f.calls.length,0);
+ let rejectFirst;
+ f.context.api.prepareSelection=value=>value.champion==='Ashe'?new Promise((_resolve,reject)=>{rejectFirst=reject;}):prepare(value);
+ const first=f.context.selectRiftHero({id:'Ashe',role:'bottom',mode:'rift'});
+ await f.context.selectRiftHero({id:'Jinx',role:'bottom',mode:'rift'});rejectFirst(Error('旧请求失败'));
+ assert.equal((await first).superseded,true);assert.equal(f.notices.length,1);assert.equal(f.context.lastTaskSelection.id,'Jinx');
 });
 test('a reply from a previous game cannot restore a hero or configure the new game',async()=>{
  const f=setup();f.context.api.prepareSelection=async value=>{f.calls.push(value);f.client.session.gameId='778';return {steps:{hover:{status:'done'}}};};

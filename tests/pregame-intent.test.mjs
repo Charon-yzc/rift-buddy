@@ -39,6 +39,13 @@ test('role preselection chooses a representative; explicit hero can use any chos
  assert.equal(pregameIntentChoice({role:'',champion:'Ashe'},c,data).role,'bottom');
 });
 
+test('a lobby avatar follows the assigned lane while a deliberately chosen configuration keeps its lane',()=>{
+ const c=client();c.session.myTeam[0].assignedPosition='JUNGLE';
+ const intent={kind:'hero',role:'support',champion:'Nami'};
+ assert.equal(pregameIntentChoice(intent,c,data).role,'jungle');
+ assert.equal(pregameIntentChoice({...intent,selection:{id:'Nami',role:'support',mode:'rift'}},c,data).role,'support');
+});
+
 test('only a confirmed placeholder for the same game, player and hero survives restart',()=>{
  const c=client();c.session.myTeam[0].championPickIntent=hero('Nami').key;
  const intent={role:'support',champion:'Nami',attemptedGameId:'101',hoveredCellId:0};
@@ -148,6 +155,21 @@ test('a newer explicit configuration owns the client while a staged hover is loa
   assert.equal(scheduler.writes.length,0,`${busy}: a staged hover overlapped the explicit operation`);
   assert.equal(scheduler.context[busy],true,'The deferred hover released another operation\'s lock');
  }
+});
+
+test('an incomplete first snapshot leaves the lobby avatar pending until it can use the assigned lane',async()=>{
+ const f=stagedScheduler('hero'),c=f.context.latestClient,intent=f.context.state.draft.preselection;
+ delete intent.selection;c.session.myTeam[0].assignedPosition='MIDDLE';
+ const eligible=c.eligibility,party=c.party.key;c.eligibility={...eligible,disabled:null};c.party.key='';
+ await f.run();assert.deepEqual(f.context.state.draft.preselection,intent);c.party.key=party;
+ await f.run();assert.equal(f.writes.length,0);assert.equal(f.context.state.draft.preselection.attemptedGameId,undefined);assert.equal(f.messages.length,0);
+ c.eligibility=eligible;const pending=f.run();await f.started;f.release();await pending;
+ assert.equal(f.writes.length,1);assert.equal(f.writes[0].role,'mid');assert.equal(f.writes[0].preserveExistingPick,true);assert.equal(f.context.appliedGuideSelection.selection.loadoutId,'default');
+});
+
+test('a saved lobby avatar leaves a different hero already chosen in the client intact',async()=>{
+ const f=stagedScheduler('hero');f.context.latestClient.session.myTeam[0].championPickIntent=hero('Ahri').key;
+ await f.run();assert.equal(f.writes.length,0);assert.match(f.messages.at(-1).message,/保留当前英雄/);
 });
 test('a cleared preselection cannot dispatch after the player chooses another hero',async()=>{
  for(const preserveRole of [false,true]){

@@ -16,7 +16,7 @@ async function run(){
  const {getBuild}=await import(pathToFileURL(path.join(base,'src/core/builds.mjs'))),{DEFAULT_BUILD_SOURCE,projectBuildSources}=await import(pathToFileURL(path.join(base,'src/core/build-source.mjs'))),{clientPreparationPlan}=await import(pathToFileURL(path.join(base,'src/client-preparation-view.mjs')));
  data.builds=projectBuildSources(JSON.parse(await fs.readFile(path.join(base,'data/builds.json'),'utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);data.flashSlot='d';data.clientFlashSlot='d';
  assert.equal(data.patch,fixture.patch);const expected={};for(const id of fixture.heroes){const selection={id,role:fixture.role,mode:'rift'},build=getBuild(hero(id),fixture.role,data,selection);assert.ok(build.reference&&build.reference.source==='OP.GG'&&build.reference.patch===data.patch&&build.missing.length===0);assert.deepEqual({patch:build.reference.patch,fetchedAt:build.reference.fetchedAt},fixture.sources[id]);expected[id]=clientPreparationPlan(data,{selection,build}).value;}
- let observer,intent=0,picked=0,completed=false,requests=0,refresh=0,heldRune=null,holdNextRune=false,spell1Id=4,spell2Id=21,page={id:44,name:'Isolated editable page',isEditable:true,isActive:true,current:true};
+ let observer,intent=0,picked=0,completed=false,requests=0,refresh=0,heldRune=null,holdNextRune=false,refuseNextAvatar=false,spell1Id=4,spell2Id=21,page={id:44,name:'Isolated editable page',isEditable:true,isActive:true,current:true};
  const fixed={top:'Ornn',jungle:'Vi',mid:'Ahri',support:'Braum'},roles=['top','jungle','mid','bottom','support'],positions=['TOP','JUNGLE','MIDDLE','BOTTOM','UTILITY'];
  const snapshot=()=>({gameId:540001,localPlayerCellId:3,myTeam:roles.map((role,cellId)=>({cellId,championId:cellId===3?picked:hero(fixed[role]).key,championPickIntent:cellId===3?intent:0,assignedPosition:positions[cellId],spell1Id:cellId===3?spell1Id:4,spell2Id:cellId===3?spell2Id:12})),theirTeam:[],actions:[roles.map((role,cellId)=>({id:cellId,type:'pick',actorCellId:cellId,championId:cellId===3?picked||intent:hero(fixed[role]).key,completed:cellId===3?completed:true,isInProgress:cellId===3&&!completed}))],timer:{phase:'PLANNING',remainingMs:90000-refresh},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
  const output=options=>{
@@ -34,7 +34,7 @@ async function run(){
    throw Error('Unsupported mocked GET '+route);
   }
   writes.push({route,method,body});
-  if(route==='/lol-champ-select/v1/session/actions/3'&&method==='PATCH'){assert.equal(body.completed,false,'The application must never lock a champion');intent=body.championId;return {};}
+  if(route==='/lol-champ-select/v1/session/actions/3'&&method==='PATCH'){assert.equal(body.completed,false,'The application must never lock a champion');if(refuseNextAvatar){refuseNextAvatar=false;throw Error('Mock refused avatar');}intent=body.championId;return {};}
   if(route==='/lol-perks/v1/pages/44'&&method==='PUT'){page={...body,id:44,isEditable:true,isActive:true,current:true};return page;}
   if(route==='/lol-champ-select/v1/session/my-selection'&&method==='PATCH'){({spell1Id,spell2Id}=body);return {};}
   throw Error('Unsupported mocked write '+method+' '+route);
@@ -61,7 +61,7 @@ async function run(){
   await until(()=>js(window,'!!document.querySelector('+JSON.stringify(selector)+')&&!document.querySelector('+JSON.stringify(selector)+').disabled&&document.querySelector('+JSON.stringify(selector)+').checkVisibility()'),'Visible enabled real reentry control missing '+selector);
   await control(window,selector);
  }
- async function nativeClick(window,id,withRefresh=false){
+ async function nativeClick(window,id,withRefresh=false,expectSuccess=true){
   await js(window,'(()=>{if(window.__pointerProbe)return;window.__pointerProbe={client:0,data:0};window.buddy.onClient(()=>window.__pointerProbe.client++);window.buddy.onData(value=>window.__pointerProbe.data=value.revision);})()');
   const observed=await js(window,'window.__pointerProbe.client'),selector=avatar(window,id),p=await point(window,selector);mouse(window,'mouseMove',p);mouse(window,'mouseDown',p);
   await until(()=>js(window,'(()=>{const pressed=window.__pressedHero;return !!pressed&&pressed.isConnected&&pressed===document.querySelector('+JSON.stringify(selector)+')&&!pressed.disabled&&pressed.matches(":active");})()'),'Native mouseDown did not press the real hero button');
@@ -75,6 +75,11 @@ async function run(){
    pointerChecks.push({surface:window===main?'main':'sidebar',hero:id,statusRefresh:true,dataRevision:changed.dataRevision,sameDomButton:true});
   }
   const start=performance.now(),before=results.length;mouse(window,'mouseUp',p);
+  if(!expectSuccess){
+   await until(()=>results.slice(before).some(value=>value.input.preselectOnly&&value.input.champion===id&&value.result.steps?.hover?.status==='failed'),'The real avatar did not receive its refusal');
+   await until(()=>js(window,'document.querySelector("#toast")?.matches(".show.error")&&!!document.querySelector("#toast").textContent'),'The actual avatar refused without a visible reason');
+   pointerChecks.push({surface:window===main?'main':'sidebar',hero:id,visibleRefusal:true});return;
+  }
   await until(()=>results.slice(before).some(value=>value.input.preselectOnly&&value.input.champion===id&&value.result.steps?.hover?.status==='done'),'The real avatar did not successfully select before any configuration');
   const selectionMs=performance.now()-start;assert(selectionMs<1000,'Isolated avatar selection exceeded one second: '+selectionMs.toFixed(1)+'ms');
   pointerChecks.push({surface:window===main?'main':'sidebar',hero:id,selectionMs,successfulHeroOnlyRequest:true});
@@ -116,6 +121,8 @@ async function run(){
  await until(()=>js(side,'document.querySelector("[data-action=party-range-mode]")?.textContent==="手动"'),'Manual mode did not reach the other window');
  await control(side,'[data-action=party-range-mode][data-mode=auto]');
  await until(async()=>{const s=await state();return s.draft.partyRangeMode==='auto'&&s.draft.partyCount===1&&s.draft.slots.filter(slot=>slot.party).every(slot=>slot.role==='bottom');},'Automatic mode did not exclude the outside teammate lane');
+ refuseNextAvatar=true;const writesBeforeRefusal=writes.length;
+ await nativeClick(side,'Ashe',false,false);assert.equal(intent,0);assert.equal(writes.length,writesBeforeRefusal+1,'Refused hero dispatched configuration');
  await nativeClick(side,'Ashe',true);await assertCompleted('Ashe');await control(side,'[data-action=companion-tab][data-tab=recommend]');await control(main,'[data-action=task-compare]');
  await nativeClick(main,'Jinx',true);await assertCompleted('Jinx');await control(side,'[data-action=companion-tab][data-tab=recommend]');
  // An explicit rune configuration switch is outside the avatar queue. It must not

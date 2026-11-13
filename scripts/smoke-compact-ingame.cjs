@@ -99,6 +99,23 @@ async function run(){
  assert.equal(await j(side,'document.querySelector("[data-stage=\\"2\\"]").querySelectorAll("img").length'),0);
  side.webContents.setZoomFactor(1);mode='rift';ownHero='LeeSin';gameId++;phase='InProgress';await j(main,'window.buddy.client(true)');await j(main,'window.buddy.openGuide({id:"LeeSin",role:"jungle",mode:"rift"})');
  const gear=await until(()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/guide.html')),'Rift card missing');await until(()=>j(gear,'!!document.querySelector(".compact-guide-main")'),'Compact not rendered');
+ let allowLive=false,heldLive=[];
+ https.get=(options,callback)=>{
+  assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,2999);
+  const own={riotId:'isolated-live-player',rawChampionName:'game_character_displayname_LeeSin',team:'ORDER',position:'JUNGLE',items:[]};
+  const values={'/liveclientdata/activeplayer':{riotId:own.riotId,currentGold:425,level:1},'/liveclientdata/playerlist':[own],'/liveclientdata/gamestats':{gameMode:'CLASSIC',mapNumber:11,gameTime:25},'/liveclientdata/eventdata':{Events:[]}};
+  const request=new EventEmitter(),send=()=>{assert.ok(Object.hasOwn(values,options.path));const response=new EventEmitter();response.statusCode=200;callback(response);response.emit('data',Buffer.from(JSON.stringify(values[options.path])));response.emit('end');};
+  if(allowLive)queueMicrotask(send);else heldLive.push(send);
+  return request;
+ };
+ await j(gear,'window.guide.control("hide")');assert.equal(gear.isVisible(),false);
+ await j(main,'window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,autoLive:true}},b.state))');
+ try{
+  const recovered=await Promise.race([j(main,'window.buddy.recoverGuide()').then(()=>true),delay(2000).then(()=>false)]);
+  assert.equal(recovered,true,'Finding a known guide waited on the live API');assert.equal(gear.isVisible(),true);
+  await until(()=>heldLive.length===4,'Recovered guide did not request live updates');
+ }finally{allowLive=true;for(const reply of heldLive)reply();heldLive=[];}
+ await until(()=>j(gear,'window.guide.bootstrap().then(p=>p.model.live?.gold===425)'),'Live data did not appear after guide recovery');
  for(const [action,value]of [['layout','details'],['ball'],['strip'],['collapse']])assert.equal(await j(gear,`window.guide.control(${JSON.stringify(action)},${JSON.stringify(value)}).then(()=>false,()=>true)`),true);
  assert.equal(await j(gear,'!!document.querySelector("[data-tab],[data-action=layout]")'),false);assert(gear.getBounds().width<=500&&gear.getBounds().height<=400);await capture('rift-gear.png',gear);
 
@@ -113,7 +130,7 @@ async function run(){
 
  for(const kind of ['skill','jungle']){const w=await until(()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/'+kind+'.html')),'Retained '+kind+' widget');await until(()=>j(w,'!!document.querySelector("header")'),'Widget ready');assert.equal(await j(w,'!!document.querySelector("[data-action=details]")'),false);await capture('rift-'+kind+'.png',w);}
  assert.equal(writes,0);assert.equal(badImageRequests,0);assert.deepEqual(external,[]);assert.equal(nativeEdge.expectedFullyInside,true,'Native edge handle extends outside the real work area: '+JSON.stringify(nativeEdge));
- const proof={passed:true,archiveSha256:release.archiveSha256,patch:data.patch,routeCount:original.routes.length,defaultCards:1,sourceOnly:true,fourSourceItems:true,firstConfigurationComplete:true,noInventedRecipeControls:true,nativeLineFoldRestore:true,edgeNativeOverflow,edgeBounds,nonActivating:true,sourceAndSkills:true,nativeHovers:3,shortNarrowAreaScrollbar:true,iconBodyClickThrough:true,sameContextKeyboardFocus:true,crossHeroFocusReset:true,fourStagesNoInventedIcons:true,noLargeWindow:true,riftSkillJungleRetained:true,zeroRealClientWrites:writes,externalNetwork:0};
+ const proof={passed:true,archiveSha256:release.archiveSha256,patch:data.patch,routeCount:original.routes.length,defaultCards:1,sourceOnly:true,fourSourceItems:true,firstConfigurationComplete:true,noInventedRecipeControls:true,nativeLineFoldRestore:true,edgeNativeOverflow,edgeBounds,nonActivating:true,sourceAndSkills:true,nativeHovers:3,shortNarrowAreaScrollbar:true,iconBodyClickThrough:true,sameContextKeyboardFocus:true,crossHeroFocusReset:true,fourStagesNoInventedIcons:true,noLargeWindow:true,riftSkillJungleRetained:true,riftRecoveryBeforeLiveData:true,zeroRealClientWrites:writes,externalNetwork:0};
  await fs.writeFile(path.join(root,'proof.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify({...proof,root}));anchor.destroy();app.quit();
 
 }
