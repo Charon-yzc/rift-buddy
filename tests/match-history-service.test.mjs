@@ -119,3 +119,15 @@ test('same-phase membership changes during identity reads invalidate the roster 
   if(route.includes('current-summoner'))return own;if(route.endsWith('gameflow-phase'))return 'ChampSelect';if(route==='/lol-champ-select/v1/session')return {gameId:replaced?2:1,myTeam:[{cellId:0,summonerId:replaced?3:2}],theirTeam:[]};if(route==='/lol-summoner/v1/summoners/2'){replaced=true;return {...own,summonerId:2};}return {};
  }});await assert.rejects(service.execute('roster'),/成员|对局/);
 });
+test('an idle client without a lobby yields a self-only roster instead of a member-change error',async()=>{
+ const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only'}),request:async(_a,route)=>{
+  if(route.includes('current-summoner'))return own;if(route.endsWith('gameflow-phase'))return 'None';if(route==='/lol-lobby/v2/lobby')throw Error('no lobby');return {};
+ }});
+ const roster=await service.execute('roster');assert.equal(roster.phase,'lobby');assert.deepEqual(roster.players.map(p=>p.puuid),[own.puuid]);
+});
+test('a lobby that disappears during the roster read still invalidates it',async()=>{
+ let lobbyReads=0;const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only'}),request:async(_a,route)=>{
+  if(route.includes('current-summoner'))return own;if(route.endsWith('gameflow-phase'))return 'Lobby';if(route==='/lol-lobby/v2/lobby'){if(lobbyReads++)throw Error('no lobby');return {members:[own],gameConfig:{queueId:430}};}return {};
+ }});
+ await assert.rejects(service.execute('roster'),/成员/);
+});

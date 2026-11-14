@@ -4,8 +4,9 @@ import fs from 'node:fs/promises';
 import {adaptMatchups,validMatchups,matchupEstimate} from '../src/core/matchups.mjs';
 import {matchupView} from '../src/matchup-view.mjs';
 import {validReference} from '../src/core/builds.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-const builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 test('optional public matchup tables strip unknown champions, duplicates and impossible counts',()=>{
  const rows=adaptMatchups([{champion_id:202,play:606,win:312,private:'discard'},{champion_id:202,play:900,win:500},{champion_id:22,play:10,win:1},{champion_id:999999,play:10,win:5},{champion_id:222,play:100,win:101}],data.champions,'Ashe');
  assert.deepEqual(rows,[{champion:'Jhin',relationship:'unknown',samples:606,wins:312}]);assert.equal(validMatchups(rows),true);

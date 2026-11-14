@@ -11,4 +11,11 @@ export function mechanicReview(champion,patch=champion?.combatStatsSource?.patch
  if(review.schema===2)return mechanicSourceMatches(champion,patch,review.sourceAnchors?.[champion.id],legacy)?'current':'pending-review';
  return review.schema===1&&!champion.mechanicSource?'current':'pending-review';
 }
-export function reviewedCatalogEntry(entry,status={},patch){return !!entry&&!status?.[entry.id]?.invalid&&!status?.[entry.id]?.stale&&(!patch||entry.patch===patch);}
+export function reviewedCatalogEntry(entry,status,patch){
+ if(!entry||typeof entry.id!=='string'||typeof patch!=='string'||!patch||!status||typeof status!=='object'||Array.isArray(status)||!Object.hasOwn(status,entry.id))return false;
+ const review=status[entry.id];
+ if(!review||typeof review!=='object'||Array.isArray(review)||!['invalid','stale','patch'].every(key=>Object.hasOwn(review,key))||review.patch!==entry.patch)return false;
+ if(review.invalid===false&&review.historicalCompatible===true&&review.historicalPatch===patch&&typeof review.historicalEvidence==='string')return true;
+ if(entry.patch!==patch)return false;
+ return review.invalid===false&&review.stale===false||review.optionalCompatible===true;
+}

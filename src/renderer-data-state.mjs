@@ -1,9 +1,11 @@
 import {BUNDLED_CATALOG,validateCatalog,installValidatedCatalog,catalogIssues} from './core/catalog.mjs';
 import {normalizeBuildSource,sameBuildSource,selectBuildSource} from './core/build-source.mjs';
 import {prepareAssets,installAssets} from './ui.mjs';
+import {projectCatalogAvailability} from './core/catalog-availability.mjs';
+import {linkReviewStatuses} from './core/catalog-link-review.mjs';
 
-const baseFields=['champions','items','runes','spells','abilityReference','spellbook','patch','version','mechanicSourceRevision'];
-const imageFields=['imageOverrides','items','augments','abilityReference','spells','runes','version'];
+const baseFields=['champions','items','runes','spells','abilityReference','historicalAbilityReference','spellbook','patch','version','mechanicSourceRevision'];
+const imageFields=['clientDictionary','imageOverrides','items','augments','abilityReference','spells','runes','version'];
 const sourceFields=['builds','buildSources','buildSource','patch'];
 const revision=value=>Number.isSafeInteger(value)&&value>=0;
 const fields=value=>value&&typeof value==='object'&&!Array.isArray(value);
@@ -23,13 +25,28 @@ export function createRendererDataState({getSource,requestSnapshot,beforeApply=(
   const keys=Object.keys(changes),has=list=>replace||!current||list.some(key=>Object.hasOwn(changes,key));
   const source=normalizeBuildSource(getSource?.()||current?.buildSource);
   const change={origin,replace,keys,baseChanged:has(baseFields),catalogChanged:has(['catalog']),assetsChanged:has(imageFields),
-   sourceChanged:has(sourceFields)||!sameBuildSource(source,current?.buildSource),statusOnly:!replace&&keys.every(key=>key==='dataFeed')};
+   sourceChanged:has(sourceFields)||!sameBuildSource(source,current?.buildSource),statusOnly:!replace&&keys.every(key=>['dataFeed','communityFeed'].includes(key))};
   const raw=replace?{...changes}:{...canonical,...changes},next=replace?{...raw}:{...current,...changes};
   // Prepare without changing active module indexes or the accepted watermark.
   if(change.catalogChanged)next.catalog=catalog.prepare(raw.catalog||BUNDLED_CATALOG);
   else next.catalog=current.catalog;
-  if(!next.catalogInfo||(change.baseChanged||change.catalogChanged)&&!Object.hasOwn(changes,'catalogInfo'))next.catalogInfo={...next.catalogInfo,...catalog.inspect(next.catalog,next),version:next.catalog.version};
+  if(!next.catalogInfo||(change.baseChanged||change.catalogChanged)&&!Object.hasOwn(changes,'catalogInfo'))next.catalogInfo={...next.catalogInfo,...catalog.inspect(next.catalog,next),version:next.catalog.version,baseKind:'unknown',combinationOrigins:{},linkOrigins:[],linkConfigOverrides:{},linkStatus:{}};
   if(change.sourceChanged){const projected={...raw};projectSource(projected,source);next.buildSources=projected.buildSources;next.builds=projected.builds;next.buildSource=projected.buildSource;}
+  // Only narrow a proof supplied by the authoritative store. Source changes
+  // can invalidate or restore local usability; they cannot create a review.
+  if(next.catalogInfo?.status&&(change.sourceChanged||change.baseChanged||change.catalogChanged||Object.hasOwn(changes,'catalogInfo'))){
+   next.catalogInfo={...next.catalogInfo,status:projectCatalogAvailability(next)};
+  }
+  // A renderer may narrow the main process proof when its inputs change; it
+  // cannot create a historical link authorization for another patch.
+  if(next.catalogInfo?.linkStatus&&(change.baseChanged||change.catalogChanged||Object.hasOwn(changes,'catalogInfo'))){
+   const authoritative=next.catalogInfo.linkStatus,currentLinks=linkReviewStatuses(next.catalog,{...next,allowHistoricalLinks:true}),linkStatus={};
+   for(const [key,fresh] of Object.entries(currentLinks)){
+    const prior=authoritative[key],approved=prior?.invalid===false&&prior.stale===false&&(!fresh.historicalPatch||prior.historicalPatch===fresh.historicalPatch);
+    linkStatus[key]=approved?fresh:{...fresh,stale:true};
+   }
+   next.catalogInfo={...next.catalogInfo,linkStatus};
+  }
   const preparedImages=change.assetsChanged?images.prepare(next):null,before=beforeApply(change);
   if(change.catalogChanged)catalog.install(next.catalog);
   if(change.assetsChanged)images.install(preparedImages);

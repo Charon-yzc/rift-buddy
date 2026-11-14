@@ -27,6 +27,21 @@ export function selectionPartyCount(client,previousClient){
  return 1;
 }
 const roleOf=value=>CLIENT_POSITION_ROLES[String(value||'').toUpperCase()];
+export const partyRangeMode=value=>value==='manual'?'manual':'auto';
+export const partyRangeCount=draft=>partyRangeMode(draft?.partyRangeMode)==='auto'&&validPartyCount(draft?.partyAutoCount)?draft.partyAutoCount:draft?.partyCount;
+export const automaticPartySlots=slots=>slots.map(({partyManual,...slot})=>slot);
+// Reserve publicly occupied lanes without turning a hover into a locked pick,
+// claiming an anonymous teammate, or changing the player's explicit position.
+export function automaticReservedRoles(slots,session,champions,{party,roleOrder={},ownRole=''}={}){
+ const local=session?.localPlayerCellId,members=new Set((party?.members||[]).map(member=>member.cellId));members.add(local);
+ const own=slots.find(slot=>slot.manualPosition&&slot.clientCellId===local)?.role||roleOf(session?.myTeam?.find(player=>player.cellId===local)?.assignedPosition)||ownRole;
+ const protectedRoles=new Set([own,...(session?.myTeam||[]).filter(player=>members.has(player.cellId)).map(player=>slots.find(slot=>slot.manualPosition&&slot.clientCellId===player.cellId)?.role||roleOf(player.assignedPosition))].filter(Boolean));
+ const reserved=new Set(),byKey=new Map(champions.map(hero=>[Number(hero.key),hero]));
+ const players=(session?.myTeam||[]).slice(0,5).filter(player=>Number.isInteger(player.cellId)&&!members.has(player.cellId)&&(Number(player.championId)>0||Number(player.championPickIntent)>0));
+ const candidates=players.map(player=>{const bound=slots.find(slot=>slot.clientCellId===player.cellId),hero=byKey.get(Number(player.championId||player.championPickIntent)),declared=(bound?.manualPosition?bound.role:'')||roleOf(player.assignedPosition);return {cellId:player.cellId,declared,roles:declared?[declared]:(hero?(roleOrder[hero.id]||profile(hero).roles):[])};}).sort((a,b)=>Number(!!b.declared)-Number(!!a.declared)||a.cellId-b.cellId);
+ for(const candidate of candidates){const role=candidate.roles.find(role=>ROLES.some(value=>value.id===role)&&!reserved.has(role)&&!protectedRoles.has(role));if(role)reserved.add(role);}
+ return reserved;
+}
 export function partyRoleConflicts(party){
  const roles=(party?.members||[]).map(member=>roleOf(member.firstPosition)).filter(Boolean);
  return ROLES.filter(role=>roles.filter(value=>value===role.id).length>1).map(role=>role.id);
@@ -45,38 +60,50 @@ export function movePartyMark(slots,role,previousRole=''){
 
 // A checkbox is an explicit range edit, independent of public champion/lane
 // updates arriving from the other window. Apply it to the current board.
-export function editPartyRange(slots,role,checked,{count,session,champions,party,ownRole='',roleOrder={}}={}){
+export function editPartyRange(slots,role,checked,{count,session,champions,party,ownRole='',roleOrder={},mode,selectedRoles}={}){
  const target=slots.find(slot=>slot.role===role);
  if(!target||typeof checked!=='boolean'||!validPartyCount(count))throw Error('请按当前选人重新调整开黑位置');
+ if(mode==='manual'&&selectedRoles!==undefined){
+  if(!Array.isArray(selectedRoles)||selectedRoles.length>5||new Set(selectedRoles).size!==selectedRoles.length||selectedRoles.some(role=>!ROLES.some(value=>value.id===role))||selectedRoles.includes(role)!==checked)throw Error('请按当前选人重新调整开黑位置');
+  // The first manual click freezes what this window actually showed, even
+  // if automatic observation moved its mark before the click reached main.
+  return {slots:slots.map(slot=>({...slot,party:selectedRoles.includes(slot.role),...(slot===target?{partyManual:true}:{})})),partyCount:selectedRoles.length};
+ }
  // Two windows may submit the same visible choice. It is one mark, not two.
- const delta=target.partyManual&&target.party===checked?0:checked?1:-1;
+ const delta=(mode==='manual'||target.partyManual)&&target.party===checked?0:checked?1:-1;
  const partyCount=Math.max(0,Math.min(5,count+delta));
  const next=slots.map(slot=>slot===target?{...slot,party:checked,partyManual:true}:slot);
- return {slots:reconcilePartyRange(next,session,champions,{count:partyCount,party,ownRole,roleOrder}),partyCount};
+ return {slots:reconcilePartyRange(next,session,champions,{count:partyCount,party,ownRole,roleOrder,mode}),partyCount};
 }
 
 // Count is authoritative; synchronization can relocate marks, never resize the
 // range. No public player binding, champion or manually chosen lane is changed.
-export function reconcilePartyRange(slots,session,champions,{count,party,ownRole='',roleOrder={},initial=false}={}){
+export function reconcilePartyRange(slots,session,champions,{count,party,ownRole='',roleOrder={},initial=false,mode}={}){
  if(!validPartyCount(count))return slots;
+ if(mode==='manual')return slots;
+ if(mode==='auto')slots=automaticPartySlots(slots);
  const ordered=ROLES.map(role=>slots.find(slot=>slot.role===role.id)).filter(Boolean);
  const team=session?.myTeam||[],localCell=session?.localPlayerCellId;
  const members=(party?.members||[]).filter(member=>Number.isInteger(member.cellId));
  if(Number.isInteger(localCell)&&!members.some(member=>member.cellId===localCell))members.unshift({cellId:localCell,local:true});
  const memberCells=new Set(members.map(member=>member.cellId));
  if(Number.isInteger(localCell))memberCells.add(localCell);
+ const reserved=mode==='auto'?automaticReservedRoles(slots,session,champions,{party,ownRole,roleOrder}):new Set();
+ const ownPlayer=team.find(player=>player.cellId===localCell),protectedOwn=ordered.find(slot=>slot.manualPosition&&slot.clientCellId===localCell)?.role||roleOf(ownPlayer?.assignedPosition)||ownRole;
  const occupiedByOther=slot=>{
   if(!Number.isInteger(slot.clientCellId))return false;
   const player=team.find(value=>value.cellId===slot.clientCellId);
   const located=slot.manualPosition||roleOf(player?.assignedPosition)||confirmedPlayerPick(player,session);
   return !!located&&!memberCells.has(slot.clientCellId);
  };
- const available=slot=>slot&&!(slot.partyManual&&!slot.party)&&!occupiedByOther(slot);
+ // A confirmed ally is not automatically a premade member. An explicit
+ // user mark is independent evidence and follows that player during a swap.
+ const available=slot=>slot&&!(slot.partyManual&&!slot.party)&&(slot.partyManual&&slot.party||(!occupiedByOther(slot)&&(!reserved.has(slot.role)||slot.role===protectedOwn)));
  const used=new Set();
  const use=role=>{const slot=ordered.find(value=>value.role===role);if(used.size<count&&available(slot))used.add(role);};
  const hints=members.map(member=>{
   const player=team.find(value=>value.cellId===member.cellId),bound=ordered.find(slot=>slot.clientCellId===member.cellId);
-  const hero=confirmedPlayerPick(player,session)&&champions.find(value=>value.key===Number(player.championId));
+  const hero=(confirmedPlayerPick(player,session)||mode==='auto')&&champions.find(value=>value.key===Number(player?.championId||player?.championPickIntent));
   const explicit=(bound?.manualPosition?bound.role:'')||(member.cellId===localCell?ownRole:'')||roleOf(player?.assignedPosition)||(hero?bound?.role:'');
   const usual=hero?(roleOrder[hero.id]||profile(hero).roles):[];
   return {member,priority:explicit?0:hero?2:3,roles:[explicit,...usual,roleOf(member.firstPosition),roleOf(member.secondPosition)]};
@@ -91,8 +118,8 @@ export function reconcilePartyRange(slots,session,champions,{count,party,ownRole
  // Fill from the left after reliable lanes. A preview or offline suggestion
  // must not move the initial range just because its portrait is displayed.
  for(const slot of ordered)use(slot.role);
- if(used.size<count)for(const slot of ordered)if(!used.has(slot.role)&&!(slot.partyManual&&!slot.party)){used.add(slot.role);if(used.size===count)break;}
- if(used.size<count)for(const slot of ordered){used.add(slot.role);if(used.size===count)break;}
+ if(mode!=='auto'&&used.size<count)for(const slot of ordered)if(!used.has(slot.role)&&!(slot.partyManual&&!slot.party)){used.add(slot.role);if(used.size===count)break;}
+ if(mode!=='auto'&&used.size<count)for(const slot of ordered){used.add(slot.role);if(used.size===count)break;}
  return slots.map(slot=>{
   const selected=used.has(slot.role);
   // Relocation is automatic. Keeping the old manual flag would turn it into

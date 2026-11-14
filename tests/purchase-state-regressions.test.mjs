@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -7,8 +8,8 @@ import {purchasePlan} from '../src/core/purchase.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {itemConflicts} from '../src/core/mechanics.mjs';
 
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const bag=ids=>ids.map(id=>({id:String(id),count:1}));
 const snapshot=(ids,{gold=0,roster=[]}={})=>({available:true,at:Date.now(),champion:'Ezreal',mode:'rift',mapId:11,gold,level:12,skills:{Q:5,W:3,E:1,R:2},inventory:bag(ids),roster,teamKnown:true});
 const selection={id:'Ezreal',role:'bottom',mode:'rift'};

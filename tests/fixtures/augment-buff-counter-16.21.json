@@ -1,0 +1,157 @@
+{
+  "patch": "16.21",
+  "source": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+  "catalog": [
+    {
+      "id": 1388,
+      "key": "InfiniteRecursion",
+      "name": "无限循环往复",
+      "rarity": "kPrismatic",
+      "description": "获得60技能急速，外加每次参与击杀3技能急速。",
+      "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/infiniterecursion_small.png",
+      "descriptionStatus": "complete",
+      "catalogEnabled": true,
+      "unresolved": [],
+      "sourceKey": "Kiwi_InfiniteRecursion_Summary",
+      "tooltip": {
+        "revision": 1,
+        "description": "获得60技能急速，外加每次参与击杀3技能急速。\n\n当前技能急速：〔动态数值〕",
+        "status": "partial",
+        "unresolved": [
+          "CurrentHaste"
+        ],
+        "sourceKey": "Kiwi_InfiniteRecursion_Tooltip"
+      },
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e5bdce6524922051cdffbb968918b2e595853d9356ef9a118677ef28d5cda845",
+      "tags": [
+        5
+      ]
+    }
+  ],
+  "bin": {
+    "Maps/ModeSpecificData/Augments/InfiniteRecursion": {
+      "AugmentNameId": "InfiniteRecursion",
+      "NameTra": "Kiwi_InfiniteRecursion_Name",
+      "DescriptionTra": "Kiwi_InfiniteRecursion_Summary",
+      "AugmentTooltipTra": "Kiwi_InfiniteRecursion_Tooltip",
+      "RootSpell": "Maps/ModeSpecificData/Augments/InfiniteRecursion/Augment_InfiniteRecursion",
+      "mBuildTags": 2048,
+      "AugmentLargeIconPath": "assets/ux/kiwi/augments/icons/infiniterecursion_large.tex",
+      "AugmentSmallIconPath": "assets/ux/kiwi/augments/icons/infiniterecursion_small.tex",
+      "AugmentDisplayTags": [
+        5
+      ],
+      "rarity": 2,
+      "AugmentPlatformId": 1388,
+      "__type": "AugmentData"
+    },
+    "Maps/ModeSpecificData/Augments/InfiniteRecursion/Augment_InfiniteRecursion": {
+      "ObjectName": "Augment_InfiniteRecursion",
+      "objectPath": "Maps/ModeSpecificData/Augments/InfiniteRecursion/Augment_InfiniteRecursion",
+      "mScriptName": "Augment_InfiniteRecursion",
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "HastePerStack",
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "StartingHaste",
+            "values": [
+              60,
+              60,
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "MaxLevel",
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "DataValuesModeOverride": {
+          "cherry": {
+            "SpellDataValues": [
+              {
+                "name": "StartingHaste",
+                "values": [
+                  20,
+                  20,
+                  20,
+                  20,
+                  20,
+                  20,
+                  20
+                ],
+                "__type": "SpellDataValue"
+              },
+              {
+                "name": "HastePerStack",
+                "values": [
+                  10,
+                  10,
+                  10,
+                  10,
+                  10,
+                  10,
+                  10
+                ],
+                "__type": "SpellDataValue"
+              }
+            ],
+            "__type": "SpellDataValueVector"
+          }
+        },
+        "mSpellCalculations": {
+          "CurrentHaste": {
+            "mExpandedTooltipCalculationDisplay": 5,
+            "mFormulaParts": [
+              {
+                "mBuffName": "{95ab772f}",
+                "mDataValue": "HastePerStack",
+                "__type": "BuffCounterByNamedDataValueCalculationPart"
+              },
+              {
+                "mDataValue": "StartingHaste",
+                "__type": "NamedDataValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        },
+        "mImgIconName": [
+          "ASSETS/Spells/Icons2D/Terrify.dds"
+        ],
+        "__type": "SpellDataResource"
+      },
+      "__type": "SpellObject"
+    }
+  },
+  "entries": {
+    "kiwi_infiniterecursion_summary": "获得@StartingHaste@技能急速，外加每次参与击杀@HastePerStack@技能急速。",
+    "kiwi_infiniterecursion_tooltip": "获得@StartingHaste@技能急速，外加每次参与击杀@HastePerStack@技能急速。<br><br>当前技能急速：@CurrentHaste@"
+  }
+}

@@ -7,6 +7,7 @@ import {tacticalCooperationPlan,tacticalCooperationMode} from './tactical-cooper
 import {partyCooperationPlan} from './party-cooperation.mjs';
 import {resourceCoordination} from './cooperation-resources.mjs';
 import {mechanicReview} from './mechanic-review.mjs';
+import {createCompositionMechanics} from './composition-mechanics.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -52,8 +53,9 @@ const FAMILIES=[
   failure:'目标离开爆开范围就没有这段减速；不要为了引爆追进危险位置，Q 命中也不要求全员强行冲入。'},
 ];
 
-export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RULES_PATCH,currentPatch=champions[0]?.combatStatsSource?.patch,reviewedAt=RULES_VERSION}={}){
+export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RULES_PATCH,currentPatch=champions[0]?.combatStatsSource?.patch,reviewedAt=RULES_VERSION,cacheLimit=Infinity}={}){
  const byId=new Map(champions.map(c=>[c.id,c])),legacy=new Map(),cache=new Map(),profiles=new Map(),pairs=new Map(COOPERATION_PAIRS.map(row=>[pairKey(row[0],row[1]),row]));
+ let cachedPairs=0;
  for(const [a,b,text] of links)if(byId.has(a)&&byId.has(b))legacy.set(pairKey(a,b),{id:'catalog:'+pairKey(a,b),family:'catalog',name:'已整理两两联动',a,b,step:text,condition:'双方实际具备对应技能与接近条件后再衔接。',failure:'原说明没有确认当前技能可用或对手站位；关键技能落空就停止强接。',patch,reviewedAt,current:false,tempo:'teamfight',sourceUrls:[]});
  const reviews=new Map(),isCurrent=id=>{if(!reviews.has(id))reviews.set(id,mechanicReview(byId.get(id),currentPatch));return reviews.get(id)==='current';};
  const prof=m=>{const k=key(m);if(!profiles.has(k)){const value=profile(byId.get(m.champion),m.role);profiles.set(k,{...value,reviewed:value.reviewed&&isCurrent(m.champion),reviewState:reviews.get(m.champion)});}return profiles.get(k);};
@@ -78,13 +80,15 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
   found||=legacy.get(pairKey(a.champion,b.champion))||null;
   // Cache both directions before canonicalization on the next lookup. Search
   // revisits the same role/hero pairs; keep this cache inside this one graph.
-  if(!cache.has(ak))cache.set(ak,new Map());if(!cache.has(bk))cache.set(bk,new Map());cache.get(ak).set(bk,found);cache.get(bk).set(ak,found);return found;
+  if(cachedPairs>=cacheLimit){cache.clear();cachedPairs=0;}
+  if(!cache.has(ak))cache.set(ak,new Map());if(!cache.has(bk))cache.set(bk,new Map());cache.get(ak).set(bk,found);cache.get(bk).set(ak,found);cachedPairs++;return found;
  };
- return {edge,profile:prof,byId,skills:createSkillCooperation(byId,{isCurrent}),fitCache:new Map()};
+ const skills=createSkillCooperation(byId,{isCurrent,cacheLimit}),fitCache=new Map(),mechanics=createCompositionMechanics(byId,currentPatch);
+ return {edge,profile:prof,byId,currentPatch,skills,mechanics,fitCache,clearCaches(){cache.clear();cachedPairs=0;profiles.clear();reviews.clear();skills.clearCache();mechanics.clear();fitCache.clear();}};
 }
 
-function connectedEdges(members,graph){
- const current=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)current.push(edge);}
+function connectedEdges(members,graph,pairs=null){
+ const current=[];if(pairs){for(const edge of pairs)if(edge?.current)current.push(edge);}else for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)current.push(edge);}
  if(!current.length)return graph.skills.edges(members);
  const missing=members.filter(m=>!current.some(e=>[e.a,e.b].includes(m.champion)));
  if(current.length>=members.length-1&&!missing.length)return current;
@@ -137,9 +141,9 @@ export function cooperationSeeds({members,targets,candidateSets,graph,limit=24,p
  if(pools.some(p=>!p.length))return [];
  const profiles=new Map(pools.flat().map(m=>[key(m),graph.profile(m)]));
  const best=new Map();
- const visit=picks=>{
+ const visit=(picks,pairs=null)=>{
   if(new Set(picks.map(m=>m.champion)).size!==picks.length)return;
-  const connected=connectedEdges(picks,graph),tactical=!connected||connected.every(e=>e.family.startsWith('skills:'))?tacticalCooperationMode(picks,graph,preferences):null;
+  const connected=connectedEdges(picks,graph,pairs),tactical=!connected||connected.every(e=>e.family.startsWith('skills:'))?tacticalCooperationMode(picks,graph,preferences):null;
   if(!connected&&!tactical)return;
   const edges=tactical?[]:connected;
   const traits=picks.map(m=>profiles.get(key(m))),ad=traits.reduce((n,p)=>n+p.damageWeights.ad,0),ap=traits.reduce((n,p)=>n+p.damageWeights.ap,0);
@@ -147,6 +151,13 @@ export function cooperationSeeds({members,targets,candidateSets,graph,limit=24,p
   const family=tactical?'tactical:'+tactical+':'+picks.map((m,i)=>m.role+':'+(traits[i].frontline?'frontline':traits[i].peel?'peel':'damage')).join('|'):edges.map(e=>e.family).sort().join('|'),signature=picks.map(key).join('|'),previous=best.get(family);
   if(!previous||score>previous.score||score===previous.score&&signature<previous.signature)best.set(family,{score,signature,members:picks});
  };
- for(const a of pools[0])for(const b of pools[1]){if(pools.length===2)visit([a,b]);else for(const c of pools[2])visit([a,b,c]);}
+ if(pools.length===2){for(const a of pools[0])for(const b of pools[1])visit([a,b]);}
+ else{
+  // Preserve [0,1], [0,2], [1,2] edge order: the first real pair owns the
+  // third member's follow-up. Each pair lookup is independent of that third.
+  const matrix=(a,b)=>a.map(first=>b.map(second=>first.champion===second.champion?null:graph.edge(first,second)));
+  const ab=matrix(pools[0],pools[1]),ac=matrix(pools[0],pools[2]),bc=matrix(pools[1],pools[2]);
+  for(let i=0;i<pools[0].length;i++)for(let j=0;j<pools[1].length;j++)for(let k=0;k<pools[2].length;k++)visit([pools[0][i],pools[1][j],pools[2][k]],[ab[i][j],ac[i][k],bc[j][k]]);
+ }
  return [...best.values()].sort((a,b)=>b.score-a.score||a.signature.localeCompare(b.signature)).slice(0,limit).map(r=>r.members.map(({rank,...m})=>m));
 }

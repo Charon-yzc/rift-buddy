@@ -1,7 +1,8 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import {getBuild} from '../src/core/builds.mjs';import {completeGearPlan} from '../src/core/complete-gear.mjs';import {itemConflicts} from '../src/core/mechanics.mjs';
-const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));
-data.builds=JSON.parse(fs.readFileSync(new URL('../data/builds.json',import.meta.url))).entries;
+const data=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
+data.builds=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries;
 const selection={id:'Ashe',role:'bottom',mode:'rift',conditions:[]},hero=id=>data.champions.find(c=>c.id===id);
 const live={matched:true,inventoryKnown:true,inventory:[],gold:0,teamKnown:true,queueId:420,roster:[]};
 const build=(id='Ashe',role='bottom',options={})=>getBuild(hero(id),role,data,options);

@@ -1,3 +1,9 @@
+import {duoPlay} from '../src/core/duo-plays.mjs';
+import {resultPlayCard} from '../src/play-card-view.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
+import {historicalData} from './fixtures/snapshot-16.20/catalog.mjs';
+import {duoPlayView} from '../src/duo-play-view.mjs';
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,17 +14,16 @@ import {captureCreativePlan,creativePlanId,validateCreativePlan,selectPartyRoute
 import {cooperationPlan,createCooperationGraph} from '../src/core/cooperation.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
-import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
-const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {resultAsText} from '../src/result-text.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 
-const data=JSON.parse(await fs.readFile('data/game.json'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const graph=createCooperationGraph(data.champions),hero=id=>data.champions.find(c=>c.id===id);
 const slotsFor=members=>createSlots().map(s=>({...s,champion:members.find(m=>m.role===s.role)?.champion||null,party:members.some(m=>m.role===s.role),locked:members.some(m=>m.role===s.role)}));
 
-test('accepted Ashe/Braum stages survive source edits and storage without losing the later protection task',()=>{
+historicalData(data);
+test('accepted stage text survives source edits and storage without changing the saved action or exit',()=>{
  const combo=DUOS.find(d=>d.carry==='Ashe'&&d.support==='Braum'),members=[{champion:'Ashe',role:'bottom'},{champion:'Braum',role:'support'}],slots=slotsFor(members),row={title:combo.name,duo:combo,slots,scope:'party'},plan=captureCreativePlan(row,data);
  const original=structuredClone(BOTTOM_PLAYS.Ashe),originalCombo=structuredClone(combo);
  try{
@@ -27,9 +32,9 @@ test('accepted Ashe/Braum stages survive source edits and storage without losing
   assert.deepEqual(state.draft.creativePlan,plan);
   const selection={id:'Ashe',role:'bottom',mode:'rift',comboId:plan.id,creativePlan:state.draft.creativePlan};
   const key=createGuideModel(data,{...selectGuide(null,selection),stage:'key'}),later=createGuideModel(data,{...selectGuide(null,selection),stage:'later'});
-  assert.notEqual(key.coach.action,later.coach.action);assert.match(later.coach.action,/自保或反开.*保护范围/);
-  assert.match(later.stageHint.play.exit,/保护已交空.*不同战区/);
-  const html=renderGuide({model:later},'team',false,()=>'<img>');assert.ok(html.includes(later.coach.action));assert.doesNotMatch(html,/Changed later|Changed catalog/);
+  assert.notEqual(key.coach.action,later.coach.action);assert.equal(later.coach.action,plan.stagePlan.later.memberJobs.find(m=>m.champion==='Ashe').job);
+  assert.equal(later.stageHint.play.exit,plan.stagePlan.later.exit);
+  const html=duoPlayView(later.combo.play,{stage:later.stageHint.id});assert.ok(html.includes(later.coach.action));assert.doesNotMatch(html,/Changed later|Changed catalog/);
   const copy=resultAsText({...row,creativePlan:plan},data);assert.ok(copy.includes(later.coach.action));assert.ok(copy.includes(later.stageHint.play.exit));assert.doesNotMatch(copy,/Changed later|Changed catalog/);
  }finally{BOTTOM_PLAYS.Ashe.splice(0,3,...original);Object.assign(combo,originalCombo);if(!Object.hasOwn(originalCombo,'steps'))delete combo.steps;}
 });
@@ -77,7 +82,7 @@ test('accepted trio opening keeps the whole-party early plan alongside personal 
   for(const m of trio.members){
    const model=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',creativePlan:restored,comboId:restored.id}),stage:'opening'});
    assert.ok(model.stageHint.play.steps.includes(originalEarly));
-   const html=renderGuide({model},'team',false,()=>'<img>');assert.ok(html.includes(originalEarly));assert.ok(html.includes(model.coach.action));assert.doesNotMatch(html,/Changed opening/);
+   const html=duoPlayView(model.combo.play,{stage:model.stageHint.id});assert.ok(html.includes(originalEarly));assert.ok(html.includes(model.coach.action));assert.doesNotMatch(html,/Changed opening/);
   }
   assert.ok(resultAsText({trio,slots,creativePlan:restored},data).includes(originalEarly));
  }finally{trio.early=originalEarly;}
@@ -92,9 +97,20 @@ test('contradictory or incomplete saved stage content is rejected even with a re
 
 test('personal trio opening text is visible and party guide puts stop conditions before the expandable full sequence',()=>{
  const trio={...structuredClone(TRIOS.find(t=>t.id==='galio-nilah-rakan')),id:'local-opening',early:'先确认三人本轮安全兵线与实际到场时间，不能到就取消；个人三人开局专属约定。'},slots=slotsFor(trio.members),plan=captureCreativePlan({trio,slots,scope:'party'},data);
- for(const m of trio.members){const model=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',comboId:plan.id,creativePlan:plan}),stage:'opening'}),html=renderGuide({model},'team',false,()=>'<img>');
+ for(const m of trio.members){const model=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',comboId:plan.id,creativePlan:plan}),stage:'opening'}),html=duoPlayView(model.combo.play,{stage:model.stageHint.id});
   assert.ok(html.includes(trio.early));assert.doesNotMatch(html,/class="quick-plan"/);
   const panel=html.slice(html.indexOf('class="duo-stage"'));assert.ok(panel.indexOf('何时停')<panel.indexOf('完整队友行动与顺序'));
   assert.match(panel,/data-guide-section="party-steps"/);assert.ok(panel.includes(model.coach.action));
  }
+});
+
+test('a custom duo outside curated role coverage retains its original plan in the actual result drawer',()=>{
+ const carry=data.champions.find(c=>!BOTTOM_PLAYS[c.id]);assert.ok(carry);
+ const custom={id:'custom-uncovered',carry:carry.id,support:'Janna',plan:'我们的原有说明 <script>不可执行</script>',steps:['先约定方向','一起退出'],window:'我们约定的行动窗口',early:'先守兵线',economy:'我们约定的经济分工',risk:'我们的原有风险',patch:'16.19',reviewedAt:'2026-09-01',sources:[]};
+ assert.equal(duoPlay(custom,data),null);
+ const slots=createSlots().map(s=>({...s,champion:s.role==='bottom'?carry.id:s.role==='support'?'Janna':null}));
+ const row={title:'我们的组合',reason:'自定义配合',scope:'bot',duo:custom,slots,targets:['bottom','support'],connections:[],analysis:{warnings:[]}};
+ const html=resultPlayCard(row,0,data);
+ for(const text of ['尚未整理这套组合的分阶段分工','我们的原有说明','先约定方向','一起退出',custom.window,custom.early,custom.economy,custom.risk,'16.19'])assert.ok(html.includes(text),text);
+ assert.ok(html.includes('&lt;script&gt;'));assert.ok(!html.includes('<script>'));assert.ok(!html.includes('data-duo-stage='),'Do not fabricate unsupported curated phase tasks');
 });

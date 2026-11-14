@@ -72,12 +72,16 @@ async function run(){
  await painted(jungle);const mapMetrics=await j(`(()=>{const p=document.querySelector('main'),r=document.querySelector('[aria-label="路线半区与中断"]').getBoundingClientRect();return {width:innerWidth,height:innerHeight,scroll:p.scrollHeight-p.clientHeight,controlsBottom:r.bottom,horizontal:document.documentElement.scrollWidth>innerWidth}})()`);
  assert.equal(mapMetrics.horizontal,false);assert(mapMetrics.controlsBottom<=mapMetrics.height,'Default map controls must remain visible');
  await fs.writeFile(path.join(output,'jungle-map.png'),(await jungle.webContents.capturePage()).toPNG());
- await j(`document.querySelector('[data-action="details"]').click()`);await until(()=>js('!!document.querySelector(".jungle-route-panel")'),'Full route panel missing');
- await js(`document.querySelector('[data-id="step:Nocturne-opening-red-g0.4"]').click()`);
- await until(()=>j('document.querySelector(".next-camp strong").textContent==="蓝BUFF"'),'Full guide progress did not synchronize to widget');
+ assert.equal(await j('!!document.querySelector("[data-action=details]")'),false,'Removed large guide entry returned');
+ await assert.rejects(j(`window.jungleWidget.control('details')`),/已移除/);
+ for(const index of [2,3,4]){
+  await j(`document.querySelector('[data-value="step:Nocturne-opening-red-g0.${index}"]').click()`);
+  await until(()=>Promise.resolve(state.jungleNotes?.routeProgress?.index===index),'Compact route progress not saved');
+ }
+ await until(()=>j('document.querySelector(".next-camp strong").textContent==="蓝BUFF"'),'Compact next-step control did not advance');
  await j(`document.querySelector('[data-value="step:Nocturne-opening-red-g0.3"]').click()`);
- await until(()=>js('document.querySelector(".camp-steps [aria-current=step] span").textContent==="三狼"'),'Widget backtrack did not synchronize to full guide');
- await painted(win);await fs.writeFile(path.join(output,'jungle-full-route.png'),(await win.webContents.capturePage()).toPNG());
+ await until(async()=>((await js('window.guide.bootstrap()')).model.jungle.route.current.label)==='三狼','Widget backtrack did not synchronize to guide state');
+ await painted(jungle);await fs.writeFile(path.join(output,'jungle-compact-backtrack.png'),(await jungle.webContents.capturePage()).toPNG());
  await j(`document.querySelector('[data-value="situation:invaded"]').click()`);
  await until(()=>j(`!!document.querySelector('[data-value="adopt:Nocturne-rotation-red-g0-t500000"]')`),'Safe recovery must use the half opposite to the current manual camp');
  const oldAdopt=await j('document.querySelector("[data-value^=adopt]").dataset.value');
@@ -88,17 +92,19 @@ async function run(){
  await j(`document.querySelector('[data-value="adopt:Nocturne-rotation-red-g0-t600000"]').click()`);
  await until(()=>Promise.resolve(state.jungleNotes?.half==='red'&&state.jungleNotes?.stage==='rotation'),'Recovery kept the old half or opening');assert.equal(state.jungleNotes.lane,undefined);
  await until(()=>j('document.querySelector(".next-camp strong").textContent==="锋喙鸟"'),'Adopted next camp missing');
- const routeCases={manualStagePinned:true,crossWindowSkipAndBacktrack:true,recoveryAdoptedHalf:state.jungleNotes.half,oldInterruptionRejected:true,mapMetrics};
+ const routeCases={manualStagePinned:true,compactProgressAndBacktrack:true,removedDetailsRejected:true,recoveryAdoptedHalf:state.jungleNotes.half,oldInterruptionRejected:true,mapMetrics};
  for(const side of ['blue','red']){
   state=core.selectGuide(null,{id:'Ivern',role:'jungle',mode:'rift'});live={...live,champion:'Ivern',gameTime:120,teamSide:side};guide.publish();
   const start=side==='blue'?'red':'blue',key='Ivern-opening-'+start+'-g0';
   await until(()=>j(`!!document.querySelector('[data-value="step:${key}.0"]')`),'Ivern route missing');
-  await j(`document.querySelector('[data-action="details"]').click()`);await until(()=>js(`!!document.querySelector('[data-id="step:${key}.5"]')`),'Ivern full route missing');
-  await js(`document.querySelector('[data-id="step:${key}.5"]').click()`);
+  for(let index=0;index<=5;index++){
+   await j(`document.querySelector('[data-value="step:${key}.${index}"]').click()`);
+   await until(()=>Promise.resolve(state.jungleNotes?.routeProgress?.index===index),'Ivern compact progress not saved');
+  }
   await until(()=>j('document.querySelector("svg").getAttribute("aria-label").includes("成熟后回收")'),'Ivern map did not switch to mature release');
   await painted(jungle);await fs.writeFile(path.join(output,'ivern-map-'+side+'.png'),(await jungle.webContents.capturePage()).toPNG());
  }
- await js(`document.querySelector('[data-action="new-game"]').click()`);await until(()=>Promise.resolve(!state.jungleNotes),'New game kept route progress');routeCases.newGameReset=true;
+ await js(`window.guide.control('new-game')`);await until(()=>Promise.resolve(!state.jungleNotes),'New game kept route progress');routeCases.newGameResetViaIPC=true;
  state={...core.selectGuide(null,{id:'Nocturne',role:'jungle',mode:'rift'}),match:{phase:'InProgress',gameId:'100'}};
  live={...live,champion:'Nocturne',gameTime:120,teamSide:'blue'};guide.publish();
  await until(()=>j(`!!document.querySelector('[data-value="step:Nocturne-opening-red-g100.0"]')`),'Known-match route click missing');

@@ -10,6 +10,7 @@ async function run(){
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'))).version;global.fetch=async()=>{throw Error('Isolated matchup smoke: external network disabled');};
  let picked='Chogath',assigned='UTILITY',enemy='Nautilus',gameId='1530';
  const output=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);if(options.method&&options.method!=='GET'){writes++;throw Error('Rune writes prohibited in matchup selection smoke');}
   if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return 'ChampSelect';
@@ -48,9 +49,9 @@ async function run(){
  await click('[data-action=guide-current]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');
  await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model?.selection.id==="Chogath"&&b.model.selection.role==="jungle")'),'Role selection did not reach guide');
  const gjs=code=>guide.webContents.executeJavaScript(code,true);
- await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=team]").click();void 0');
- await gjs('(()=>{const el=document.querySelector("#guide-stage");el.value="later";el.dispatchEvent(new Event("change",{bubbles:true}));})()');
- await until(()=>gjs('document.querySelector(".hero-coach .coach-phase")?.textContent.includes("后期团战")'),'The visible guide still shows a different phase');
+ assert.equal(await gjs('!!document.querySelector("[data-tab]")'),false);
+ await gjs('window.guide.control("stage","later")');
+ await until(()=>gjs('window.guide.bootstrap().then(b=>b.model.coach.stage==="later")'),"Retained role model stage missing");
  const laterGuide=await gjs('window.guide.bootstrap().then(b=>({stage:b.model?.coach?.stage,action:b.model?.coach?.action}))');assert.equal(laterGuide.stage,'later');assert.match(laterGuide.action,/资源入口 Q\/W 限制敌方进场/);
  await gjs('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
  await fs.writeFile(path.join(root,'chogath-jungle-guide.png'),(await guide.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
@@ -64,12 +65,12 @@ async function run(){
  const {rolePlay}=await import(require('node:url').pathToFileURL(path.resolve('src/core/role-plays.mjs')));
  for(const [id,position,role]of cases.slice(-3)){
   picked=id;assigned=position;await sync();await changeRole(role);await click('[data-action=guide-current]');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(id)+')'),'Personal guide missing');
-  await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=team]").click();void 0');
+  assert.equal(await gjs('!!document.querySelector("[data-tab]")'),false);
   for(const stage of ['opening','key','later']){
-   await gjs('(()=>{const el=document.querySelector("#guide-stage");el.value='+JSON.stringify(stage)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');
+   await gjs('window.guide.control("stage",'+JSON.stringify(stage)+')');
    await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.coach?.stage==='+JSON.stringify(stage)+')'),'Personal stage missing');
    const expected=rolePlay(id,role,stage),coach=await gjs('window.guide.bootstrap().then(b=>b.model.coach)');assert.ok(expected);assert.equal(coach.roleTask.generic,undefined);assert.ok(coach.action.includes(expected.action));
-   assert.ok((await gjs('document.querySelector(".hero-coach").textContent')).includes(expected.action));
+   assert.ok((await js('document.querySelector(".hero-coach").textContent')).includes(expected.action));
   }
  }
  const saved=(await state()).preparations;assert.ok(saved.some(p=>p.id==='Chogath'&&p.role==='support'));assert.ok(saved.some(p=>p.id==='Chogath'&&p.role==='jungle'));

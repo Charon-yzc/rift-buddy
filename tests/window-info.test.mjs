@@ -28,3 +28,21 @@ test('window UI and copied text distinguish outer bounds from render resolution'
  assert.match(windowInfoDialog(stripInfo),/文本条/);assert.match(windowInfoText(stripInfo),/文本条/);
  assert.doesNotMatch(windowInfoText(stripInfo),/展开/);
 });
+test('the window report can identify exclusive fullscreen even without a game rectangle',()=>{
+ const input={...fixture(),client:{connected:true,phase:'InProgress'},guide:{...fixture().guide,visible:true,collapsed:false,autoShow:true},gameProcessPresent:true,gameExclusiveFullscreen:true};
+ const info=windowInfo(input,now),copy=windowInfoText(info),dialog=windowInfoDialog(info);
+ assert.match(copy,/指引：400 × 740 DIP · 已打开/);
+ assert.match(copy,/未检测到当前外框 · 检测到游戏进程/);
+ assert.match(copy,/检测到独占全屏/);
+ assert.match(dialog,/Esc → 视频 → 窗口模式，选择「无边框」/);
+ assert.equal(windowInfo({...input,observedAt:now-5001},now).gameExclusiveFullscreen,false);
+ assert.equal(windowInfo({...input,gameProcessPresent:false},now).gameExclusiveFullscreen,false);
+});
+test('the report distinguishes the two Mayhem surfaces, including the visible edge tab',()=>{
+ const info=windowInfo({...fixture(),guide:{mode:'hex',autoShow:false,economy:{bounds:{x:10,y:40,width:28,height:64},visible:true,layout:'edge'},routes:{bounds:{x:70,y:40,width:320,height:190},visible:false,layout:'line',title:'private title'}}},now);
+ const copy=windowInfoText(info),dialog=windowInfoDialog(info);
+ assert.match(copy,/海克斯配置：320 × 190 DIP · 已隐藏 · 单行/);
+ assert.match(copy,/双方装备价值：28 × 64 DIP · 已打开 · 贴边/);
+ assert.match(dialog,/开局自动显示：关闭/);
+ assert.doesNotMatch(copy,/指引：尚未打开|private/);
+});

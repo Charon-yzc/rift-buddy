@@ -1,0 +1,42 @@
+{
+  "purpose": "Historical 16.20 rule and migration regression fixtures only; excluded from packaged application",
+  "sourceCommit": "ad2b62bc18b9e191fc1d61ef80a0429508e516c4",
+  "containsPersonalData": false,
+  "files": [
+    {
+      "file": "data/game.json",
+      "oldSha256": "18682c9766de7d168d625232b65bb28a973303918784c4cc4e27ca469b7e95a3",
+      "historicalJsonHash": "1c3d44d438dacce46e7a73eec3259073180567f696e649ce1a0d53b37c53fb28"
+    },
+    {
+      "file": "data/builds.json",
+      "oldSha256": "d48c0c6b5bcfc5bd15645706b692682f5fcb9bd1f632fefc3a75e09e4d4e5f6e",
+      "historicalJsonHash": "2a49fb4723b606ca41871d56019f62b82d8e38952caba48111fa8c7d3b02d532"
+    },
+    {
+      "file": "data/hex-builds.json",
+      "oldSha256": "17f9ec79de862757cb74461b9724732eb3ed756b9f46f7acada25e1e12fcd782",
+      "historicalJsonHash": "82f6fea5ebd79f58f4a48477c89488fd645eb89c35cd9e7642aeee0953607fef"
+    },
+    {
+      "file": "data/rankings.json",
+      "oldSha256": "e9fb028cd61bd2d7e1dbf8d655c9e844a2be7a9927c7d658de9d4bd477c82ce4",
+      "historicalJsonHash": "652a7fc6cd28259216d49fa87cee3ec6f109bd87790102cde5d224e0646e7937"
+    },
+    {
+      "file": "data/spells.json",
+      "oldSha256": "eb8310c3a59c13ae3a04140826b07c5b05f6fb63237a9b7dcbc8b6319b5255e8",
+      "historicalJsonHash": "b8fbd42c0c6dc5d50e13683f706c74cf28b50c573997cdd7b142f5c131bc0bec"
+    },
+    {
+      "file": "data/abilities.json",
+      "oldSha256": "e38fb7f9e9dc3ff9ffea0bbdbe8249c3c67b19e467a44ed0057747af3263cb69",
+      "historicalJsonHash": "0fb4e640b47b2419b785c53f25bebabc37911fbc7ccf7e949f06df286d5c980f"
+    },
+    {
+      "file": "data/hex-hero-observations.json",
+      "oldSha256": "58217d150a19871d613dfb80bf46b3a664ef67a39b58b6049d5801a0e0503881",
+      "historicalJsonHash": "06286c28e066c8ec10045c2569353bacc3931e7f45d13dbd0ec64f0aed6f6df3"
+    }
+  ]
+}

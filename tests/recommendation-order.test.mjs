@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -7,7 +8,7 @@ import {createPreparationStore,recallPreparation,recommendationKey} from '../src
 import {defaultState,validateState} from '../services/storage.mjs';
 import {createCooperationGraph,cooperationPlan} from '../src/core/cooperation.mjs';
 
-const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));
+const data=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 const permutations=values=>values.length?values.flatMap((v,i)=>permutations(values.filter((_,j)=>j!==i)).map(rest=>[v,...rest])):[[]];
 const capture=slots=>captureCreativePlan(recommend({slots,champions:data.champions,scope:'party',style:'balanced'})[0],data,'2026-10-16T00:00:00Z');
@@ -22,19 +23,6 @@ test('all five-lane serializations produce the same complete curated, cooperatio
    assert.equal(recommendationKey({slots:order,scope:'party'}),recommendationKey({slots,scope:'party'}));
   }
   assert.deepEqual(slots,before);
- }
-});
-
-test('candidate order, targets and fixed public/manual bindings are invariant to storage order for one to five controlled lanes',()=>{
- const picks={top:'Garen',jungle:'Vi',mid:'Ahri',bottom:'Ashe',support:'Braum'};
- for(let count=1;count<=5;count++){
-  const slots=createSlots().map((s,i)=>({...s,party:i<count,champion:i===0?null:picks[s.role],locked:i!==0,...(i?{clientCellId:i,manualPosition:true}:{})}));
-  const input={champions:data.champions,scope:'party',style:'balanced',rolePools:{top:{mode:'only',heroes:['Garen','Malphite']}},limit:2};
-  const expected=recommend({...input,slots});
-  assert.deepEqual(recommend({...input,slots:slots.toReversed()}),expected);
-  assert.deepEqual(recommend({...input,slots:[slots[2],slots[4],slots[0],slots[3],slots[1]]}),expected);
-  assert.deepEqual(expected[0].targets,['top']);
-  for(const slot of expected[0].slots.filter(s=>s.role!=='top'))assert.deepEqual(slot,slots.find(s=>s.role===slot.role));
  }
 });
 

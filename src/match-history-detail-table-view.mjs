@@ -1,7 +1,7 @@
-import {escape as e,portrait} from './ui.mjs';
+import {escape as e,portrait,formatNumber} from './ui.mjs';
 import {PUBLIC_STAT_GROUPS,publicStatValue} from './core/match-history/public-stats.mjs';
 import {historyTextTip} from './match-history-hover.mjs';
-const num=value=>Number.isFinite(value)?value.toLocaleString('zh-CN',{maximumFractionDigits:2}):'未读取';
+const num=value=>Number.isFinite(value)?formatNumber(value,2):'未读取';
 const format=(value,field)=>value===null?'未读取':field.format==='boolean'?(value?'是':'否'):field.format==='percentage'?num(value*100)+'%':field.format==='seconds'?`${Math.floor(value/60)}:${String(Math.floor(value%60)).padStart(2,'0')}`:num(value);
 const folded=value=>String(value??'').normalize('NFKC').toLocaleLowerCase().trim();
 export function historyPublicStatRows(game,{query='',group=''}={}){

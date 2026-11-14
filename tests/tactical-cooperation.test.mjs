@@ -1,9 +1,10 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
-import {createCooperationGraph,cooperationPlan,cooperationSeeds} from '../src/core/cooperation.mjs';
+import {createCooperationGraph,cooperationPlan} from '../src/core/cooperation.mjs';
 import {captureCreativePlan,validateCreativePlan,creativeMemberCombo,creativePlanId,selectPartyRoute} from '../src/core/creative-plan.mjs';
 import {captureTeamConfigurations,restoreTeamFavorite} from '../src/core/team-favorites.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
@@ -14,7 +15,7 @@ import {cooperationText,cooperationView} from '../src/cooperation-view.mjs';
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const graph=createCooperationGraph(data.champions),member=(champion,role)=>({champion,role}),hero=id=>data.champions.find(c=>c.id===id);
 const setup=(members,open=[])=>createSlots().map(s=>({...s,party:members.some(m=>m.role===s.role)||open.includes(s.role),champion:members.find(m=>m.role===s.role)?.champion||null,locked:members.some(m=>m.role===s.role),...(members.some(m=>m.role===s.role)?{manualPosition:true,clientCellId:['top','jungle','mid','bottom','support'].indexOf(s.role)}:{})}));
 const friends=[member('Jayce','top'),member('Nidalee','jungle')];
@@ -70,13 +71,6 @@ test('ranged locked friends get an independent poke plan, with different third-m
  const natural=cooperationPlan(friends,graph);assert.equal(natural.tempo,'poke');assert.equal(captureCreativePlan({adaptive:natural,slots:setup(friends)},data).shared.tempo,'poke');
  const [open]=recommend({slots:setup(friends,['mid']),champions:data.champions,scope:'party',play:{tempo:'poke'}});assert.equal(open.adaptive.tempo,'poke');assert.doesNotMatch(cooperationText(open.adaptive),/等杰斯实际控制成功/);
  for(const third of data.champions.filter(c=>!friends.some(m=>m.champion===c.id))){const members=[...friends,member(third.id,'mid')],p=cooperationPlan(members,graph,{tempo:'poke'});if(p.kind==='shared'){assert.equal(p.memberJobs.length,3);assert.ok(p.memberJobs.every(m=>m.job.length>0));assert.ok(captureCreativePlan({adaptive:p,slots:setup(members)},data));}}
-});
-
-test('tactical seeds include ranged completions and still require the supplied pools and fixed friends',()=>{
- const members=[...friends,member(null,'mid')],input={members,targets:['mid'],candidateSets:{mid:[hero('Lux'),hero('Galio')]},graph,preferences:{tempo:'poke'}};
- const seeds=cooperationSeeds(input);assert.equal(seeds.length,2);assert.deepEqual(seeds,cooperationSeeds(input));
- for(const seed of seeds){assert.deepEqual(seed.slice(0,2),friends);assert.ok(['Lux','Galio'].includes(seed[2].champion));assert.equal(cooperationPlan(seed,graph,{tempo:'poke'}).kind,'shared');}
- assert.deepEqual(cooperationSeeds({...input,candidateSets:{mid:[]}}),[]);
 });
 
 test('other ranged groups use actual independent skills, while authored interactions retain their conditions',()=>{

@@ -67,6 +67,36 @@ test('loading preserves the selected hero and formal role before the first live 
  assert.equal(tracker.current(loading,null,data.champions,slots,now).formalRole,'bottom');
 });
 
+test('a final same-game roster gap retains a locked hero for the first in-game guide',()=>{
+ const tracker=createCurrentGameTracker(),pick=client('ChampSelect','1','Jhin','MIDDLE');
+ Object.assign(pick.session.myTeam[0],{pickState:'locked',spell1Id:12,spell2Id:4});
+ tracker.observe(pick,data.champions);
+ const gap=client('ChampSelect','1');gap.session.myTeam=[];
+ tracker.observe(gap,data.champions);
+ const playing=client('InProgress','1');tracker.observe(playing,data.champions);
+ assert.deepEqual(tracker.current(playing,null,data.champions,[],now),{id:'Jhin',role:'mid',mode:'rift',positionKnown:true,formalRole:'mid'});
+ assert.equal(tracker.flashSlot(),'f');
+});
+
+test('a last incomplete draft cannot carry over an unlocked or contradicted champion',()=>{
+ for(const reason of ['unlocked','new-game','unknown-game','cell-changed','mode-changed','mode-conflict','different-action','explicitly-empty','different-champion']){
+  const tracker=createCurrentGameTracker(),pick=client('ChampSelect','1','Jhin','MIDDLE');
+  if(reason!=='unlocked')pick.session.myTeam[0].pickState='locked';
+  tracker.observe(pick,data.champions);
+  const gap=client('ChampSelect',reason==='new-game'?'2':'1');
+  if(reason!=='different-champion'&&reason!=='explicitly-empty')gap.session.myTeam=[];
+  if(reason==='unknown-game')gap.game={};
+  if(reason==='cell-changed')gap.session.localPlayerCellId=2;
+  if(reason==='mode-changed')gap.mode={id:'hex'};
+  if(reason==='mode-conflict'){gap.mode={id:null};gap.game.modeConflict=true;}
+  if(reason==='different-action')gap.session.actions=[{actorCellId:1,type:'pick',championId:22,completed:true}];
+  if(reason==='explicitly-empty')gap.session.myTeam[0].championId=0;
+  tracker.observe(gap,data.champions);
+  const playing=client('InProgress',gap.game.gameId||'1');tracker.observe(playing,data.champions);
+  assert.equal(tracker.current(playing,null,data.champions,[],now)?.id,reason==='different-champion'?'Ashe':undefined,reason);
+ }
+});
+
 test('a new game detected during loading drops the previous hero and role',()=>{
  const tracker=createCurrentGameTracker();tracker.observe(client('ChampSelect'),data.champions);tracker.observe(client('InProgress'),data.champions);
  const loading=client('GameStart','2');tracker.observe(loading,data.champions);

@@ -1,0 +1,173 @@
+global.fetch=async()=>{throw Error('External network disabled for compact-window smoke');};
+// Actual main/preload/renderers with isolated files, synthetic loopback reads,
+// and a fake client window. No real game process or player data is accessed.
+const {app,BrowserWindow,screen}=require('electron');
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events'),{promisify}=require('node:util'),{pathToFileURL}=require('node:url');
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[];let observer,writes=0,gameId=700001,ownHero='Sona',phase='Lobby',mode='hex';
+const external=[];require('electron').shell.openExternal=async url=>{external.push(url);};
+app.setPath('userData',root);app.on('browser-window-created',(_event,window)=>{windows.push(window);window.__createdFocusable=window.isFocusable();window.__focusCount=0;window.on('focus',()=>window.__focusCount++);window.webContents.setBackgroundThrottling(false);window.webContents.on('console-message',(_event,details)=>{if(details.level==='error')console.error(details.message);});window.setFocusable(false);const ignore=window.setIgnoreMouseEvents.bind(window);window.setIgnoreMouseEvents=(value,options)=>{window.__ignoring=value;return ignore(value,options);};});
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(check,label){for(let n=0;n<160;n++){const value=await check();if(value)return value;await delay(100);}throw Error(label);}
+async function run(){
+ await fs.mkdir(root,{recursive:true});const {defaultState}=await import(pathToFileURL(path.resolve('services/storage.mjs'))),state=defaultState(),install=path.join(root,'fake-client');
+ await fs.mkdir(install,{recursive:true});await fs.writeFile(path.join(install,'lockfile'),'LeagueClient:0:23456:isolated-hex:https');
+ Object.assign(state.preferences,{installPath:install,autoSync:false,autoCheck:false,appUpdateCheck:false,roomAuto:false,guideAutoShow:false,autoLive:false,chatNotice:false});await fs.writeFile(path.join(root,'settings.json'),JSON.stringify(state));
+ const release=JSON.parse(await fs.readFile('release/latest.json')),base=path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),key=id=>data.champions.find(c=>c.id===id).key;
+ const session=()=>({gameId,localPlayerCellId:0,myTeam:[ownHero,'Ashe','Seraphine','Lux','Hecarim'].map((id,cellId)=>({cellId,championId:key(id),summonerId:cellId+1,assignedPosition:mode==='rift'&&cellId===0?'jungle':'',spell1Id:4,spell2Id:32})),theirTeam:[],benchEnabled:true,benchChampions:['Yasuo','Malphite','Xerath','Teemo','Karma'].map(id=>({championId:key(id)})),actions:[[{id:1,type:'pick',actorCellId:0,championId:key(ownHero),completed:true}]],bans:{myTeamBans:[],theirTeamBans:[]},timer:{phase:'FINALIZATION',adjustedTimeLeftInPhase:28000}});
+ https.request=(options,callback)=>{const request=new EventEmitter();request.write=()=>{writes++;throw Error('No client writes permitted');};request.end=()=>queueMicrotask(()=>{try{
+  assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);assert.equal(options.auth,'riot:isolated-hex');assert.equal(options.method||'GET','GET');
+  const values={'/lol-game-data/assets/v1/champion-summary.json':[{id:999999,name:'隔离字典'}],'/lol-game-data/assets/v1/items.json':[{id:999999,name:'隔离字典'}],'/lol-gameflow/v1/gameflow-phase':phase,'/lol-gameflow/v1/session':{gameData:{gameId,mapId:mode==='rift'?11:12,queue:{id:mode==='rift'?400:2400,gameMode:mode==='rift'?'CLASSIC':'KIWI'}}},'/lol-champ-select/v1/session':session(),'/lol-champ-select/v1/pickable-champion-ids':data.champions.map(c=>c.key),'/lol-champ-select/v1/disabled-champion-ids':[],'/lol-summoner/v1/current-summoner':{summonerId:1,displayName:'隔离测试'},'/lol-lobby/v2/lobby':{members:[{summonerId:1,isLeader:true},{summonerId:3}],localMember:{summonerId:1}},'/lol-perks/v1/pages':[],'/lol-chat/v1/conversations':[]};
+  assert.ok(Object.hasOwn(values,options.path),'Unexpected mock route '+options.path);const res=new EventEmitter();res.statusCode=200;callback(res);res.emit('data',Buffer.from(JSON.stringify(values[options.path])));res.emit('end');request.emit('close');
+ }catch(error){request.emit('error',error);}});request.destroy=error=>{if(error)request.emit('error',error);};return request;};
+ const execFile=(_file,_args,_options,callback)=>{if(callback)queueMicrotask(()=>callback(null,'--app-port=23456 --remoting-auth-token=isolated-hex',''));return new EventEmitter();};execFile[promisify.custom]=async()=>({stdout:'--app-port=23456 --remoting-auth-token=isolated-hex',stderr:''});cp.execFile=execFile;
+ cp.spawn=file=>{assert.ok(file.endsWith('window-observer.exe'),'Unexpected process '+path.basename(file));observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.stderr=new EventEmitter();observer.stderr.setEncoding=()=>{};observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();observer.exitCode=null;return observer;};
+ await app.whenReady();
+ const fixtureImages=new Map(),imageEntries=require(path.join(base,'services/image-cache.mjs')).imageEntries(data);let badImageRequests=0,handledImages=0;
+ for(const [key,url]of imageEntries){if(fixtureImages.has(url))continue;try{fixtureImages.set(url,await fs.readFile(path.join(base,'data/images',key+'.png')));}catch{}}
+ const png=fixtureImages.values().next().value;assert(png?.length);
+ for(const scheme of ['https','http'])require('electron').session.defaultSession.protocol.handle(scheme,request=>{const u=new URL(request.url);if(!['ddragon.leagueoflegends.com','raw.communitydragon.org','game.gtimg.cn'].includes(u.hostname)||u.protocol!=='https:')badImageRequests++;handledImages++;return new Response(fixtureImages.get(request.url)||png,{headers:{'Content-Type':'image/png'}});});
+
+ app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'))).version;require(path.join(base,'electron/main.cjs'));
+ const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing');main.setSize(1280,900);let surface=main;
+ const js=code=>surface.webContents.executeJavaScript(code,true).catch(error=>{throw Error('Hex renderer: '+code,{cause:error});}),click=async selector=>{assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);await js(`document.querySelector(${JSON.stringify(selector)}).click()`);};
+ const capture=async(name,window=surface)=>{window.showInactive();window.moveTop();await delay(180);await window.webContents.executeJavaScript('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await window.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
+
+ const j=(w,s)=>w.webContents.executeJavaScript(s,true).catch(error=>{throw Error(s,{cause:error});});
+ await until(()=>j(main,'!!window.buddy&&!!document.querySelector("[data-action=navigate][data-route=favorites]")'),'Main ready');
+ await click('[data-action=navigate][data-route=hex]');
+ await click('[data-action=pick-hex]');await until(()=>j(main,'!!document.querySelector("#picker-grid [data-id=Camille]")'),'Hero picker absent');await click('#picker-grid [data-id=Camille]');
+ await until(()=>j(main,'!document.querySelector(".hero-picker")'),'Picker remains');
+ await j(main,'window.buddy.openGuide({id:"Camille",role:"top",mode:"hex"})');
+ const micros=await until(async()=>{const found=windows.filter(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/hex-micro.html'));return found.length===2?found:null;},'Hex micro pair missing');
+ const values=await Promise.all(micros.map(w=>j(w,'window.hexMicro.bootstrap()'))),routes=micros[values.findIndex(v=>v.kind==='routes')],economy=micros[values.findIndex(v=>v.kind==='economy')];
+ await until(()=>j(routes,'!!document.querySelector(".hex-micro-route .hex-micro-augments .is-core")'),'Current pairing cards are missing');
+ const source=JSON.parse(await fs.readFile(path.join(base,'data/hex-builds.json'))).entries.Camille;
+ const opening=await j(routes,'window.hexMicro.bootstrap().then(p=>p.routes[0])');
+ assert.equal(opening.kind,'build-pairing');assert(opening.augments.every(a=>source.augmentIds.includes(a.id)));
+ assert.equal(opening.augments.find(a=>a.core)?.id,1996);assert(opening.items.some(i=>Number(i.id)===3078&&i.core&&i.required));
+ assert(await j(routes,'(()=>{const card=document.querySelector(".hex-micro-route"),augment=card.querySelector("[data-micro-kind=augment]").getBoundingClientRect(),item=card.querySelector("[data-micro-kind=item]").getBoundingClientRect();return augment.bottom<=item.top&&augment.width>item.width;})()'),'Opening augment icons must be above and larger than equipment');
+ await click('.augment-card[data-id="2157"]');await until(()=>j(main,'!!document.querySelector(".augment-modal [data-action=own-augment]")'),'Owned action missing');await click('.augment-modal [data-action=own-augment]');await until(()=>j(main,'!document.querySelector(".augment-modal")'),'Owned action did not close');
+ await until(()=>j(routes,'window.hexMicro.bootstrap().then(p=>p.routes[0]?.augments.some(a=>a.id===2157&&a.core&&a.owned))'),'Recorded core did not reorder the open guide');
+ const original=await j(routes,'window.hexMicro.bootstrap()');
+ const sourceRows=original.routes.filter(route=>route.kind==='reference');
+ assert.deepEqual(sourceRows.map(route=>route.items.map(item=>Number(item.id))),source.core.map(core=>[...core.items,source.boots[0].items[0]]));
+ const reference=original.routes[0];
+ assert(original.routes.every(route=>route.sourceOnly&&route.patch===data.patch&&route.card.sourceUrl===source.sourceUrl&&route.card.priority==='主Q副E'));
+ assert(sourceRows.every(route=>route.items.every(item=>!item.core)));assert.deepEqual(sourceRows.slice(1).map(route=>route.augments),[[],[]]);
+ assert.equal(reference.id,'Camille-pairing-2157');assert(reference.items.some(item=>Number(item.id)===6333&&item.core&&item.required));
+ assert.equal(new URL(reference.card.sourceUrl).searchParams.get('patch'),data.patch);assert.equal(reference.card.source,'OP.GG · 机制搭配');
+ const cardInfo=()=>j(routes,'(()=>{const card=document.querySelector("[data-micro-route]"),caption=card.querySelector(".hex-route-caption");return {id:card.dataset.microRoute,items:[...card.querySelectorAll("[data-micro-kind=item]")].map(item=>item.dataset.microId),augments:[...card.querySelectorAll("[data-micro-kind=augment]")].map(item=>item.dataset.microId),title:caption.querySelector("b").textContent,source:caption.querySelector("small").textContent,sourceTitle:caption.querySelector("small").title,skills:caption.querySelector("span").textContent,skillNote:caption.querySelector("span").title};})()');
+ const fullInfo=await cardInfo();assert.deepEqual(fullInfo.items,reference.items.map(item=>String(item.id)));assert.equal(fullInfo.title,reference.card.title);assert.equal(fullInfo.source,reference.card.source);assert(fullInfo.sourceTitle.includes(reference.card.sourceUrl));assert.equal(fullInfo.skills,reference.card.priority);assert(fullInfo.skillNote.includes('未单独提供此路线的专属加点'));
+ assert.equal(await j(routes,'document.querySelectorAll(".hex-micro-pin").length'),0,'Pin buttons only appear after expansion');assert.equal(await j(routes,'document.querySelectorAll("[data-action=expand]").length'),1);assert.equal(routes.__createdFocusable,false);assert.equal(economy.__createdFocusable,false);
+ await capture('micro-source-only.png',routes);
+ let cursor={x:-1000,y:-1000};screen.getCursorScreenPoint=()=>cursor;
+ const nativeClick=async(selector,window=routes)=>{
+  await j(window,'document.querySelector('+JSON.stringify(selector)+').scrollIntoView({block:"nearest"})');await delay(120);
+  const nativeBounds=window.getBounds(),area=screen.getDisplayMatching(nativeBounds).workArea;
+  const point=await j(window,'(()=>{const e=document.querySelector('+JSON.stringify(selector)+'),r=e.getBoundingClientRect(),left=Math.max(r.left,'+(area.x-nativeBounds.x)+'),right=Math.min(r.right,'+(area.x+area.width-nativeBounds.x)+'),top=Math.max(r.top,'+(area.y-nativeBounds.y)+'),bottom=Math.min(r.bottom,'+(area.y+area.height-nativeBounds.y)+'),x=(left+right)/2,y=(top+bottom)/2;return {x,y,hit:right>left&&bottom>top&&e.contains(document.elementFromPoint(x,y))};})()');assert(point.hit,'Control has no visible hit-testable region: '+selector);
+  const bounds=window.getBounds();cursor={x:Math.round(bounds.x+point.x),y:Math.round(bounds.y+point.y)};if(window===routes)await until(()=>routes.__ignoring===false,'Control region still passes clicks: '+selector);
+  const zoom=window.webContents.getZoomFactor(),x=Math.round(point.x*zoom),y=Math.round(point.y*zoom);window.webContents.sendInputEvent({type:'mouseMove',x,y});window.webContents.sendInputEvent({type:'mouseDown',x,y,button:'left',clickCount:1});window.webContents.sendInputEvent({type:'mouseUp',x,y,button:'left',clickCount:1});await delay(120);cursor={x:-1000,y:-1000};
+ };
+ assert.equal(await j(routes,'document.querySelectorAll(".hex-micro-route:not([hidden])").length'),3);
+ await nativeClick('[data-action=expand]');await until(()=>j(routes,'!!document.querySelector(".is-expanded")'),'More pairings did not expand');
+ assert.equal(await j(routes,'document.querySelectorAll(".hex-micro-route:not([hidden])").length'),original.routes.length);
+ const second=original.routes[1].id;
+ await nativeClick(`[data-action=pin][data-id="${second}"]`);
+ await until(async()=>(await cardInfo()).id===second,'Pin did not move the selected configuration to the top');
+ await nativeClick(`[data-action=pin][data-id="${reference.id}"]`);
+ await until(async()=>(await cardInfo()).id===reference.id,'The original card could not be pinned back');
+ await nativeClick('[data-action=expand]');await until(()=>j(routes,'!document.querySelector(".is-expanded")'),'More pairings did not collapse');
+ await nativeClick('[data-action=line]');await until(()=>j(routes,'document.documentElement.dataset.layout==="line"'),'First-configuration layout missing');assert.deepEqual(await cardInfo(),fullInfo,'The first-configuration view must retain every item, actual mark, source and skill note');await capture('micro-first-configuration.png',routes);
+ const foldedBounds=routes.getBounds();await nativeClick('[data-action=fold]');await until(()=>!routes.isVisible(),'Edge fold did not hide the reference');const edge=await until(async()=>{for(const window of windows.filter(window=>!window.isDestroyed()&&window.isVisible()&&window.webContents.getURL().endsWith('/src/peek.html')))if((await j(window,'window.windowPeek?.bootstrap()'))?.title==='海克斯配置')return window;},'Reference edge handle missing');await until(()=>j(edge,'!!window.windowPeek&&!!document.querySelector("#restore")'),'Edge handle not ready');assert.equal(edge.__createdFocusable,false);const work=screen.getDisplayMatching(foldedBounds).workArea,edgeBounds=edge.getBounds(),visibleEdge={left:Math.max(edgeBounds.x,work.x),right:Math.min(edgeBounds.x+edgeBounds.width,work.x+work.width)};assert(visibleEdge.right-visibleEdge.left>=26&&(Math.abs(visibleEdge.left-work.x)<=2||Math.abs(visibleEdge.right-work.x-work.width)<=2),'Handle has no usable work-area edge region: '+JSON.stringify({edgeBounds,work,foldedBounds}));const edgeNativeOverflow=edgeBounds.x<work.x||edgeBounds.x+edgeBounds.width>work.x+work.width,nativeEdge={edgeBounds,work,foldedBounds,primary:screen.getPrimaryDisplay(),matching:screen.getDisplayMatching(foldedBounds),displays:screen.getAllDisplays(),physicalBounds:screen.dipToScreenRect(null,edgeBounds),displayMocked:false,expectedFullyInside:edgeBounds.x>=work.x-1&&edgeBounds.x+edgeBounds.width<=work.x+work.width+1&&edgeBounds.y>=work.y-1&&edgeBounds.y+edgeBounds.height<=work.y+work.height+1};await capture('micro-edge.png',edge);await nativeClick('#restore',edge);await until(()=>routes.isVisible()&&(edge.isDestroyed()||!edge.isVisible()),'Edge restore did not return the same reference window');assert.equal((await j(routes,'window.hexMicro.bootstrap()')).layout,'line');assert.deepEqual(routes.getBounds(),foldedBounds);assert.deepEqual(await cardInfo(),fullInfo);nativeEdge.nativeRestore=true;await fs.writeFile(path.join(root,'native-edge.json'),JSON.stringify(nativeEdge,null,2));await nativeClick('[data-action=line]');await until(()=>j(routes,'document.documentElement.dataset.layout==="full"'),'Full source reference did not restore');assert.deepEqual(await cardInfo(),fullInfo);
+
+ for(const kind of ['augment','item','caption']){
+  const selector=kind==='caption'?'.hex-route-caption':'[data-micro-kind="'+kind+'"]';
+  const rect=await j(routes,`(()=>{const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();return {x:r.x,y:r.y};})()`),b=routes.getBounds();cursor={x:Math.ceil(b.x+rect.x+4),y:Math.ceil(b.y+rect.y+4)};
+  const tip=await until(()=>windows.find(w=>!w.isDestroyed()&&w.isVisible()&&w.webContents.getURL().startsWith('data:text/html;charset=utf-8,')),'Native hover absent');
+  const tipBounds=tip.getBounds(),tipArea=screen.getDisplayMatching(tipBounds).workArea;
+  assert(tipBounds.width<=192,'190 DIP tooltip plus native fractional-scale rounding');assert.equal(tip.__createdFocusable,false);
+  assert(cursor.x<tipBounds.x||cursor.x>=tipBounds.x+tipBounds.width||cursor.y<tipBounds.y||cursor.y>=tipBounds.y+tipBounds.height,'Tooltip covers the hovered cursor');
+  assert(tipBounds.x>=tipArea.x-1&&tipBounds.y>=tipArea.y-1&&tipBounds.x+tipBounds.width<=tipArea.x+tipArea.width+1&&tipBounds.y+tipBounds.height<=tipArea.y+tipArea.height+1,'Tooltip is clipped by the work area');
+  if(kind==='caption'){
+   const content=await j(tip,'({title:document.querySelector("b").textContent,brief:document.querySelector("p").textContent})');
+   assert.equal(content.title,fullInfo.title);
+   assert.ok(content.brief.includes(fullInfo.source)&&content.brief.includes(fullInfo.skills),'The caption hover must reveal the source and skill order');
+   assert.equal(routes.__ignoring,true,'A fitting caption remains click-through');
+  }
+  await capture('hover-'+kind+'.png',tip);cursor={x:-1000,y:-1000};await until(()=>!tip.isVisible(),'Hover did not hide');
+ }
+
+ // The short, narrow work area scrolls the same equipment cards.
+ const displayMatching=screen.getDisplayMatching.bind(screen);
+ screen.getDisplayMatching=rect=>{const display=displayMatching(rect);return {...display,workArea:{...display.workArea,width:220,height:120}};};
+ await j(routes,'window.hexMicro.bootstrap()');
+ await until(()=>j(routes,'document.querySelector(".hex-micro-route-list").scrollHeight>document.querySelector(".hex-micro-route-list").clientHeight'),'Short layout did not overflow');
+ assert(routes.getBounds().height<=80&&routes.getBounds().width<=220,'Short narrow work area exceeded its cap');assert.deepEqual((await cardInfo()).items,fullInfo.items,'Clipping must not discard source equipment');
+ const short=await j(routes,'(()=>{const e=document.querySelector(".hex-micro-route-list"),r=e.getBoundingClientRect();return {right:r.right,y:r.y+Math.min(30,r.height/2),height:r.height};})()'),shortBounds=routes.getBounds();
+ cursor={x:Math.floor(shortBounds.x+short.right-3),y:Math.floor(shortBounds.y+short.y)};
+ await until(()=>routes.__ignoring===false,'Collapsed scrollbar swallowed clicks');
+ routes.webContents.sendInputEvent({type:'mouseWheel',x:Math.floor(short.right-3),y:Math.floor(short.y),deltaY:-400,canScroll:true,hasPreciseScrollingDeltas:true});
+ await until(()=>j(routes,'document.querySelector(".hex-micro-route-list").scrollTop>0'),'Short overlay would not scroll');
+ await capture('micro-short-scrolled.png',routes);
+ screen.getDisplayMatching=displayMatching;cursor={x:-1000,y:-1000};await j(routes,'window.hexMicro.bootstrap()');
+ await until(()=>j(routes,'document.querySelector(".hex-micro-route-list").scrollHeight<=document.querySelector(".hex-micro-route-list").clientHeight'),'Normal reference layout remained clipped');const restoredBounds=routes.getBounds();cursor={x:restoredBounds.x+80,y:restoredBounds.y+30};await until(()=>routes.__ignoring===true,'Fitting reference body blocked game input');cursor={x:-1000,y:-1000};assert.equal(routes.__focusCount,0);assert.equal(economy.__focusCount,0);
+
+ surface=main;
+ phase='ChampSelect';ownHero='Yasuo';await j(main,'window.buddy.client(true)');
+ const area=screen.getPrimaryDisplay().workArea,anchor=new BrowserWindow({x:area.x+20,y:area.y+30,width:Math.max(500,area.width-580),height:Math.min(850,area.height-80),show:false,focusable:false,webPreferences:{sandbox:true}});await anchor.loadURL('data:text/html,<body>Isolated client</body>');anchor.showInactive();await until(()=>observer,'Observer missing');observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,anchor.getBounds()),foreground:true,minimized:false},game:null})+'\n');
+ await j(main,'window.buddy.companionMode(true)');const side=await until(()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().includes('surface=companion')),'Sidebar missing');surface=side;await until(()=>j(side,'!!document.querySelector("[data-action=companion-tab][data-tab=plan]")'),'Sidebar ready');await click('[data-action=companion-tab][data-tab=plan]');await until(()=>j(side,'!!document.querySelector(".hex-config-pools")'),'Sidebar pool missing');
+ for(const zoom of [1,1.25]){side.webContents.setZoomFactor(zoom);await delay(150);await capture('sidebar-'+zoom+'.png',side);assert.equal(await j(side,'document.documentElement.scrollWidth>innerWidth'),false);}
+ await j(side,'document.querySelector(".hex-config-pool-tabs input[value=\\"2\\"]").click()');await capture('pool-stage.png',side);assert.equal(await j(side,'getComputedStyle(document.querySelector(".hex-config-pool-total")).display'), 'none');
+ assert.equal(await j(side,'document.querySelector("[data-stage=\\"2\\"]").querySelectorAll("img").length'),0);
+ side.webContents.setZoomFactor(1);mode='rift';ownHero='LeeSin';gameId++;phase='InProgress';await j(main,'window.buddy.client(true)');await j(main,'window.buddy.openGuide({id:"LeeSin",role:"jungle",mode:"rift"})');
+ const gear=await until(()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/guide.html')),'Rift card missing');await until(()=>j(gear,'!!document.querySelector(".compact-guide-main")'),'Compact not rendered');
+ let allowLive=false,heldLive=[],enemyItem=2003;
+ https.get=(options,callback)=>{
+  assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,2999);
+  const own={riotId:'isolated-live-player',rawChampionName:'game_character_displayname_LeeSin',team:'ORDER',position:'JUNGLE',items:[{itemID:1001,count:1}]};
+  const team=(ids,team,itemID)=>ids.map(id=>({rawChampionName:'game_character_displayname_'+id,team,items:[{itemID,count:1}]}));
+  const players=[own,...team(['Ahri','Ashe','Lux','Sona'],'ORDER',1001),...team(['Garen','Jhin','Annie','Nami','Warwick'],'CHAOS',enemyItem)];
+  const values={'/liveclientdata/activeplayer':{riotId:own.riotId,currentGold:425,level:1},'/liveclientdata/playerlist':players,'/liveclientdata/gamestats':{gameMode:'CLASSIC',mapNumber:11,gameTime:25},'/liveclientdata/eventdata':{Events:[]}};
+  const request=new EventEmitter(),send=()=>{assert.ok(Object.hasOwn(values,options.path));const response=new EventEmitter();response.statusCode=200;callback(response);response.emit('data',Buffer.from(JSON.stringify(values[options.path])));response.emit('end');};
+  if(allowLive)queueMicrotask(send);else heldLive.push(send);
+  return request;
+ };
+ await j(gear,'window.guide.control("hide")');assert.equal(gear.isVisible(),false);
+ await j(main,'window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,autoLive:true}},b.state))');
+ try{
+  const recovered=await Promise.race([j(main,'window.buddy.recoverGuide()').then(()=>true),delay(2000).then(()=>false)]);
+  assert.equal(recovered,true,'Finding a known guide waited on the live API');assert.equal(gear.isVisible(),true);
+  await until(()=>heldLive.length===4,'Recovered guide did not request live updates');
+ }finally{allowLive=true;for(const reply of heldLive)reply();heldLive=[];}
+ await until(()=>j(gear,'window.guide.bootstrap().then(p=>p.model.live?.gold===425)'),'Live data did not appear after guide recovery');
+ const totals=()=>j(economy,`(()=>{const row=document.querySelector('.hex-economy-totals');if(!row)return null;const diff=row.querySelector('b'),rect=row.getBoundingClientRect();return {ally:row.querySelector('.ally').textContent,enemy:row.querySelector('.enemy').textContent,diff:diff.textContent,color:getComputedStyle(diff).color,fits:rect.bottom<=innerHeight&&rect.right<=innerWidth&&[...row.children].every(child=>child.getBoundingClientRect().right<=rect.right+.01)};})()`);
+ await until(async()=>(await totals())?.diff==='+1,250','Complete public equipment did not show a team lead');
+ await capture('economy-team-lead.png',economy);
+ assert.deepEqual(await totals(),{ally:'我 1,500',enemy:'敌 250',diff:'+1,250',color:'rgb(124, 230, 163)',fits:true});
+ await j(main,'window.buddy.openGuide()');
+ await until(()=>j(economy,'window.hexMicro.bootstrap().then(({context,view})=>window.hexMicro.control("line",{context,view}))'),'Economy line control did not accept the current view');
+ await until(()=>j(economy,'document.documentElement.dataset.layout==="line"'),'Economy did not switch to compact layout');
+ enemyItem=1036;
+ await j(main,'window.buddy.openGuide()');
+ await until(async()=>(await totals())?.diff==='-250','Live enemy equipment did not update the team difference');
+ assert.deepEqual(await totals(),{ally:'我 1,500',enemy:'敌 1,750',diff:'-250',color:'rgb(255, 148, 151)',fits:true});
+ await capture('economy-team-trail.png',economy);
+ for(const [action,value]of [['layout','details'],['ball'],['strip'],['collapse']])assert.equal(await j(gear,`window.guide.control(${JSON.stringify(action)},${JSON.stringify(value)}).then(()=>false,()=>true)`),true);
+ assert.equal(await j(gear,'!!document.querySelector("[data-tab],[data-action=layout]")'),false);assert(gear.getBounds().width<=500&&gear.getBounds().height<=400);await capture('rift-gear.png',gear);
+
+ await j(gear,'document.querySelector("[data-action=interaction]").focus()');
+ assert.equal(await j(gear,'document.activeElement.dataset.action'),'interaction');
+ await j(gear,'window.guide.control("live-advice")');await delay(120);
+ assert.equal(await j(gear,'document.activeElement.dataset.action'),'interaction','Same-context repaint dropped keyboard focus');
+ await j(main,'window.buddy.openGuide({id:"Ahri",role:"mid",mode:"rift"})');
+ await until(()=>j(gear,'window.guide.bootstrap().then(p=>p.model.champion.id==="Ahri")'),'New hero not selected');await delay(120);
+ assert.notEqual(await j(gear,'document.activeElement.dataset.action'),'interaction','New context retained an unrelated control focus');
+ await j(main,'window.buddy.openGuide({id:"LeeSin",role:"jungle",mode:"rift"})');
+
+ for(const kind of ['skill','jungle']){const w=await until(()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/'+kind+'.html')),'Retained '+kind+' widget');await until(()=>j(w,'!!document.querySelector("header")'),'Widget ready');assert.equal(await j(w,'!!document.querySelector("[data-action=details]")'),false);await capture('rift-'+kind+'.png',w);}
+ assert.equal(writes,0);assert.equal(badImageRequests,0);assert.deepEqual(external,[]);assert.equal(nativeEdge.expectedFullyInside,true,'Native edge handle extends outside the real work area: '+JSON.stringify(nativeEdge));
+ const proof={passed:true,archiveSha256:release.archiveSha256,patch:data.patch,routeCount:original.routes.length,defaultCards:3,sourceOnly:true,fourSourceItems:true,firstConfigurationComplete:true,noInventedRecipeControls:true,nativeLineFoldRestore:true,edgeNativeOverflow,edgeBounds,nonActivating:true,sourceAndSkills:true,nativeHovers:3,shortNarrowAreaScrollbar:true,iconBodyClickThrough:true,sameContextKeyboardFocus:true,crossHeroFocusReset:true,fourStagesNoInventedIcons:true,noLargeWindow:true,riftSkillJungleRetained:true,riftRecoveryBeforeLiveData:true,zeroRealClientWrites:writes,externalNetwork:0};
+ await fs.writeFile(path.join(root,'proof.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify({...proof,root}));anchor.destroy();app.quit();
+
+}
+run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,"native-error.txt"),error.stack).catch(()=>{});app.exit(1);});

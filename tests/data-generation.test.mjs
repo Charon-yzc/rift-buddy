@@ -10,35 +10,53 @@ import {parseArgs} from 'node:util';
 import {loadServerSeed,serverBuildJobs} from '../services/server-data-collector.mjs';
 import {feedHash,verifyFeedEnvelope,validateFeedBundle} from '../services/data-feed.mjs';
 import {defaultBuildJobs} from '../src/core/default-build-jobs.mjs';
+import {BUILD_REGIONS,BUILD_TIERS} from '../src/core/build-source.mjs';
+import {rankingKey} from '../src/core/rankings.mjs';
 import {stageServerData} from '../services/server-data-store.mjs';
 import {publishServerData} from '../services/server-data-publish.mjs';
-import {GENERATION_NAMES,validateGenerationGame,createGenerationRecipe,projectGenerationBundle,validateGenerationBundle,packGenerationBundle,generationRelease,validateGenerationManifest,verifyGenerationEnvelope,decodeGenerationAssets} from '../services/data-generation.mjs';
+import {GENERATION_NAMES,validateGenerationGame,createGenerationRecipe,projectGenerationBundle,validateGenerationBundle,packGenerationBundle,generationRelease,validateGenerationManifest,verifyGenerationEnvelope,decodeGenerationAssets,generationBaseIdentity} from '../services/data-generation.mjs';
 
-const seed=await loadServerSeed('data'),recipe=createGenerationRecipe(seed,serverBuildJobs(seed)),bundle=projectGenerationBundle(seed,recipe),packed=packGenerationBundle(bundle,recipe);
+const seed=await loadServerSeed('tests/fixtures/snapshot-16.21'),recipe=createGenerationRecipe(seed,serverBuildJobs(seed)),bundle=projectGenerationBundle(seed,recipe),packed=packGenerationBundle(bundle,recipe);
 const pair=generateKeyPairSync('ed25519'),keys={test:pair.publicKey.export({type:'spki',format:'pem'})};
 const base={schema:2,version:seed.game.version,patch:seed.game.patch,sequence:1,publishedAt:'2026-10-19T00:00:00Z',checkedAt:'2026-10-18T22:00:00Z',files:packed.files,recipe};
 const manifest=value=>{const next=structuredClone(value);next.release=generationRelease(next);return next;};
 const envelope=value=>{const payload=Buffer.from(JSON.stringify(value));return {keyId:'test',payload:payload.toString('base64'),signature:sign(null,payload,pair.privateKey).toString('base64')};};
+// Protocol-only examples make no claim to contain an activatable game snapshot.
+// Real base validation, decompression and publication below retain original fixtures.
+function protocolBase(){
+ const patch='77.1',files=Object.fromEntries(GENERATION_NAMES.map(name=>{const hash=feedHash('synthetic '+name);return [name,{file:hash+'.json.gz',sha256:hash,bytes:1,rawSha256:hash,rawBytes:1}];}));
+ return {schema:2,version:patch+'.1',patch,sequence:1,publishedAt:'2026-10-19T00:00:00Z',checkedAt:'2026-10-19T00:00:00Z',files,recipe:{schema:1,baseSha256:files.game.rawSha256,builds:['Ashe:bottom:global:emerald_plus:'+patch],rankings:BUILD_REGIONS.flatMap(region=>BUILD_TIERS.map(tier=>rankingKey(patch,{region:region.id,tier:tier.id}))).sort(),hex:['Ashe']}};
+}
 
 test('signed global generation round-trips all four assets independently of the old client patch',async()=>{
  const signed=verifyGenerationEnvelope(envelope(manifest(base)),{keys});assert.deepEqual(Object.keys(signed.files),GENERATION_NAMES);
- assert.equal(signed.recipe.builds.length,309);assert.equal(signed.recipe.rankings.length,6);assert.equal(signed.recipe.hex.length,173);
+ assert.deepEqual(signed.recipe.builds,Object.keys(bundle.builds.entries).sort());assert.equal(signed.recipe.rankings.length,6);assert.deepEqual(signed.recipe.hex,seed.game.champions.map(c=>c.id).sort());
  assert.deepEqual(await decodeGenerationAssets(signed,packed.assets),bundle);
  assert.throws(()=>verifyFeedEnvelope(envelope(signed),{keys}),/清单/,'Legacy three-file protocol must remain distinct');
 });
+test('official notes travel inside the signed game asset without changing the mechanism identity',async()=>{
+ const candidate=structuredClone(bundle),notes=JSON.parse(await fs.readFile('data/patch-notes.json'));
+ notes.patches=notes.patches.filter(patch=>patch.patch!=='16.22');candidate.game.patchNotes=notes;
+ assert.equal(generationBaseIdentity(candidate.game),generationBaseIdentity(bundle.game));
+ const expected=createGenerationRecipe(candidate,serverBuildJobs(seed)),assets=packGenerationBundle(candidate,expected),value=manifest({...base,files:assets.files,recipe:expected});
+ const verified=verifyGenerationEnvelope(envelope(value),{keys}),decoded=await decodeGenerationAssets(verified,assets.assets);assert.deepEqual(decoded.game.patchNotes,notes);assert.notEqual(expected.baseSha256,recipe.baseSha256);
+ const bad=structuredClone(candidate.game);bad.patchNotes.patches[0].sourceURL='https://untrusted.example/';assert.throws(()=>validateGenerationGame(bad),/版本改动/);
+ const stale=structuredClone(candidate.game);stale.patchNotes.patches.shift();stale.patchNotes.unavailable=true;assert.doesNotThrow(()=>validateGenerationGame(stale));
+ const future=structuredClone(candidate.game);future.patchNotes.patches.unshift(JSON.parse(await fs.readFile('data/patch-notes.json')).patches[0]);assert.throws(()=>validateGenerationGame(future),/版本改动/);
+});
 test('signature verification rejects tampering, unknown keys, ambiguous fields and noncanonical encoding',()=>{
- const original=envelope(manifest(base));
+ const value=manifest(protocolBase());assert.equal(validateGenerationManifest(value),value);const original=envelope(value);
  for(const bad of [{...original,keyId:'untrusted'},{...original,signature:'A'.repeat(86)+'=='},{...original,payload:original.payload+'\n'},{...original,redirect:'https://other.example/'}])assert.throws(()=>verifyGenerationEnvelope(bad,{keys}));
- assert.throws(()=>verifyGenerationEnvelope(envelope({...manifest(base),schema:1}),{keys}),/清单/);
+ assert.throws(()=>verifyGenerationEnvelope(envelope({...value,schema:1}),{keys}),/清单/);
 });
 test('missing or extra files, path injection and stale release identity cannot become a manifest',()=>{
  for(const change of [v=>delete v.files.game,v=>v.files.extra=v.files.game,v=>v.files.game.file='../game.json.gz',v=>v.recipe.baseSha256='a'.repeat(64),v=>v.recipe.builds.push(v.recipe.builds[0]),v=>v.recipe.rankings.pop(),v=>v.version='16.19.1',v=>v.unknown=true]){
-  const value=structuredClone(base);change(value);assert.throws(()=>validateGenerationManifest(manifest(value)));
+  const value=protocolBase();change(value);assert.throws(()=>validateGenerationManifest(manifest(value)));
  }
- const value=manifest(base);value.files.builds.rawSha256='a'.repeat(64);assert.throws(()=>validateGenerationManifest(value),/身份/);
+ const value=manifest(protocolBase());value.files.builds.rawSha256='a'.repeat(64);assert.throws(()=>validateGenerationManifest(value),/身份/);
 });
 test('aggregate compressed and expanded budgets apply even when each asset is individually bounded',()=>{
- for(const [key,size] of [['bytes',7*1024*1024],['rawBytes',13*1024*1024]]){const value=structuredClone(base);for(const file of Object.values(value.files))file[key]=size;assert.throws(()=>validateGenerationManifest(manifest(value)),/总大小/);}
+ for(const [key,size] of [['bytes',7*1024*1024],['rawBytes',13*1024*1024]]){const value=protocolBase();for(const file of Object.values(value.files))file[key]=size;assert.throws(()=>validateGenerationManifest(manifest(value)),/总大小/);}
 });
 test('coverage is bound to the frozen recipe, including saved-only roles absent from the default boards',()=>{
  const withoutSaved=new Set(defaultBuildJobs(seed.game,seed.rankings.entries,{}).map(job=>job.champion.id+':'+job.role)),extra=serverBuildJobs(seed).find(job=>!withoutSaved.has(job.champion.id+':'+job.role));assert.ok(extra);
@@ -91,10 +109,27 @@ test('lost frozen saved-role coverage prevents publication of either channel',as
  const missing=structuredClone(seed);delete missing.builds.entries[recipe.builds.find(key=>key.startsWith('Brand:jungle:'))];f.advance();await f.candidate(missing,recipe);
  await assert.rejects(f.publish(),/完整|范围/);assert.equal(await f.latest(),before);assert.equal(await f.legacy(seed.game.patch),legacy);
 });
+
+test('optional Hex pool failures do not block a complete signed generation',async t=>{
+ const f=await publication(t),status=await f.candidate(seed);
+ status.datasets['hex-pools']={optional:true,state:'partial',total:recipe.hex.length,checked:recipe.hex.length,failed:recipe.hex.length,skipped:0,checkedAt:status.checkedAt};
+ await fs.writeFile(path.join(f.root,'status.json'),JSON.stringify(status));const result=await f.publish();
+ assert.equal(result.generation.manifest.recipe.builds.length,recipe.builds.length);
+ const current=verifyGenerationEnvelope(JSON.parse(await f.latest()),{keys}),assets={};for(const file of Object.values(current.files))assets[file.sha256]=await fs.readFile(path.join(f.publicRoot,'v2/assets',file.file));
+ assert.deepEqual(await decodeGenerationAssets(current,assets),bundle);
+});
+
+test('optional status cannot hide a required failure or allow an unknown dataset',async t=>{
+ const f=await publication(t);await f.candidate(seed);await f.publish();const before=await f.latest(),legacy=await f.legacy(seed.game.patch);
+ for(const change of [s=>s.datasets['hex-pools']={state:'ok'},s=>s.datasets['hex-pools']={optional:false,state:'partial'},s=>s.datasets.unknown={optional:true,state:'ok'},s=>{s.datasets['hex-pools']={optional:true,state:'partial'};s.datasets.builds={...s.datasets.builds,optional:true,state:'partial',failed:1};},s=>{s.datasets['hex-pools']={optional:true,state:'ok'};delete s.datasets.game;}]){
+  f.advance();const status=await f.candidate(seed);change(status);await fs.writeFile(path.join(f.root,'status.json'),JSON.stringify(status));
+  await assert.rejects(f.publish(),/未完整完成/);assert.equal(await f.latest(),before);assert.equal(await f.legacy(seed.game.patch),legacy);
+ }
+});
 test('new patch is published globally only with current valid coverage, and replaces only generated old assets',async t=>{
- const f=await publication(t);await f.candidate(seed);const first=await f.publish(),before=await f.latest(),legacy=await f.legacy(seed.game.patch);
- const next=JSON.parse(JSON.stringify(seed).replaceAll('16.20','16.21')),oldHex=structuredClone(next);oldHex['hex-builds'].entries.Ahri=seed['hex-builds'].entries.Ahri;f.advance();await f.candidate(oldHex);
- await assert.rejects(f.publish(),/海克斯/);assert.equal(await f.latest(),before);assert.equal(await f.legacy(seed.game.patch),legacy);
+ const previous=await loadServerSeed('tests/fixtures/snapshot-16.20'),f=await publication(t);await f.candidate(previous);const first=await f.publish(),before=await f.latest(),legacy=await f.legacy(previous.game.patch);
+ const next=structuredClone(seed),oldHex=structuredClone(next);oldHex['hex-builds'].entries.Ahri=previous['hex-builds'].entries.Ahri;f.advance();
+ await assert.rejects(f.candidate(oldHex),/hex-builds/);assert.equal(await f.latest(),before);assert.equal(await f.legacy(previous.game.patch),legacy);
  f.advance();await f.candidate(next);const current=await f.publish();assert.equal(current.generation.manifest.patch,'16.21');assert.equal(current.generation.manifest.version,'16.21.1');assert.ok(current.generation.manifest.sequence>first.generation.manifest.sequence);
  assert.equal(verifyGenerationEnvelope(JSON.parse(await f.latest()),{keys}).patch,'16.21');assert.equal(verifyFeedEnvelope(JSON.parse(await f.legacy('16.21')),{keys}).patch,'16.21');
  assert.ok(current.generation.removed.includes('v2/assets/'+first.generation.manifest.files.game.file));assert.equal((await fs.readdir(path.join(f.publicRoot,'v2/assets'))).length,4);

@@ -3,17 +3,39 @@ import {ROLES,profile} from './rules.mjs';
 import {roleClaimChoice,activeRoleClaim} from './role-claim.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {rankedDraftPolicy} from './ranked-draft.mjs';
+import {requireBuildSource} from './build-source.mjs';
+import {canonicalJSON} from './content-fingerprint.mjs';
 
 export const pregamePhase=phase=>['None','Lobby','Matchmaking','ReadyCheck'].includes(phase);
+// A lane edit can keep an explicit hero only within its unchanged, unconsumed
+// lobby intent. The renderer rechecks this stamp after each asynchronous wait.
+export function pregameLobbyContext(client){
+ if(!client?.connected||!pregamePhase(client.phase)||client.mode?.id!=='rift'||rankedDraftPolicy(client).ranked)return null;
+ const party=client.party;
+ if(!party?.key&&!['known','lobby'].includes(party?.status))return null;
+ const own=client.own?.puuid||client.own?.summonerId||client.own?.riotId||null;
+ const members=(party?.members||[]).map(member=>canonicalJSON([member.local===true,member.displayName||'',member.publicRiotId||''])).sort();
+ const lobby=party?.key||[party?.lobbyCount??null,members];
+ return canonicalJSON([own,lobby,client.game?.queueId,client.game?.gameId]);
+}
+export function pregameHeroRoleChange(change,intent,client){
+ if(!change||!Object.hasOwn(change,'role')||Object.keys(change).some(field=>field!=='role')||!ROLES.some(role=>role.id===change.role)||intent?.kind!=='hero'||!intent.champion||intent.attemptedGameId)return null;
+ const context=pregameLobbyContext(client);return context?{role:change.role,champion:intent.champion,context,stamp:canonicalJSON([intent,context])}:null;
+}
 export function validatePregameIntent(value){
  if(!value||!['',...ROLES.map(role=>role.id)].includes(value.role)||value.champion!==null&&!(typeof value.champion==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value.champion)))throw Error('请选择分路或英雄');
  const attemptedGameId=typeof value.attemptedGameId==='string'&&/^[1-9]\d{0,19}$/.test(value.attemptedGameId)?value.attemptedGameId:'';
  const hoveredCellId=attemptedGameId&&Number.isInteger(value.hoveredCellId)&&value.hoveredCellId>=0&&value.hoveredCellId<30?value.hoveredCellId:null;
  const kind=['position','hero'].includes(value.kind)?value.kind:null;
+ if(value.reviewStamp!==undefined&&(typeof value.reviewStamp!=='string'||!value.reviewStamp.length||value.reviewStamp.length>10000))throw Error('预选资料状态格式不正确');
+ const reviewStamp=value.reviewStamp||null;
+ if(value.catalogChoiceToken!==undefined&&(typeof value.catalogChoiceToken!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.catalogChoiceToken)))throw Error('预选组合标识格式不正确');
  if(kind==='hero'&&!value.champion)throw Error('请先选择预选英雄');
  const selection=kind==='hero'&&value.selection?validateGuideSelection(value.selection):null;
  if(selection&&(selection.id!==value.champion||selection.mode!=='rift'||value.role&&selection.role!==value.role))throw Error('预选配置与英雄不一致');
- return {role:value.role,champion:value.champion,...(kind?{kind}:{}),...(selection?{selection}:{}),...(attemptedGameId?{attemptedGameId}:{}),...(hoveredCellId!==null?{hoveredCellId}:{})};
+ if(value.selectionFields!==undefined&&(!selection||!Array.isArray(value.selectionFields)||value.selectionFields.length>30||!value.selectionFields.every(field=>typeof field==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(field))))throw Error('预选配置字段格式不正确');
+ const buildSource=value.buildSource===undefined?null:requireBuildSource(value.buildSource);
+ return {role:value.role,champion:value.champion,...(kind?{kind}:{}),...(selection?{selection}:{}),...(value.selectionFields?{selectionFields:[...new Set(value.selectionFields)]}:{}),...(reviewStamp?{reviewStamp}:{}),...(buildSource?{buildSource}:{}),...(value.catalogChoiceToken?{catalogChoiceToken:value.catalogChoiceToken}:{}),...(attemptedGameId?{attemptedGameId}:{}),...(hoveredCellId!==null?{hoveredCellId}:{})};
 }
 // Restore only a confirmed placeholder for this exact public game/player/hero.
 // This is display state, not permission to repeat a write after restarting.
@@ -28,16 +50,22 @@ export function restoredRoleClaim(intent,client,champions){
 export function pregameIntentChoice(intent,client,data){
  const own=client.session?.myTeam?.find(player=>player.cellId===client.session.localPlayerCellId);
  const unavailable=reason=>({champion:null,role:intent?.role||'',reason});
+ const waiting=reason=>({...unavailable(reason),waiting:true});
  if(rankedDraftPolicy(client).ranked)return unavailable('排位按客户端选人，不使用大厅预选');
- if(!rankedDraftPolicy(client).consumePreselection)return {...unavailable('等待确认本局队列'),waiting:true};
- if(!client.connected||client.phase!=='ChampSelect'||client.mode?.id!=='rift'||!own)return unavailable('等待进入峡谷选人');
- if(intent?.kind!=='hero'&&(own.championId||own.championPickIntent))return unavailable('客户端已有选择，保留当前英雄');
+ if(!rankedDraftPolicy(client).consumePreselection)return waiting('等待确认本局队列');
+ if(!client.connected||client.phase!=='ChampSelect'||client.mode?.id!=='rift')return unavailable('等待进入峡谷选人');
+ if(!own)return waiting('等待确认本人选人状态');
+ const selected=own.championId||own.championPickIntent;
+ const champion=data.champions.find(value=>value.id===intent?.champion);
+ if(selected&&(intent?.kind!=='hero'||selected!==champion?.key))return unavailable('客户端已有选择，保留当前英雄');
+ const {pickable,disabled}=client.eligibility||{};
+ if(!Array.isArray(pickable)||!Array.isArray(disabled))return waiting('等待同步可选英雄');
  if(!intent?.champion)return {...roleClaimChoice(client,intent?.role,data.champions,data),role:intent?.role||''};
- const champion=data.champions.find(value=>value.id===intent.champion);
  if(!champion)return unavailable('预选英雄暂不可用，请重新选择');
- const pickable=client.eligibility?.pickable,blocked=[...(client.eligibility?.disabled||[]),...(client.session.bans||[]),...client.session.myTeam.filter(player=>player.cellId!==own.cellId).flatMap(player=>[player.championId,player.championPickIntent]),...(client.session.allowDuplicatePicks===false?client.session.theirTeam||[]:[]).map(player=>player.championId)];
- if(!Array.isArray(pickable)||!pickable.some(value=>value===champion.id||Number(value)===champion.key)||blocked.some(value=>value===champion.id||Number(value)===champion.key))return unavailable('预选英雄本局不可选，请直接选择其他英雄');
- const role=intent.selection?.role||intent.role||CLIENT_POSITION_ROLES[String(own.assignedPosition||'').toUpperCase()]||profile(champion).roles[0];
+ const blocked=[...disabled,...(client.session.bans||[]),...client.session.myTeam.filter(player=>player.cellId!==own.cellId).flatMap(player=>[player.championId,player.championPickIntent]),...(client.session.allowDuplicatePicks===false?client.session.theirTeam||[]:[]).map(player=>player.championId)];
+ if(!pickable.some(value=>value===champion.id||Number(value)===champion.key)||blocked.some(value=>value===champion.id||Number(value)===champion.key))return unavailable('预选英雄本局不可选，请直接选择其他英雄');
+ const assigned=CLIENT_POSITION_ROLES[String(own.assignedPosition||'').toUpperCase()];
+ const role=intent.selection?.role||(intent.kind==='hero'?assigned:null)||intent.role||assigned||profile(champion).roles[0];
  return {champion:champion.id,role,reason:''};
 }
 

@@ -3,18 +3,12 @@ import {renameSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import path from 'node:path';
 import {atomicJSON} from './data.mjs';
-import {DATA_FEED_ORIGIN,DATA_FEED_KEYS,DATA_FEED_NAMES,DATA_FEED_MAX_PACKED,verifyFeedEnvelope,decodeFeedFile,validateFeedBundle,applyFeedBundle,validFeedPatch} from './data-feed.mjs';
+import {DATA_FEED_KEYS,DATA_FEED_NAMES,DATA_FEED_MAX_PACKED,verifyFeedEnvelope,decodeFeedFile,validateFeedBundle,applyFeedBundle,validFeedPatch} from './data-feed.mjs';
+import {downloadSignedFeed} from './signed-feed-download.mjs';
 
-export async function downloadDataFeed(relative,{limit,fetcher=fetch}={}){
- if(!/^\/v1\/(?:patches\/[1-9]\d{0,2}\.[1-9]\d{0,2}\/latest\.json|assets\/[a-f0-9]{64}\.json\.gz)$/.test(relative))throw Error('资料下载地址无效');
- const response=await fetcher(DATA_FEED_ORIGIN+relative,{redirect:'error',credentials:'omit',signal:AbortSignal.timeout(20000),headers:{Accept:'application/json, application/octet-stream'}});
- if(!response.ok){await response.body?.cancel();const error=Error('资料服务暂不可用');if(relative.startsWith('/v1/assets/')&&[404,410].includes(response.status))error.code='DATA_FEED_REPLACED';throw error;}
- if(Number(response.headers.get('content-length'))>limit){await response.body?.cancel();throw Error('资料响应过大');}
- const reader=response.body?.getReader(),parts=[];let bytes=0;
- if(!reader)throw Error('资料响应为空');
- try{while(true){const part=await reader.read();if(part.done)break;bytes+=part.value.byteLength;if(bytes>limit)throw Error('资料响应过大');parts.push(part.value);}}
- finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
- return Buffer.concat(parts);
+export async function downloadDataFeed(relative,{limit,fetcher=fetch,signal}={}){
+ if(!/^\/v1\/(?:patches\/[1-9]\d{0,2}\.[1-9]\d{0,2}\/latest\.json|assets\/[a-f0-9]{64}\.json\.gz)$/.test(relative)||!Number.isSafeInteger(limit)||limit<1||limit>DATA_FEED_MAX_PACKED)throw Error('资料下载地址或限制无效');
+ return downloadSignedFeed(relative,{limit,fetcher,signal,label:'资料',replacedCode:'DATA_FEED_REPLACED'});
 }
 export async function createDataFeedCache({root,getData,canActivate=()=>false,restoreAtStartup=false,onChange=()=>{},download=downloadDataFeed,keys=DATA_FEED_KEYS,clock=()=>Date.now(),write=atomicJSON,promote=renameSync}){
  const filename=path.join(root,'data-feed.json'),pendingFile=path.join(root,'data-feed.pending.json'),stage=path.join(root,`data-feed-${process.pid}-${randomUUID()}.stage.json`);let accepted=null,manifest=null,pending=null,pendingPath=null,flight=null,lastAttempt=-Infinity,lastAttemptPatch=null,activeRelease=null,activeSequence=null,activeData=null;
@@ -27,7 +21,7 @@ export async function createDataFeedCache({root,getData,canActivate=()=>false,re
   if(Date.parse(signed.publishedAt)>clock()+5*60*1000||Date.parse(signed.checkedAt)>clock()+5*60*1000)throw Error('资料发布时间无效');
   const bundle={};
   for(const name of DATA_FEED_NAMES){const file=signed.files[name],encoded=record.assets?.[file.sha256];if(typeof encoded!=='string'||encoded.length>Math.ceil(DATA_FEED_MAX_PACKED/3)*4)throw Error('资料缓存不完整');bundle[name]=await decodeFeedFile(Buffer.from(encoded,'base64'),file);}
-  validateFeedBundle(bundle,data);return {manifest:signed,bundle};
+  validateFeedBundle(bundle,data,{allowInvalidEquipment:true});return {manifest:signed,bundle};
  }
  const follows=(next,prior)=>!prior||next.sequence>=prior.sequence&&(next.sequence!==prior.sequence||next.release===prior.release&&next.checkedAt===prior.checkedAt)&&(!prior.checkedAt||!!next.checkedAt&&Date.parse(next.checkedAt)>=Date.parse(prior.checkedAt));
  async function read(file){
@@ -92,7 +86,7 @@ export async function createDataFeedCache({root,getData,canActivate=()=>false,re
      else packed=await download('/v1/assets/'+file.file,{limit:file.bytes});
      bundle[name]=await decodeFeedFile(packed,file);record.assets[file.sha256]=packed.toString('base64');
     }
-    if(getData().patch!==patch)throw Error('资料补丁已变化');validateFeedBundle(bundle,getData());
+    if(getData().patch!==patch)throw Error('资料补丁已变化');validateFeedBundle(bundle,getData(),{allowInvalidEquipment:true});
     if(activeRelease===next.release&&activeSequence===next.sequence&&activeData===getData()&&!pending){publish({phase:'ready',checkedAt:record.checkedAt,serverCheckedAt:next.checkedAt||null,updatedAt:next.publishedAt,message:'统计资料已是最新'});break;}
     const preparedFor=getData();
     try{

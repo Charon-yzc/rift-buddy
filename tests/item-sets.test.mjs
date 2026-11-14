@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {getBuild} from '../src/core/builds.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {createItemSet,validateItemSet} from '../src/core/item-sets.mjs';
 import {completeGearPlan} from '../src/core/complete-gear.mjs';
 import {itemSetControls} from '../src/item-sets-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('data/game.json','utf8'));data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),build=s=>getBuild(hero(s.id),s.role,data,s),make=s=>createItemSet(hero(s.id),build(s),data);
 
 test('shop set follows independent selected starter, footwear, core and late equipment; quantities and alternatives stay distinct',()=>{

@@ -1,5 +1,11 @@
-# Generated Akari bytes are hashed in manifest.json. Windows checkouts must
-# preserve those exact bytes instead of applying core.autocrlf conversion.
-src/core/akari/engine.mjs text eol=lf
-src/core/akari/LICENSE.akari.txt text eol=lf
-src/core/akari/manifest.json text eol=lf
+# Stable text bytes keep Windows checkouts from inflating incremental updates.
+# This also preserves the generated Akari bytes hashed in manifest.json.
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.cs text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.svg text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf

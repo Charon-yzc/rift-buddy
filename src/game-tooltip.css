@@ -5,6 +5,7 @@
 .game-tooltip small{color:var(--rb-muted,#9cb5c7);font-size:calc(11px * var(--text-scale,1))}
 .game-tooltip p{margin:0 0 8px;white-space:pre-line;overflow-wrap:anywhere}.game-tooltip p:last-child{margin-bottom:0}
 .game-tooltip strong{color:var(--rb-accent,#92e1ee);font-weight:600}
+.game-tooltip.game-tooltip-compact{width:min(200px,calc(100vw - 16px));max-height:min(248px,calc(100dvh - 16px));padding:7px 8px;border-radius:5px;font-size:11px;line-height:1.5}.game-tooltip-compact>header{gap:6px;margin-bottom:5px}.game-tooltip-compact>header>img{width:25px;height:25px}.game-tooltip-compact>header b{font-size:11px}.game-tooltip-compact small{font-size:9px}.game-tooltip-compact p{margin-bottom:5px}.game-tooltip-condition{color:var(--rb-accent,#92e1ee)}
 .game-tooltip-basics{margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid var(--rb-line,#355063)}
 .game-tooltip-note{display:block;margin-top:8px}.game-tooltip-changes{border-top:1px solid var(--rb-line,#355063);padding-top:8px;margin-top:9px}
 .game-tooltip-changes>div{margin-top:5px}.game-tooltip-changes p{display:grid;gap:2px;margin-top:4px}.game-tooltip-changes i{font-style:normal;color:var(--rb-muted,#9cb5c7)}

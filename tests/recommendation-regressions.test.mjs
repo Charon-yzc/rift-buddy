@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,8 +7,8 @@ import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {assessSituation,pinnedSituationItem,situationItemIssue,inventoryFulfillsItem} from '../src/core/live-situation.mjs';
 import {adaptEquipment} from '../src/core/adaptive-build.mjs';
 import {itemConflicts} from '../src/core/mechanics.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id);
 const rows=ids=>ids.map(id=>({items:[id],samples:100}));
 const player=(champion,ids)=>({champion,side:'enemy',itemsKnown:true,inventory:ids.map(id=>({id:String(id),count:1})),scores:{kills:0}});

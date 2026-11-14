@@ -54,6 +54,28 @@ test('explicit lane claim only preselects a representative, leaves runes/spells/
  assert.deepEqual(f.calls.filter(c=>c.method!=='GET').map(c=>c.route),['/lol-champ-select/v1/session/actions/4']);
 });
 
+test('a queued hero-only click can replace an earlier hover while full configuration remains bound to its exact target',async()=>{
+ const quick=fixture();quick.value.preselectOnly=true;quick.own.championPickIntent=1;quick.action.championId=1;
+ const result=await quick.run();assert.equal(result.steps.hover.status,'done');assert.equal(quick.own.championPickIntent,22);assert.equal(quick.items,0);
+ const full=fixture();full.own.championPickIntent=1;full.action.championId=1;
+ await assert.rejects(full.run(),/选人对象已变化/);assert.equal(full.items,0);
+ const locked=fixture({locked:true});locked.value.preselectOnly=true;locked.own.championId=1;
+ await assert.rejects(locked.run(),/已锁定其他英雄/);
+});
+
+test('staged preparation preserves a native pick made while eligibility is loading',async()=>{
+ for(const preselectOnly of [true,false]){
+  const f=fixture(),request=f.deps.request;Object.assign(f.value,{preselectOnly,preserveExistingPick:true});
+  f.deps.request=async(auth,route,...args)=>{
+   const result=await request(auth,route,...args);
+   if(route.endsWith('/pickable-champion-ids'))f.action.championId=1;
+   return result;
+  };
+  const result=await f.run();assert.equal(result.complete,false);assert.match(result.steps.hover.message,/保留当前英雄/);
+  assert.equal(f.action.championId,1);assert.ok(f.calls.every(call=>call.method==='GET'));assert.equal(f.items,0);
+ }
+});
+
 test('reference lane differs from the actual client lane without preventing a complete explicit preparation',async()=>{
  const f=fixture();f.own.assignedPosition='MIDDLE';f.value.context=runeWriteContext({connected:true,phase:'ChampSelect',session:f.session,game:{gameId:777}});
  const result=await f.run();assert.equal(result.complete,true);assert.equal(f.own.championPickIntent,22);assert.equal(f.own.assignedPosition,'MIDDLE');assert.equal(f.action.completed,false);assert.equal(f.items,1);
@@ -61,6 +83,48 @@ test('reference lane differs from the actual client lane without preventing a co
 test('locked same hero applies configuration without selecting or unlocking, locked other hero rejects before writes',async()=>{
  const f=fixture({locked:true});f.session.myTeam.push({cellId:1,championId:0,championPickIntent:22});assert.equal((await f.run()).complete,true);assert(!f.calls.some(c=>c.route.includes('/actions/')));assert.equal(f.action.completed,true);
  const other=fixture({locked:true});other.own.championId=1;other.value.context.championId=1;await assert.rejects(other.run(),/锁定其他英雄/);assert(!other.calls.some(c=>c.method!=='GET'));
+});
+test('a confirmed hover configures the same champion without sending another pick',async()=>{
+ const f=fixture();f.own.championPickIntent=22;f.action.championId=22;f.session.timer.phase='BAN_PICK';f.action.isInProgress=false;
+ f.value.context.championPickIntent=22;
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(result.steps.hover.status,'done');assert.equal(f.items,1);
+ assert.ok(!f.calls.some(call=>call.route.includes('/actions/')));assert.equal(f.action.completed,false);
+});
+test('clicking an already hovered champion out of turn confirms it without another client write',async()=>{
+ const f=fixture();f.value.preselectOnly=true;f.own.championPickIntent=22;f.action.championId=22;
+ f.session.timer.phase='BAN_PICK';f.action.isInProgress=false;
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(result.steps.hover.status,'done');
+ assert.equal(f.items,0);assert(f.calls.every(call=>call.method==='GET'));assert.equal(f.action.completed,false);
+});
+test('the same native pick made while a quick click is validating does not trigger another write',async()=>{
+ const f=fixture(),request=f.deps.request;f.value.preselectOnly=true;let reads=0;
+ f.deps.request=async(auth,route,...args)=>{
+  if(route==='/lol-champ-select/v1/session'&&++reads===2){f.own.championId=22;f.action.championId=22;f.action.completed=true;}
+  return request(auth,route,...args);
+ };
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(result.steps.hover.locked,true);
+ assert.equal(f.items,0);assert(f.calls.every(call=>call.method==='GET'));
+});
+test('confirming the same hovered hero before configuration starts keeps the click valid',async()=>{
+ const f=fixture({locked:true});f.value.context.championId=0;f.value.context.championPickIntent=22;
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(result.steps.hover.locked,true);assert.equal(f.items,1);
+ assert.ok(!f.calls.some(call=>call.route.includes('/actions/')));
+});
+test('locking the same hero while its rune page is loading completes the original configuration',async()=>{
+ const f=fixture(),request=f.deps.request;f.own.championPickIntent=22;f.action.championId=22;f.value.context.championPickIntent=22;
+ f.deps.request=async(auth,route,...args)=>{
+  const result=await request(auth,route,...args);
+  if(route==='/lol-perks/v1/pages'){f.own.championId=22;f.own.championPickIntent=0;f.action.completed=true;}
+  return result;
+ };
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(f.items,1);
+ assert.deepEqual(f.calls.filter(call=>call.method!=='GET').map(call=>call.route),['/lol-perks/v1/pages/11','/lol-champ-select/v1/session/my-selection']);
+});
+test('a teammate taking the previously hovered hero blocks configuration without another pick',async()=>{
+ const f=fixture();f.own.championPickIntent=22;f.action.championId=22;f.value.context.championPickIntent=22;
+ f.session.myTeam.push({cellId:1,championId:22});
+ const result=await f.run();assert.equal(result.complete,false);assert.equal(result.steps.hover.status,'failed');assert.equal(f.items,0);
+ assert.ok(f.calls.every(call=>call.method==='GET'));
 });
 test('default preparation preserves the latest client Flash key, including a change while runes are applied',async()=>{
  for(const flashSlot of [0,1]){
@@ -214,4 +278,5 @@ test('wrong session, unsupported mode and mismatched item-set identity reject be
  for(const mutate of [f=>f.value.sessionGameId='778',f=>f.game.gameData.queue={id:450,gameMode:'ARAM'},f=>f.value.itemSet.associatedChampions=[1]]){const f=fixture();mutate(f);await assert.rejects(f.run());assert(!f.calls.some(c=>c.method!=='GET'));}
  const f=fixture();assert(validateClientPreparation(f.value,data));
  for(const [route,body] of [['/lol-champ-select/v1/session/actions/4',{championId:22,completed:true}],['/lol-champ-select/v1/session/actions/4',{championId:22,completed:false,type:'ban'}],['/lol-champ-select/v1/session/actions/4/complete',{championId:22}],['/lol-champ-select/v1/session/my-selection',{championPickIntent:22}]])assert.throws(()=>lcuRequest({port:1,password:'mock'},route,'PATCH',body),/不支持/);
+ assert.throws(()=>lcuRequest({port:1,password:'mock'},'/lol-champ-select/v1/session/bench/swap/22','POST',{championId:22}),/不支持/);
 });

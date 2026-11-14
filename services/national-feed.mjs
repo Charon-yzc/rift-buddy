@@ -1,6 +1,6 @@
 import {createPublicKey,verify} from 'node:crypto';
-import {DATA_FEED_KEYS,DATA_FEED_ORIGIN} from './data-feed.mjs';
-import {readPublicJSON} from './build-json.mjs';
+import {DATA_FEED_KEYS} from './data-feed.mjs';
+import {downloadSignedFeed} from './signed-feed-download.mjs';
 import {NATIONAL_TIERS,nationalKey,validNationalReference} from '../src/core/national-reference.mjs';
 
 export const NATIONAL_FEED_PATH='/national/v1/latest.json';
@@ -21,7 +21,7 @@ export function verifyNationalEnvelope(envelope,data,{keys=DATA_FEED_KEYS}={}){
 }
 export async function fetchNationalFeed(data,{fetcher=fetch,clock=()=>new Date().toISOString()}={}){
  let envelope;
- try{envelope=await readPublicJSON(DATA_FEED_ORIGIN+NATIONAL_FEED_PATH,{fetcher,timeout:12000,limit:1000000});}
+ try{envelope=JSON.parse((await downloadSignedFeed(NATIONAL_FEED_PATH,{fetcher,timeout:12000,limit:1000000,label:'国服资料'})).toString('utf8'));}
  catch(error){if(error.status===404||error.status===410||error.status>=500||error.name==='TimeoutError'||error instanceof TypeError)return null;throw error;}
  const authenticated=verifyNationalEnvelope(envelope);if(authenticated.patch!==data.patch)return null;
  const payload=validateNationalFeed(authenticated,data),age=Date.parse(clock())-Date.parse(payload.publishedAt);

@@ -17,10 +17,19 @@ export function createCurrentGameTracker({flashId=4}={}){
    // Loading no longer has a selection session, but it belongs to the same game.
    if(phase==='ChampSelect'&&lastPhase!=='ChampSelect'||id&&gameId&&id!==gameId||!activeGame(phase)&&phase!=='ChampSelect'){own=null;mode=null;liveTime=null;flashSlot=undefined;}
    if(phase==='ChampSelect'){
-    const player=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId);
+    const cell=client.session?.localPlayerCellId,player=client.session?.myTeam?.find(p=>p.cellId===cell);
+    // The roster can drop the local row just before loading. Only a locked
+    // pick tied to the same known game and cell can bridge that gap.
+    const conflictingPick=!player&&client.session?.actions?.some(action=>action.actorCellId===cell&&
+     action.type==='pick'&&action.championId>0&&action.championId!==own?.lockedChampion);
+    const keepLocked=!player&&!!id&&own?.lockedGame===id&&own.lockedCell===cell&&!conflictingPick&&
+     !client.game?.modeConflict&&(!client.mode?.id||client.mode.id===mode);
+    if(!player&&!keepLocked)flashSlot=undefined;
     if(player&&[player.spell1Id,player.spell2Id].every(Number.isInteger))flashSlot=player.spell1Id===flashId?'d':player.spell2Id===flashId?'f':undefined;
     const selected=currentPlayerSelection(client.session,champions,slots),formal=currentPlayerSelection(client.session,champions);
-    own=selected?{...selected,formalKnown:formal?.positionKnown===true,...(formal?.positionKnown?{formalRole:formal.role}:{})}:null;
+    if(selected)own={...selected,formalKnown:formal?.positionKnown===true,...(formal?.positionKnown?{formalRole:formal.role}:{}),
+     ...(id&&player?.pickState==='locked'?{lockedGame:id,lockedCell:cell,lockedChampion:player.championId}:{})};
+    else if(!keepLocked)own=null;
    }
    if(client.mode?.id)mode=client.mode.id;else if(!own)mode=null;
    lastPhase=phase;if(id)gameId=id;

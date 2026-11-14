@@ -18,7 +18,7 @@ export function mechanismRuneKeys(buildKey,champion,role){
  if(buildKey==='meleeCrit')return ['lethal','conqueror'];
  if(buildKey==='supportTank')return ['aftershock','guardian'];
  if(buildKey==='enchanter')return ['aery','guardian'];
- if(buildKey==='tank')return ['grasp','aftershock'];
+ if(buildKey==='tank')return role==='jungle'?['aftershock','grasp']:['grasp','aftershock'];
  if(buildKey==='senna')return ['fleet','aery'];
  if(buildKey==='pokeSupport')return ['comet','hail'];
  if(buildKey==='fighter')return ['conqueror'];

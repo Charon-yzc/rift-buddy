@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {cleanPublicStats,PUBLIC_STAT_FIELDS,PUBLIC_STAT_GROUPS,publicStatValue} from '../src/core/match-history/public-stats.mjs';
 import {historyDamageComposition,historyComparisonView,historyRadarData} from '../src/match-history-comparison-view.mjs';
 import {historyDetailTableView,historyPublicStatRows} from '../src/match-history-detail-table-view.mjs';
-import {matchHistoryView,historyMatchSummaryView,historyMatchAkariScore} from '../src/match-history-view.mjs';
+import {matchHistoryView,historyMatchSummaryView,historyMatchAkariScore,historyCardsView} from '../src/match-history-view.mjs';
 import {analyzeAkariHistory} from '../src/core/akari/bridge.mjs';
 
 const data={champions:[{key:'22',id:'Ashe',name:'寒冰射手'},{key:'103',id:'Ahri',name:'九尾妖狐'}],items:{1001:{name:'鞋子'},3869:{name:'职责装备'}},spells:{4:{name:'闪现'},7:{name:'治疗术'}},runes:[{id:8000,name:'精密',slots:[{runes:[{id:8005,name:'强攻'}]}]},{id:8100,name:'主宰',slots:[]}],augments:[{id:100,name:'测试强化'}]};
@@ -14,6 +14,19 @@ const players=[
 ];
 const game={id:42,source:'lcu',created:1700000000000,version:'16.20',queue:420,duration:1800,participants:players,self:players[0],completeTeams:false,teams:[{key:'TEAM-100',result:'loss',kills:4,gold:19000,bans:[103],objectives:{baron:0,dragon:2,tower:null}},{key:'TEAM-200',result:'win',kills:4,gold:14000,bans:[],objectives:{}}]};
 const state=(section='summary',open=true)=>({tabs:[{id:1,options:{},filter:{},page:{player:{name:'本人'},source:'lcu',games:[game],start:0,count:1},details:{42:{game,open,section}}}],current:1,servers:[],query:'',source:'auto',server:''});
+test('a failed history source never blames the client connection and keeps the cached hero statistics usable',()=>{
+  const failed={tabs:[{id:1,options:{},filter:{},error:'战绩数据源暂时不可用：游戏后台与当前大区客户端的战绩接口都返回了错误。',page:null,details:{}}],current:1,servers:[],query:'',source:'auto',server:'',
+   championUsage:{status:'ready',cached:true,basis:'recent',scanned:500,usage:{sampled:500,counts:{Ahri:20}},at:Date.parse('2026-10-20')}};
+  const html=matchHistoryView(failed,data);
+  assert.match(html,/战绩数据源暂时不可用/);
+  assert.doesNotMatch(html,/连接客户端后重试查询/);
+  assert.match(html,/常用英雄统计来自本机缓存/);
+  assert.match(html,/本地缓存/);
+  const plain=matchHistoryView({...failed,championUsage:null},data);
+  assert.match(plain,/战绩数据源暂时不可用/);
+  assert.doesNotMatch(plain,/连接客户端后重试查询/);
+});
+
 test('compact match disclosure retains both team rosters and an independently labelled six-tab panel',()=>{
  const html=matchHistoryView(state(),data);
  assert.match(html,/history-roster-preview/);assert.match(html,/aria-controls="history-panel-42"/);assert.match(html,/id="history-panel-42"/);assert.match(html,/role="tabpanel"/); assert.match(html,/data-history-tip="item"/);assert.match(html,/data-history-tip="rune"/);
@@ -114,4 +127,17 @@ test('raw all-player matrix uses the union of known fields, searches labels and 
  const noResult=historyDetailTableView({game:extended,rawStatsQuery:'<script>bad</script>'},data);assert.match(noResult,/没有匹配的公开统计字段/);assert.doesNotMatch(noResult,/<script>|undefined|NaN|Infinity/);
  const statsTab=matchHistoryView(state('stats'),data);assert.match(statsTab,/history-public-matrix/);assert.match(statsTab,/全玩家详细数据/);
  assert.equal(publicStatValue(players[0],'__proto__'),null);assert.equal(publicStatValue({publicStats:{magicalDamageTaken:12}},'magicDamageTaken'),null);
+});
+
+test('reused card markup follows every detail change but not unrelated renders',()=>{
+ const s=state('summary',true),detail=s.tabs[0].details[42],html=()=>historyCardsView(s,data).items[0].html;
+ const first=html();assert.equal(html(),first,'an unchanged card renders identically');
+ detail.section='events';assert.match(html(),/事件数据尚未读取/,'a section switch is not served from the cache');
+ detail.timeline={frames:[],events:[{type:'WARD_PLACED',timestamp:61000,creatorId:1,wardType:'CONTROL_WARD'}]};const withTimeline=html();assert.match(withTimeline,/控制守卫/,'an arriving timeline replaces the placeholder');
+ detail.eventTypes=['CHAMPION_KILL'];assert.match(html(),/没有符合条件的事件/,'a new filter selection is applied');
+ detail.eventTypes=[];assert.equal(html(),withTimeline);
+ delete detail.timeline;assert.match(html(),/事件数据尚未读取/,'an evicted timeline is not served from the cache');
+ detail.open=false;assert.match(html(),/data-history-expanded="false"/);
+ s.tabs[0].page.fullAnalysis={map:{42:{akariScore:{total:9.99}}}};detail.open=true;detail.section='summary';
+ assert.match(html(),/Akari 参考 9.99/,'a recalculated page analysis refreshes the score');
 });

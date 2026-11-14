@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import {BUNDLED_CATALOG,configureCatalog,catalogIssues} from '../src/core/catalog.mjs';
 import {TRIOS,DUOS} from '../src/core/rules.mjs';
@@ -8,7 +9,7 @@ import {objectiveRhythm} from '../src/core/live-rhythm.mjs';
 import {objectiveCoordination} from '../src/core/objective-coordination.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
-const data=JSON.parse(fs.readFileSync('data/game.json'));data.builds=JSON.parse(fs.readFileSync('data/builds.json')).entries;data.catalog=configureCatalog(BUNDLED_CATALOG);data.catalogInfo=catalogIssues(data.catalog,data);
+const data=JSON.parse(fs.readFileSync('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(fs.readFileSync('tests/fixtures/snapshot-16.20/builds.json')).entries;data.catalog=configureCatalog(BUNDLED_CATALOG);data.catalogInfo=catalogIssues(data.catalog,data);
 const resource={id:'dragon',name:'元素亚龙',remaining:50,state:'prepare'};
 const slotsFor=members=>createSlots().map(s=>({...s,champion:members.find(m=>m.role===s.role)?.champion||null,party:members.some(m=>m.role===s.role),locked:members.some(m=>m.role===s.role)}));
 const curated=combo=>{const members=combo.members||[{champion:combo.carry,role:'bottom'},{champion:combo.support,role:'support'}];return captureCreativePlan({scope:'party',slots:slotsFor(members),...(members.length===3?{trio:combo}:{duo:combo})},data);};
@@ -35,7 +36,7 @@ test('two-player guidance never assigns unknown teammates and rejects missing or
 test('actual guide model and rhythm UI retain adopted plan context; unconfirmed queues and wrong live context do not activate it',()=>{
  const plan=curated(TRIOS.find(t=>t.id==='ball-delivery')),selection={id:'Orianna',role:'mid',mode:'rift',comboId:plan.id,creativePlan:plan},guide=selectGuide(null,selection);
  const m=createGuideModel(data,guide,live('Orianna'));const dragon=m.objectives.rows.find(r=>r.id==='dragon');assert.equal(dragon.coordination.planId,plan.id);assert.equal(dragon.coordination.ownJob.champion,'Orianna');
- const html=renderGuide({model:m},'rhythm',false,()=>'<img>');assert.match(html,/本轮你怎么做/);assert.match(html,/取消／换收益/);assert.match(html,/采用的技能职责/);assert.match(html,/阵容尚未确认/);
+ const html=renderGuide({model:m},'rhythm',false,()=>'<img>');assert.match(html,/compact-guide-main/);assert.doesNotMatch(html,/data-tab=|本轮你怎么做/);assert(dragon.coordination.ownJob);
  const unsupported=objectiveRhythm({live:{...live('Orianna'),queueId:480},plan,champion:'Orianna',role:'mid',patch:data.patch,data});assert.equal(unsupported.available,false);assert.equal(unsupported.rows.length,0);
  const mismatch=createGuideModel(data,guide,live('Ashe'));assert.equal(mismatch.objectives.available,false);assert.equal(mismatch.objectives.rows.length,0);
 });

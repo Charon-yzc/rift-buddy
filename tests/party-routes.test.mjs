@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -10,7 +11,7 @@ import {defaultState,saveState,readState} from '../services/storage.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {resultActionsView,resultActionLeadView,memberActionSummary} from '../src/cooperation-view.mjs';
 import {distinctPlayConditions} from '../src/duo-play-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 
 test('fragile four/five-player groups default to their supported side pressure and have the same plan for every input order',()=>{

@@ -1,0 +1,66 @@
+{
+  "reviewedAt": "2026-10-21",
+  "basis": "Explicit client catalogue Enabled:false only; not a complete champion or round eligibility table.",
+  "patches": {
+    "16.20": {
+      "source": "https://raw.communitydragon.org/16.20/game/maps/modespecificdata/kiwi.bin.json",
+      "sha256": "41d8cf58a5b2bb25d7cc69b94e3f78c98d337135bf0263d35a093eca3c284101",
+      "disabled": {
+        "1064": {
+          "key": "ARAM_Perseverance"
+        },
+        "1066": {
+          "key": "ARAM_QuantumComputing"
+        },
+        "1327": {
+          "key": "Adamant"
+        },
+        "1334": {
+          "key": "SnowballUpgrade"
+        },
+        "1346": {
+          "key": "Vampirism"
+        },
+        "2007": {
+          "key": "ARAM_LittleDevil"
+        },
+        "2097": {
+          "key": "VoidDash"
+        }
+      }
+    },
+    "16.21": {
+      "source": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+      "sha256": "e1ed4bfa49ae574f9ea27e9261587e363f2ac3b0f2299a78b5ca42e518053351",
+      "disabled": {
+        "1064": {
+          "key": "ARAM_Perseverance"
+        },
+        "1066": {
+          "key": "ARAM_QuantumComputing"
+        },
+        "1327": {
+          "key": "Adamant"
+        },
+        "1334": {
+          "key": "SnowballUpgrade"
+        },
+        "1343": {
+          "key": "Quest_Sneakerhead"
+        },
+        "1346": {
+          "key": "Vampirism"
+        },
+        "2007": {
+          "key": "ARAM_LittleDevil"
+        },
+        "2097": {
+          "key": "VoidDash"
+        },
+        "2109": {
+          "key": "SnapBack"
+        }
+      }
+    }
+  }
+}

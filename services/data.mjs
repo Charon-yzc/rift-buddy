@@ -1,14 +1,41 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import {buildAugmentDescriptions} from './augments.mjs';
+import {buildAugmentDescriptions,AUGMENT_TOOLTIP_PARSER_REVISION} from './augments.mjs';
 import {enrichChampionStats,hasCurrentCombatStats} from './champion-stats.mjs';
-import {enrichItemDescriptions} from './item-descriptions.mjs';
+import {enrichItemDescriptions,enrichItemModeDescriptions,hasCurrentItemDescription,ITEM_TOOLTIP_PARSER_REVISION} from './item-descriptions.mjs';
+import {hasItemModeTooltip,ITEM_MODE_TOOLTIP_REVISION} from '../src/core/item-mode-tooltip.mjs';
 import {captureChampionMechanicSource} from './champion-mechanics.mjs';
 import {mechanicSourceInput} from '../src/core/mechanic-source.mjs';
+import {AUGMENT_COUNTER_BASIS_REVISION,validAugmentCounterBasis} from '../src/core/augment-counter-basis.mjs';
 
 export const DD = 'https://ddragon.leagueoflegends.com';
 export const CN = 'https://game.gtimg.cn/images/lol/act/img/js';
+const hasAugmentDetails=a=>a.tooltip?.revision===1&&!!a.tooltip.description&&Number.isSafeInteger(a.tooltipParserRevision)&&a.tooltipParserRevision>=AUGMENT_TOOLTIP_PARSER_REVISION&&(a.tooltipParserRevision>AUGMENT_TOOLTIP_PARSER_REVISION||/^[a-f0-9]{64}$/.test(a.effectSourceHash||''));
+const hasCounterCompletion=a=>Number.isSafeInteger(a.tooltipParserRevision)&&a.tooltipParserRevision>AUGMENT_TOOLTIP_PARSER_REVISION||Number.isSafeInteger(a.tooltipCounterBasis?.revision)&&a.tooltipCounterBasis.revision>AUGMENT_COUNTER_BASIS_REVISION||validAugmentCounterBasis(a);
+// Repair the existing parser-5 cache hole without downgrading future parser or
+// counter metadata, or repeatedly fetching unrelated unsupported formulas.
+const needsBassFormula=a=>a.id===3078&&a.key==='TheBoomAndTheBass'&&a.tooltipParserRevision===AUGMENT_TOOLTIP_PARSER_REVISION&&validAugmentCounterBasis(a)&&a.tooltip?.unresolved?.includes('Calc_Damage');
+// Revision 19 prevents same-parser revision-18 caches from replacing the
+// completed static bass formula bundled with a newer installation.
+const hasBassFormula=a=>a.id!==3078||a.key!=='TheBoomAndTheBass'||!a.tooltip?.unresolved?.includes('Calc_Damage');
+const scopedFormulaTargets=[
+ {id:3116,key:'TakeemDownDownDown',sourceKey:'Kiwi_Augment_TakeemDownDownDown_Description',tooltipKey:'Kiwi_Augment_TakeemDownDownDown_Tooltip',counters:['f1','f2','f3'],labels:['额外攻击力','法术强度','额外攻速比例','技能急速','近战','远程']},
+ {id:3163,key:'EnchantingButterflies',sourceKey:'Kiwi_Augment_EnchantingButterflies_Description',tooltipKey:'Kiwi_Augment_EnchantingButterflies_Tooltip',counters:['f1'],labels:['额外生命值','治疗和护盾强度百分点','法术强度']},
+];
+const hasScopedFormula=(a,target)=>{
+ const detail=a?.tooltip;
+ return !!a&&a.id===target.id&&a.key===target.key&&hasAugmentDetails(a)&&hasCounterCompletion(a)&&/^[a-f0-9]{64}$/.test(a.effectSourceHash||'')&&a.sourceKey===target.sourceKey&&a.descriptionStatus==='complete'&&Array.isArray(a.unresolved)&&!a.unresolved.length&&typeof a.description==='string'&&!!a.description&&!a.description.includes('〔动态数值〕')&&typeof detail.description==='string'&&detail.sourceKey===target.tooltipKey&&['complete','partial'].includes(detail.status)&&Array.isArray(detail.unresolved)&&new Set(detail.unresolved).size===detail.unresolved.length&&detail.unresolved.every(k=>target.counters.includes(k))&&(detail.status==='complete'?!detail.unresolved.length&&!detail.description.includes('〔动态数值〕'):detail.unresolved.length>0&&detail.description.includes('〔动态数值〕'))&&!/〔数值未解析〕|@|\{\{|\}\}/.test(a.description+detail.description)&&target.labels.every(label=>detail.description.includes(label));
+};
+const hasScopedFormulas=augments=>scopedFormulaTargets.every(t=>{const rows=augments.filter(a=>a.id===t.id||a.key===t.key);return rows.length===1&&hasScopedFormula(rows[0],t);});
+// Do not reinterpret or replace metadata written by a newer parser/counter.
+const needsScopedFormula=a=>a.tooltipParserRevision===AUGMENT_TOOLTIP_PARSER_REVISION&&!(Number.isSafeInteger(a.tooltipCounterBasis?.revision)&&a.tooltipCounterBasis.revision>AUGMENT_COUNTER_BASIS_REVISION)&&scopedFormulaTargets.some(t=>a.id===t.id&&a.key===t.key&&!hasScopedFormula(a,t));
+const augmentContentRevision=augments=>augments.every(hasCounterCompletion)?augments.every(hasBassFormula)?hasScopedFormulas(augments)?20:19:18:17;
+// Leave unknown or future parser data intact for a version that understands it.
+const unsupportedItemRevision=item=>{
+ const known=(revision,current)=>revision===undefined||Number.isSafeInteger(revision)&&revision>=0&&revision<=current;
+ return !known(item?.tooltipParserRevision,ITEM_TOOLTIP_PARSER_REVISION)||!known(item?.modeTooltips?.hex?.revision,ITEM_MODE_TOOLTIP_REVISION);
+};
 export async function getJSON(url, timeout = 20000) {
   let last;
   for(let attempt=0;attempt<3;attempt++) {
@@ -27,6 +54,10 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
   const versions = await readJSON(`${DD}/api/versions.json`);
   const version = versions.find(v => /^\d+\.\d+\.\d+$/.test(v));
   if (!version) throw new Error('官方版本号不可用');
+  let itemSources;
+  const readItemSources=patch=>itemSources??=Promise.all([readJSON(`https://raw.communitydragon.org/${patch}/game/items.cdtb.bin.json`,35000),readJSON(`https://raw.communitydragon.org/${patch}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000)]);
+  const completeItemModes=(items,patch)=>Object.values(items).some(i=>i.tooltip?.patch===patch)&&Object.values(items).every(i=>hasItemModeTooltip(i,patch));
+  const completeItemDescriptions=(items,patch)=>Object.values(items).some(i=>i.tooltip?.patch===patch)&&Object.values(items).every(i=>hasCurrentItemDescription(i,patch));
   const checkAge=clock()-Date.parse(previous?.contentCheckedAt||previous?.fetchedAt),recentCheck=Number.isFinite(checkAge)&&checkAge>=0&&checkAge<86400000;
   if(!recheckVersion&&recentCheck&&previous?.version===version&&previous.itemTooltipRevision===1&&previous.contentRevision>=8&&previous.mechanicSourceRevision===1&&previous.champions?.every(c=>hasCurrentCombatStats(c,previous.patch)&&mechanicSourceInput(c,previous.patch)?.version===version)&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
     // Tencent's names can catch up after Data Dragon has already shipped this
@@ -37,9 +68,12 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
       progress('已核对同补丁国服英雄名称资料');
       previous={...previous,cnVersion:cn.version,champions:previous.champions.map(c=>{const h=names.get(c.id.toLowerCase());return {...c,name:h.title,title:h.name,keywords:h.keywords};})};
     }else progress('国服名称来源尚未提供完整同补丁资料，保留既有名称与版本记录');
+    let itemRepairFailed=false;
     if(previous.contentRevision<9){
       try{
-        const cd=`https://raw.communitydragon.org/${previous.patch}`,[bin,strings]=await Promise.all([readJSON(`${cd}/game/items.cdtb.bin.json`,35000),readJSON(`${cd}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000)]);
+        // The legacy migration rewrites every base tooltip; never touch future data.
+        if(Object.values(previous.items).some(unsupportedItemRevision))throw Error('装备包含尚不支持的来源修订');
+        const [bin,strings]=await readItemSources(previous.patch);
         if(!bin||!Object.keys(bin).length||!strings?.entries||!Object.keys(strings.entries).length)throw Error('装备公式来源不完整');
         const items=enrichItemDescriptions(previous.items,bin,strings,previous.patch);
         if(!Object.entries(items).some(([id,item])=>item!==previous.items[id])||Object.entries(previous.items).some(([id,item])=>item.tooltip?.patch===previous.patch&&items[id]===item))throw Error('装备公式来源未覆盖已有记录');
@@ -52,9 +86,46 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
         }
         previous={...previous,items,contentRevision:9};
         progress('已补齐当前版本法强装备公式');
-      }catch{progress('装备公式暂未补齐，保留原公式并等待重试');}
+      }catch{itemRepairFailed=true;progress('装备公式暂未补齐，保留原公式并等待重试');}
     }
-    progress('当前已是最新资料版本');
+    const pendingDescriptions=previous.contentRevision>=9?Object.entries(previous.items).filter(([,item])=>!unsupportedItemRevision(item)&&!hasCurrentItemDescription(item,previous.patch)):[];
+    const pendingModes=Object.entries(previous.items).filter(([,item])=>!unsupportedItemRevision(item)&&!hasItemModeTooltip(item,previous.patch));
+    if(pendingDescriptions.length||pendingModes.length){
+      try{
+        const [bin,strings]=await readItemSources(previous.patch);
+        if(!bin||!Object.keys(bin).length||!strings?.entries||!Object.keys(strings.entries).length)throw Error('海克斯装备参数来源不完整');
+        const bases=pendingDescriptions.length?enrichItemDescriptions(Object.fromEntries(pendingDescriptions),bin,strings,previous.patch):{};
+        if(pendingDescriptions.some(([id,item])=>bases[id]===item||!hasCurrentItemDescription(bases[id],previous.patch)))throw Error('装备基础字段未覆盖待核对记录');
+        for(const [id,item]of pendingDescriptions){const old=item.tooltip,next=bases[id].tooltip,count=text=>(text?.match(/〔数值未解析〕/g)||[]).length;if(old.description?.trim()&&!next.description?.trim()||old.status==='complete'&&next.status!=='complete'||count(next.description)>count(old.description))throw Error('已有装备说明未完整保留');}
+        const items={...previous.items,...bases},pending=Object.entries(items).filter(([,item])=>!unsupportedItemRevision(item)&&!hasItemModeTooltip(item,previous.patch)),parsed=enrichItemModeDescriptions(Object.fromEntries(pending),bin,strings,previous.patch);
+        if(pending.some(([id,item])=>parsed[id]===item||!hasItemModeTooltip(parsed[id],previous.patch)))throw Error('海克斯装备参数未覆盖待核对记录');
+        previous={...previous,items:{...items,...parsed}};
+        progress('已核对同版本装备基础字段与公开海克斯参数');
+      }catch{itemRepairFailed=true;progress('装备基础字段或海克斯参数暂未补齐，保留原资料并等待重试');}
+    }
+    const needsAugmentRepair=a=>!hasAugmentDetails(a)||!hasCounterCompletion(a)||needsBassFormula(a)||needsScopedFormula(a);
+    if(previous.augments.some(needsAugmentRepair)){
+      try{
+        const cd=`https://raw.communitydragon.org/${previous.patch}`,[bin,strings]=await Promise.all([readJSON(`${cd}/game/maps/modespecificdata/kiwi.bin.json`,35000),readJSON(`${cd}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000)]);
+        const pending=previous.augments.filter(needsAugmentRepair),parsed=buildAugmentDescriptions(pending,bin,strings?.entries||{});
+        if(parsed.some(a=>!a.description||a.descriptionStatus==='missing'||!hasAugmentDetails(a)||!hasCounterCompletion(a)||needsBassFormula(a)||needsScopedFormula(a)))throw Error('强化完整说明或计数来源未覆盖已有清单');
+        for(let i=0;i<pending.length;i++){
+          const old=pending[i],next=parsed[i];if(!hasAugmentDetails(old))continue;
+          if(old.descriptionStatus==='complete'&&next.descriptionStatus!=='complete'||old.tooltip.status==='complete'&&next.tooltip.status!=='complete'||(next.unresolved||[]).some(key=>!(old.unresolved||[]).includes(key))||(next.tooltip.unresolved||[]).some(key=>!(old.tooltip.unresolved||[]).includes(key)))throw Error('强化计数来源不能降低已完整解析的说明');
+        }
+        // Preserve already completed records, including newer parser results
+        // received from the signed feed, when repairing a mixed older cache.
+        let index=0;const augments=previous.augments.map(a=>needsAugmentRepair(a)?parsed[index++]:a);
+        previous={...previous,augments};
+        progress('已补齐同版本强化详细数值与动态计数资料');
+      }catch{progress('强化详细数值或计数资料暂未补齐，保留原资料并等待重试');}
+    }
+    // Parser completion lives on each augment, so it cannot skip an unfinished
+    // revision-8 item migration or force the detail sources to be read again.
+    if(previous.contentRevision>=9&&!Object.values(previous.items).some(unsupportedItemRevision)&&previous.augments.every(hasAugmentDetails))previous={...previous,contentRevision:Math.max(completeItemModes(previous.items,previous.patch)?completeItemDescriptions(previous.items,previous.patch)?augmentContentRevision(previous.augments):16:15,previous.contentRevision)};
+    const itemDataPending=itemRepairFailed||previous.contentRevision<9||Object.values(previous.items).some(item=>unsupportedItemRevision(item)||!hasCurrentItemDescription(item,previous.patch)||!hasItemModeTooltip(item,previous.patch));
+    const augmentDataPending=!previous.augments.every(a=>hasAugmentDetails(a)&&hasCounterCompletion(a)&&hasBassFormula(a))||!hasScopedFormulas(previous.augments);
+    progress(itemDataPending?(augmentDataPending?'部分装备与强化资料待核，保留现有资料':'部分装备资料待核，保留现有资料'):augmentDataPending?'部分强化资料待补齐，保留既有可用内容':'当前版本资料已检查');
     return {...previous,checkedAt:new Date(clock()).toISOString()};
   }
   const base = `${DD}/cdn/${version}/data/zh_CN`;
@@ -69,7 +140,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
   const cd = `https://raw.communitydragon.org/${patch}`;
   const enrichedChampions=await enrichChampionStats(Object.values(champions.data),patch,readJSON,progress);
   let itemDescriptions=null;
-  try{const [bin,strings]=await Promise.all([readJSON(`${cd}/game/items.cdtb.bin.json`,35000),readJSON(`${cd}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000)]);itemDescriptions=enrichItemDescriptions(items.data,bin,strings,patch);progress('已解析当前版本装备数值与条件公式');}
+  try{const [bin,strings]=await readItemSources(patch);itemDescriptions=enrichItemModeDescriptions(enrichItemDescriptions(items.data,bin,strings,patch),bin,strings,patch);progress('已解析当前版本装备数值与公开海克斯参数');}
   catch{progress('装备详细公式暂不可用，保留官方基础描述');}
   progress('正在读取海克斯资料清单');
   let augments = [], augmentSource = null, augmentError = null;
@@ -95,7 +166,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     augmentSource = `${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`;
   } catch (e) { augmentError = e.message; }
   return {
-    schema: 1, contentRevision:10, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
+    schema: 1, contentRevision:itemDescriptions&&augments.length&&augments.every(hasAugmentDetails)?completeItemModes(itemDescriptions,patch)?completeItemDescriptions(itemDescriptions,patch)?augmentContentRevision(augments):16:15:11, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
     sources: { champions:`${base}/championFull.json`, items:`${base}/item.json`, runes:`${base}/runesReforged.json`,
       names:`${CN}/heroList/hero_list.js`, augments:augmentSource,
       augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null,
@@ -113,19 +184,21 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     items:Object.fromEntries(Object.entries(items.data).map(([id,i]) => [id, {
       id:Number(id), name:i.name, description:cleanText(i.description), tags:i.tags, gold:i.gold, maps:i.maps,
       from:i.from || [], into:i.into || [], inStore:i.inStore !== false, requiredAlly:i.requiredAlly,requiredChampion:i.requiredChampion,stats:i.stats,specialRecipe:i.specialRecipe||null,
-      icon:`${DD}/cdn/${version}/img/item/${i.image.full}`, ...(itemDescriptions?.[id]?.tooltip?{tooltip:itemDescriptions[id].tooltip}:{}),
+      icon:`${DD}/cdn/${version}/img/item/${i.image.full}`, ...(itemDescriptions?.[id]?.tooltip?{tooltip:itemDescriptions[id].tooltip,tooltipParserRevision:itemDescriptions[id].tooltipParserRevision}:{}),
+      ...(itemDescriptions?.[id]?.modeTooltips?{modeTooltips:itemDescriptions[id].modeTooltips}:{}),
     }])),
     runes, spells:spells.data, augments,
   };
 }
 const writeQueues=new Map();
-export function atomicJSON(filename, value, {space=0}={}) {
+export function atomicJSON(filename, value, {space=0,mode}={}) {
   const key=path.resolve(filename),content=JSON.stringify(value,null,space);
   const pending=(writeQueues.get(key)||Promise.resolve()).catch(()=>{}).then(async()=>{
     await fs.mkdir(path.dirname(key),{recursive:true});
     const tmp=`${key}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`;
     try{
       await fs.writeFile(tmp,content,'utf8');
+      if(mode!==undefined)await fs.chmod(tmp,mode);
       // Windows readers/indexers can briefly hold the destination open. Keep
       // the old file intact and the write queue ordered while retrying rename;
       // never delete the destination or replace it with a non-atomic write.

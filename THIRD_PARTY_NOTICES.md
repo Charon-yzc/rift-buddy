@@ -1,5 +1,9 @@
 # Third-party notices
 
+## Vue
+
+The renderer bundles the runtime-only Vue 3.5.44 browser build, copyright (c) 2018-present Yuxi (Evan) You and Vue contributors, under the MIT license. Templates in `src/vue/` are precompiled by the matching official `@vue/compiler-sfc`; the compiler is not shipped to the renderer. `scripts/build-renderer.mjs` copies the runtime and its full MIT license to `src/generated/vue.runtime.mjs` and `src/generated/vue-LICENSE.txt` before packaging. Source: https://github.com/vuejs/core/tree/v3.5.44 .
+
 ## Riot and Tencent champion reference data
 
 `data/abilities.json` contains Chinese champion descriptions from Tencent's public League of Legends champion details, with same-patch Riot Data Dragon cooldown/resource ordering and localized client spell data distributed by CommunityDragon used for special forms and source corrections. `data/images/ability/` bundles those public skill icons, using exact-version Data Dragon PNGs for missing Tencent icons. Each source URL and SHA-256 is retained in the reference data. No game process memory or private game data is used.
@@ -28,7 +32,7 @@ Source: https://github.com/LeagueAkari/LeagueAkari/blob/5109b2f7fcce6e02312e534c
 
 Pinned revision: `5109b2f7fcce6e02312e534cd1729ed0f2142b51`.
 
-The item-set JSON schema and League client install-directory layout in `src/core/item-sets.mjs` and `services/item-sets.mjs` reference the same revision's `src/renderer/src-opgg-window/opgg/utils/loadout.ts` and `src/main/shards/league-client/index.ts`. This app exports the currently chosen equipment; it writes only its own hero/position/mode file, copies competing shop sets for the same champion and map into `Config/RiftBuddyItemSetBackups`, and then moves them out of the shop (it never adopts LeagueAkari's chat messages or its handling of other champions' and maps' files).
+The item-set JSON schema and League client install-directory layout in `src/core/item-sets.mjs` and `services/item-sets.mjs` reference the same revision's `src/renderer/src-opgg-window/opgg/utils/loadout.ts` and `src/main/shards/league-client/index.ts`. The app keeps the latest imported Rift Buddy equipment set, uses item-set priority and rank, and preserves personal and third-party files.
 
 The client preview and summoner-spell endpoints in `services/client-preparation.mjs` reference the same pinned revision's `src/shared/http-api-axios-helper/league-client/champ-select.ts`. Only the local player's pick is previewed; no pick completion, ban, or automatic background configuration is implemented.
 
@@ -54,3 +58,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+
+## xxHash
+
+`services/riot-stringtable.mjs` adapts the seed-zero short-key paths from xxHash v0.8.3, copyright Yann Collet, under the BSD 2-Clause license. The full upstream copyright, license and disclaimer are retained at the beginning of that module in both desktop and connection-helper bundles. The bounded implementation resolves Riot translation keys; it is not a security checksum.
+
+Source: https://github.com/Cyan4973/xxHash/blob/v0.8.3/xxhash.h . Riot RST lowercase hashing and the current 38-bit mask follow https://github.com/CommunityDragon/CDTB/blob/master/cdtb/rstfile.py .

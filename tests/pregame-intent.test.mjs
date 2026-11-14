@@ -13,7 +13,10 @@ import {reconcileClientDraft,publicClientGameId} from '../src/core/draft.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {clientPreparationPlan} from '../src/client-preparation-view.mjs';
 import {runeWriteContext} from '../src/core/rune-context.mjs';
-import {upsertPreparation} from '../src/core/preparation.mjs';
+import {upsertPreparation,storedPreparation,preparationIdentity,CONFIGURATION_FIELDS} from '../src/core/preparation.mjs';
+import {DEFAULT_BUILD_SOURCE,normalizeBuildSource,requireBuildSource,selectBuildSource} from '../src/core/build-source.mjs';
+import {catalogPlanGroups,catalogContextRevision} from '../src/core/catalog-choice.mjs';
+import {projectCatalogAvailability} from '../src/core/catalog-availability.mjs';
 import {validateClientPreparation} from '../services/client-preparation.mjs';
 import {writeRunePage} from '../services/lcu.mjs';
 import {sanitizeShare,encodeFrame,decodeFrame} from '../src/core/room.mjs';
@@ -34,6 +37,13 @@ test('role preselection chooses a representative; explicit hero can use any chos
  const byHero=pregameIntentChoice({role:'support',champion:'Garen'},c,data);
  assert.deepEqual(byHero,{champion:'Garen',role:'support',reason:''});
  assert.equal(pregameIntentChoice({role:'',champion:'Ashe'},c,data).role,'bottom');
+});
+
+test('a lobby avatar follows the assigned lane while a deliberately chosen configuration keeps its lane',()=>{
+ const c=client();c.session.myTeam[0].assignedPosition='JUNGLE';
+ const intent={kind:'hero',role:'support',champion:'Nami'};
+ assert.equal(pregameIntentChoice(intent,c,data).role,'jungle');
+ assert.equal(pregameIntentChoice({...intent,selection:{id:'Nami',role:'support',mode:'rift'}},c,data).role,'support');
 });
 
 test('only a confirmed placeholder for the same game, player and hero survives restart',()=>{
@@ -120,16 +130,22 @@ const mainSource=await fs.readFile(new URL('../electron/main.cjs',import.meta.ur
 const stagedSource=mainSource.slice(mainSource.indexOf('async function applyStagedSelection(){'),mainSource.indexOf(' const status=createClientSync(',mainSource.indexOf('async function applyStagedSelection(){')));
 const stagedWithLoader=stagedSource.replace(/await Promise\.all\(\[import\([\s\S]*?\]\)/,'await loadModules()');
 assert.notEqual(stagedWithLoader,stagedSource,'The staged scheduler module boundary must be available');
+const projectionSource=mainSource.slice(mainSource.indexOf(' const projectPreparationData='),mainSource.indexOf(' const {publicClientGameId,')).split('\n').filter(line=>!line.includes('const {confirmedClientDraft}=await import(')).join('\n');
+const stagedCatalogSource=mainSource.slice(mainSource.indexOf(' function stagedCatalogChoice('),mainSource.indexOf(' async function applyStagedSelection(){'));
 function stagedScheduler(kind,{saveFailsAfterDispatch=false}={}){
  let loaded,entered;const loading=new Promise(resolve=>{loaded=resolve;}),started=new Promise(resolve=>{entered=resolve;});
  const writes=[],messages=[],events=[],current=client();current.party={key:'synthetic-party'};
- const service={validateClientPreparation,prepareClientSelection:async({value})=>{writes.push(value);return {complete:true,steps:{hover:{status:'done'},runes:{status:'done',pageId:44},spells:{status:'done'},items:{status:'done'}}};}};
+ const service={validateClientPreparation,prepareClientSelection:async({value},control)=>{assert.equal(control.isCurrent(),true);writes.push(value);return {complete:true,steps:{hover:{status:'done'},runes:{status:'done',pageId:44},spells:{status:'done'},items:{status:'done'}}};}};
  const modules=[{getBuild},{clientPreparationPlan},{runeWriteContext},service];
- const context=vm.createContext({state:{draft:{preselection:{role:'support',champion:'Nami',...(kind?{kind,selection:{id:'Nami',role:'support',mode:'rift'}}:{})}}},preservePreparationResult,upsertPreparation,structuredClone,appliedGuideSelection:null,latestClient:current,data,isDeepStrictEqual,publicClientGameId,pregameIntentChoice,
-  stagedSelectionRunning:false,applyingRunes:false,importingItemSet:false,stagedSelectionParty:current.party.key,stagedPartyIdentity:()=>current.party.key,
-  saveCurrentState:async update=>{if(saveFailsAfterDispatch&&writes.length)throw Error('mock disk unavailable');context.state=update(context.state);},loadModules:()=>{entered();return loading;},
+ // Imported helpers and VM literals use different prototypes; IPC data has
+ // one realm in production. Keep exact field/value comparisons across the VM.
+ const context=vm.createContext({state:{preferences:defaultState().preferences,preparations:[],draft:{preselection:{role:'support',champion:'Nami',buildSource:DEFAULT_BUILD_SOURCE,...(kind?{kind,selection:{id:'Nami',role:'support',mode:'rift'}}:{})}}},preservePreparationResult,upsertPreparation,storedPreparation,preparationIdentity,CONFIGURATION_FIELDS,normalizeBuildSource,requireBuildSource,selectBuildSource,catalogPlanGroups,catalogContextRevision,projectCatalogAvailability,structuredClone,appliedGuideSelection:null,latestClient:current,data,isDeepStrictEqual:(a,b)=>isDeepStrictEqual(a,b,{skipPrototype:true}),publicClientGameId,pregameIntentChoice,
+  stagedSourceBinding:{entry:{source:DEFAULT_BUILD_SOURCE,epoch:1,destroyed:false},epoch:1},selectionWriteRevision:0,saveTask:Promise.resolve(),
+  heroSelectionRevision:0,stagedSelectionRunning:false,applyingRunes:false,importingItemSet:false,stagedSelectionParty:current.party.key,stagedPartyIdentity:()=>current.party.key,
+  saveCurrentState:update=>{const task=context.saveTask.catch(()=>{}).then(()=>{if(saveFailsAfterDispatch&&writes.length)throw Error('mock disk unavailable');context.state=update(context.state);return context.state;});context.saveTask=task;return task;},loadModules:()=>{entered();return loading;},
+  rememberAppliedGuide:(gameId,selection,source)=>{context.appliedGuideSelection={gameId,selection:structuredClone(selection),source:requireBuildSource(source)};},
   publishWindows:(_event,value)=>messages.push(value),beginPreparation:()=>({}),finishPreparation:(_operation,event)=>events.push(event),helper:{active:()=>false},status:async()=>{},rememberSelectionHover:async()=>{}});
- vm.runInContext(stagedWithLoader,context);
+ vm.runInContext(projectionSource+stagedCatalogSource+stagedWithLoader,context);
  return {context,writes,messages,events,started,release:()=>loaded(modules),run:()=>vm.runInContext('applyStagedSelection()',context)};
 }
 test('a newer explicit configuration owns the client while a staged hover is loading',async()=>{
@@ -140,6 +156,21 @@ test('a newer explicit configuration owns the client while a staged hover is loa
   assert.equal(scheduler.context[busy],true,'The deferred hover released another operation\'s lock');
  }
 });
+
+test('an incomplete first snapshot leaves the lobby avatar pending until it can use the assigned lane',async()=>{
+ const f=stagedScheduler('hero'),c=f.context.latestClient,intent=f.context.state.draft.preselection;
+ delete intent.selection;c.session.myTeam[0].assignedPosition='MIDDLE';
+ const eligible=c.eligibility,party=c.party.key;c.eligibility={...eligible,disabled:null};c.party.key='';
+ await f.run();assert.deepEqual(f.context.state.draft.preselection,intent);c.party.key=party;
+ await f.run();assert.equal(f.writes.length,0);assert.equal(f.context.state.draft.preselection.attemptedGameId,undefined);assert.equal(f.messages.length,0);
+ c.eligibility=eligible;const pending=f.run();await f.started;f.release();await pending;
+ assert.equal(f.writes.length,1);assert.equal(f.writes[0].role,'mid');assert.equal(f.writes[0].preserveExistingPick,true);assert.equal(f.context.appliedGuideSelection.selection.loadoutId,'default');
+});
+
+test('a saved lobby avatar leaves a different hero already chosen in the client intact',async()=>{
+ const f=stagedScheduler('hero');f.context.latestClient.session.myTeam[0].championPickIntent=hero('Ahri').key;
+ await f.run();assert.equal(f.writes.length,0);assert.match(f.messages.at(-1).message,/保留当前英雄/);
+});
 test('a cleared preselection cannot dispatch after the player chooses another hero',async()=>{
  for(const preserveRole of [false,true]){
   const scheduler=stagedScheduler(),pending=scheduler.run();await scheduler.started;
@@ -148,12 +179,28 @@ test('a cleared preselection cannot dispatch after the player chooses another he
   scheduler.release();await pending;assert.equal(scheduler.writes.length,0);
  }
 });
+test('a changed source epoch stops a staged configuration before client dispatch',async()=>{
+ const scheduler=stagedScheduler('hero'),pending=scheduler.run();await scheduler.started;
+ scheduler.context.stagedSourceBinding.entry.epoch++;scheduler.release();await pending;
+ assert.equal(scheduler.writes.length,0);assert.match(scheduler.messages.at(-1).message,/配置来源已变化/);
+});
+test('a newer hero click stops an older staged choice while its imports are loading',async()=>{
+ const scheduler=stagedScheduler('hero'),pending=scheduler.run();await scheduler.started;
+ scheduler.context.heroSelectionRevision++;scheduler.release();await pending;assert.equal(scheduler.writes.length,0);assert.equal(scheduler.events.length,0);
+});
+test('a staged hover-only choice uses the shared hero lane and preserves supersession',async()=>{
+ const scheduler=stagedScheduler('hero'),requests=[];
+ scheduler.context.derivedCatalogState=()=>({required:true,current:false});
+ scheduler.context.selectHeroOnly=async(value,control)=>{assert(control.isCurrent());requests.push(value);return {complete:false,superseded:true};};
+ const pending=scheduler.run();await scheduler.started;scheduler.release();await pending;
+ assert.equal(requests.length,1);assert.equal(requests[0].preselectOnly,true);assert.equal(scheduler.writes.length,0);assert.equal(scheduler.context.appliedGuideSelection,null);assert.equal(scheduler.messages.length,0);
+});
 
 test('hero cancellation preserves the latest lane and exact manual range without client access',async()=>{
  const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),start=source.indexOf(" guard('cancel-preselection',"),end=source.indexOf(" guard('authorize-client',",start);
  assert.ok(start>=0&&end>start);let handler;
  const slots=createSlots().map(slot=>({...slot,party:slot.role!=='jungle',partyManual:true}));
- const sandbox={state:{draft:{slots,partyCount:4,preselection:{role:'support',champion:'Ashe',kind:'hero',selection:{id:'Ashe',role:'support',mode:'rift'}}}},stateRevision:8,guard:(_channel,fn)=>{handler=fn;}};
+ const sandbox={state:{draft:{slots,partyCount:4,preselection:{role:'support',champion:'Ashe',kind:'hero',selection:{id:'Ashe',role:'support',mode:'rift'}}}},stateRevision:8,selectionWriteRevision:0,guard:(_channel,fn)=>{handler=fn;}};
  const context=vm.createContext(sandbox);context.saveCurrentState=async update=>{context.state=update(structuredClone(context.state));context.stateRevision++;};
  vm.runInContext(source.slice(start,end),context);
  const before=structuredClone(context.state.draft),result=await handler();assert.equal(result.revision,9);assert.deepEqual(context.state.draft.slots,before.slots);assert.equal(context.state.draft.partyCount,4);assert.deepEqual(JSON.parse(JSON.stringify(context.state.draft.preselection)),{role:'support',champion:null,kind:'position'});
@@ -167,7 +214,7 @@ test('leaving selection while a staged hover is loading does not revive an old e
 });
 test('an unchanged staged position dispatches a full configuration once without claiming a hero lock',async()=>{
  const scheduler=stagedScheduler(),pending=scheduler.run();await scheduler.started;scheduler.release();await pending;
- assert.equal(scheduler.writes.length,1);assert.equal(scheduler.writes[0].champion,'Nami');assert.equal(scheduler.writes[0].preselectOnly,false);assert.equal(scheduler.writes[0].claimPosition,true);
+ assert.equal(scheduler.writes.length,1,JSON.stringify({messages:scheduler.messages,intent:scheduler.context.state.draft.preselection}));assert.equal(scheduler.writes[0].champion,'Nami');assert.equal(scheduler.writes[0].preselectOnly,false);assert.equal(scheduler.writes[0].claimPosition,true);
  assert.equal(scheduler.context.state.ownedPageId,44,'Position preparation must remember the page actually written for later reuse');
  assert.equal(scheduler.context.applyingRunes,false);assert.equal(scheduler.context.importingItemSet,false);
  await scheduler.run();assert.equal(scheduler.writes.length,1,'Polling repeated an already attempted preselection');

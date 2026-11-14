@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,7 +7,7 @@ import {resolveClientParty} from '../src/core/client-party.mjs';
 import {reconcileClientDraft} from '../src/core/draft.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
 const key=id=>data.champions.find(c=>c.id===id).key;
 const blank=()=>({localPlayerCellId:0,myTeam:[0,1].map(cellId=>({cellId,championId:0,assignedPosition:''}))});
 const group=(members=[{cellId:0,local:true},{cellId:1}])=>({status:'known',lobbyCount:members.length,unmatched:0,members});

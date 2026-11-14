@@ -1,6 +1,7 @@
 const {app,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],writes=[],errors=[],cacheSmoke=process.env.RIFT_BUDDY_USAGE_CACHE_SMOKE,usageSmoke=process.env.RIFT_BUDDY_USAGE_SMOKE==='1',roomUsageSmoke=process.env.RIFT_BUDDY_ROOM_USAGE_SMOKE==='1',historyReads=[],roomSockets=[],roomFrames=[];let main,observer,offline=false,clientPhase='Lobby',holdUsage=false,releaseUsage=null;
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],writes=[],errors=[],cacheSmoke=process.env.RIFT_BUDDY_USAGE_CACHE_SMOKE,usageSmoke=process.env.RIFT_BUDDY_USAGE_SMOKE==='1',roomUsageSmoke=process.env.RIFT_BUDDY_ROOM_USAGE_SMOKE==='1',historyReads=[],roomSockets=[],roomFrames=[];let main,observer,offline=false,clientPhase='Lobby',holdUsage=usageSmoke,releaseUsage=null;
+const interactionSmoke=process.env.RIFT_BUDDY_HISTORY_INTERACTIONS==='1',interactionFixture=interactionSmoke?require('./history-interaction-fixture.cjs'):null;
 app.setPath('userData',root);globalShortcut.register=()=>false;
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);window.webContents.on('console-message',(_event,_level,message)=>{if(typeof message==='string'&&/TypeError|ReferenceError|SyntaxError/.test(message))errors.push(message);});});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -16,6 +17,7 @@ if(roomUsageSmoke)global.WebSocket=class {
 const own={puuid:'fixture-own-player-0001',summonerId:1,gameName:'战绩测试玩家',tagLine:'TEST',summonerLevel:100},friend={puuid:'fixture-friend-player-2',summonerId:2,gameName:'示例队友',tagLine:'TEST'};
 function game(id){const identities=[own,friend,...Array.from({length:8},(_,i)=>({puuid:'fixture-public-player-'+(i+3),gameName:'模拟玩家'+(i+3),tagLine:'TEST'}))];return {gameId:id,gameCreation:Date.now()-id*3600000,gameDuration:1800,gameMode:'CLASSIC',gameType:'MATCHED_GAME',gameVersion:'16.20',queueId:420,mapId:11,teams:[],participantIdentities:identities.map((p,i)=>({participantId:i+1,player:p})),participants:identities.map((p,i)=>({participantId:i+1,championId:[22,412,99,86,64,103,51,89,122,17][i],teamId:i<5?100:200,spell1Id:4,spell2Id:7,stats:{kills:8,deaths:2,assists:10,win:i<5?id%2===1:id%2===0,totalDamageDealtToChampions:25000,totalDamageTaken:15000,goldEarned:12000,totalMinionsKilled:140,neutralMinionsKilled:20,totalHeal:2000,visionScore:30,champLevel:16,item0:3006,item1:3031,perk0:8005,perkPrimaryStyle:8000,perkSubStyle:8100}}))};}
 const output=options=>{assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);const route=options.path,method=options.method||'GET';if(offline)throw Error('fixture offline');
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
  if(route==='/lol-summoner/v1/current-summoner')return own;
  if(route==='/riotclient/region-locale')return {region:cacheSmoke?'KR':'unconfigured-fixture'};
  if(cacheSmoke&&route.includes('/matches?'))throw Error('Isolated match-history maintenance');
@@ -29,9 +31,9 @@ const output=options=>{assert.equal(options.hostname,'127.0.0.1');assert.equal(o
  if(route.startsWith('/lol-summoner/v1/summoners?name='))return friend;
  if(route.includes('/matches?')){const q=new URLSearchParams(route.split('?')[1]),start=Number(q.get('begIndex')),count=Number(q.get('endIndex'))-start+1;historyReads.push({start,count});const value={games:{games:Array.from({length:usageSmoke?Math.max(0,Math.min(count,500-start)):start===0?count:3},(_,i)=>{const row=game(start+i+1);if(usageSmoke)row.participants[0].championId=[22,103,99,64,412,86][(start+i)%6];return row;})}};return holdUsage&&count===100&&start>0?new Promise(resolve=>releaseUsage=()=>{releaseUsage=null;resolve(value);}):value;}
  if(route.startsWith('/lol-match-history/v1/games/')){if(usageSmoke)throw Error('Summary must not fetch individual games');return game(Number(route.split('/').at(-1)));}
- if(route.includes('/game-timelines/'))return {frames:[{timestamp:60000,participantFrames:{1:{participantId:1,totalGold:600,currentGold:200,minionsKilled:6,jungleMinionsKilled:0,level:2,xp:300}},events:[{type:'ITEM_PURCHASED',timestamp:20000,participantId:1,itemId:1001},{type:'SKILL_LEVEL_UP',timestamp:0,participantId:1,skillSlot:1},{type:'CHAMPION_KILL',timestamp:50000,killerId:1,victimId:2}]}]};
+ if(route.includes('/game-timelines/'))return interactionSmoke?interactionFixture.readTimeline():{frames:[{timestamp:60000,participantFrames:{1:{participantId:1,totalGold:600,currentGold:200,minionsKilled:6,jungleMinionsKilled:0,level:2,xp:300}},events:[{type:'ITEM_PURCHASED',timestamp:20000,participantId:1,itemId:1001},{type:'SKILL_LEVEL_UP',timestamp:0,participantId:1,skillSlot:1},{type:'CHAMPION_KILL',timestamp:50000,killerId:1,victimId:2}]}]};
  if(route.startsWith('/lol-ranked/'))return {queues:[{queueType:'RANKED_SOLO_5x5',tier:'GOLD',division:'I',leaguePoints:40,wins:30,losses:20}]};
- if(route.startsWith('/lol-champion-mastery/'))return [{championId:22,championLevel:10,championPoints:100000}];
+ if(route.startsWith('/lol-champion-mastery/'))return interactionSmoke?Array.from({length:173},(_,i)=>({championId:i+1,championLevel:10,championPoints:100000-i})):[{championId:22,championLevel:10,championPoints:100000}];
  if(route.includes('/rofls/')&&method==='POST'){writes.push(route);return {};}
  if(route.includes('/metadata/'))return {state:'readyToWatch',downloadProgress:100};
  throw Error('Unexpected fixture route');
@@ -42,7 +44,7 @@ cp.execFile=(file,args,options,callback)=>{queueMicrotask(()=>(typeof options===
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label){for(let n=0;n<120;n++){if(await check())return;await delay(80);}throw Error(label);}
 async function run(){
- const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
+ const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile(process.env.RIFT_BUDDY_SMOKE_RELEASE||'release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;require(path.join(base,'electron/main.cjs'));
  await until(()=>{main=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main window missing');
   const js=code=>main.webContents.executeJavaScript(code,true),click=selector=>until(()=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)return false;el.click();return true;})()'),'Control missing '+selector),capture=async name=>{await until(()=>js('[...document.querySelectorAll("img.portrait")].filter(img=>{const r=img.getBoundingClientRect();return img.offsetParent&&r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;}).every(img=>img.complete&&img.naturalWidth>0)'),'Visible bundled portraits not loaded');await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
@@ -53,7 +55,18 @@ async function run(){
  // A live-data render can replace a hovered node during its dwell timer.
  // Re-enter only its replacement, as native pointer targeting would; never
  // restart the timer for a stable target or bypass the real hover handler.
- const hover=async(selector,label)=>{await js('window.__historySmokeHoverTarget=null');await until(()=>js(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)return false;if(window.__historySmokeHoverTarget!==el){window.__historySmokeHoverTarget=el;(el.querySelector('img')||el).dispatchEvent(new PointerEvent('pointerover',{bubbles:true}));}const tip=document.querySelector('#history-hover-detail');return !!(tip&&tip.matches(':popover-open')&&el.getAttribute('aria-describedby')==='history-hover-detail');})()`),label);};
+ const hover=async(selector,label)=>{
+  await js('window.__historySmokeHoverTarget=null');
+  await until(()=>js(`(async()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)return false;
+   if(window.__historySmokeHoverTarget!==el){
+    el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    if(!el.isConnected||el!==document.querySelector(${JSON.stringify(selector)})||!el.checkVisibility())return false;
+    const r=el.getBoundingClientRect(),x=(r.left+r.right)/2,y=(r.top+r.bottom)/2,hit=document.elementFromPoint(x,y);
+    if(!r.width||!r.height||x<0||y<0||x>=innerWidth||y>=innerHeight||!hit||hit!==el&&!el.contains(hit))return false;
+    window.__historySmokeHoverTarget=el;(el.querySelector('img')||el).dispatchEvent(new PointerEvent('pointerover',{bubbles:true}));
+   }
+   const tip=document.querySelector('#history-hover-detail');return !!(tip&&tip.matches(':popover-open')&&el.getAttribute('aria-describedby')==='history-hover-detail');})()`),label);
+ };
  const hoverText=()=>js('document.querySelector("#history-hover-detail")?.textContent||""');
  const originalTheme=await js('document.documentElement.dataset.theme');
  const chooseTheme=async theme=>{await click('[data-action=theme-open]');await click(`[data-action=presentation][data-field=theme][data-value="${theme}"]`);await until(()=>js(`document.documentElement.dataset.theme===${JSON.stringify(theme)}`),'Theme did not apply');await click('[aria-label=配色] [data-action=close]');};
@@ -95,9 +108,17 @@ async function run(){
  }
  if(usageSmoke){
   await js('window.buddy.client(true)');
+  // Keep the second summary batch blocked until the visible list has loaded.
+  // Request order alone would still pass if rendering waited for all500.
+  await until(()=>releaseUsage,'Controlled initial summary batch missing');
+  await until(()=>js('document.querySelectorAll(".history-match").length===20'),'Own history waited for the blocked summary');
+  const scanning=await js('window.buddy.championUsage()');assert.equal(scanning.complete,false);assert.equal(scanning.scanned,100);assert.equal(scanning.status,'loading');
+  await capture('history-before-priority.png');holdUsage=false;releaseUsage();
   await until(()=>js('window.buddy.championUsage().then(value=>value.complete&&value.scanned===500)'),'Automatic500 summary missing');
   await until(()=>js('document.querySelectorAll(".history-match").length===20'),'Own history did not load automatically');
-  assert.deepEqual(historyReads.slice(0,5),[0,100,200,300,400].map(start=>({start,count:100})));assert.equal(historyReads[5].count,20,'History detail must follow priority statistics');
+  const batches=historyReads.filter(read=>read.count===100).map(read=>read.start);assert.deepEqual(batches,[0,100,200,300,400],'The bounded summary must still read five ordered batches');
+  const listRead=historyReads.findIndex(read=>read.count===20);assert.ok(listRead>=0,'Own history page was not read');
+  assert.ok(listRead<historyReads.findIndex(read=>read.count===100&&read.start===400),'Own history must not wait for the priority statistics to finish');
   assert.match(await js('document.querySelector(".champion-usage").textContent'),/近 500 场/);assert.equal(await js('document.querySelector(".usage-details").open'),false);assert.equal(await js('document.querySelector(".history-search-disclosure").open'),false);
   main.setSize(1460,980);await capture('usage-main.png');
   const screen=require('electron').screen,area=screen.getPrimaryDisplay().workArea;
@@ -123,7 +144,7 @@ async function run(){
   const saved=JSON.parse(await fs.readFile(path.join(root,'settings.json'),'utf8'));assert.equal(Object.hasOwn(saved,'championUsage'),false);assert.equal(Object.hasOwn(saved.preferences,'championUsage'),false);
   let roomVerified=false;
   if(roomUsageSmoke){
-   await js('window.__usageInputs=[];const originalPost=Worker.prototype.postMessage;Worker.prototype.postMessage=function(input,...rest){if(input?.slots)window.__usageInputs.push(structuredClone(input));return originalPost.call(this,input,...rest);};true');
+   await js('window.__usageInputs=[];const originalPost=Worker.prototype.postMessage;Worker.prototype.postMessage=function(message,...rest){const input=message?.input||message;if(input?.slots)window.__usageInputs.push(structuredClone(input));return originalPost.call(this,message,...rest);};true');
    await js('window.buddy.roomRelay({url:"wss://room.riftbuddy.dpdns.org",room:"482913",pin:"123456"},"战绩测试玩家#TEST")');
    await until(()=>roomFrames.some(frame=>frame.kind==='state'&&frame.championUsage?.usage?.sampled===500),'Main did not publish its own summary');
    const published=roomFrames.findLast(frame=>frame.kind==='state'&&frame.championUsage?.usage?.sampled===500);assert.equal(published.championUsage.mass,.6);
@@ -143,16 +164,23 @@ async function run(){
   offline=true;await js('window.buddy.client(true)');await until(()=>js('!document.querySelector(".champion-usage")&&!document.querySelector(".history-match")'),'Disconnect retained personal counts/history');
   if(roomUsageSmoke)await until(()=>roomFrames.findLast(frame=>frame.kind==='state')?.championUsage===null,'Disconnect did not revoke the main-owned room summary');
   assert.equal(writes.length,0);assert.equal(errors.length,0,errors.join('\n'));
-  await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,automatic500:true,priorityBeforeHistory:true,sharedTwoWindows:true,realRefreshClick:true,searchFocusAcrossBatches:true,activeRangeNodePreserved:true,sliderPersisted:true,disconnectCleared:true,...(roomVerified?{roomMainPublisher:true,roomRendererForgeryRejected:true,roomRealWorkerOwnership:true,roomUsageDetails:true,roomLeaveRecalculated:true,roomDisconnectRevoked:true}:{}),realWrites:0,screenshots:['usage-main.png','usage-daylight.png','usage-compact.png',...(roomVerified?['usage-room-details.png','usage-room-draft.png']:[])]},null,2));app.quit();return;
+  await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,automatic500:true,historyBeforePriority:true,historyVisibleWhileScanPending:true,sharedTwoWindows:true,realRefreshClick:true,searchFocusAcrossBatches:true,activeRangeNodePreserved:true,sliderPersisted:true,disconnectCleared:true,...(roomVerified?{roomMainPublisher:true,roomRendererForgeryRejected:true,roomRealWorkerOwnership:true,roomUsageDetails:true,roomLeaveRecalculated:true,roomDisconnectRevoked:true}:{}),realWrites:0,screenshots:['history-before-priority.png','usage-main.png','usage-daylight.png','usage-compact.png',...(roomVerified?['usage-room-details.png','usage-room-draft.png']:[])]},null,2));app.quit();return;
  }
  await click('[data-action=history-self]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'History page missing');
   assert.match(await js('document.querySelector(".history-profile").textContent'),/战绩测试玩家/);assert.equal(writes.length,0);
+  if(interactionSmoke){const result=await interactionFixture.measure({main,js,until,click});assert.equal(writes.length,0);assert.deepEqual(errors,[]);await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,...result,realWrites:0},null,2));app.quit();return;}
  for(const close of ['button','escape','backdrop']){
   await js('(()=>{document.querySelector("#history-query").value="示例";document.querySelector("#history-search").dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}));})()');
   await until(()=>js('!!document.querySelector("[aria-label=玩家搜索结果]")'),'Search results missing');
   if(close==='button')await click('[aria-label=玩家搜索结果] [data-action=close]');
   else if(close==='escape')await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
-  else await js('document.querySelector(".modal-backdrop").click()');
+  else{
+   const point=await js('(()=>{const backdrop=document.querySelector(".modal-backdrop");if(!backdrop)return null;const r=backdrop.getBoundingClientRect(),left=Math.max(0,r.left)+3,right=Math.min(innerWidth,r.right)-3,top=Math.max(0,r.top)+3,bottom=Math.min(innerHeight,r.bottom)-3;return [{x:left,y:top},{x:right,y:top},{x:left,y:bottom},{x:right,y:bottom}].map(p=>({x:Math.round(p.x),y:Math.round(p.y)})).find(p=>p.x>=0&&p.y>=0&&p.x<innerWidth&&p.y<innerHeight&&document.elementFromPoint(p.x,p.y)===backdrop)||null;})()');
+   assert.ok(point,'A visible outer backdrop point must be hit-testable outside the modal');
+   main.webContents.sendInputEvent({type:'mouseMove',...point});
+   main.webContents.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...point});
+   main.webContents.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,...point});
+  }
   await click('[data-action=history-tab][data-id="1"]');await click('[data-action=history-refresh]');
   await until(()=>js('!document.querySelector(".history-loading")'),'History refresh missing after closing search');
   assert.equal(await js('!!document.querySelector("[aria-label=玩家搜索结果]")'),false,'Closed search must stay closed: '+close);

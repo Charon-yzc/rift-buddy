@@ -1,9 +1,9 @@
 // Read-only aggregate presentation; no score or missing measurement is synthesized.
-import {escape as e,portrait} from './ui.mjs';
+import {escape as e,portrait,formatNumber} from './ui.mjs';
 import {ongoingJungleView} from './ongoing-game-jungle-view.mjs';
 
 const finite=Number.isFinite;
-const num=(v,d=2)=>finite(v)?v.toLocaleString('zh-CN',{maximumFractionDigits:d}):'未读取';
+const num=(v,d=2)=>finite(v)?formatNumber(v,d):'未读取';
 const pct=v=>finite(v)?`${(v*100).toFixed(1)}%`:'未读取';
 const POSITIONS={TOP:'上路',JUNGLE:'打野',MIDDLE:'中路',MID:'中路',BOTTOM:'下路',BOT:'下路',UTILITY:'辅助',SUPPORT:'辅助',FILL:'任意位置',UNSELECTED:'未选择',NONE:'未知位置'};
 export const ongoingPositionName=value=>POSITIONS[value]||'位置未读取';

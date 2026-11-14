@@ -21,7 +21,7 @@ for(const phase of phases){
   // Exercise explicit restoration; a pending old plan must not auto-adopt.
   state.favorites=[{id:'legacy-naut-samira-matchups',type:'team',title:'历史泰坦莎弥拉对位方案',slots,scope:'party',style:'fun',creativePlan,configurations:[],version:game.version}];
  }
- await fs.mkdir(state.preferences.installPath);await saveState(directory,state);
+ await fs.mkdir(state.preferences.installPath);if(phase==='side')await fs.writeFile(path.join(state.preferences.installPath,'lockfile'),'LeagueClient:1:23456:isolated-matchups-only:https');await saveState(directory,state);
  const log=await fs.open(path.join(directory,'smoke.log'),'wx');
  const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-matchups.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:directory,RIFT_BUDDY_MATCHUP_PHASE:phase},windowsHide:true,stdio:['ignore',log.fd,log.fd]});
  const timer=setTimeout(()=>child.kill(),60000);

@@ -20,6 +20,7 @@ async function run(){
  }
  assert.ok((await fs.readFile('THIRD_PARTY_NOTICES.md')).equals(await fs.readFile(path.join(base,'THIRD_PARTY_NOTICES.md'))));
  const output=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);if(options.method&&options.method!=='GET'){writes++;throw Error('Client writes prohibited in item-set smoke');}
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return 'ChampSelect';
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId:'1545',mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
@@ -34,6 +35,8 @@ async function run(){
  const status=()=>js('document.querySelector(".item-set-status")?.textContent||""'),readSet=async()=>JSON.parse(await fs.readFile(filename,'utf8')),capture=async name=>{await js('document.querySelector("#toast").classList.remove("show");document.querySelector(".item-set-controls").closest("details").open=true;document.querySelector(".item-set-controls").scrollIntoView({block:"center"});[...document.images].forEach(i=>i.loading="eager");void 0');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  await until(()=>js('!!document.querySelector("[data-action=sync]")'),'UI missing');await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(250);await click('[data-action=navigate][data-route=builds]');await click('[data-action=build][data-id=Volibear]');await js('document.querySelector(".item-set-controls").closest("details").open=true;void 0');
  const before=phase==='restart'?await fs.readFile(filename,'utf8'):null;
+ const personalFiles=[path.join(target,'personal-shop-set.json'),path.join(game,'Config','Global','Recommended','third-party-shop-set.json')];
+ const personalBytes=await Promise.all(personalFiles.map(file=>fs.readFile(file)));
  assert.equal(installRequests,0,'Viewing or restoring a plan must not import automatically');if(before)assert.equal(await fs.readFile(filename,'utf8'),before);else await assert.rejects(fs.stat(filename),{code:'ENOENT'});
  if(phase==='select'){
   holdInstall=true;await click('[data-action=import-item-set]');await until(()=>releaseInstall,'Import request was not started');
@@ -65,7 +68,10 @@ async function run(){
   assert.ok(bounds.scroll<=bounds.width+1);for(const b of bounds.buttons){assert.ok(b.left>=0&&b.right<=bounds.width+1&&b.width>90&&b.height>=35);assert.ok(b.top>=bounds.navBottom-1&&b.bottom<=bounds.footerTop+1,JSON.stringify(bounds));}geometry.push(bounds);await capture('item-set-sidebar-'+phase+'-'+width+'.png');
  }
  for(const name of ['user-build.json','akari1-106.json','rift-buddy-22-bottom-rift.json'])assert.equal(await fs.readFile(path.join(target,name),'utf8'),'preserve user file '+name);
- assert.deepEqual((await fs.readdir(target)).sort(),['user-build.json','akari1-106.json','rift-buddy-22-bottom-rift.json','rift-buddy-106-top-rift.json'].sort());assert.equal(writes,0);assert.ok(windows.every(w=>!w.isVisible()));
+ assert.deepEqual(await Promise.all(personalFiles.map(file=>fs.readFile(file))),personalBytes);
+ assert.ok((await readSet()).sortrank>2000000000,'Imported plan should sort ahead of equally prioritized fixture sets');
+ for(const stale of [path.join(game,'Config','Champions','Ashe','Recommended','rift-buddy-22-bottom-rift.json'),path.join(game,'Config','Global','Recommended','rift-buddy-106-top-hex.json')])await assert.rejects(fs.stat(stale),{code:'ENOENT'});
+ assert.deepEqual((await fs.readdir(target)).sort(),['user-build.json','akari1-106.json','rift-buddy-22-bottom-rift.json','rift-buddy-106-top-rift.json','personal-shop-set.json'].sort());assert.equal(writes,0);assert.ok(windows.every(w=>!w.isVisible()));
  const report={passed:true,phase,archiveSha256:release.archiveSha256,sourceFiles:files.length,helperFiles,selectedGear:true,ownFileOnly:true,noAutomaticImports:true,explicitClick:true,pendingAndDuplicateGuard:phase==='select',atomicFailureAndExport:phase==='select',cancelExport:phase==='select',exportFailureRetainsFile:phase==='select',authorizationClickAndRetry:phase==='select',actualElevation:false,wholeProcessRestart:phase==='restart',sidebarAndDrawer:true,geometry,saveDialogs,actualRuneWrites:0,realClientShop:'UNPROVEN'};await fs.writeFile(path.join(root,'item-set-'+phase+'.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
 run().catch(async error=>{console.error(error);if(main&&!main.isDestroyed()){await fs.writeFile(path.join(root,'failure-ui.html'),await main.webContents.executeJavaScript('document.documentElement.outerHTML').catch(()=>''));await fs.writeFile(path.join(root,'failure-state.json'),JSON.stringify(await main.webContents.executeJavaScript('window.buddy.bootstrap()').catch(()=>null),null,2));}app.exit(1);});

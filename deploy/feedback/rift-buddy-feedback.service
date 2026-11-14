@@ -1,0 +1,29 @@
+[Unit]
+Description=Rift Buddy explicit player feedback
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=riftfeedback
+Group=riftfeedback
+WorkingDirectory=/opt/rift-buddy-feedback/current
+ExecStart=/opt/rift-buddy-runtime/node-v24.21.0-linux-arm64/bin/node --max-old-space-size=160 /opt/rift-buddy-feedback/current/relay/feedback-server.mjs /var/lib/rift-buddy-feedback
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=10
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/rift-buddy-feedback
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+MemoryHigh=192M
+MemoryMax=256M
+TasksMax=32
+LimitNOFILE=128
+LimitCORE=0
+
+[Install]
+WantedBy=multi-user.target

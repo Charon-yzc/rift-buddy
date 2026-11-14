@@ -24,7 +24,8 @@ await fs.writeFile(legacyScript,legacyModule.installerScript({version:'98.0.0',d
 await run(compiler,['/NOCONFIG','/INPUTCHARSET','UTF8',legacyScript]);
 const cleanupLifecycle=path.join(root,'cleanup-lock.ps1');await fs.writeFile(cleanupLifecycle,(await fs.readFile(lifecycle,'utf8')).replace('function ClearBackup([string]$Root){',"function ClearBackup([string]$Root){ throw 'Synthetic backup cleanup lock';"));
 const cleanupInstaller=await compile(next,'cleanup-incremental',old,cleanupLifecycle);
-const installRun=file=>run(file,['/S','/D='+install],{windowsVerbatimArguments:true});
+// The delta must finish unattended even when an older client omits /S.
+const installRun=file=>run(file,[...(file===delta?[]:['/S']),'/D='+install],{windowsVerbatimArguments:true});
 const launch=async file=>{const child=spawn(file,['-e','setInterval(()=>{},1000)'],{windowsHide:true,stdio:'ignore'});await once(child,'spawn');return child;};
 let running,unrelated,locker;try{
  await installRun(oldInstaller);assert.ok(await fs.stat(path.join(install,'卸载开黑搭子.exe')));

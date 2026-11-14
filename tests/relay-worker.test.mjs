@@ -216,7 +216,7 @@ test('worker: duplicate nicks and a full room cannot join',async()=>{
 
 test('worker: receiver capabilities gate packed fanout and incompatible late joins',async()=>{
  const fs=await import('node:fs/promises'),{createSlots,recommend}=await import('../src/core/recommend.mjs'),{captureCreativePlan}=await import('../src/core/creative-plan.mjs'),{captureRoomConfigurations}=await import('../src/core/room-configuration.mjs'),{createPreparationStore}=await import('../src/core/preparation.mjs');
- const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url))).entries;
+ const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries;
  const slots=createSlots().map((s,i)=>({...s,party:true,champion:['Malphite','Vi','Orianna','Jinx','Nautilus'][i],locked:true})),strategy=captureCreativePlan(recommend({slots,champions:data.champions,scope:'party'})[0],data,'2026-10-16T00:00:00Z'),lineup=slots.map(({role,champion})=>({role,champion})),configurations=captureRoomConfigurations(slots,data,createPreparationStore(),{creativePlan:strategy});
  const message={kind:'state',v:1,from:'new-a',at:1,lineup,pick:null,strategy,configurations,ballot:{version:1,vote:null,proposal:{lineup,mode:'rift',strategy,configurations}}},wire=encodeFrame(message).trimEnd();
  assert.equal(JSON.parse(wire).encoding,'dict2');

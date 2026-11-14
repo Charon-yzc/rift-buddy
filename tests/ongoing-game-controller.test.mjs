@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createOngoingGameController} from '../src/ongoing-game-controller.mjs';
+import {normalizeMatch} from '../src/core/match-history/model.mjs';
+import {ongoingGameView} from '../src/ongoing-game-view.mjs';
 const member={key:'mock-public-player-1',puuid:'mock-public-player-1',name:'本人',self:true,team:'LOBBY'};
 const roster=(key='one')=>({key,session:'account-one',phase:'lobby',queue:430,players:[member],teams:{LOBBY:[member.key]},selfPuuid:member.puuid});
 const page={handle:'handle-one',games:[],count:20,start:0,hasMore:false,player:{puuid:member.puuid}};
@@ -20,7 +22,8 @@ test('a cancelled timeline batch cannot repaint the replacement roster',async()=
   if(op==='timeline')return new Promise(resolve=>releases.push(()=>resolve({timeline:{frames:[]}})));
   return {};
  },analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{paints++;}});
- const previous=c.refresh();while(releases.length<4)await new Promise(resolve=>setImmediate(resolve));
+ const previous=c.refresh();while(releases.length<3)await new Promise(resolve=>setImmediate(resolve));
+ for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));assert.equal(releases.length,3,'Samples share a bounded queue');
  next={...roster('new-game'),players:[],teams:{}};await c.refresh();const accepted=paints;
  for(const release of releases)release();await previous;
  assert.equal(c.state.roster.key,'new-game');assert.equal(paints,accepted,'Cancelled work must not replace the new page DOM');
@@ -28,6 +31,9 @@ test('a cancelled timeline batch cannot repaint the replacement roster',async()=
 test('ongoing game automatically loads each actual visible player with the bounded current roster',async()=>{
  const calls=[];const c=createOngoingGameController({request:async(op,p)=>{calls.push([op,p]);return op==='roster'?roster():op==='page'?page:{};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
  await c.refresh();assert.equal(c.state.players[member.key].loading,false);assert.equal(c.state.roster.key,'one');assert.equal(calls.find(([op])=>op==='page')[1].rosterKey,'one');
+ // The roster's first pages are a batch: the service reads them from the
+ // backend instead of the client route that serves one player at a time.
+ assert.equal(calls.find(([op])=>op==='page')[1].batch,true);
 });
 test('a background tick repaints only when the public roster actually changed',async()=>{
  let current=roster(),changes=0;
@@ -112,10 +118,141 @@ test('historical roster settings can reload its players and returning to the pag
  let reads=0;const c=createOngoingGameController({request:async op=>op==='page'?(reads++,page):{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],setTimer:()=>1,clearTimer:()=>{}}),game={id:1,map:11,queue:420,mode:'CLASSIC',self:member,participants:[{...member,champion:22,team:'TEAM-100'}]};
  await c.setDraft(game);await c.configure({count:10});assert.equal(c.state.roster.phase,'draft');assert.equal(reads,2);c.stop();c.start();await new Promise(resolve=>setImmediate(resolve));assert.equal(c.state.roster.phase,'draft');c.stop();
 });
+test('a normalized historical Arena simulation keeps all eight public subteams and recorded spell order',async()=>{
+ const ids=Array.from({length:16},(_,i)=>'mock-arena-history-player-'+i);
+ const game=normalizeMatch({gameId:777,gameMode:'CHERRY',mapId:30,queueId:1700,gameDuration:1200,
+  participantIdentities:ids.map((puuid,i)=>({participantId:i+1,player:{puuid,gameName:'演示玩家 '+i}})),
+  participants:ids.map((_,i)=>({participantId:i+1,championId:22,teamId:100,spell1Id:i%2?7:4,spell2Id:i%2?4:7,stats:{playerSubteamId:Math.floor(i/2)+1}})),teams:[]},'lcu',ids[0]);
+ const queries=[],c=createOngoingGameController({settings:{count:1,details:0},request:async(op,p)=>{queries.push([op,p]);return op==='page'?page:{};},analyze:()=>null,infer:()=>[]});
+ await c.setDraft(game);
+ assert.deepEqual(c.state.roster.players.map(p=>p.group),game.participants.map(p=>Number(p.team.slice(7))));
+ assert.deepEqual(c.state.roster.players.map(p=>p.spells),game.participants.map(p=>p.spells));assert.equal(c.state.roster.players[0].self,true);
+ const html=ongoingGameView(c.state,{champions:[],items:{},runes:[],augments:[],spells:{}});
+ assert.equal((html.match(/data-ongoing-team="CHERRY-\d+"/g)||[]).length,8);assert.doesNotMatch(html,/data-ongoing-team="CHERRY-unknown"/);
+ assert.ok(queries.filter(([op])=>op==='page').every(([,p])=>ids.includes(p.puuid)));
+});
+test('historical five-versus-five simulation preserves teams and partial spells without querying anonymous players',async()=>{
+ const participants=Array.from({length:10},(_,i)=>({id:i+1,puuid:i===7?'':'mock-classic-history-player-'+i,name:i===7?'':'演示玩家 '+i,champion:22,team:i<5?'TEAM-100':'TEAM-200',position:i%5?'MIDDLE':'TOP',spells:i===7?[4,null]:[7,4]}));
+ const queries=[],c=createOngoingGameController({settings:{count:1,details:0},request:async(op,p)=>{queries.push([op,p]);return op==='page'?page:{};},analyze:()=>null,infer:()=>[]});
+ await c.setDraft({id:778,map:11,queue:420,mode:'CLASSIC',self:participants[0],participants});
+ assert.deepEqual(Object.keys(c.state.roster.teams),['TEAM-100','TEAM-200']);assert.deepEqual(Object.values(c.state.roster.teams).map(team=>team.length),[5,5]);
+ assert.deepEqual(c.state.roster.players.map(p=>p.spells),participants.map(p=>p.spells));assert.ok(c.state.roster.players.every(p=>p.group===null));
+ assert.equal(c.state.roster.players[7].puuid,'');assert.equal(queries.filter(([op])=>op==='page').length,9);assert.ok(queries.filter(([op])=>op==='page').every(([,p])=>p.puuid));
+});
+test('historical Arena never invents a public subteam or a missing spell',async()=>{
+ const participants=['CHERRY-unknown','CHERRY-0','CHERRY-9007199254740992'].map((team,i)=>({id:i+1,puuid:'',name:'',champion:22,team,spells:i===0?[null,7]:[]}));
+ const c=createOngoingGameController({request:async()=>assert.fail('Unknown identities cannot request player data'),analyze:()=>null,infer:()=>[]});
+ await c.setDraft({id:779,map:30,queue:1700,mode:'CHERRY',participants});
+ assert.equal(c.state.roster.players.length,3);assert.ok(c.state.roster.players.every(p=>p.puuid===''&&p.group===null));
+ assert.deepEqual(c.state.roster.players.map(p=>p.spells),[[null,7],[null,null],[null,null]]);
+});
 test('clearing a historical simulation returns refresh to the live roster',async()=>{
  let reads=0;const c=createOngoingGameController({request:async op=>op==='roster'?(reads++,roster()):op==='page'?page:{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});await c.setDraft({id:1,map:11,queue:420,mode:'CLASSIC',self:member,participants:[{...member,team:'TEAM-100'}]});c.clear();await c.refresh();assert.equal(c.state.draft,false);assert.equal(reads,1);assert.equal(c.state.roster.key,'one');
 });
 test('Arena encounters use verified public subteams and preserve unknown relationship counts',async()=>{
  const other={...member,key:'mock-arena-other-player',puuid:'mock-arena-other-player',self:false,group:2,team:'TEAM-ALL'},unknown={...other,key:'mock-arena-unknown-player',puuid:'mock-arena-unknown-player',group:null};
  const c=createOngoingGameController({request:async op=>op==='roster'?{...roster(),gameId:100,phase:'in-game',mode:'CHERRY',players:[{...member,group:1,team:'TEAM-ALL'},other,unknown],teams:{'TEAM-ALL':[member.key,other.key,unknown.key]}}:op==='page'?page:{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});await c.refresh();assert.equal(c.state.met[other.puuid].enemy,1);assert.equal(c.state.met[unknown.puuid].unknown,1);assert.equal(c.state.met[unknown.puuid].ally,0);
+});
+test('a player slot covers only the first page, so the next list does not wait for a rank',async()=>{
+ const members=Array.from({length:2},(_,i)=>({...member,key:'mock-public-member-'+i,puuid:'mock-public-member-'+i,self:i===0})),calls=[],profiles=[];
+ const c=createOngoingGameController({settings:{concurrency:1,details:1},request:async(op,p)=>{
+  calls.push([op,p]);
+  if(op==='roster')return {...roster(),players:members,teams:{LOBBY:members.map(m=>m.key)}};
+  if(op==='page')return {...page,handle:'handle-'+p.puuid,games:[{id:members.findIndex(m=>m.puuid===p.puuid)+1,queue:430}]};
+  if(op==='profile')return new Promise(resolve=>profiles.push(()=>resolve({ranked:[]})));
+  if(op==='timeline')return {timeline:{frames:[]}};
+  return {};
+ },analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
+ const loading=c.refresh();
+ for(let i=0;i<40&&calls.filter(([op])=>op==='page').length<2;i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(calls.filter(([op])=>op==='page').length,2,'the second list starts while the first rank is pending');
+ assert.equal(c.state.players[members[0].key].loading,true,'the card still shows its rank as loading');
+ assert.ok(calls.filter(([op])=>op==='timeline').length<=1,'samples keep yielding until every rank arrives');
+ for(let i=0;i<40&&profiles.length<2;i++)await new Promise(resolve=>setImmediate(resolve));
+ while(profiles.length)profiles.shift()();
+ await loading;
+ assert.ok(members.every(m=>c.state.players[m.key].profile&&!c.state.players[m.key].loading));
+});
+
+test('every list and rank arrives before detailed samples, which share one round-robin queue and read a shared game once',async()=>{
+ const members=Array.from({length:6},(_,i)=>({...member,key:'mock-public-member-'+i,puuid:'mock-public-member-'+i,self:i===0})),timelines=[],calls=[];let running=0,maxWhileLists=0,maxAfter=0;
+ // Every player's history holds the shared game 100 plus three own games.
+ const games=i=>[100,...[1,2,3].map(n=>i*10+n)].map(id=>({id,queue:430}));
+ const c=createOngoingGameController({settings:{details:4},request:async(op,p)=>{
+  calls.push([op,p]);
+  if(op==='roster')return {...roster(),players:members,teams:{LOBBY:members.map(m=>m.key)}};
+  if(op==='page'){await new Promise(resolve=>setImmediate(resolve));return {...page,handle:'handle-'+p.puuid,games:games(members.findIndex(m=>m.puuid===p.puuid))};}
+  if(op==='profile')return {ranked:[]};
+  if(op==='timeline'){running++;const lists=Object.values(c.state.players).some(entry=>entry.loading);if(lists)maxWhileLists=Math.max(maxWhileLists,running);else maxAfter=Math.max(maxAfter,running);return new Promise(resolve=>timelines.push({id:p.id,resolve:()=>{running--;resolve({timeline:{frames:[]}});}}));}
+  return {};
+ },analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
+ const loading=c.refresh();
+ for(let i=0;i<80&&(Object.keys(c.state.players).length<6||Object.values(c.state.players).some(entry=>entry.loading||!entry.profile));i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(members.every(m=>c.state.players[m.key].page&&c.state.players[m.key].profile&&!c.state.players[m.key].loading),'Pending samples must not hold back any list or rank');
+ assert.ok(maxWhileLists<=1,'Samples yield to list reads');
+ while(timelines.length){timelines.shift().resolve();for(let i=0;i<3;i++)await new Promise(resolve=>setImmediate(resolve));}
+ await loading;
+ const order=calls.filter(([op])=>op==='timeline').map(([,p])=>p.id);
+ assert.equal(order.filter(id=>id===100).length,1,'A game in several histories is read once');
+ assert.deepEqual(order.slice(0,6).sort((a,b)=>a-b),[1,11,21,31,41,51].slice(0,5).concat(100).sort((a,b)=>a-b),'Each player gets an early sample before anyone gets a second');
+ assert.ok(maxAfter<=3,'Samples use at most the three measured-fastest backend reads');
+ assert.ok(calls.filter(([op])=>op==='timeline').every(([,p])=>p.compact===true&&p.background===true),'Samples ask for compact low-priority timelines');
+ assert.ok(members.every(m=>c.state.players[m.key].loadedDetails===4&&!c.state.players[m.key].detailsLoading));
+});
+test('deeper history pages load in the background as one request and never hold a player slot',async()=>{
+ const members=Array.from({length:3},(_,i)=>({...member,key:'mock-deeper-member-'+i,puuid:'mock-deeper-member-'+i})),calls=[],releases=[];
+ const c=createOngoingGameController({settings:{concurrency:1},request:async(op,p)=>{calls.push([op,p]);if(op==='roster')return {...roster(),players:members,teams:{LOBBY:members.map(m=>m.key)}};if(op==='page')return p.start?new Promise(resolve=>releases.push(()=>resolve({...page,start:20,count:p.count,games:[]}))):{...page,hasMore:true,games:[]};if(op==='profile')return {ranked:[]};return {};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
+ const loading=c.refresh();
+ for(let i=0;i<80&&(Object.keys(c.state.players).length<3||Object.values(c.state.players).some(entry=>!entry.profile));i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(members.every(m=>c.state.players[m.key].profile&&!c.state.players[m.key].loading&&c.state.players[m.key].detailsLoading),'Every rank shows while deeper pages are pending');
+ assert.ok(releases.length<=1,'Deeper pages hold at most one background slot');
+ while(releases.length){releases.shift()();for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));}
+ await loading;
+ assert.deepEqual(calls.filter(([op])=>op==='page').map(([,p])=>p.start+':'+p.count).sort(),['0:20','0:20','0:20','20:30','20:30','20:30']);
+ assert.ok(members.every(m=>!c.state.players[m.key].detailsLoading));
+});
+
+test('player reload and full force refresh replace a fallback timeline and still coalesce shared games',async()=>{
+ const members=[member,{...member,key:'mock-second',puuid:'mock-second'}];let timelineReads=0,recovered=false;
+ const c=createOngoingGameController({settings:{details:1},request:async(op)=>{
+  if(op==='roster')return {...roster(),players:members,teams:{LOBBY:members.map(m=>m.key)}};
+  if(op==='page')return {...page,handle:'new-handle',games:[{id:1,queue:430}]};if(op==='profile')return {};
+  timelineReads++;return {timeline:{frames:[],complete:recovered},notice:recovered?'':'后台时间线暂不可用，已使用客户端数据'};
+ },analyze:(_games,{timelines}={})=>({complete:timelines?.[1]?.complete||false}),teamAnalyze:()=>null,infer:()=>[]});
+ await c.refresh();assert.equal(timelineReads,1);assert.equal(c.state.players[member.key].analysis.complete,false);
+ recovered=true;await c.reloadPlayer(member.key);assert.equal(timelineReads,2);assert.equal(c.state.players[member.key].analysis.complete,true);
+ await c.refresh({force:true});assert.equal(timelineReads,3);assert(members.every(m=>c.state.players[m.key].analysis.complete));
+});
+
+test('reloading one player keeps other current players in-flight samples',async()=>{
+ const members=[member,{...member,key:'mock-held-other',puuid:'mock-held-other'}],held=[];let timelineReads=0;
+ const c=createOngoingGameController({settings:{details:1},request:async(op,p)=>{
+  if(op==='roster')return {...roster(),players:members,teams:{LOBBY:members.map(m=>m.key)}};
+  if(op==='page')return {...page,handle:p.puuid,games:[{id:p.puuid===member.puuid?1:2,queue:430}]};if(op==='profile')return {};
+  const serial=++timelineReads;return new Promise(resolve=>held.push({id:p.id,serial,done:()=>resolve({timeline:{frames:[],serial}})}));
+ },analyze:(_games,{timelines}={})=>({serial:Object.values(timelines||{})[0]?.serial||0}),teamAnalyze:()=>null,infer:()=>[]});
+ const initial=c.refresh();for(let i=0;i<80&&held.length<2;i++)await new Promise(resolve=>setImmediate(resolve));assert.equal(held.length,2);
+ const reload=c.reloadPlayer(member.key);held.find(h=>h.id===2).done();held.find(h=>h.id===1).done();
+ for(let i=0;i<80&&held.length<3;i++)await new Promise(resolve=>setImmediate(resolve));assert.equal(held.length,3);held[2].done();await Promise.all([initial,reload]);
+ assert.equal(c.state.players[members[1].key].loadedDetails,1);assert.equal(c.state.players[members[1].key].analysis.serial,held.find(h=>h.id===2).serial);assert.equal(c.state.players[member.key].analysis.serial,3);
+});
+
+test('a slow deeper page holds one background slot while samples keep loading beside it',async()=>{
+ const members=Array.from({length:3},(_,i)=>({...member,key:'mock-lane-member-'+i,puuid:'mock-lane-member-'+i})),pages=[],timelines=[];let running=0,maxRunning=0;
+ const c=createOngoingGameController({settings:{details:4},request:async(op,p)=>{
+  if(op==='roster')return {...roster(),players:members,teams:{LOBBY:members.map(m=>m.key)}};
+  const index=members.findIndex(m=>m.puuid===p.puuid);
+  if(op==='page'){if(p.start){assert.equal(p.background,true);return new Promise(resolve=>pages.push(()=>resolve({...page,start:p.start,count:p.count,games:[]})));}return {...page,handle:'handle-'+index,hasMore:true,games:[1,2,3,4].map(n=>({id:index*10+n,queue:430}))};}
+  if(op==='profile')return {ranked:[]};
+  if(op==='timeline'){running++;maxRunning=Math.max(maxRunning,running);return new Promise(resolve=>timelines.push(()=>{running--;resolve({timeline:{frames:[]}});}));}
+  return {};
+ },analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
+ const loading=c.refresh();
+ for(let i=0;i<80&&(timelines.length<2||Object.values(c.state.players).some(entry=>entry.loading));i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(pages.length,1,'Only one deeper page runs at a time');
+ assert.equal(timelines.length,2,'Samples fill the other two slots instead of waiting behind deeper pages');
+ while(timelines.length||pages.length){(timelines.shift()||pages.shift())();for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));}
+ await loading;
+ assert.ok(maxRunning<=3);
+ assert.ok(members.every(m=>c.state.players[m.key].loadedDetails===4&&!c.state.players[m.key].detailsLoading));
 });

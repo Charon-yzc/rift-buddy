@@ -1,0 +1,2315 @@
+{
+  "schema": 1,
+  "patch": "16.21",
+  "mode": "aram-mayhem",
+  "rules": "normal",
+  "source": "AramHex",
+  "sourceUrl": "https://github.com/czgreat/aramhex-data",
+  "sourceCommit": "f4d80d48110951b7319ab74ffaa2c351bc7c8652",
+  "sourceTag": "data-v9",
+  "sourceLicense": "CC BY-NC 4.0",
+  "licenseUrl": "https://github.com/czgreat/aramhex-data/blob/f4d80d48110951b7319ab74ffaa2c351bc7c8652/LICENSE",
+  "attribution": "海克斯大乱斗统计数据：czgreat/aramhex-data，CC BY-NC 4.0；按英雄记录的胜场和持有局数加总改编。",
+  "sourceDataUrl": "https://github.com/czgreat/aramhex-data/blob/f4d80d48110951b7319ab74ffaa2c351bc7c8652/patches/16.21/normal/hero_augments.json",
+  "sourceDataSHA256": "993f242b5b6899354c3cc71e35bf08930940645b885a72588b2fc0d8c6ce0f3f",
+  "region": "CN",
+  "regionScope": "国服七区合并，不代表全服或全球",
+  "windowStart": "2026-10-25T00:00:00+08:00",
+  "windowEndExclusive": "2026-10-26T11:07:00+08:00",
+  "snapshotAt": "2026-10-26T11:41:58+08:00",
+  "validMatches": 5376732,
+  "validPlayerAppearances": 53767320,
+  "heroCount": 173,
+  "rows": [
+    {
+      "id": 1134,
+      "games": 767215,
+      "wins": 445157,
+      "heroCount": 31,
+      "name": "亮出你的剑",
+      "rarity": "prismatic",
+      "winRate": 0.5802245785079801,
+      "holdingShare": 0.01426916945088578
+    },
+    {
+      "id": 1095,
+      "games": 90397,
+      "wins": 51699,
+      "heroCount": 21,
+      "name": "风语者的祝福",
+      "rarity": "prismatic",
+      "winRate": 0.571910572253504,
+      "holdingShare": 0.0016812628935197068
+    },
+    {
+      "id": 3049,
+      "games": 2297924,
+      "wins": 1253837,
+      "heroCount": 80,
+      "name": "装甲冲击",
+      "rarity": "gold",
+      "winRate": 0.5456390202635074,
+      "holdingShare": 0.04273830274598027
+    },
+    {
+      "id": 3078,
+      "games": 2553357,
+      "wins": 1388024,
+      "heroCount": 171,
+      "name": "鼓声暴起 低音轰鸣",
+      "rarity": "gold",
+      "winRate": 0.5436074939775363,
+      "holdingShare": 0.04748901377267827
+    },
+    {
+      "id": 3173,
+      "games": 70947,
+      "wins": 38188,
+      "heroCount": 173,
+      "name": "厄运",
+      "rarity": "gold",
+      "winRate": 0.5382609553610441,
+      "holdingShare": 0.0013195189940655402
+    },
+    {
+      "id": 1004,
+      "games": 1697007,
+      "wins": 910855,
+      "heroCount": 164,
+      "name": "回归基本功",
+      "rarity": "prismatic",
+      "winRate": 0.5367420405455016,
+      "holdingShare": 0.031562052934756654
+    },
+    {
+      "id": 1005,
+      "games": 123540,
+      "wins": 66135,
+      "heroCount": 21,
+      "name": "喂呜喂呜",
+      "rarity": "gold",
+      "winRate": 0.5353326857697912,
+      "holdingShare": 0.0022976782179212206
+    },
+    {
+      "id": 1389,
+      "games": 259896,
+      "wins": 139099,
+      "heroCount": 173,
+      "name": "男爵之手",
+      "rarity": "prismatic",
+      "winRate": 0.5352102379413304,
+      "holdingShare": 0.004833716837662729
+    },
+    {
+      "id": 1053,
+      "games": 2071868,
+      "wins": 1106859,
+      "heroCount": 173,
+      "name": "科学狂人",
+      "rarity": "prismatic",
+      "winRate": 0.5342323931833495,
+      "holdingShare": 0.03853396449739358
+    },
+    {
+      "id": 3051,
+      "games": 501320,
+      "wins": 267400,
+      "heroCount": 105,
+      "name": "蓝色屏障",
+      "rarity": "silver",
+      "winRate": 0.5333918455278066,
+      "holdingShare": 0.009323879263463383
+    },
+    {
+      "id": 3163,
+      "games": 283167,
+      "wins": 150784,
+      "heroCount": 20,
+      "name": "迷人蝴蝶",
+      "rarity": "gold",
+      "winRate": 0.5324914273202739,
+      "holdingShare": 0.005266526209600925
+    },
+    {
+      "id": 2104,
+      "games": 157765,
+      "wins": 83645,
+      "heroCount": 21,
+      "name": "灵魄炸弹",
+      "rarity": "prismatic",
+      "winRate": 0.5301873039013723,
+      "holdingShare": 0.0029342172903540666
+    },
+    {
+      "id": 1204,
+      "games": 299232,
+      "wins": 158361,
+      "heroCount": 11,
+      "name": "叠角龙",
+      "rarity": "silver",
+      "winRate": 0.529224815527751,
+      "holdingShare": 0.005565313651489418
+    },
+    {
+      "id": 1420,
+      "games": 176966,
+      "wins": 93532,
+      "heroCount": 21,
+      "name": "咏叹奏鸣",
+      "rarity": "gold",
+      "winRate": 0.5285309042414927,
+      "holdingShare": 0.003291330123948897
+    },
+    {
+      "id": 2141,
+      "games": 1037993,
+      "wins": 548509,
+      "heroCount": 93,
+      "name": "终极九头蛇",
+      "rarity": "prismatic",
+      "winRate": 0.5284322726646519,
+      "holdingShare": 0.019305276885662144
+    },
+    {
+      "id": 3081,
+      "games": 1421773,
+      "wins": 750869,
+      "heroCount": 172,
+      "name": "命运之武器",
+      "rarity": "gold",
+      "winRate": 0.5281215777764805,
+      "holdingShare": 0.026443069879622045
+    },
+    {
+      "id": 3131,
+      "games": 2341641,
+      "wins": 1232058,
+      "heroCount": 102,
+      "name": "屹立不倒",
+      "rarity": "gold",
+      "winRate": 0.5261515321947301,
+      "holdingShare": 0.04355138028080998
+    },
+    {
+      "id": 1333,
+      "games": 1604722,
+      "wins": 841992,
+      "heroCount": 123,
+      "name": "逃跑计划",
+      "rarity": "silver",
+      "winRate": 0.5246964894854061,
+      "holdingShare": 0.029845675774801496
+    },
+    {
+      "id": 1073,
+      "games": 1046837,
+      "wins": 549205,
+      "heroCount": 88,
+      "name": "暗影疾奔",
+      "rarity": "silver",
+      "winRate": 0.5246327747299723,
+      "holdingShare": 0.01946976341762989
+    },
+    {
+      "id": 1315,
+      "games": 495537,
+      "wins": 259944,
+      "heroCount": 90,
+      "name": "快中求稳",
+      "rarity": "silver",
+      "winRate": 0.5245703146283729,
+      "holdingShare": 0.009216323223846754
+    },
+    {
+      "id": 1310,
+      "games": 1595965,
+      "wins": 836392,
+      "heroCount": 133,
+      "name": "小丑学院",
+      "rarity": "prismatic",
+      "winRate": 0.5240666305338776,
+      "holdingShare": 0.02968280732608581
+    },
+    {
+      "id": 1063,
+      "games": 462081,
+      "wins": 241648,
+      "heroCount": 83,
+      "name": "狂徒豪气",
+      "rarity": "gold",
+      "winRate": 0.5229559319686375,
+      "holdingShare": 0.008594086519469447
+    },
+    {
+      "id": 1058,
+      "games": 1658493,
+      "wins": 866662,
+      "heroCount": 160,
+      "name": "秘术冲拳",
+      "rarity": "prismatic",
+      "winRate": 0.5225599384501473,
+      "holdingShare": 0.030845744217863194
+    },
+    {
+      "id": 1195,
+      "games": 1603416,
+      "wins": 836836,
+      "heroCount": 172,
+      "name": "巨人杀手",
+      "rarity": "prismatic",
+      "winRate": 0.5219082259376232,
+      "holdingShare": 0.029821385927362568
+    },
+    {
+      "id": 3086,
+      "games": 4848747,
+      "wins": 2525101,
+      "heroCount": 171,
+      "name": "小蜜蜂！！！",
+      "rarity": "gold",
+      "winRate": 0.5207739236549154,
+      "holdingShare": 0.09018018751911012
+    },
+    {
+      "id": 1105,
+      "games": 1149406,
+      "wins": 597121,
+      "heroCount": 113,
+      "name": "家园卫士",
+      "rarity": "silver",
+      "winRate": 0.5195039872769065,
+      "holdingShare": 0.021377409177173047
+    },
+    {
+      "id": 3129,
+      "games": 833936,
+      "wins": 432765,
+      "heroCount": 84,
+      "name": "吸元秘术",
+      "rarity": "gold",
+      "winRate": 0.5189427006388979,
+      "holdingShare": 0.015510090515949093
+    },
+    {
+      "id": 1062,
+      "games": 517558,
+      "wins": 268484,
+      "heroCount": 173,
+      "name": "全能龙魂",
+      "rarity": "prismatic",
+      "winRate": 0.5187515215685972,
+      "holdingShare": 0.00962588427319792
+    },
+    {
+      "id": 1041,
+      "games": 2088388,
+      "wins": 1083239,
+      "heroCount": 106,
+      "name": "歌利亚巨人",
+      "rarity": "prismatic",
+      "winRate": 0.5186962384384511,
+      "holdingShare": 0.03884121432870376
+    },
+    {
+      "id": 1388,
+      "games": 2115591,
+      "wins": 1094488,
+      "heroCount": 171,
+      "name": "无限循环往复",
+      "rarity": "prismatic",
+      "winRate": 0.5173438533251465,
+      "holdingShare": 0.03934715362417171
+    },
+    {
+      "id": 3116,
+      "games": 2656502,
+      "wins": 1373164,
+      "heroCount": 158,
+      "name": "将他们放倒倒倒",
+      "rarity": "gold",
+      "winRate": 0.516906819569494,
+      "holdingShare": 0.049407372359269536
+    },
+    {
+      "id": 2076,
+      "games": 409211,
+      "wins": 211352,
+      "heroCount": 16,
+      "name": "保持坚定",
+      "rarity": "silver",
+      "winRate": 0.5164866047100396,
+      "holdingShare": 0.007610775467328482
+    },
+    {
+      "id": 1045,
+      "games": 1196474,
+      "wins": 616872,
+      "heroCount": 38,
+      "name": "炼狱导管",
+      "rarity": "prismatic",
+      "winRate": 0.5155749310056048,
+      "holdingShare": 0.022252810815194063
+    },
+    {
+      "id": 2062,
+      "games": 381791,
+      "wins": 196822,
+      "heroCount": 37,
+      "name": "回响施放",
+      "rarity": "prismatic",
+      "winRate": 0.5155228907962733,
+      "holdingShare": 0.00710080026305942
+    },
+    {
+      "id": 3085,
+      "games": 644825,
+      "wins": 332353,
+      "heroCount": 44,
+      "name": "灵魂乐流",
+      "rarity": "silver",
+      "winRate": 0.5154158104912185,
+      "holdingShare": 0.011992879689744626
+    },
+    {
+      "id": 1080,
+      "games": 788033,
+      "wins": 406021,
+      "heroCount": 43,
+      "name": "会心防御",
+      "rarity": "silver",
+      "winRate": 0.5152334991047329,
+      "holdingShare": 0.01465635631457919
+    },
+    {
+      "id": 1015,
+      "games": 452612,
+      "wins": 232961,
+      "heroCount": 55,
+      "name": "死亡之环",
+      "rarity": "prismatic",
+      "winRate": 0.5147035429904643,
+      "holdingShare": 0.008417975826208188
+    },
+    {
+      "id": 1225,
+      "games": 1421939,
+      "wins": 731821,
+      "heroCount": 97,
+      "name": "双刀流",
+      "rarity": "prismatic",
+      "winRate": 0.5146641311617446,
+      "holdingShare": 0.026446157256861603
+    },
+    {
+      "id": 1156,
+      "games": 1013115,
+      "wins": 521216,
+      "heroCount": 106,
+      "name": "沃格勒特的巫师帽",
+      "rarity": "prismatic",
+      "winRate": 0.5144687424428619,
+      "holdingShare": 0.018842579470206067
+    },
+    {
+      "id": 1181,
+      "games": 1431961,
+      "wins": 735909,
+      "heroCount": 83,
+      "name": "重量级打击手",
+      "rarity": "silver",
+      "winRate": 0.5139169293018455,
+      "holdingShare": 0.026632553008035364
+    },
+    {
+      "id": 1152,
+      "games": 1616534,
+      "wins": 830110,
+      "heroCount": 85,
+      "name": "钢化你心",
+      "rarity": "gold",
+      "winRate": 0.5135122428603419,
+      "holdingShare": 0.030065363123919882
+    },
+    {
+      "id": 1026,
+      "games": 277930,
+      "wins": 142716,
+      "heroCount": 60,
+      "name": "唯快不破",
+      "rarity": "silver",
+      "winRate": 0.513496204080164,
+      "holdingShare": 0.00516912503729031
+    },
+    {
+      "id": 3121,
+      "games": 521616,
+      "wins": 267578,
+      "heroCount": 82,
+      "name": "水果化",
+      "rarity": "silver",
+      "winRate": 0.5129788963528726,
+      "holdingShare": 0.009701357627644451
+    },
+    {
+      "id": 1056,
+      "games": 788861,
+      "wins": 404401,
+      "heroCount": 125,
+      "name": "由心及物",
+      "rarity": "silver",
+      "winRate": 0.5126391087910291,
+      "holdingShare": 0.014671756003460839
+    },
+    {
+      "id": 1214,
+      "games": 703683,
+      "wins": 360692,
+      "heroCount": 25,
+      "name": "旋转至胜",
+      "rarity": "silver",
+      "winRate": 0.5125773963560296,
+      "holdingShare": 0.013087559506406493
+    },
+    {
+      "id": 3149,
+      "games": 84877,
+      "wins": 43498,
+      "heroCount": 9,
+      "name": "一起抱抱",
+      "rarity": "prismatic",
+      "winRate": 0.5124827691836422,
+      "holdingShare": 0.0015785983009753881
+    },
+    {
+      "id": 2111,
+      "games": 469670,
+      "wins": 240479,
+      "heroCount": 13,
+      "name": "邦！",
+      "rarity": "gold",
+      "winRate": 0.5120169480699215,
+      "holdingShare": 0.008735231735559816
+    },
+    {
+      "id": 1007,
+      "games": 2335491,
+      "wins": 1194593,
+      "heroCount": 91,
+      "name": "大力",
+      "rarity": "silver",
+      "winRate": 0.5114954414296609,
+      "holdingShare": 0.0434369985336818
+    },
+    {
+      "id": 1319,
+      "games": 701853,
+      "wins": 358972,
+      "heroCount": 67,
+      "name": "升级：献祭",
+      "rarity": "silver",
+      "winRate": 0.5114632266300778,
+      "holdingShare": 0.013053523962139085
+    },
+    {
+      "id": 3025,
+      "games": 5559,
+      "wins": 2838,
+      "heroCount": 28,
+      "name": "音之屏障",
+      "rarity": "silver",
+      "winRate": 0.5105234754452239,
+      "holdingShare": 0.00010338994020903404
+    },
+    {
+      "id": 1206,
+      "games": 914436,
+      "wins": 466573,
+      "heroCount": 67,
+      "name": "魔法转物理",
+      "rarity": "silver",
+      "winRate": 0.5102303496362786,
+      "holdingShare": 0.017007282490553742
+    },
+    {
+      "id": 2132,
+      "games": 2510024,
+      "wins": 1279857,
+      "heroCount": 106,
+      "name": "术士果汁盒",
+      "rarity": "gold",
+      "winRate": 0.5098983117292902,
+      "holdingShare": 0.0466830781225473
+    },
+    {
+      "id": 1029,
+      "games": 2686131,
+      "wins": 1369449,
+      "heroCount": 133,
+      "name": "虚幻武器",
+      "rarity": "gold",
+      "winRate": 0.5098221196211205,
+      "holdingShare": 0.04995843199921439
+    },
+    {
+      "id": 1038,
+      "games": 1740337,
+      "wins": 887041,
+      "heroCount": 172,
+      "name": "有始有终",
+      "rarity": "gold",
+      "winRate": 0.5096949613781698,
+      "holdingShare": 0.032367932788913416
+    },
+    {
+      "id": 3094,
+      "games": 686687,
+      "wins": 349737,
+      "heroCount": 102,
+      "name": "巫妖大脑",
+      "rarity": "silver",
+      "winRate": 0.5093106466264834,
+      "holdingShare": 0.012771456713855182
+    },
+    {
+      "id": 1037,
+      "games": 189163,
+      "wins": 96298,
+      "heroCount": 14,
+      "name": "急救用具",
+      "rarity": "silver",
+      "winRate": 0.5090741846978531,
+      "holdingShare": 0.0035181779564240883
+    },
+    {
+      "id": 1030,
+      "games": 2484636,
+      "wins": 1264737,
+      "heroCount": 105,
+      "name": "尤里卡",
+      "rarity": "prismatic",
+      "winRate": 0.509023052068794,
+      "holdingShare": 0.046210895391475715
+    },
+    {
+      "id": 2098,
+      "games": 430736,
+      "wins": 219200,
+      "heroCount": 144,
+      "name": "吃过路兵",
+      "rarity": "prismatic",
+      "winRate": 0.5088964005794733,
+      "holdingShare": 0.008011111582277115
+    },
+    {
+      "id": 1344,
+      "games": 1271780,
+      "wins": 647040,
+      "heroCount": 171,
+      "name": "最终形态",
+      "rarity": "prismatic",
+      "winRate": 0.5087672396169148,
+      "holdingShare": 0.023653401359785088
+    },
+    {
+      "id": 2127,
+      "games": 1418773,
+      "wins": 721221,
+      "heroCount": 173,
+      "name": "大师铸就",
+      "rarity": "silver",
+      "winRate": 0.5083413625717433,
+      "holdingShare": 0.026387273905413178
+    },
+    {
+      "id": 1353,
+      "games": 2303080,
+      "wins": 1168873,
+      "heroCount": 80,
+      "name": "坦克引擎",
+      "rarity": "gold",
+      "winRate": 0.5075260086492871,
+      "holdingShare": 0.04283419742698725
+    },
+    {
+      "id": 2009,
+      "games": 1352681,
+      "wins": 685985,
+      "heroCount": 81,
+      "name": "狂热者",
+      "rarity": "silver",
+      "winRate": 0.5071299145918365,
+      "holdingShare": 0.025158051396275655
+    },
+    {
+      "id": 1077,
+      "games": 1969757,
+      "wins": 998890,
+      "heroCount": 71,
+      "name": "灵魂虹吸",
+      "rarity": "gold",
+      "winRate": 0.5071133139773079,
+      "holdingShare": 0.03663483692324632
+    },
+    {
+      "id": 1154,
+      "games": 907525,
+      "wins": 460218,
+      "heroCount": 172,
+      "name": "海牛阿福的勇士",
+      "rarity": "prismatic",
+      "winRate": 0.5071133026638385,
+      "holdingShare": 0.016878747164634576
+    },
+    {
+      "id": 1028,
+      "games": 845401,
+      "wins": 428646,
+      "heroCount": 163,
+      "name": "侵蚀",
+      "rarity": "silver",
+      "winRate": 0.5070327572359152,
+      "holdingShare": 0.01572332413071732
+    },
+    {
+      "id": 2129,
+      "games": 204721,
+      "wins": 103794,
+      "heroCount": 6,
+      "name": "地形专家",
+      "rarity": "gold",
+      "winRate": 0.5070022127676204,
+      "holdingShare": 0.003807535878671282
+    },
+    {
+      "id": 1390,
+      "games": 1838899,
+      "wins": 931373,
+      "heroCount": 104,
+      "name": "超凡邪恶",
+      "rarity": "gold",
+      "winRate": 0.5064840428974077,
+      "holdingShare": 0.03420105372557159
+    },
+    {
+      "id": 1060,
+      "games": 729571,
+      "wins": 369106,
+      "heroCount": 173,
+      "name": "海洋龙魂",
+      "rarity": "silver",
+      "winRate": 0.5059219733240493,
+      "holdingShare": 0.013569041566512893
+    },
+    {
+      "id": 1076,
+      "games": 161349,
+      "wins": 81628,
+      "heroCount": 20,
+      "name": "天音爆",
+      "rarity": "silver",
+      "winRate": 0.5059095501056715,
+      "holdingShare": 0.003000874880875595
+    },
+    {
+      "id": 2083,
+      "games": 2332293,
+      "wins": 1179927,
+      "heroCount": 153,
+      "name": "牙仙子",
+      "rarity": "gold",
+      "winRate": 0.5059085629464223,
+      "holdingShare": 0.04337752002517514
+    },
+    {
+      "id": 1324,
+      "games": 124658,
+      "wins": 63030,
+      "heroCount": 21,
+      "name": "蛋白粉奶昔",
+      "rarity": "prismatic",
+      "winRate": 0.5056233855829549,
+      "holdingShare": 0.002318471517643059
+    },
+    {
+      "id": 2157,
+      "games": 1211352,
+      "wins": 612252,
+      "heroCount": 59,
+      "name": "升级：死亡之舞",
+      "rarity": "silver",
+      "winRate": 0.5054286450181285,
+      "holdingShare": 0.022529521649953914
+    },
+    {
+      "id": 1305,
+      "games": 1111113,
+      "wins": 561553,
+      "heroCount": 132,
+      "name": "练腿日",
+      "rarity": "silver",
+      "winRate": 0.5053968408253706,
+      "holdingShare": 0.020665210763712978
+    },
+    {
+      "id": 1373,
+      "games": 3544635,
+      "wins": 1789974,
+      "heroCount": 173,
+      "name": "缩小引擎",
+      "rarity": "gold",
+      "winRate": 0.5049811898827383,
+      "holdingShare": 0.06592545434661798
+    },
+    {
+      "id": 1384,
+      "games": 1448972,
+      "wins": 731340,
+      "heroCount": 173,
+      "name": "捐赠",
+      "rarity": "gold",
+      "winRate": 0.5047302501359585,
+      "holdingShare": 0.02694893478045772
+    },
+    {
+      "id": 1403,
+      "games": 874223,
+      "wins": 440826,
+      "heroCount": 173,
+      "name": "属性叠属性！",
+      "rarity": "gold",
+      "winRate": 0.5042489158944571,
+      "holdingShare": 0.016259374653599994
+    },
+    {
+      "id": 1331,
+      "games": 65988,
+      "wins": 33272,
+      "heroCount": 21,
+      "name": "至高天诺言",
+      "rarity": "prismatic",
+      "winRate": 0.5042128871916106,
+      "holdingShare": 0.0012272882486982798
+    },
+    {
+      "id": 1138,
+      "games": 1698978,
+      "wins": 856475,
+      "heroCount": 121,
+      "name": "渴血",
+      "rarity": "silver",
+      "winRate": 0.5041118837324556,
+      "holdingShare": 0.03159871088981188
+    },
+    {
+      "id": 2131,
+      "games": 268304,
+      "wins": 135253,
+      "heroCount": 31,
+      "name": "别停止引导",
+      "rarity": "silver",
+      "winRate": 0.5041035541773511,
+      "holdingShare": 0.004990094354712119
+    },
+    {
+      "id": 1335,
+      "games": 391709,
+      "wins": 197421,
+      "heroCount": 173,
+      "name": "夺金",
+      "rarity": "prismatic",
+      "winRate": 0.5039991422203728,
+      "holdingShare": 0.00728526175379394
+    },
+    {
+      "id": 3170,
+      "games": 4169540,
+      "wins": 2100003,
+      "heroCount": 173,
+      "name": "重型",
+      "rarity": "gold",
+      "winRate": 0.5036534006149359,
+      "holdingShare": 0.07754784876761572
+    },
+    {
+      "id": 1180,
+      "games": 495923,
+      "wins": 249750,
+      "heroCount": 104,
+      "name": "超强大脑",
+      "rarity": "gold",
+      "winRate": 0.5036064066397404,
+      "holdingShare": 0.009223502305861627
+    },
+    {
+      "id": 3134,
+      "games": 403460,
+      "wins": 202986,
+      "heroCount": 101,
+      "name": "孤勇者",
+      "rarity": "silver",
+      "winRate": 0.5031130719278243,
+      "holdingShare": 0.00750381458477008
+    },
+    {
+      "id": 1311,
+      "games": 583317,
+      "wins": 293378,
+      "heroCount": 103,
+      "name": "溢流",
+      "rarity": "gold",
+      "winRate": 0.5029477968240254,
+      "holdingShare": 0.010848913429198257
+    },
+    {
+      "id": 1022,
+      "games": 1278712,
+      "wins": 641831,
+      "heroCount": 71,
+      "name": "灵巧",
+      "rarity": "silver",
+      "winRate": 0.5019355413885223,
+      "holdingShare": 0.023782327257523717
+    },
+    {
+      "id": 3172,
+      "games": 1371320,
+      "wins": 687548,
+      "heroCount": 173,
+      "name": "鞭挞",
+      "rarity": "gold",
+      "winRate": 0.5013767756614065,
+      "holdingShare": 0.025504711784035357
+    },
+    {
+      "id": 1098,
+      "games": 909958,
+      "wins": 455577,
+      "heroCount": 162,
+      "name": "急急小子",
+      "rarity": "gold",
+      "winRate": 0.5006571731882131,
+      "holdingShare": 0.01692399769971797
+    },
+    {
+      "id": 1402,
+      "games": 457042,
+      "wins": 228500,
+      "heroCount": 173,
+      "name": "属性叠属性叠属性！",
+      "rarity": "prismatic",
+      "winRate": 0.49995405236280255,
+      "holdingShare": 0.008500367881456618
+    },
+    {
+      "id": 2102,
+      "games": 725225,
+      "wins": 362477,
+      "heroCount": 84,
+      "name": "高压锅",
+      "rarity": "gold",
+      "winRate": 0.4998131614326588,
+      "holdingShare": 0.013488211798542312
+    },
+    {
+      "id": 1238,
+      "games": 4696121,
+      "wins": 2344824,
+      "heroCount": 173,
+      "name": "质变：棱彩阶",
+      "rarity": "gold",
+      "winRate": 0.49931081418046935,
+      "holdingShare": 0.08734154873257585
+    },
+    {
+      "id": 2107,
+      "games": 334933,
+      "wins": 167161,
+      "heroCount": 159,
+      "name": "濒死悟道",
+      "rarity": "prismatic",
+      "winRate": 0.4990878772769479,
+      "holdingShare": 0.006229304343233027
+    },
+    {
+      "id": 1243,
+      "games": 1727711,
+      "wins": 862043,
+      "heroCount": 173,
+      "name": "质变：混沌",
+      "rarity": "prismatic",
+      "winRate": 0.4989509240839469,
+      "holdingShare": 0.03213310613212635
+    },
+    {
+      "id": 3132,
+      "games": 1096404,
+      "wins": 547026,
+      "heroCount": 172,
+      "name": "王冠之重",
+      "rarity": "gold",
+      "winRate": 0.49892740267273744,
+      "holdingShare": 0.020391643102166894
+    },
+    {
+      "id": 1129,
+      "games": 1100088,
+      "wins": 548766,
+      "heroCount": 102,
+      "name": "神射法师",
+      "rarity": "gold",
+      "winRate": 0.49883827475620135,
+      "holdingShare": 0.020460160558495383
+    },
+    {
+      "id": 2103,
+      "games": 880368,
+      "wins": 439107,
+      "heroCount": 75,
+      "name": "狙神飞星",
+      "rarity": "gold",
+      "winRate": 0.4987766479472221,
+      "holdingShare": 0.016373663407437827
+    },
+    {
+      "id": 1027,
+      "games": 167163,
+      "wins": 83303,
+      "heroCount": 81,
+      "name": "大地苏醒",
+      "rarity": "prismatic",
+      "winRate": 0.4983339614627639,
+      "holdingShare": 0.003109007478892383
+    },
+    {
+      "id": 3123,
+      "games": 1185258,
+      "wins": 590566,
+      "heroCount": 26,
+      "name": "珠光手镯",
+      "rarity": "gold",
+      "winRate": 0.49825945068499855,
+      "holdingShare": 0.02204420826628517
+    },
+    {
+      "id": 1006,
+      "games": 587357,
+      "wins": 292256,
+      "heroCount": 110,
+      "name": "利刃华尔兹",
+      "rarity": "prismatic",
+      "winRate": 0.4975781339117436,
+      "holdingShare": 0.010924052007799534
+    },
+    {
+      "id": 1104,
+      "games": 294309,
+      "wins": 146230,
+      "heroCount": 12,
+      "name": "仆从大师",
+      "rarity": "gold",
+      "winRate": 0.4968587437013479,
+      "holdingShare": 0.005473752457812664
+    },
+    {
+      "id": 1013,
+      "games": 1182465,
+      "wins": 587465,
+      "heroCount": 85,
+      "name": "星界躯体",
+      "rarity": "gold",
+      "winRate": 0.49681385918399273,
+      "holdingShare": 0.021992262214296714
+    },
+    {
+      "id": 1136,
+      "games": 646035,
+      "wins": 320588,
+      "heroCount": 84,
+      "name": "扇巴掌",
+      "rarity": "silver",
+      "winRate": 0.49623936783610795,
+      "holdingShare": 0.012015384066008869
+    },
+    {
+      "id": 2140,
+      "games": 462487,
+      "wins": 229386,
+      "heroCount": 59,
+      "name": "升级：贪欲九头蛇",
+      "rarity": "gold",
+      "winRate": 0.49598367089237105,
+      "holdingShare": 0.008601637574645713
+    },
+    {
+      "id": 1401,
+      "games": 683315,
+      "wins": 338844,
+      "heroCount": 84,
+      "name": "生机迸发",
+      "rarity": "gold",
+      "winRate": 0.4958825724592611,
+      "holdingShare": 0.012708742038844414
+    },
+    {
+      "id": 3150,
+      "games": 1253894,
+      "wins": 621582,
+      "heroCount": 102,
+      "name": "升级：风暴狂涌",
+      "rarity": "gold",
+      "winRate": 0.4957213289161604,
+      "holdingShare": 0.02332074576155181
+    },
+    {
+      "id": 1141,
+      "games": 155142,
+      "wins": 76857,
+      "heroCount": 21,
+      "name": "全心为你",
+      "rarity": "gold",
+      "winRate": 0.49539776462853385,
+      "holdingShare": 0.002885433010237445
+    },
+    {
+      "id": 1018,
+      "games": 508791,
+      "wins": 251899,
+      "heroCount": 84,
+      "name": "巨像的勇气",
+      "rarity": "prismatic",
+      "winRate": 0.4950932701246681,
+      "holdingShare": 0.009462829837901535
+    },
+    {
+      "id": 1308,
+      "games": 380379,
+      "wins": 188175,
+      "heroCount": 173,
+      "name": "火狐",
+      "rarity": "silver",
+      "winRate": 0.49470396630728825,
+      "holdingShare": 0.007074538957865112
+    },
+    {
+      "id": 1034,
+      "games": 320171,
+      "wins": 158336,
+      "heroCount": 74,
+      "name": "防护面纱",
+      "rarity": "silver",
+      "winRate": 0.49453573246796245,
+      "holdingShare": 0.0059547509528092525
+    },
+    {
+      "id": 1375,
+      "games": 417420,
+      "wins": 206221,
+      "heroCount": 84,
+      "name": "吞噬灵魂",
+      "rarity": "gold",
+      "winRate": 0.4940371807771549,
+      "holdingShare": 0.007763451851422016
+    },
+    {
+      "id": 2026,
+      "games": 383930,
+      "wins": 189567,
+      "heroCount": 133,
+      "name": "杀意翻涌",
+      "rarity": "silver",
+      "winRate": 0.4937540697522986,
+      "holdingShare": 0.007140582792670343
+    },
+    {
+      "id": 1115,
+      "games": 1111594,
+      "wins": 548729,
+      "heroCount": 93,
+      "name": "最万用的瞄准镜",
+      "rarity": "prismatic",
+      "winRate": 0.49364156337655657,
+      "holdingShare": 0.020674156718244466
+    },
+    {
+      "id": 1318,
+      "games": 907319,
+      "wins": 447588,
+      "heroCount": 106,
+      "name": "升级：中娅",
+      "rarity": "silver",
+      "winRate": 0.4933083072216056,
+      "holdingShare": 0.016874915841072233
+    },
+    {
+      "id": 1092,
+      "games": 1788155,
+      "wins": 882099,
+      "heroCount": 43,
+      "name": "易损",
+      "rarity": "gold",
+      "winRate": 0.49330119592540916,
+      "holdingShare": 0.033257283420486644
+    },
+    {
+      "id": 1061,
+      "games": 139018,
+      "wins": 68572,
+      "heroCount": 80,
+      "name": "回力OK镖",
+      "rarity": "gold",
+      "winRate": 0.4932598656289114,
+      "holdingShare": 0.0025855482475228447
+    },
+    {
+      "id": 1329,
+      "games": 1531090,
+      "wins": 754944,
+      "heroCount": 173,
+      "name": "史上最大雪球",
+      "rarity": "prismatic",
+      "winRate": 0.4930761744900692,
+      "holdingShare": 0.02847621938381902
+    },
+    {
+      "id": 1996,
+      "games": 799136,
+      "wins": 394010,
+      "heroCount": 159,
+      "name": "升级：耀光",
+      "rarity": "gold",
+      "winRate": 0.4930449885876747,
+      "holdingShare": 0.014862857215126214
+    },
+    {
+      "id": 1415,
+      "games": 1628573,
+      "wins": 802792,
+      "heroCount": 164,
+      "name": "双生火焰",
+      "rarity": "silver",
+      "winRate": 0.4929419804945802,
+      "holdingShare": 0.030289272368420075
+    },
+    {
+      "id": 1332,
+      "games": 496291,
+      "wins": 244627,
+      "heroCount": 105,
+      "name": "不祥契约",
+      "rarity": "prismatic",
+      "winRate": 0.4929104094170557,
+      "holdingShare": 0.009230346612031249
+    },
+    {
+      "id": 1079,
+      "games": 713206,
+      "wins": 351527,
+      "heroCount": 98,
+      "name": "战争交响乐",
+      "rarity": "prismatic",
+      "winRate": 0.49288284170351904,
+      "holdingShare": 0.013264674527203512
+    },
+    {
+      "id": 1068,
+      "games": 3891964,
+      "wins": 1916813,
+      "heroCount": 170,
+      "name": "循环往复",
+      "rarity": "gold",
+      "winRate": 0.4925053263596477,
+      "holdingShare": 0.07238530765528206
+    },
+    {
+      "id": 1205,
+      "games": 1884695,
+      "wins": 927329,
+      "heroCount": 105,
+      "name": "物理转魔法",
+      "rarity": "silver",
+      "winRate": 0.4920313366353707,
+      "holdingShare": 0.03505279787052805
+    },
+    {
+      "id": 1071,
+      "games": 1740834,
+      "wins": 856494,
+      "heroCount": 93,
+      "name": "更万用的瞄准镜",
+      "rarity": "gold",
+      "winRate": 0.49200210933380206,
+      "holdingShare": 0.03237717632197402
+    },
+    {
+      "id": 3079,
+      "games": 403517,
+      "wins": 198476,
+      "heroCount": 162,
+      "name": "死之舞",
+      "rarity": "prismatic",
+      "winRate": 0.49186527457331414,
+      "holdingShare": 0.007504874708280048
+    },
+    {
+      "id": 1020,
+      "games": 638555,
+      "wins": 314039,
+      "heroCount": 84,
+      "name": "黎明使者的坚决",
+      "rarity": "gold",
+      "winRate": 0.49179632138187,
+      "holdingShare": 0.01187626610364809
+    },
+    {
+      "id": 1314,
+      "games": 127787,
+      "wins": 62767,
+      "heroCount": 25,
+      "name": "强力护盾",
+      "rarity": "silver",
+      "winRate": 0.4911845492890513,
+      "holdingShare": 0.0023766667187429093
+    },
+    {
+      "id": 1081,
+      "games": 633203,
+      "wins": 310884,
+      "heroCount": 83,
+      "name": "踢踏舞",
+      "rarity": "prismatic",
+      "winRate": 0.49097051024710875,
+      "holdingShare": 0.011776726085659467
+    },
+    {
+      "id": 2054,
+      "games": 280305,
+      "wins": 137579,
+      "heroCount": 16,
+      "name": "三重射击",
+      "rarity": "prismatic",
+      "winRate": 0.49081892938049626,
+      "holdingShare": 0.005213296850205664
+    },
+    {
+      "id": 1323,
+      "games": 513932,
+      "wins": 252158,
+      "heroCount": 85,
+      "name": "残忍",
+      "rarity": "prismatic",
+      "winRate": 0.4906446767276605,
+      "holdingShare": 0.009558445539037468
+    },
+    {
+      "id": 1404,
+      "games": 359391,
+      "wins": 176331,
+      "heroCount": 173,
+      "name": "属性！",
+      "rarity": "silver",
+      "winRate": 0.4906383298413149,
+      "holdingShare": 0.006684190322299865
+    },
+    {
+      "id": 3075,
+      "games": 567895,
+      "wins": 278515,
+      "heroCount": 27,
+      "name": "反冲",
+      "rarity": "gold",
+      "winRate": 0.49043397106859543,
+      "holdingShare": 0.010562084924448531
+    },
+    {
+      "id": 1048,
+      "games": 3490478,
+      "wins": 1711488,
+      "heroCount": 170,
+      "name": "珠光护手",
+      "rarity": "prismatic",
+      "winRate": 0.49033055071540343,
+      "holdingShare": 0.06491820682154141
+    },
+    {
+      "id": 1118,
+      "games": 155855,
+      "wins": 76378,
+      "heroCount": 20,
+      "name": "会心治疗",
+      "rarity": "gold",
+      "winRate": 0.49005806679285235,
+      "holdingShare": 0.0028986938534410864
+    },
+    {
+      "id": 3171,
+      "games": 1216860,
+      "wins": 596098,
+      "heroCount": 173,
+      "name": "力量",
+      "rarity": "gold",
+      "winRate": 0.48986571996778594,
+      "holdingShare": 0.022631963058601396
+    },
+    {
+      "id": 1019,
+      "games": 886158,
+      "wins": 433986,
+      "heroCount": 88,
+      "name": "全凭身法",
+      "rarity": "prismatic",
+      "winRate": 0.4897388501824731,
+      "holdingShare": 0.016481349637660944
+    },
+    {
+      "id": 1237,
+      "games": 2335377,
+      "wins": 1143542,
+      "heroCount": 173,
+      "name": "质变：黄金阶",
+      "rarity": "silver",
+      "winRate": 0.48966055587598917,
+      "holdingShare": 0.043434878286661864
+    },
+    {
+      "id": 3053,
+      "games": 133533,
+      "wins": 65384,
+      "heroCount": 13,
+      "name": "热舞怪兽",
+      "rarity": "prismatic",
+      "winRate": 0.4896467539859061,
+      "holdingShare": 0.0024835346080109627
+    },
+    {
+      "id": 1097,
+      "games": 1216492,
+      "wins": 595623,
+      "heroCount": 106,
+      "name": "巫师式思考",
+      "rarity": "silver",
+      "winRate": 0.48962344183110124,
+      "holdingShare": 0.022625118752431776
+    },
+    {
+      "id": 2073,
+      "games": 703193,
+      "wins": 344254,
+      "heroCount": 37,
+      "name": "虹吸",
+      "rarity": "silver",
+      "winRate": 0.4895583431575684,
+      "holdingShare": 0.013078446163952378
+    },
+    {
+      "id": 1116,
+      "games": 765485,
+      "wins": 374425,
+      "heroCount": 126,
+      "name": "闪现向前",
+      "rarity": "gold",
+      "winRate": 0.4891343396670085,
+      "holdingShare": 0.014236993772425332
+    },
+    {
+      "id": 1054,
+      "games": 579852,
+      "wins": 283610,
+      "heroCount": 106,
+      "name": "物法皆修",
+      "rarity": "prismatic",
+      "winRate": 0.48910756537875183,
+      "holdingShare": 0.010784469078987013
+    },
+    {
+      "id": 2018,
+      "games": 1760252,
+      "wins": 860570,
+      "heroCount": 154,
+      "name": "纯粹主义者 - 术师",
+      "rarity": "silver",
+      "winRate": 0.48889022708112245,
+      "holdingShare": 0.03273832506436995
+    },
+    {
+      "id": 2072,
+      "games": 426090,
+      "wins": 208287,
+      "heroCount": 31,
+      "name": "咒语裂变",
+      "rarity": "prismatic",
+      "winRate": 0.4888333450679434,
+      "holdingShare": 0.007924702216885647
+    },
+    {
+      "id": 1322,
+      "games": 1029509,
+      "wins": 502929,
+      "heroCount": 143,
+      "name": "罪恶快感",
+      "rarity": "gold",
+      "winRate": 0.4885134564146598,
+      "holdingShare": 0.019147485870599463
+    },
+    {
+      "id": 3036,
+      "games": 702558,
+      "wins": 342582,
+      "heroCount": 106,
+      "name": "翻倍时间",
+      "rarity": "gold",
+      "winRate": 0.48762095086811336,
+      "holdingShare": 0.013066636016078168
+    },
+    {
+      "id": 3004,
+      "games": 1371171,
+      "wins": 667670,
+      "heroCount": 173,
+      "name": "罪恶快感！",
+      "rarity": "gold",
+      "winRate": 0.4869341606553814,
+      "holdingShare": 0.025501940583982984
+    },
+    {
+      "id": 2032,
+      "games": 221412,
+      "wins": 107801,
+      "heroCount": 94,
+      "name": "鲨鱼诱饵",
+      "rarity": "gold",
+      "winRate": 0.4868796632522176,
+      "holdingShare": 0.004117966080511359
+    },
+    {
+      "id": 1349,
+      "games": 1308578,
+      "wins": 637071,
+      "heroCount": 168,
+      "name": "终极唤醒",
+      "rarity": "prismatic",
+      "winRate": 0.48684220581425025,
+      "holdingShare": 0.024337794779431075
+    },
+    {
+      "id": 1133,
+      "games": 1510817,
+      "wins": 735278,
+      "heroCount": 77,
+      "name": "魔法飞弹",
+      "rarity": "gold",
+      "winRate": 0.4866757522585462,
+      "holdingShare": 0.02809916878877355
+    },
+    {
+      "id": 1379,
+      "games": 60436,
+      "wins": 29395,
+      "heroCount": 18,
+      "name": "升级：花晓之剑",
+      "rarity": "prismatic",
+      "winRate": 0.4863822887020981,
+      "holdingShare": 0.0011240284990957333
+    },
+    {
+      "id": 1336,
+      "games": 2132360,
+      "wins": 1036684,
+      "heroCount": 43,
+      "name": "升级：无尽之刃",
+      "rarity": "gold",
+      "winRate": 0.4861674388939954,
+      "holdingShare": 0.039659034521341216
+    },
+    {
+      "id": 2125,
+      "games": 317491,
+      "wins": 154237,
+      "heroCount": 29,
+      "name": "前进时间到",
+      "rarity": "silver",
+      "winRate": 0.4857995974689046,
+      "holdingShare": 0.0059049065491826635
+    },
+    {
+      "id": 2139,
+      "games": 409952,
+      "wins": 199120,
+      "heroCount": 78,
+      "name": "豪猪",
+      "rarity": "gold",
+      "winRate": 0.48571540082741393,
+      "holdingShare": 0.0076245570729580716
+    },
+    {
+      "id": 2096,
+      "games": 745147,
+      "wins": 361926,
+      "heroCount": 32,
+      "name": "小小的额外帮助",
+      "rarity": "gold",
+      "winRate": 0.4857108731565718,
+      "holdingShare": 0.01385873426460534
+    },
+    {
+      "id": 2133,
+      "games": 104537,
+      "wins": 50769,
+      "heroCount": 11,
+      "name": "仁慈打击",
+      "rarity": "gold",
+      "winRate": 0.48565579651223967,
+      "holdingShare": 0.0019442479186241755
+    },
+    {
+      "id": 2016,
+      "games": 587145,
+      "wins": 285034,
+      "heroCount": 143,
+      "name": "注魔",
+      "rarity": "silver",
+      "winRate": 0.48545759565354385,
+      "holdingShare": 0.010920109092288773
+    },
+    {
+      "id": 1025,
+      "games": 1104322,
+      "wins": 535850,
+      "heroCount": 98,
+      "name": "俯冲轰炸",
+      "rarity": "silver",
+      "winRate": 0.48522985143825803,
+      "holdingShare": 0.020538907276762167
+    },
+    {
+      "id": 2077,
+      "games": 993272,
+      "wins": 481395,
+      "heroCount": 71,
+      "name": "贪欲束缚",
+      "rarity": "gold",
+      "winRate": 0.48465576398005783,
+      "holdingShare": 0.018473526298130538
+    },
+    {
+      "id": 1328,
+      "games": 1254966,
+      "wins": 608224,
+      "heroCount": 80,
+      "name": "暴击律动",
+      "rarity": "gold",
+      "winRate": 0.4846537675124266,
+      "holdingShare": 0.023340683523002448
+    },
+    {
+      "id": 1416,
+      "games": 590839,
+      "wins": 286192,
+      "heroCount": 83,
+      "name": "海克斯科技龙魂",
+      "rarity": "silver",
+      "winRate": 0.4843823782790236,
+      "holdingShare": 0.010988812535197961
+    },
+    {
+      "id": 1044,
+      "games": 985066,
+      "wins": 476913,
+      "heroCount": 101,
+      "name": "冰寒",
+      "rarity": "silver",
+      "winRate": 0.4841431944661576,
+      "holdingShare": 0.01832090571001121
+    },
+    {
+      "id": 2115,
+      "games": 194211,
+      "wins": 94015,
+      "heroCount": 107,
+      "name": "软弹啪叽抓",
+      "rarity": "prismatic",
+      "winRate": 0.48408689518101444,
+      "holdingShare": 0.003612063982359545
+    },
+    {
+      "id": 1047,
+      "games": 770661,
+      "wins": 373030,
+      "heroCount": 43,
+      "name": "关键暴击",
+      "rarity": "gold",
+      "winRate": 0.48403902623851475,
+      "holdingShare": 0.0143332604265937
+    },
+    {
+      "id": 1421,
+      "games": 166088,
+      "wins": 80347,
+      "heroCount": 102,
+      "name": "舞会女王",
+      "rarity": "prismatic",
+      "winRate": 0.48376162034584075,
+      "holdingShare": 0.0030890139214675384
+    },
+    {
+      "id": 1046,
+      "games": 618373,
+      "wins": 298661,
+      "heroCount": 173,
+      "name": "炼狱龙魂",
+      "rarity": "silver",
+      "winRate": 0.48297871996351716,
+      "holdingShare": 0.01150090798648696
+    },
+    {
+      "id": 1051,
+      "games": 301995,
+      "wins": 145790,
+      "heroCount": 46,
+      "name": "点亮他们！",
+      "rarity": "silver",
+      "winRate": 0.48275633702544746,
+      "holdingShare": 0.005616701743735786
+    },
+    {
+      "id": 2091,
+      "games": 914014,
+      "wins": 440538,
+      "heroCount": 141,
+      "name": "无尽大杀四方",
+      "rarity": "gold",
+      "winRate": 0.4819816764294639,
+      "holdingShare": 0.01699943385684836
+    },
+    {
+      "id": 2004,
+      "games": 139231,
+      "wins": 67102,
+      "heroCount": 20,
+      "name": "信念者的强化",
+      "rarity": "prismatic",
+      "winRate": 0.48194726749071687,
+      "holdingShare": 0.0025895097616916744
+    },
+    {
+      "id": 2099,
+      "games": 789849,
+      "wins": 380573,
+      "heroCount": 158,
+      "name": "飞升仪式",
+      "rarity": "prismatic",
+      "winRate": 0.48183007131742905,
+      "holdingShare": 0.014690131477633626
+    },
+    {
+      "id": 1149,
+      "games": 267797,
+      "wins": 129019,
+      "heroCount": 84,
+      "name": "不动如山",
+      "rarity": "gold",
+      "winRate": 0.48177910880256314,
+      "holdingShare": 0.00498066483507082
+    },
+    {
+      "id": 1057,
+      "games": 154836,
+      "wins": 74594,
+      "heroCount": 173,
+      "name": "山脉龙魂",
+      "rarity": "silver",
+      "winRate": 0.48176134749024774,
+      "holdingShare": 0.0028797418208681407
+    },
+    {
+      "id": 2138,
+      "games": 222014,
+      "wins": 106876,
+      "heroCount": 17,
+      "name": "自适应防护",
+      "rarity": "silver",
+      "winRate": 0.4813930653021882,
+      "holdingShare": 0.004129162472669272
+    },
+    {
+      "id": 1001,
+      "games": 846621,
+      "wins": 407487,
+      "heroCount": 99,
+      "name": "泰坦的坚决",
+      "rarity": "prismatic",
+      "winRate": 0.4813098186791965,
+      "holdingShare": 0.01574601449356226
+    },
+    {
+      "id": 1170,
+      "games": 894718,
+      "wins": 430537,
+      "heroCount": 93,
+      "name": "万用瞄准镜",
+      "rarity": "silver",
+      "winRate": 0.4811985452399527,
+      "holdingShare": 0.016640554150736914
+    },
+    {
+      "id": 2005,
+      "games": 852909,
+      "wins": 410013,
+      "heroCount": 162,
+      "name": "扳机炼狱",
+      "rarity": "prismatic",
+      "winRate": 0.4807230314136678,
+      "holdingShare": 0.01586296285550405
+    },
+    {
+      "id": 1087,
+      "games": 648943,
+      "wins": 311943,
+      "heroCount": 83,
+      "name": "台风",
+      "rarity": "silver",
+      "winRate": 0.4806939900730881,
+      "holdingShare": 0.012069468963675332
+    },
+    {
+      "id": 2144,
+      "games": 317850,
+      "wins": 152780,
+      "heroCount": 23,
+      "name": "加固护盾",
+      "rarity": "silver",
+      "winRate": 0.4806669812804782,
+      "holdingShare": 0.005911583467429658
+    },
+    {
+      "id": 1348,
+      "games": 17974,
+      "wins": 8637,
+      "heroCount": 105,
+      "name": "闪闪现现",
+      "rarity": "silver",
+      "winRate": 0.4805274285078447,
+      "holdingShare": 0.0003342922801434031
+    },
+    {
+      "id": 1067,
+      "games": 163257,
+      "wins": 78397,
+      "heroCount": 13,
+      "name": "活力焕发",
+      "rarity": "gold",
+      "winRate": 0.4802060554830727,
+      "holdingShare": 0.003036361120472436
+    },
+    {
+      "id": 2087,
+      "games": 2046801,
+      "wins": 982283,
+      "heroCount": 161,
+      "name": "大法师",
+      "rarity": "prismatic",
+      "winRate": 0.47991133480978365,
+      "holdingShare": 0.03806775193556235
+    },
+    {
+      "id": 1072,
+      "games": 173213,
+      "wins": 83081,
+      "heroCount": 47,
+      "name": "炽烈黎明",
+      "rarity": "gold",
+      "winRate": 0.4796464468602241,
+      "holdingShare": 0.003221529360213602
+    },
+    {
+      "id": 1320,
+      "games": 1448698,
+      "wins": 694806,
+      "heroCount": 67,
+      "name": "升级：收集者",
+      "rarity": "silver",
+      "winRate": 0.4796072059186939,
+      "holdingShare": 0.026943838748146643
+    },
+    {
+      "id": 2136,
+      "games": 333349,
+      "wins": 159800,
+      "heroCount": 25,
+      "name": "可靠武器",
+      "rarity": "silver",
+      "winRate": 0.4793774692589448,
+      "holdingShare": 0.006199844068850744
+    },
+    {
+      "id": 1113,
+      "games": 1390844,
+      "wins": 666396,
+      "heroCount": 69,
+      "name": "老练狙神",
+      "rarity": "gold",
+      "winRate": 0.47913065735625276,
+      "holdingShare": 0.025867831984186677
+    },
+    {
+      "id": 1413,
+      "games": 325998,
+      "wins": 156193,
+      "heroCount": 69,
+      "name": "和我一起困在这里",
+      "rarity": "prismatic",
+      "winRate": 0.47912257130411845,
+      "holdingShare": 0.006063125333380946
+    },
+    {
+      "id": 2034,
+      "games": 332356,
+      "wins": 159053,
+      "heroCount": 173,
+      "name": "鲨鱼暴风",
+      "rarity": "gold",
+      "winRate": 0.47856214420681437,
+      "holdingShare": 0.006181375601387608
+    },
+    {
+      "id": 1151,
+      "games": 1194066,
+      "wins": 570886,
+      "heroCount": 166,
+      "name": "面包和奶酪",
+      "rarity": "gold",
+      "winRate": 0.47810255044528527,
+      "holdingShare": 0.02220802524656241
+    },
+    {
+      "id": 1187,
+      "games": 20617,
+      "wins": 9852,
+      "heroCount": 105,
+      "name": "闪光弹",
+      "rarity": "silver",
+      "winRate": 0.4778580782849105,
+      "holdingShare": 0.00038344853342141657
+    },
+    {
+      "id": 3016,
+      "games": 197252,
+      "wins": 94243,
+      "heroCount": 90,
+      "name": "伤不过三",
+      "rarity": "prismatic",
+      "winRate": 0.47777969298156675,
+      "holdingShare": 0.003668622501549268
+    },
+    {
+      "id": 1036,
+      "games": 601328,
+      "wins": 287020,
+      "heroCount": 89,
+      "name": "火上浇油",
+      "rarity": "gold",
+      "winRate": 0.47731022004629753,
+      "holdingShare": 0.011183893859690236
+    },
+    {
+      "id": 1011,
+      "games": 683948,
+      "wins": 326319,
+      "heroCount": 168,
+      "name": "你摸不到",
+      "rarity": "prismatic",
+      "winRate": 0.4771108329873031,
+      "holdingShare": 0.012720514989402484
+    },
+    {
+      "id": 2010,
+      "games": 831381,
+      "wins": 396393,
+      "heroCount": 51,
+      "name": "双发快射",
+      "rarity": "prismatic",
+      "winRate": 0.47678862037982583,
+      "holdingShare": 0.015462570944581207
+    },
+    {
+      "id": 1103,
+      "games": 1605560,
+      "wins": 765497,
+      "heroCount": 162,
+      "name": "面包和黄油",
+      "rarity": "gold",
+      "winRate": 0.47677881860534643,
+      "holdingShare": 0.02986126145026384
+    },
+    {
+      "id": 3088,
+      "games": 1671018,
+      "wins": 795418,
+      "heroCount": 85,
+      "name": "深红钴蓝闪光",
+      "rarity": "gold",
+      "winRate": 0.4760080382138313,
+      "holdingShare": 0.03107869241018522
+    },
+    {
+      "id": 2043,
+      "games": 255316,
+      "wins": 121418,
+      "heroCount": 89,
+      "name": "自然即是治愈",
+      "rarity": "gold",
+      "winRate": 0.4755596985696157,
+      "holdingShare": 0.004748534983703856
+    },
+    {
+      "id": 2123,
+      "games": 871915,
+      "wins": 414152,
+      "heroCount": 102,
+      "name": "超负荷",
+      "rarity": "prismatic",
+      "winRate": 0.47499125488149646,
+      "holdingShare": 0.016216448950775304
+    },
+    {
+      "id": 2137,
+      "games": 147406,
+      "wins": 69980,
+      "heroCount": 145,
+      "name": "轻拍背部",
+      "rarity": "gold",
+      "winRate": 0.47474322619160686,
+      "holdingShare": 0.002741553791410842
+    },
+    {
+      "id": 1194,
+      "games": 664957,
+      "wins": 314967,
+      "heroCount": 100,
+      "name": "精怪魔法",
+      "rarity": "prismatic",
+      "winRate": 0.47366521444243764,
+      "holdingShare": 0.012367307874002274
+    },
+    {
+      "id": 2088,
+      "games": 499013,
+      "wins": 236125,
+      "heroCount": 173,
+      "name": "下雪天",
+      "rarity": "silver",
+      "winRate": 0.473184065344991,
+      "holdingShare": 0.009280972159296762
+    },
+    {
+      "id": 2100,
+      "games": 1445080,
+      "wins": 683316,
+      "heroCount": 144,
+      "name": "急速之追求",
+      "rarity": "gold",
+      "winRate": 0.4728568660558585,
+      "holdingShare": 0.026876548803250747
+    },
+    {
+      "id": 3118,
+      "games": 89583,
+      "wins": 42344,
+      "heroCount": 157,
+      "name": "奥术公理",
+      "rarity": "gold",
+      "winRate": 0.4726789681077883,
+      "holdingShare": 0.0016661235858510337
+    },
+    {
+      "id": 1326,
+      "games": 880617,
+      "wins": 415562,
+      "heroCount": 148,
+      "name": "夜狩",
+      "rarity": "gold",
+      "winRate": 0.47189868012995434,
+      "holdingShare": 0.016378294473297163
+    },
+    {
+      "id": 1002,
+      "games": 597175,
+      "wins": 281615,
+      "heroCount": 173,
+      "name": "尖端发明家",
+      "rarity": "gold",
+      "winRate": 0.4715786829656298,
+      "holdingShare": 0.011106653632727092
+    },
+    {
+      "id": 1150,
+      "games": 992046,
+      "wins": 467145,
+      "heroCount": 161,
+      "name": "面包和果酱",
+      "rarity": "gold",
+      "winRate": 0.47089046274063906,
+      "holdingShare": 0.01845072434333718
+    },
+    {
+      "id": 3055,
+      "games": 2349534,
+      "wins": 1106302,
+      "heroCount": 151,
+      "name": "终极循环往复",
+      "rarity": "silver",
+      "winRate": 0.47086017908232014,
+      "holdingShare": 0.04369817948895351
+    },
+    {
+      "id": 1112,
+      "games": 753784,
+      "wins": 354629,
+      "heroCount": 150,
+      "name": "终极不可阻挡",
+      "rarity": "silver",
+      "winRate": 0.4704650138501215,
+      "holdingShare": 0.014019370874352673
+    },
+    {
+      "id": 1347,
+      "games": 114461,
+      "wins": 53847,
+      "heroCount": 77,
+      "name": "吵闹鬼",
+      "rarity": "silver",
+      "winRate": 0.4704397130900481,
+      "holdingShare": 0.0021288210013071136
+    },
+    {
+      "id": 1358,
+      "games": 570163,
+      "wins": 267943,
+      "heroCount": 173,
+      "name": "弹球",
+      "rarity": "gold",
+      "winRate": 0.46994105194479474,
+      "holdingShare": 0.010604266680950436
+    },
+    {
+      "id": 1211,
+      "games": 1092182,
+      "wins": 513154,
+      "heroCount": 162,
+      "name": "杀戮时间到了",
+      "rarity": "gold",
+      "winRate": 0.46984293826486795,
+      "holdingShare": 0.020313119567796946
+    },
+    {
+      "id": 1084,
+      "games": 1536456,
+      "wins": 721454,
+      "heroCount": 121,
+      "name": "穿针引线",
+      "rarity": "gold",
+      "winRate": 0.46955721478519397,
+      "holdingShare": 0.028576019783020615
+    },
+    {
+      "id": 1301,
+      "games": 452018,
+      "wins": 212203,
+      "heroCount": 123,
+      "name": "神圣干预",
+      "rarity": "gold",
+      "winRate": 0.469456968527802,
+      "holdingShare": 0.008406928223314831
+    },
+    {
+      "id": 2065,
+      "games": 98693,
+      "wins": 46331,
+      "heroCount": 11,
+      "name": "惊惧",
+      "rarity": "gold",
+      "winRate": 0.46944565470702077,
+      "holdingShare": 0.0018355573608652988
+    },
+    {
+      "id": 3018,
+      "games": 1516765,
+      "wins": 711788,
+      "heroCount": 43,
+      "name": "大腕",
+      "rarity": "prismatic",
+      "winRate": 0.4692803433623534,
+      "holdingShare": 0.02820979360697167
+    },
+    {
+      "id": 2116,
+      "games": 1325590,
+      "wins": 621806,
+      "heroCount": 138,
+      "name": "威能之追求",
+      "rarity": "gold",
+      "winRate": 0.46907867440158724,
+      "holdingShare": 0.0246541951505115
+    },
+    {
+      "id": 2134,
+      "games": 230393,
+      "wins": 107734,
+      "heroCount": 169,
+      "name": "电涌力场",
+      "rarity": "prismatic",
+      "winRate": 0.4676096930028256,
+      "holdingShare": 0.004285000628634642
+    },
+    {
+      "id": 2064,
+      "games": 428002,
+      "wins": 199985,
+      "heroCount": 40,
+      "name": "快步",
+      "rarity": "gold",
+      "winRate": 0.4672524894743483,
+      "holdingShare": 0.007960262851114766
+    },
+    {
+      "id": 1088,
+      "games": 1103728,
+      "wins": 515333,
+      "heroCount": 149,
+      "name": "终极刷新",
+      "rarity": "prismatic",
+      "winRate": 0.4669021715495122,
+      "holdingShare": 0.02052785967386881
+    },
+    {
+      "id": 1392,
+      "games": 458543,
+      "wins": 213268,
+      "heroCount": 173,
+      "name": "神圣雪球",
+      "rarity": "prismatic",
+      "winRate": 0.46509923823937993,
+      "holdingShare": 0.008528284467219122
+    },
+    {
+      "id": 3063,
+      "games": 38700,
+      "wins": 17946,
+      "heroCount": 90,
+      "name": "溺水之赠礼",
+      "rarity": "silver",
+      "winRate": 0.4637209302325581,
+      "holdingShare": 0.0007197680672944086
+    },
+    {
+      "id": 2078,
+      "games": 308488,
+      "wins": 142339,
+      "heroCount": 21,
+      "name": "连锁反应",
+      "rarity": "prismatic",
+      "winRate": 0.4614085474961749,
+      "holdingShare": 0.005737462830581848
+    },
+    {
+      "id": 12317,
+      "games": 1076241,
+      "wins": 496468,
+      "heroCount": 173,
+      "name": "潘朵拉的盒子",
+      "rarity": "prismatic",
+      "winRate": 0.46129816648873256,
+      "holdingShare": 0.020016638359509085
+    },
+    {
+      "id": 2055,
+      "games": 335143,
+      "wins": 154124,
+      "heroCount": 37,
+      "name": "多重射击",
+      "rarity": "prismatic",
+      "winRate": 0.45987533679653164,
+      "holdingShare": 0.006233210061427648
+    },
+    {
+      "id": 3052,
+      "games": 502349,
+      "wins": 229504,
+      "heroCount": 43,
+      "name": "远射天资",
+      "rarity": "silver",
+      "winRate": 0.4568616639029838,
+      "holdingShare": 0.009343017282617024
+    },
+    {
+      "id": 1074,
+      "games": 515877,
+      "wins": 235664,
+      "heroCount": 98,
+      "name": "缩小射线",
+      "rarity": "gold",
+      "winRate": 0.45682207192799834,
+      "holdingShare": 0.009594619928982884
+    },
+    {
+      "id": 2143,
+      "games": 288094,
+      "wins": 131524,
+      "heroCount": 58,
+      "name": "升级：焚天",
+      "rarity": "gold",
+      "winRate": 0.4565315487306226,
+      "holdingShare": 0.005358161797909957
+    },
+    {
+      "id": 2135,
+      "games": 264133,
+      "wins": 120321,
+      "heroCount": 30,
+      "name": "针插垫",
+      "rarity": "prismatic",
+      "winRate": 0.45553187220074737,
+      "holdingShare": 0.004912519351903721
+    },
+    {
+      "id": 1386,
+      "games": 102582,
+      "wins": 46435,
+      "heroCount": 168,
+      "name": "转得我眩晕了",
+      "rarity": "silver",
+      "winRate": 0.452662260435554,
+      "holdingShare": 0.0019078875420980624
+    },
+    {
+      "id": 2080,
+      "games": 372600,
+      "wins": 167436,
+      "heroCount": 173,
+      "name": "冰雪爆裂",
+      "rarity": "gold",
+      "winRate": 0.4493719806763285,
+      "holdingShare": 0.006929859996741515
+    },
+    {
+      "id": 3071,
+      "games": 493351,
+      "wins": 220972,
+      "heroCount": 171,
+      "name": "黄铜爆音",
+      "rarity": "gold",
+      "winRate": 0.44790017654773173,
+      "holdingShare": 0.009175666557306558
+    },
+    {
+      "id": 1325,
+      "games": 255110,
+      "wins": 113906,
+      "heroCount": 84,
+      "name": "玻璃大炮",
+      "rarity": "prismatic",
+      "winRate": 0.4464975892752146,
+      "holdingShare": 0.004744703660141514
+    }
+  ]
+}

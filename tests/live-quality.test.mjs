@@ -8,7 +8,7 @@ const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snaps
 import {aggregateCombatStats,applyLivePanel,combatWindow,statAtLevel} from '../src/core/live-estimate.mjs';
 import {canModelYone} from '../src/core/combat-models.mjs';
 
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
+const data=JSON.parse(await fs.readFile('data/game.json','utf8')),historical=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id);
 const active={riotId:'fixture-only',level:7,currentGold:800,abilities:Object.fromEntries(Object.entries({Q:1,W:3,E:1,R:1}).map(([k,abilityLevel])=>[k,{abilityLevel}]))};
@@ -50,8 +50,8 @@ test('partial bags pause purchase and damage advice while skills and manual targ
 });
 
 test('Yone ultimate scales with bonus attack damage at the actual level',()=>{
- const yone=hero('Yone'),target=hero('Ahri'),level=11,base=statAtLevel(yone.stats,level);
- const bare=aggregateCombatStats(yone,level,[],data),equipped={...bare,ad:base.ad+50};
+ const yone=historical.champions.find(c=>c.id==='Yone'),target=historical.champions.find(c=>c.id==='Ahri'),level=11,base=statAtLevel(yone.stats,level);
+ const bare=aggregateCombatStats(yone,level,[],historical),equipped={...bare,ad:base.ad+50};
  const skills={Q:0,W:0,E:0,R:2},defense={hp:5000,armor:0,mr:0};
  const plain=combatWindow(yone,target,level,bare,defense,null,{skills});
  const bonus=combatWindow(yone,target,level,equipped,defense,null,{skills});
@@ -62,7 +62,7 @@ test('Yone ultimate scales with bonus attack damage at the actual level',()=>{
 });
 
 test('Yone reviewed model rejects impossible basic and ultimate ranks',()=>{
- const yone=hero('Yone'),agg=aggregateCombatStats(yone,7,[],data);
+ const yone=historical.champions.find(c=>c.id==='Yone'),agg=aggregateCombatStats(yone,7,[],historical);
  assert.equal(canModelYone(yone,3,agg,{Q:3,W:0,E:0,R:0}),false);
  assert.equal(canModelYone(yone,7,agg,{Q:3,W:1,E:1,R:2}),false);
  assert.equal(canModelYone(yone,15,agg,{Q:5,W:3,E:4,R:3}),false);
@@ -75,23 +75,24 @@ test('an unread public inventory never becomes a bare-stat damage comparison',()
  const model=createGuideModel(data,state,own);
  assert.equal(model.estimate,null);assert.equal(model.customDuel.unresolved,true);
  const html=renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
- assert.ok(html.includes('等级或装备暂不可读'));assert.equal(html.includes('2 秒约'),false);
+ assert.doesNotMatch(html,/duel-box|data-tab=|2 秒约|6 秒约|立即斩杀/);assert.match(html,/compact-guide-main/);
  const restored={...own,enemies:own.enemies.map(e=>({...e,itemsKnown:true}))};
  assert.ok(createGuideModel(data,state,restored).estimate.targetSelected);
 });
 
-test('current patch crit fallback includes IE and uses the live multiplier without stacking it twice',()=>{
- const c=hero('Jinx'),yone=hero('Yone');
- const bare=aggregateCombatStats(c,11,[],data),edge=aggregateCombatStats(c,11,[{id:'3031',count:1}],data);
+test('reviewed 16.21 crit fallback includes IE and uses the live multiplier without stacking it twice',async()=>{
+ const current=data,reviewed=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
+ const c=reviewed.champions.find(c=>c.id==='Jinx'),yone=reviewed.champions.find(c=>c.id==='Yone');assert.equal(aggregateCombatStats(current.champions.find(c=>c.id==='Jinx'),11,[],current).critDamage,1.75,'Unreviewed 16.22 does not inherit the 16.21 static fallback');
+ const bare=aggregateCombatStats(c,11,[],reviewed),edge=aggregateCombatStats(c,11,[{id:'3031',count:1}],reviewed);
  assert.equal(bare.critDamage,2);assert.ok(Math.abs(edge.critDamage-2.3)<1e-12);
  assert.equal(edge.crit,0.25);
- const blades=aggregateCombatStats(yone,11,[{id:'3031',count:1}],data);
+ const blades=aggregateCombatStats(yone,11,[{id:'3031',count:1}],reviewed);
  assert.ok(Math.abs(blades.critDamage-2.3*0.95)<1e-12);assert.equal(blades.crit,0.5);
- const target=hero('Ahri'),def={hp:5000,armor:0,mr:0};
+ const target=reviewed.champions.find(c=>c.id==='Ahri'),def={hp:5000,armor:0,mr:0};
  const auto=combatWindow(c,target,11,{...edge,ad:100,atkSpeed:1},def,0,{windowSeconds:2});
  assert.equal(auto.total,265,'Two expected attacks at 25% crit and 230% crit damage');
  const live=applyLivePanel(c,11,{ad:100,critDamage:2.4},edge).agg;
  assert.equal(live.ad,100);assert.equal(live.critDamage,2.4);
- const passiveOnly={...data,items:{...data.items,3031:{...data.items[3031],description:'75攻击力\n25%暴击几率\n\n条件效果\n50攻击力\n40%暴击伤害'}}};
+ const passiveOnly={...reviewed,items:{...reviewed.items,3031:{...reviewed.items[3031],description:'75攻击力\n25%暴击几率\n\n条件效果\n50攻击力\n40%暴击伤害'}}};
  assert.equal(aggregateCombatStats(c,11,[{id:'3031',count:1}],passiveOnly).critDamage,2,'Conditional text does not become permanent crit damage');
 });

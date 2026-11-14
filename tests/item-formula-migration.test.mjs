@@ -1,12 +1,13 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
 import {collectSnapshot,loadSnapshot} from '../services/data.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/item-ap-formulas-16.20.json',import.meta.url))),clock=()=>Date.parse('2026-10-21T00:00:00Z');
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/item-ap-formulas-16.20.json',import.meta.url))),clock=()=>Date.parse('2026-10-21T00:00:00Z');
 const old=()=>({...structuredClone(data),contentRevision:8,itemTooltipRevision:1,contentCheckedAt:new Date(clock()-1000).toISOString()});
 
-test('a recently checked old parser revision refreshes only item formulas, without 173 hero requests',async()=>{
+test('a historical installer refreshes old parser formulas against its matching bundled baseline without 173 hero requests',async t=>{
+ const read=fs.readFile,bundled=new URL('../data/game.json',import.meta.url);t.mock.method(fs,'readFile',(file,...args)=>file instanceof URL&&file.href===bundled.href?Promise.resolve(JSON.stringify(data)):read(file,...args));
  const previous=old();previous.items=Object.fromEntries([2503,3100,3115].map(id=>[id,previous.items[id]]));const before=structuredClone(previous),calls=[];
  const result=await collectSnapshot(()=>{},previous,{clock,readJSON:async url=>{calls.push(url);if(url.endsWith('versions.json'))return [data.version];if(url.includes('hero_list.js'))throw Error('isolated CN offline');if(url.endsWith('items.cdtb.bin.json'))return fixture.items;if(url.endsWith('lol.stringtable.json'))return {entries:fixture.entries};throw Error('Unexpected refresh '+url);}});
- assert.equal(result.contentRevision,9);assert.equal(result.itemTooltipRevision,1,'The format remains backwards compatible');assert.match(result.items[3115].tooltip.description,/15 \+ 15%法术强度/);assert.deepEqual(result.champions,before.champions);assert.equal(result.contentCheckedAt,before.contentCheckedAt);assert.equal(result.fetchedAt,before.fetchedAt);assert.deepEqual(previous,before);assert.equal(calls.length,4);assert.ok(!calls.some(url=>url.includes('/characters/')||url.includes('championFull')));
+ assert.equal(result.contentRevision,9);assert.equal(result.itemTooltipRevision,1,'The format remains backwards compatible');assert.match(result.items[3115].tooltip.description,/15 \+ 15%法术强度/);assert.deepEqual(result.champions,before.champions);assert.equal(result.contentCheckedAt,before.contentCheckedAt);assert.equal(result.fetchedAt,before.fetchedAt);assert.deepEqual(previous,before);assert.equal(calls.length,6,'Item and independent augment migrations each request their two bounded sources');assert.equal(calls.filter(url=>url.endsWith('kiwi.bin.json')).length,1);assert.deepEqual(result.augments,before.augments,'Unavailable augment detail must not erase a successful item migration');assert.ok(!calls.some(url=>url.includes('/characters/')||url.includes('championFull')));
 });
 
 test('a failed item parser migration retains the old input and remains eligible for retry',async()=>{

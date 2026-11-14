@@ -1,0 +1,237 @@
+{
+  "source": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+  "locale": "https://raw.communitydragon.org/16.21/game/zh_cn/data/menu/en_us/lol.stringtable.json",
+  "catalog": [
+    {
+      "id": 3118,
+      "key": "ArcaneAxiom",
+      "name": "奥术公理"
+    },
+    {
+      "id": 3049,
+      "key": "ArmoredImpact",
+      "name": "装甲冲击"
+    },
+    {
+      "id": 3059,
+      "key": "NoManaNoProblem",
+      "name": "没法力，没问题"
+    }
+  ],
+  "bin": {
+    "ArmoredImpact": {
+      "AugmentNameId": "ArmoredImpact",
+      "NameTra": "Kiwi_Augment_ArmoredImpact_Name",
+      "DescriptionTra": "Kiwi_Augment_ArmoredImpact_Description",
+      "AugmentTooltipTra": "Kiwi_Augment_ArmoredImpact_Tooltip",
+      "RootSpell": "{1ff45a3d}",
+      "AdditionalSpells": [
+        "{5d836541}"
+      ],
+      "AugmentLargeIconPath": "{a5f7fc50c1b61b38}",
+      "AugmentSmallIconPath": "assets/ux/kiwi/augments/icons/armoredimpact_small.tex",
+      "AugmentDisplayTags": [
+        1,
+        3
+      ],
+      "rarity": 1,
+      "AugmentPlatformId": 3049,
+      "ResourceResolver": "{0142dc74}",
+      "__type": "AugmentData"
+    },
+    "{1ff45a3d}": {
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "ArmorPercent",
+            "values": [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "AOEStartSize",
+            "values": [
+              160,
+              160,
+              160,
+              160,
+              160,
+              160,
+              160
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "AOEScalePercentPerArmor",
+            "values": [
+              0.004999999888241291,
+              0.004999999888241291,
+              0.004999999888241291,
+              0.004999999888241291,
+              0.004999999888241291,
+              0.004999999888241291,
+              0.004999999888241291
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "Cooldown",
+            "values": [
+              10,
+              10,
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "ArmorDamage": {
+            "mFormulaParts": [
+              {
+                "mStat": 1,
+                "mStatFormula": 2,
+                "mDataValue": "ArmorPercent",
+                "__type": "StatByNamedDataValueCalculationPart"
+              },
+              {
+                "mStartValue": 50,
+                "mEndValue": 125,
+                "__type": "ByCharLevelInterpolationCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        }
+      }
+    },
+    "ArcaneAxiom": {
+      "AugmentNameId": "ArcaneAxiom",
+      "NameTra": "Kiwi_Augment_ArcaneAxiom_Name",
+      "DescriptionTra": "Kiwi_Augment_ArcaneAxiom_Description",
+      "AugmentTooltipTra": "Kiwi_Augment_ArcaneAxiom_Tooltip",
+      "RootSpell": "{45895f11}",
+      "AugmentLargeIconPath": "assets/ux/kiwi/augments/icons/arcaneaxiom_large.tex",
+      "AugmentSmallIconPath": "assets/ux/kiwi/augments/icons/arcaneaxiom_small.tex",
+      "AugmentDisplayTags": [
+        5
+      ],
+      "rarity": 1,
+      "AugmentPlatformId": 3118,
+      "__type": "AugmentData"
+    },
+    "{45895f11}": {
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "ResetWindow",
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "UltimateRefund": {
+            "mFormulaParts": [
+              {
+                "mStartValue": 0.15000000596046448,
+                "mEndValue": 0.30000001192092896,
+                "__type": "ByCharLevelInterpolationCalculationPart"
+              }
+            ],
+            "mDisplayAsPercent": true,
+            "__type": "GameCalculation"
+          }
+        }
+      }
+    },
+    "NoManaNoProblem": {
+      "AugmentNameId": "NoManaNoProblem",
+      "NameTra": "Kiwi_Augment_NoManaNoProblem_Name",
+      "DescriptionTra": "Kiwi_Augment_NoManaNoProblem_Description",
+      "AugmentTooltipTra": "Kiwi_Augment_NoManaNoProblem_Tooltip",
+      "RootSpell": "{af3c9f19}",
+      "AugmentLargeIconPath": "assets/ux/kiwi/augments/icons/nomananoproblem_large.tex",
+      "AugmentSmallIconPath": "assets/ux/kiwi/augments/icons/nomananoproblem_small.tex",
+      "AugmentDisplayTags": [
+        1
+      ],
+      "AugmentPlatformId": 3059,
+      "__type": "AugmentData"
+    },
+    "{af3c9f19}": {
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "APAmp",
+            "values": [
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "{8e5ab46a}": {
+            "mSimpleTooltipCalculationDisplay": 6,
+            "mExpandedTooltipCalculationDisplay": 5,
+            "mFormulaParts": [
+              {
+                "mNumber": 10,
+                "__type": "NumberCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "{f717dc88}": {
+            "mSimpleTooltipCalculationDisplay": 5,
+            "mExpandedTooltipCalculationDisplay": 5,
+            "mFormulaParts": [
+              {
+                "mNumber": 0.800000011920929,
+                "__type": "NumberCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "{efe39699}": {
+            "mFormulaParts": [
+              {
+                "mDataValue": "APAmp",
+                "__type": "StatByNamedDataValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        }
+      }
+    }
+  },
+  "entries": {
+    "{0ae9f2e881}": "施放技能后，你的下一次普通攻击会对附近敌人造成@ArmorDamage@额外物理伤害。",
+    "{2a67b4a441}": "在你对一名敌方英雄造成伤害后，如果该英雄在@ResetWindow@秒内阵亡，则会返还你终极技能的部分总冷却时间。",
+    "{2593d74b83}": "来自你的装备的<scaleMana>%i:scaleMana%法力值</scaleMana>转化<br>为<scaleAP>%i:scaleAP%法术强度</scaleAP>。<br><br>使你的总<scaleAP>法术强度提升@APAmp*100@%</scaleAP>。"
+  }
+}

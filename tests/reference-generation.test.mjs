@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -14,9 +15,9 @@ import {RANKING_ROLES,rankingKey} from '../src/core/rankings.mjs';
 import {selectBuildSource} from '../src/core/build-source.mjs';
 import {pairApiUrl,pairSourceUrl} from '../src/core/pair-statistics.mjs';
 
-const game=JSON.parse(await fs.readFile('data/game.json')),source={region:'global',tier:'emerald_plus'};
-const builds=JSON.parse(await fs.readFile('data/builds.json')).entries,hex=JSON.parse(await fs.readFile('data/hex-builds.json')).entries;
-const rankings=JSON.parse(await fs.readFile('data/rankings.json')).entries,rankKey=rankingKey(game.patch,source);
+const game=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),source={region:'global',tier:'emerald_plus'};
+const builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries,hex=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/hex-builds.json')).entries;
+const rankings=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/rankings.json')).entries,rankKey=rankingKey(game.patch,source);
 const fixture=JSON.parse(await fs.readFile('tests/fixtures/opgg-galio-ahri.json'));
 const page=`<script>self.__next_f.push([1,${JSON.stringify(fixture.fragments.map((n,i)=>i.toString(16)+':'+JSON.stringify(n)).join('\n'))}])</script>`;
 const opponent=parseOpponentBuildJSON(fixture.raw,{champion:game.champions.find(c=>c.id==='Galio'),role:'mid',opponent:game.champions.find(c=>c.id==='Ahri'),data:game,page,url:fixture.url});

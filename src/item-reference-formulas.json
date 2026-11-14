@@ -1,0 +1,1789 @@
+{
+ "1054": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 1054,
+    "name": "多兰之盾",
+    "description": "110生命值\n\n耐久专注\n每5秒回复4生命值。\n在承受来自英雄的伤害后，在8秒里回复生命值。\n帮助之手\n攻击对小兵造成5额外物理伤害。",
+    "tags": [
+     "Health",
+     "HealthRegen",
+     "Lane"
+    ],
+    "gold": {
+     "base": 450,
+     "purchasable": true,
+     "total": 450,
+     "sell": 180
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatHPPoolMod": 110,
+     "FlatHPRegenMod": 0.8
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/1054.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "110生命值\n\n耐久专注\n每5秒回复4生命值。在承受来自英雄的伤害后，在8秒里至多回复〔数值未解析〕生命值。\n\n帮助之手\n攻击对小兵造成5额外物理伤害。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "22ab53a8cf9541aed49600eb11cc10d88e2a112190bde82fc00615d18146c525",
+      "basisHash": "9d42a3cd9c44efd8"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "110生命值\n\n耐久专注\n每5秒回复4生命值。在承受来自英雄的伤害后，在8秒里至多回复（近战 40 / 远程 30）生命值。\n\n帮助之手\n攻击对小兵造成5额外物理伤害。",
+  "replacements": [
+   {
+    "anchor": "至多回复〔数值未解析〕生命值",
+    "replacement": "至多回复（近战 40 / 远程 30）生命值"
+   }
+  ]
+ },
+ "2517": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 2517,
+    "name": "无穷饥渴",
+    "description": "65攻击力\n5%全能吸血\n20%韧性\n\n饥馑\n获得技能急速，基于你的额外攻击力。\n\n盛宴\n如果一名在近期曾被你造成过伤害的英雄阵亡，则获得持续适中时长的全能吸血。 ",
+    "tags": [
+     "Damage",
+     "LifeSteal",
+     "SpellVamp",
+     "Tenacity",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 825,
+     "purchasable": true,
+     "total": 3100,
+     "sell": 2170
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3133",
+     "1037",
+     "1036"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatPhysicalDamageMod": 65
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/2517.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "65攻击力\n 〔数值未解析〕%全能吸血\n20%韧性\n\n饥馑\n获得〔数值未解析〕技能急速。\n\n盛宴\n如果一名在过去3秒内曾被你造成过伤害的英雄阵亡，则获得持续8秒的15%全能吸血。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "539499f3e4c873e07885f522597f2056dfbf021e0290c9243c2a5cdf16ebc345",
+      "basisHash": "9f867fa0e2ba0ad1"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "65攻击力\n 〔数值未解析〕%全能吸血\n20%韧性\n\n饥馑\n获得（近战 5 + 0.13×额外攻击力 / 远程 5 + 0.10×额外攻击力）技能急速。\n\n盛宴\n如果一名在过去3秒内曾被你造成过伤害的英雄阵亡，则获得持续8秒的15%全能吸血。",
+  "replacements": [
+   {
+    "anchor": "饥馑\n获得〔数值未解析〕技能急速",
+    "replacement": "饥馑\n获得（近战 5 + 0.13×额外攻击力 / 远程 5 + 0.10×额外攻击力）技能急速"
+   }
+  ],
+  "combinedDescription": "65攻击力\n 5%全能吸血\n20%韧性\n\n饥馑\n获得（近战 5 + 0.13×额外攻击力 / 远程 5 + 0.10×额外攻击力）技能急速。\n\n盛宴\n如果一名在过去3秒内曾被你造成过伤害的英雄阵亡，则获得持续8秒的15%全能吸血。"
+ },
+ "3073": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3073,
+    "name": "海克斯注力刚壁",
+    "description": "40攻击力\n20%攻击速度\n450生命值\n\n海克斯充能\n获得30终极技能急速。\n\n过载 \n在施放你的终极技能后，获得持续8秒的0%攻击速度和0%移动速度。 ",
+    "tags": [
+     "Health",
+     "Damage",
+     "AttackSpeed",
+     "CooldownReduction",
+     "NonbootsMovement",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 500,
+     "purchasable": true,
+     "total": 3000,
+     "sell": 2100
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "2021",
+     "1042",
+     "3044"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatHPPoolMod": 450,
+     "FlatPhysicalDamageMod": 40,
+     "PercentAttackSpeedMod": 0.2
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3073.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "40攻击力\n20%攻击速度\n450生命值\n\n海克斯充能\n获得30终极技能急速。\n\n过载  (30秒)\n在施放你的终极技能后，获得持续8秒的〔数值未解析〕%攻击速度和〔数值未解析〕%移动速度。 \n\n控场可能是一件棘手的工作。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "0751db4b000b8f5c0c1e6c4484cca03646e7509e9eb05bdc12264e89e71cfbb1",
+      "basisHash": "1da0c66a37f51c5e"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "40攻击力\n20%攻击速度\n450生命值\n\n海克斯充能\n获得30终极技能急速。\n\n过载  (30秒)\n在施放你的终极技能后，获得持续8秒的（近战 50 / 远程 25）%攻击速度和（近战 20 / 远程 10）%移动速度。 \n\n控场可能是一件棘手的工作。",
+  "replacements": [
+   {
+    "anchor": "〔数值未解析〕%攻击速度",
+    "replacement": "（近战 50 / 远程 25）%攻击速度"
+   },
+   {
+    "anchor": "〔数值未解析〕%移动速度",
+    "replacement": "（近战 20 / 远程 10）%移动速度"
+   }
+  ]
+ },
+ "3142": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3142,
+    "name": "幽梦之灵",
+    "description": "55攻击力\n18穿甲\n4%移动速度\n\n鬼影萦绕\n非战斗状态期间获得0移动速度。\n\n鬼魂步伐\n提供移动速度和幽灵状态，持续0秒。",
+    "tags": [
+     "Damage",
+     "Active",
+     "NonbootsMovement",
+     "ArmorPenetration"
+    ],
+    "gold": {
+     "base": 675,
+     "purchasable": true,
+     "total": 2800,
+     "sell": 1960
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3134",
+     "6690",
+     "1036"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatPhysicalDamageMod": 55,
+     "PercentMovementSpeedMod": 0.04
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3142.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "55攻击力\n 18穿甲\n4%移动速度\n\n鬼影萦绕\n提供非战斗状态下的（近战 20 / 远程 10）移动速度。\n\n 鬼魂步伐 (45秒)\n提供〔数值未解析〕%移动速度和幽灵状态，持续（近战 6 / 远程 4.002）秒。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "partial",
+      "description": "55攻击力\n 18穿甲\n4%移动速度\n\n鬼影萦绕\n提供非战斗状态下的（近战 30 / 远程 15）移动速度。\n\n 鬼魂步伐 (45秒)\n提供〔数值未解析〕%移动速度和幽灵状态，持续（近战 6 / 远程 4.002）秒。",
+      "appliedKeys": [
+       "BaseOOCMS"
+      ],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "0dfa20db68e85b1b0328e6113613b1505e8ae4acf449284327f572a002047cd7",
+      "basisHash": "b482ba542764696d"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "55攻击力\n 18穿甲\n4%移动速度\n\n鬼影萦绕\n提供非战斗状态下的（近战 20 / 远程 10）移动速度。\n\n 鬼魂步伐 (45秒)\n提供（近战 20 / 远程 15）%移动速度和幽灵状态，持续（近战 6 / 远程 4.002）秒。",
+  "replacements": [
+   {
+    "anchor": "提供〔数值未解析〕%移动速度和幽灵状态",
+    "replacement": "提供（近战 20 / 远程 15）%移动速度和幽灵状态"
+   }
+  ]
+ },
+ "3155": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3155,
+    "name": "海克斯饮魔刀",
+    "description": "25攻击力\n25魔法抗性\n\n救主灵刃\n在受到将使你的生命值跌到30%以下的魔法伤害时，提供持续2.5秒的魔法伤害护盾。",
+    "tags": [
+     "Damage",
+     "SpellBlock"
+    ],
+    "gold": {
+     "base": 200,
+     "purchasable": true,
+     "total": 1300,
+     "sell": 910
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "1036",
+     "1033",
+     "1036"
+    ],
+    "into": [
+     "3156"
+    ],
+    "inStore": true,
+    "stats": {
+     "FlatSpellBlockMod": 25,
+     "FlatPhysicalDamageMod": 25
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3155.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "25攻击力\n25魔法抗性\n\n救主灵刃  (90秒)\n在受到将使你的生命值跌到30%以下的魔法伤害时，提供持续2.5秒的〔数值未解析〕魔法伤害护盾。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "partial",
+      "description": "25攻击力\n25魔法抗性\n\n救主灵刃  (75秒)\n在受到将使你的生命值跌到30%以下的魔法伤害时，提供持续2.5秒的〔数值未解析〕魔法伤害护盾。",
+      "appliedKeys": [
+       "Cooldown"
+      ],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "fb39b10c9295a1ef82dc20f3c53a97c402ec4f54bf2559c0c30c1caafb99d5ac",
+      "basisHash": "a77fa505e91fa33a"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "25攻击力\n25魔法抗性\n\n救主灵刃  (90秒)\n在受到将使你的生命值跌到30%以下的魔法伤害时，提供持续2.5秒的（近战 110–280，随等级变化 / 远程为对应近战值的 75%）魔法伤害护盾。",
+  "replacements": [
+   {
+    "anchor": "〔数值未解析〕魔法伤害护盾",
+    "replacement": "（近战 110–280，随等级变化 / 远程为对应近战值的 75%）魔法伤害护盾"
+   }
+  ]
+ },
+ "6662": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 6662,
+    "name": "冰脉护手",
+    "description": "300生命值\n50护甲\n15技能急速\n\n咒刃\n在施放一个技能后，你的下一次攻击造成额外物理伤害攻击特效并生成一个持续2秒的冰冷地带，这个地带可造成减速。",
+    "tags": [
+     "Health",
+     "Armor",
+     "CooldownReduction",
+     "Slow",
+     "OnHit",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 800,
+     "purchasable": true,
+     "total": 2900,
+     "sell": 2030
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3057",
+     "1028",
+     "1031"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatHPPoolMod": 300,
+     "FlatArmorMod": 50
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6662.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "300生命值\n50护甲\n15技能急速\n\n咒刃  (1.5秒)\n在施放一个技能后，你的下一次攻击造成额外的150%基础攻击力物理伤害攻击特效并生成一个持续2秒的冰冷地带，这个地带可造成〔数值未解析〕减速。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "479f06c33af11f0facb042ac03f085fa99fd2184d0b3a69f371288b2f087e6c3",
+      "basisHash": "78ad58608aefa981"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "300生命值\n50护甲\n15技能急速\n\n咒刃  (1.5秒)\n在施放一个技能后，你的下一次攻击造成额外的150%基础攻击力物理伤害攻击特效并生成一个持续2秒的冰冷地带，这个地带可造成（近战 25% / 远程 12.5%）减速。",
+  "replacements": [
+   {
+    "anchor": "〔数值未解析〕减速",
+    "replacement": "（近战 25% / 远程 12.5%）减速"
+   }
+  ]
+ },
+ "6695": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 6695,
+    "name": "巨蛇之牙",
+    "description": "55攻击力\n15穿甲\n\n掠盾者\n对一名敌方英雄造成伤害时，会使其获得的护盾值降低0%，持续3秒。\n如果该敌方英雄尚未被掠盾者影响，会使其身上的所有护盾降低0%。",
+    "tags": [
+     "Damage",
+     "ArmorPenetration"
+    ],
+    "gold": {
+     "base": 625,
+     "purchasable": true,
+     "total": 2500,
+     "sell": 1750
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3134",
+     "1037"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatPhysicalDamageMod": 55
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6695.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "55攻击力\n 15穿甲\n\n掠盾者\n对一名敌方英雄造成伤害时，会使其获得的护盾值降低〔数值未解析〕%，持续3秒。\n如果该敌方英雄尚未被掠盾者影响，会使其身上的所有护盾降低〔数值未解析〕%。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "92ab0423e2dfa1ae62921b3fef10b2ed103a861a4e8a13c871073ee693258b4e",
+      "basisHash": "45d56a1f6dda317e"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "55攻击力\n 15穿甲\n\n掠盾者\n对一名敌方英雄造成伤害时，会使其获得的护盾值降低（近战 50 / 远程 35）%，持续3秒。\n如果该敌方英雄尚未被掠盾者影响，会使其身上的所有护盾降低（近战 50 / 远程 35）%。",
+  "replacements": [
+   {
+    "anchor": "获得的护盾值降低〔数值未解析〕%",
+    "replacement": "获得的护盾值降低（近战 50 / 远程 35）%"
+   },
+   {
+    "anchor": "身上的所有护盾降低〔数值未解析〕%",
+    "replacement": "身上的所有护盾降低（近战 50 / 远程 35）%"
+   }
+  ]
+ },
+ "6699": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 6699,
+    "name": "电震涡流剑",
+    "description": "55攻击力\n10穿甲\n10技能急速\n\n通电\n用技能对一名敌人造成伤害会触发盈能(充能完毕时)。\n\n苍穹\n你的盈能攻击造成相当于%目标当前生命值的额外物理伤害，并为你提供持续4秒的 额外穿甲。",
+    "tags": [
+     "Damage",
+     "Active",
+     "CooldownReduction",
+     "ArmorPenetration",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 963,
+     "purchasable": true,
+     "total": 3000,
+     "sell": 2100
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "2020",
+     "1036",
+     "1036"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatPhysicalDamageMod": 55
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6699.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "55攻击力\n 10穿甲\n10技能急速\n\n通电\n用技能对一名敌人造成伤害会触发盈能(充能完毕时)。\n\n苍穹\n你的盈能攻击造成相当于〔数值未解析〕%目标当前生命值的额外物理伤害，并为你提供持续4秒的 〔数值未解析〕穿甲。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "a55e1ff08f6a2cca2b146d69fbcfe12fcbed96d4a5d006eb3e5ecd46d1184e61",
+      "basisHash": "3d0f33bf84356ec1"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "55攻击力\n 10穿甲\n10技能急速\n\n通电\n用技能对一名敌人造成伤害会触发盈能(充能完毕时)。\n\n苍穹\n你的盈能攻击造成相当于（近战 9 / 远程 7）%目标当前生命值的额外物理伤害，并为你提供持续4秒的 （近战 15 / 远程 12）穿甲。",
+  "replacements": [
+   {
+    "anchor": "相当于〔数值未解析〕%目标当前生命值",
+    "replacement": "相当于（近战 9 / 远程 7）%目标当前生命值"
+   },
+   {
+    "anchor": "〔数值未解析〕穿甲",
+    "replacement": "（近战 15 / 远程 12）穿甲"
+   }
+  ]
+ },
+ "3068": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3068,
+    "name": "日炎圣盾",
+    "description": "350生命值\n50护甲\n10技能急速\n\n献祭\n承受或造成伤害后，每秒对附近敌人造成魔法伤害，持续3秒。 ",
+    "tags": [
+     "Health",
+     "Armor",
+     "Aura",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 700,
+     "purchasable": true,
+     "total": 2800,
+     "sell": 1960
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "6660",
+     "1031",
+     "1028"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatHPPoolMod": 350,
+     "FlatArmorMod": 50
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3068.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "350生命值\n50护甲\n10技能急速\n\n献祭\n承受或造成伤害后，每秒对附近敌人造成〔数值未解析〕魔法伤害，持续3秒。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "2785700718c2c40f6e729573bae67e2a8f85bc3c83267e5e1c916c719386960a",
+      "basisHash": "9896a695d897dea3"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "350生命值\n50护甲\n10技能急速\n\n献祭\n承受或造成伤害后，每秒对附近敌人造成（20 + 1.5%额外生命值）魔法伤害，持续3秒。",
+  "replacements": [
+   {
+    "anchor": "造成〔数值未解析〕魔法伤害，持续3秒",
+    "replacement": "造成（20 + 1.5%额外生命值）魔法伤害，持续3秒"
+   }
+  ]
+ },
+ "3075": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3075,
+    "name": "荆棘之甲",
+    "description": "150生命值\n75护甲\n\n荆棘\n在被一次攻击命中后，对攻击者造成魔法伤害，并且如果目标是英雄，还会施加持续3秒的40%重伤效果。",
+    "tags": [
+     "Health",
+     "Armor"
+    ],
+    "gold": {
+     "base": 450,
+     "purchasable": true,
+     "total": 2450,
+     "sell": 1715
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3076",
+     "1031",
+     "1028"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatHPPoolMod": 150,
+     "FlatArmorMod": 75
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3075.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "150生命值\n75护甲\n\n荆棘\n在被一次攻击命中后，对攻击者造成〔数值未解析〕魔法伤害，并且如果目标是英雄，还会施加持续3秒的40%重伤效果。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "eb843291df206f61dc02800d3e912426724e7419fc363358f322324b3af6eb05",
+      "basisHash": "08090329546d6c11"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "150生命值\n75护甲\n\n荆棘\n在被一次攻击命中后，对攻击者造成（20 + 10%额外护甲）魔法伤害，并且如果目标是英雄，还会施加持续3秒的40%重伤效果。",
+  "replacements": [
+   {
+    "anchor": "造成〔数值未解析〕魔法伤害",
+    "replacement": "造成（20 + 10%额外护甲）魔法伤害"
+   }
+  ]
+ },
+ "3156": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3156,
+    "name": "玛莫提乌斯之噬",
+    "description": "60攻击力\n15技能急速\n40魔法抗性\n\n救主灵刃\n在受到将使你的生命值跌到30%以下的魔法伤害时，提供持续3秒的魔法伤害护盾和持续到战斗状态结束的10%全能吸血。",
+    "tags": [
+     "SpellBlock",
+     "Damage",
+     "LifeSteal",
+     "SpellVamp",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 750,
+     "purchasable": true,
+     "total": 3100,
+     "sell": 2170
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3155",
+     "3133"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatSpellBlockMod": 40,
+     "FlatPhysicalDamageMod": 60
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3156.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "60攻击力\n15技能急速\n40魔法抗性\n\n救主灵刃  (90秒)\n在受到将使你的生命值跌到30%以下的魔法伤害时，提供持续3秒的〔数值未解析〕魔法伤害护盾和持续到战斗状态结束的10%全能吸血。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "partial",
+      "description": "60攻击力\n15技能急速\n40魔法抗性\n\n救主灵刃  (60秒)\n在受到将使你的生命值跌到30%以下的魔法伤害时，提供持续3秒的〔数值未解析〕魔法伤害护盾和持续到战斗状态结束的10%全能吸血。",
+      "appliedKeys": [
+       "Cooldown"
+      ],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "122f9848240c38badba7fc5835ec674823fbc14b9e81b33faef31bc889794d1e",
+      "basisHash": "9f7debc31eacf9aa"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "60攻击力\n15技能急速\n40魔法抗性\n\n救主灵刃  (90秒)\n在受到将使你的生命值跌到30%以下的魔法伤害时，提供持续3秒的（近战 200 + 150%额外攻击力 / 远程为对应近战值的75%）魔法伤害护盾和持续到战斗状态结束的10%全能吸血。",
+  "replacements": [
+   {
+    "anchor": "持续3秒的〔数值未解析〕魔法伤害护盾",
+    "replacement": "持续3秒的（近战 200 + 150%额外攻击力 / 远程为对应近战值的75%）魔法伤害护盾"
+   }
+  ]
+ },
+ "3742": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3742,
+    "name": "亡者的板甲",
+    "description": "350生命值\n55护甲\n4%移动速度\n\n沉船者\n在移动时，积攒至多20额外移动速度。你的下一次攻击会释放掉已积攒的移动速度来造成额外物理伤害。\n\n永不沉没\n使所受的减速效果的效能降低15%。",
+    "tags": [
+     "Health",
+     "Armor",
+     "Slow",
+     "NonbootsMovement"
+    ],
+    "gold": {
+     "base": 900,
+     "purchasable": true,
+     "total": 2900,
+     "sell": 2030
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3066",
+     "1028",
+     "1031"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatHPPoolMod": 350,
+     "FlatArmorMod": 55,
+     "PercentMovementSpeedMod": 0.04
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3742.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "350生命值\n55护甲\n4%移动速度\n\n沉船者\n在移动时，积攒至多20额外移动速度。你的下一次攻击会释放掉已积攒的移动速度来造成至多〔数值未解析〕额外物理伤害。\n\n永不沉没\n使所受的减速效果的效能降低15%。\n\n“只有一种方法能让你从我这里拿到这件盔甲……” - 被遗忘的名字",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "cb5e0d2c877e45cbfd25c77889c06d0bd5458b76b0d155d035631e33b2fe19a7",
+      "basisHash": "9dd0f63def437da3"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "350生命值\n55护甲\n4%移动速度\n\n沉船者\n在移动时，积攒至多20额外移动速度。你的下一次攻击会释放掉已积攒的移动速度来造成至多（40 + 100%基础攻击力）额外物理伤害。\n\n永不沉没\n使所受的减速效果的效能降低15%。\n\n“只有一种方法能让你从我这里拿到这件盔甲……” - 被遗忘的名字",
+  "replacements": [
+   {
+    "anchor": "造成至多〔数值未解析〕额外物理伤害",
+    "replacement": "造成至多（40 + 100%基础攻击力）额外物理伤害"
+   }
+  ]
+ },
+ "3748": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3748,
+    "name": "巨型九头蛇",
+    "description": "40攻击力\n600生命值\n\n顺劈\n攻击附带物理伤害并对目标身后的敌人们造成物理伤害。\n刚斩\n强化你的下一次顺劈，使其造成额外物理伤害 攻击特效并对目标身后的敌人们造成额外物理伤害。",
+    "tags": [
+     "Health",
+     "HealthRegen",
+     "Damage",
+     "OnHit"
+    ],
+    "gold": {
+     "base": 50,
+     "purchasable": true,
+     "total": 3300,
+     "sell": 2310
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3077",
+     "2021",
+     "1011"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatHPPoolMod": 600,
+     "FlatPhysicalDamageMod": 40
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3748.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "40攻击力\n600生命值\n\n顺劈\n攻击附带〔数值未解析〕物理伤害并对目标身后的敌人们造成〔数值未解析〕物理伤害。\n\n 刚斩  (10秒)\n强化你的下一次顺劈，使其造成〔数值未解析〕额外物理伤害 攻击特效并对目标身后的敌人们造成〔数值未解析〕额外物理伤害。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "f6b0d11094ee5f6325c2962c29ce9dbec61ba600da24e8a6ceb678eef0972e21",
+      "basisHash": "08fd69a4d57f8c74"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "40攻击力\n600生命值\n\n顺劈\n攻击附带（近战 1%自身最大生命值 / 远程 0.5%自身最大生命值）物理伤害并对目标身后的敌人们造成（近战 3%自身最大生命值 / 远程 1.5%自身最大生命值）物理伤害。\n\n 刚斩  (10秒)\n强化你的下一次顺劈，使其造成（近战 4%自身最大生命值 / 远程 2%自身最大生命值）额外物理伤害 攻击特效并对目标身后的敌人们造成（近战 9%自身最大生命值 / 远程 4.5%自身最大生命值）额外物理伤害。",
+  "replacements": [
+   {
+    "anchor": "攻击附带〔数值未解析〕物理伤害",
+    "replacement": "攻击附带（近战 1%自身最大生命值 / 远程 0.5%自身最大生命值）物理伤害"
+   },
+   {
+    "anchor": "并对目标身后的敌人们造成〔数值未解析〕物理伤害。",
+    "replacement": "并对目标身后的敌人们造成（近战 3%自身最大生命值 / 远程 1.5%自身最大生命值）物理伤害。"
+   },
+   {
+    "anchor": "使其造成〔数值未解析〕额外物理伤害",
+    "replacement": "使其造成（近战 4%自身最大生命值 / 远程 2%自身最大生命值）额外物理伤害"
+   },
+   {
+    "anchor": "并对目标身后的敌人们造成〔数值未解析〕额外物理伤害。",
+    "replacement": "并对目标身后的敌人们造成（近战 9%自身最大生命值 / 远程 4.5%自身最大生命值）额外物理伤害。"
+   }
+  ]
+ },
+ "6610": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 6610,
+    "name": "焚天",
+    "description": "40攻击力\n400生命值\n10技能急速\n\n光盾打击\n你对一个英雄打出的第一次攻击会暴击并回复生命值。",
+    "tags": [
+     "Health",
+     "Damage",
+     "CooldownReduction",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 900,
+     "purchasable": true,
+     "total": 3100,
+     "sell": 2170
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "2021",
+     "3133"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatHPPoolMod": 400,
+     "FlatPhysicalDamageMod": 40
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6610.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "40攻击力\n400生命值\n10技能急速\n\n光盾打击 每个目标 (10秒)\n你对一个英雄打出的第一次攻击会暴击以造成你的80%常规暴击伤害，并回复自身〔数值未解析〕外加4%已损失生命值。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "d69e2accfe406a281ab5404dfff416467fc20d098c05f038ee4fc608e2f913ab",
+      "basisHash": "b1a9fe927b7d09ac"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "40攻击力\n400生命值\n10技能急速\n\n光盾打击 每个目标 (10秒)\n你对一个英雄打出的第一次攻击会暴击以造成你的80%常规暴击伤害，并回复自身（近战 90%基础攻击力 / 远程 45%基础攻击力）外加4%已损失生命值。",
+  "replacements": [
+   {
+    "anchor": "回复自身〔数值未解析〕外加4%已损失生命值",
+    "replacement": "回复自身（近战 90%基础攻击力 / 远程 45%基础攻击力）外加4%已损失生命值"
+   }
+  ]
+ },
+ "6655": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 6655,
+    "name": "卢登的回声",
+    "description": "100法术强度\n600法力\n10技能急速\n\n回声\n伤害型技能会发射6道回声，对目标和附近的敌人造成额外魔法伤害。剩余回声会对主要目标发射，造成20%伤害。\n",
+    "tags": [
+     "SpellDamage",
+     "Mana",
+     "CooldownReduction",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 450,
+     "purchasable": true,
+     "total": 2750,
+     "sell": 1925
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3802",
+     "3145"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatMPPoolMod": 600,
+     "FlatMagicDamageMod": 100
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6655.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "100法术强度\n 600法力\n10技能急速\n\n回声  (12秒)\n伤害型技能会发射6道回声，对目标和附近的敌人造成额外的75 + 5%法术强度魔法伤害。剩余回声会对主要目标发射，造成20%伤害。(最大值：〔数值未解析〕)",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "ed9fbcfbe20b3076b7d576c91f453828a2d0fe1900b0baaeb5542df5439e9213",
+      "basisHash": "38acc0ec89de4a0e"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "100法术强度\n 600法力\n10技能急速\n\n回声  (12秒)\n伤害型技能会发射6道回声，对目标和附近的敌人造成额外的75 + 5%法术强度魔法伤害。剩余回声会对主要目标发射，造成20%伤害。(最大值：2×（75 + 5%法术强度）)",
+  "replacements": [
+   {
+    "anchor": "最大值：〔数值未解析〕",
+    "replacement": "最大值：2×（75 + 5%法术强度）"
+   }
+  ]
+ },
+ "6660": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 6660,
+    "name": "斑比的熔渣",
+    "description": "150生命值\n5技能急速\n\n献祭\n承受或造成伤害后，对附近敌人造成魔法伤害，持续3秒。",
+    "tags": [
+     "Health",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 250,
+     "purchasable": true,
+     "total": 900,
+     "sell": 630
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "1028",
+     "2022"
+    ],
+    "into": [
+     "3068",
+     "6664"
+    ],
+    "inStore": true,
+    "stats": {
+     "FlatHPPoolMod": 150
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6660.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "150生命值\n5技能急速\n\n献祭\n承受或造成伤害后，每秒对附近敌人造成〔数值未解析〕魔法伤害，持续3秒。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "1121df114117563abdb79fcafa2f9cfbb40a4075310cce4294b46256252d6ea2",
+      "basisHash": "ccc9bf6a267a2fa2"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "150生命值\n5技能急速\n\n献祭\n承受或造成伤害后，每秒对附近敌人造成15魔法伤害，持续3秒。",
+  "replacements": [
+   {
+    "anchor": "造成〔数值未解析〕魔法伤害，持续3秒",
+    "replacement": "造成15魔法伤害，持续3秒"
+   }
+  ]
+ },
+ "6692": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 6692,
+    "name": "星蚀",
+    "description": "60攻击力\n15技能急速\n\n永升之月\n在2秒内用2次独立的攻击或技能命中一名英雄时，会为你提供持续2秒的护盾值。",
+    "tags": [
+     "Damage",
+     "CooldownReduction",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 625,
+     "purchasable": true,
+     "total": 2900,
+     "sell": 2030
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3133",
+     "1037",
+     "1036"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatPhysicalDamageMod": 60
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6692.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "60攻击力\n15技能急速\n\n永升之月  (6秒)\n在2秒内用2次独立的攻击或技能命中一名英雄时，会造成（近战 8% / 远程 5%）最大生命值的物理伤害并为你提供持续2秒的〔数值未解析〕护盾值。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "unreferenced",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "da9fdf2c9b9afb1ffc2ada70093704f5c71be4cf9219e812820c7867862718ea",
+      "basisHash": "f6cce245b347bdee"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "60攻击力\n15技能急速\n\n永升之月  (6秒)\n在2秒内用2次独立的攻击或技能命中一名英雄时，会造成（近战 8% / 远程 5%）最大生命值的物理伤害并为你提供持续2秒的（近战 150 + 40%额外攻击力 / 远程为对应近战值的50%）护盾值。",
+  "replacements": [
+   {
+    "anchor": "提供持续2秒的〔数值未解析〕护盾值",
+    "replacement": "提供持续2秒的（近战 150 + 40%额外攻击力 / 远程为对应近战值的50%）护盾值"
+   }
+  ]
+ },
+ "6698": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 6698,
+    "name": "亵渎九头蛇",
+    "description": "55攻击力\n18穿甲\n10技能急速\n\n顺劈\n攻击会对附近的敌人们造成物理伤害。\n邪斩\n对你附近的敌人们造成物理伤害。",
+    "tags": [
+     "Damage",
+     "Active",
+     "CooldownReduction",
+     "ArmorPenetration",
+     "AbilityHaste"
+    ],
+    "gold": {
+     "base": 313,
+     "purchasable": true,
+     "total": 2850,
+     "sell": 1995
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3077",
+     "2020"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatPhysicalDamageMod": 55
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6698.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "55攻击力\n 18穿甲\n10技能急速\n\n顺劈\n攻击会对附近的敌人们造成〔数值未解析〕物理伤害。\n\n 邪斩  (10秒)\n对你附近的敌人们造成80%总攻击力物理伤害。\n\n深渊需要祭品。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "90a28cb9f8c80998020969491c0a0d78145c31ed774663eb855455d0079f59ce",
+      "basisHash": "50f6a1503c4c1d09"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "55攻击力\n 18穿甲\n10技能急速\n\n顺劈\n攻击会对附近的敌人们造成（近战 40%总攻击力 / 远程 20%总攻击力）物理伤害。\n\n 邪斩  (10秒)\n对你附近的敌人们造成80%总攻击力物理伤害。\n\n深渊需要祭品。",
+  "replacements": [
+   {
+    "anchor": "造成〔数值未解析〕物理伤害",
+    "replacement": "造成（近战 40%总攻击力 / 远程 20%总攻击力）物理伤害"
+   }
+  ]
+ },
+ "3302": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3302,
+    "name": "界弓",
+    "description": "30攻击力\n35%攻击速度\n\n晦影\n攻击造成0额外魔法伤害 攻击特效。\n\n交相\n对抗英雄时，在光明特效和黑暗特效之间轮换：附带光明特效的攻击提供持续5秒的护甲和魔抗。附带黑暗特效的攻击提供持续5秒的10%护甲穿透和法术穿透。 ",
+    "tags": [
+     "Damage",
+     "AttackSpeed",
+     "OnHit",
+     "MagicPenetration",
+     "ArmorPenetration"
+    ],
+    "gold": {
+     "base": 1100,
+     "purchasable": true,
+     "total": 3000,
+     "sell": 2100
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3051",
+     "1043"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatPhysicalDamageMod": 30,
+     "PercentAttackSpeedMod": 0.35
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3302.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "30攻击力\n35%攻击速度\n\n晦影\n攻击造成30 + 10%额外攻击力 + 10%法术强度额外魔法伤害 攻击特效。\n\n交相\n对抗英雄时，在光明特效和黑暗特效之间轮换：附带光明特效的攻击提供持续5秒的〔数值未解析〕 护甲和魔抗(至多至〔数值未解析〕)。附带黑暗特效的攻击提供持续5秒的10%护甲穿透和法术穿透(至多至30%)。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "6aad4431025a9eb99a3d4ed978a66104e6eede2f72b6d8defb8259bd71fdc690",
+      "basisHash": "4dcdcd8f73869797"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z"
+  ],
+  "description": "30攻击力\n35%攻击速度\n\n晦影\n攻击造成30 + 10%额外攻击力 + 10%法术强度额外魔法伤害 攻击特效。\n\n交相\n对抗英雄时，在光明特效和黑暗特效之间轮换：附带光明特效的攻击提供持续5秒的（1–10级 6 / 11–13级 7 / 14级及以上 8）护甲和魔抗（对应等级区间的上限分别为 18 / 21 / 24）。附带黑暗特效的攻击提供持续5秒的10%护甲穿透和法术穿透(至多至30%)。",
+  "replacements": [
+   {
+    "anchor": "〔数值未解析〕 护甲和魔抗(至多至〔数值未解析〕)",
+    "replacement": "（1–10级 6 / 11–13级 7 / 14级及以上 8）护甲和魔抗（对应等级区间的上限分别为 18 / 21 / 24）"
+   }
+  ]
+ },
+ "3087": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3087,
+    "name": "斯塔缇克电刃",
+    "description": "45攻击力\n45法术强度\n30%攻击速度\n4%移动速度\n\n电火花\n你的盈能攻击会发射连锁闪电，造成附带攻击特效，并且对附近的目标们造成魔法伤害。\n\n电疗 \n普通攻击提供额外盈能层数。",
+    "tags": [
+     "Damage",
+     "AttackSpeed",
+     "SpellDamage",
+     "OnHit",
+     "NonbootsMovement"
+    ],
+    "gold": {
+     "base": 625,
+     "purchasable": true,
+     "total": 3000,
+     "sell": 2100
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3144",
+     "3113",
+     "1037"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatMagicDamageMod": 45,
+     "FlatPhysicalDamageMod": 45,
+     "PercentAttackSpeedMod": 0.3,
+     "PercentMovementSpeedMod": 0.04
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3087.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "45攻击力\n45法术强度\n30%攻击速度\n4%移动速度\n\n电火花\n你的盈能攻击会发射连锁闪电，对最多〔数值未解析〕个目标造成60魔法伤害，攻击小兵和野怪时提升至90魔法伤害。附带 攻击特效至次级弹射目标们。\n\n电疗 \n普通攻击提供9额外盈能层数。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "partial",
+      "description": "45攻击力\n45法术强度\n30%攻击速度\n4%移动速度\n\n电火花\n你的盈能攻击会发射连锁闪电，对最多〔数值未解析〕个目标造成70魔法伤害，攻击小兵和野怪时提升至90魔法伤害。附带 攻击特效至次级弹射目标们。\n\n电疗 \n普通攻击提供9额外盈能层数。",
+      "appliedKeys": [
+       "ChainDamage"
+      ],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "8b4842512043c6bc7415b8830f1a57f50b32523823ca28c9bd48036510dfb151",
+      "basisHash": "70fdf7fe79a83bab"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z"
+  ],
+  "description": "45攻击力\n45法术强度\n30%攻击速度\n4%移动速度\n\n电火花\n你的盈能攻击会发射连锁闪电，对最多（1–5级 4 / 6–9级 5 / 10–13级 6 / 14–18级 7）个目标造成60魔法伤害，攻击小兵和野怪时提升至90魔法伤害。附带 攻击特效至次级弹射目标们。\n\n电疗 \n普通攻击提供9额外盈能层数。",
+  "replacements": [
+   {
+    "anchor": "最多〔数值未解析〕个目标",
+    "replacement": "最多（1–5级 4 / 6–9级 5 / 10–13级 6 / 14–18级 7）个目标"
+   }
+  ]
+ }
+}

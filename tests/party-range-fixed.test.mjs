@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import {createSlots,mergeClientSession,recommend} from '../src/core/recommend.mjs';
-import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,partyRoleConflicts,movePartyMark,editPartyRange} from '../src/core/party-range.mjs';
-import {reconcileClientDraft,moveChampion,publicClientGameId} from '../src/core/draft.mjs';
+import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,partyRoleConflicts,movePartyMark,editPartyRange,partyRangeCount,partyRangeMode} from '../src/core/party-range.mjs';
+import {reconcileClientDraft,moveChampion,moveDisplayedChampion,publicClientGameId} from '../src/core/draft.mjs';
+import {companionRosterDraft} from '../src/core/draft-intents.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 import {partyWithPregameIntents} from '../src/core/pregame-intent.mjs';
 import {rankedDraftPolicy} from '../src/core/ranked-draft.mjs';
@@ -47,6 +48,95 @@ test('count freezes through membership polls, public collisions, hover changes a
  for(let poll=0;poll<4;poll++)slots=merge(slots,s,2,p);
  assert.equal(markedPartyCount(slots),2);assert.ok(roles(slots).includes('bottom'));assert.equal(slots[3].clientCellId,1);
  assert.equal(slots[0].champion,'Garen');
+});
+
+test('dragging an outside teammate onto our lane moves the group range before the next recommendation',()=>{
+ const s=session(),p=party(2);
+ Object.assign(s.myTeam[0],{championId:key('Ashe'),pickState:'locked',assignedPosition:'BOTTOM'});
+ Object.assign(s.myTeam[1],{championId:key('Ahri'),pickState:'locked',assignedPosition:'MIDDLE'});
+ Object.assign(s.myTeam[2],{championId:key('Garen'),pickState:'locked',assignedPosition:'TOP'});
+ const initial=merge(createSlots(),s,2,p);assert.deepEqual(roles(initial),['mid','bottom']);
+ let moved=moveChampion(initial,'top','mid');
+ assert.deepEqual(roles(moved),['top','bottom']);assert.equal(moved[2].champion,'Garen');assert.equal(moved[2].party,false);
+ assert.equal(moved[0].champion,'Ahri');assert.equal(moved[0].party,true);
+ moved=validateState({...defaultState(),draft:{slots:moved,partyCount:2,scope:'party',clientGameId:'101'}}).draft.slots;
+ for(let poll=0;poll<3;poll++)moved=merge(moved,s,2,p);
+ assert.deepEqual(roles(moved),['top','bottom']);assert.equal(markedPartyCount(moved),2);
+ const [result]=recommend({slots:moved,champions:data.champions,scope:'party',clientSession:s,party:p,limit:1});
+ assert.ok(result);assert.deepEqual(roles(result.slots),['top','bottom']);
+ assert.deepEqual(result.analysis.members.map(m=>m.champion).sort(),['Ahri','Ashe']);
+ const alone=initial.map(slot=>({...slot,party:slot.clientCellId===0}));
+ const swapped=moveChampion(alone,'top','bottom');assert.deepEqual(roles(swapped),['top']);
+ const [solo]=recommend({slots:swapped,champions:data.champions,scope:'party',clientSession:s,party:party(1),limit:1});
+ assert.equal(solo.scope,'context');assert.deepEqual(roles(solo.slots),['top']);assert.equal(solo.slots[0].champion,'Ashe');
+});
+
+test('an explicitly included anonymous teammate keeps the same party mark through dragging and repeated sync',()=>{
+ const s=session(),p={status:'unknown',members:[{cellId:0,local:true}]};
+ for(const [cellId,id,assignedPosition]of [[0,'Ashe','BOTTOM'],[1,'Garen','TOP'],[2,'Nami','UTILITY'],[3,'Vi','JUNGLE'],[4,'Ahri','MIDDLE']])Object.assign(s.myTeam[cellId],{championId:key(id),pickState:'locked',assignedPosition});
+ const originalSession=structuredClone(s),originalParty=structuredClone(p),initial=merge(createSlots(),s,1,p,{ownRole:'bottom'}),before=structuredClone(initial);
+ assert.deepEqual(roles(initial),['bottom']);assert.equal(initial.find(slot=>slot.champion==='Garen').party,false);
+ const included=editPartyRange(initial,'top',true,{count:1,session:s,champions:data.champions,party:p,ownRole:'bottom'});
+ assert.equal(included.partyCount,2);assert.deepEqual(initial,before,'A checkbox edit must not mutate the prior board');
+ let slots=moveChampion(included.slots,'top','support');
+ const assertMoved=()=>{
+  const garen=slots.find(slot=>slot.champion==='Garen'),nami=slots.find(slot=>slot.champion==='Nami');
+  assert.equal(garen.role,'support');assert.equal(garen.clientCellId,1);assert.equal(garen.manualPosition,true);
+  assert.equal(garen.party,true);assert.equal(garen.partyManual,true);
+  assert.equal(nami.role,'top');assert.equal(nami.clientCellId,2);assert.equal(nami.party,false);assert.equal(nami.partyManual,undefined);
+  assert.equal(markedPartyCount(slots),included.partyCount);assert.deepEqual(roles(slots),['bottom','support']);
+  assert.deepEqual(slots.filter(slot=>slot.party).map(slot=>slot.champion).sort(),['Ashe','Garen']);
+ };
+ assertMoved();
+ for(let poll=0;poll<2;poll++){
+  slots=reconcilePartyRange(slots,s,data.champions,{count:included.partyCount,party:p,ownRole:'bottom'});assertMoved();
+  slots=merge(slots,s,included.partyCount,p,{ownRole:'bottom'});assertMoved();
+ }
+ const excluded=editPartyRange(slots,'support',false,{count:included.partyCount,session:s,champions:data.champions,party:p,ownRole:'bottom'});
+ assert.equal(excluded.partyCount,1);slots=excluded.slots;
+ for(let poll=0;poll<2;poll++){
+  slots=merge(slots,s,excluded.partyCount,p,{ownRole:'bottom'});
+  const garen=slots.find(slot=>slot.champion==='Garen');
+  assert.equal(garen.clientCellId,1);assert.equal(garen.role,'support');assert.equal(garen.party,false);assert.equal(garen.partyManual,true);
+  assert.equal(markedPartyCount(slots),1);assert.deepEqual(roles(slots),['bottom']);
+ }
+ assert.deepEqual(s,originalSession);assert.deepEqual(p,originalParty,'Manual range selection must not invent premade membership');
+});
+
+test('an explicit lane mark survives a newly confirmed teammate when premade detection only knows self',()=>{
+ const s=session(),p={status:'unknown',members:[{cellId:0,local:true}]};
+ Object.assign(s.myTeam[0],{championId:key('Ashe'),pickState:'locked',assignedPosition:'BOTTOM'});
+ const initial=merge(createSlots(),s,1,p,{ownRole:'bottom'});
+ const selected=editPartyRange(initial,'top',true,{count:1,session:s,champions:data.champions,party:p,ownRole:'bottom'});
+ assert.equal(selected.partyCount,2);assert.equal(selected.slots[0].partyManual,true);
+ Object.assign(s.myTeam[1],{championId:key('Garen'),pickState:'locked',assignedPosition:'TOP'});
+ let slots=selected.slots;
+ for(let poll=0;poll<2;poll++){
+  slots=merge(slots,s,selected.partyCount,p,{ownRole:'bottom'});
+  const garen=slots.find(slot=>slot.champion==='Garen');
+  assert.equal(garen.role,'top');assert.equal(garen.clientCellId,1);assert.equal(garen.party,true);assert.equal(garen.partyManual,true);
+  assert.equal(markedPartyCount(slots),2);assert.deepEqual(roles(slots),['top','bottom']);
+ }
+ assert.deepEqual(p.members,[{cellId:0,local:true}]);
+});
+
+test('dragging a public group preview into an empty lane follows ownership through save and polling',()=>{
+ const s=session(),p=party(2);p.members[1].firstPosition='MIDDLE';
+ Object.assign(s.myTeam[0],{championId:key('Ashe'),pickState:'locked',assignedPosition:'BOTTOM'});
+ Object.assign(s.myTeam[1],{championPickIntent:key('Ahri')});
+ const initial=merge(createSlots(),s,2,p);assert.deepEqual(roles(initial),['mid','bottom']);
+ const shown=companionRosterDraft(initial,s,data.champions,{party:p,ownRole:'bottom'});
+ assert.equal(shown[2].clientCellId,1);assert.equal(shown[2].publicIntent,true);
+ let moved=moveDisplayedChampion(initial,shown,'mid','jungle');
+ assert.deepEqual(roles(moved),['jungle','bottom']);assert.equal(moved[1].clientCellId,1);
+ assert.equal(moved[1].champion,null);assert.equal(moved[1].locked,false);
+ moved=validateState({...defaultState(),draft:{slots:moved,partyCount:2,scope:'party',clientGameId:'101'}}).draft.slots;
+ for(let poll=0;poll<3;poll++)moved=merge(moved,s,2,p);
+ assert.deepEqual(roles(moved),['jungle','bottom']);assert.equal(moved[1].champion,null);
+ Object.assign(s.myTeam[1],{championId:key('Ahri'),championPickIntent:0,pickState:'locked'});
+ moved=merge(moved,s,2,p);assert.deepEqual(roles(moved),['jungle','bottom']);assert.equal(moved[1].champion,'Ahri');
+ const allOff=moveChampion(moved.map(slot=>({...slot,party:false,partyManual:true})),'jungle','top');
+ assert.equal(markedPartyCount(merge(allOff,s,0,p)),0,'Moving a member must not revive an explicitly cleared range');
 });
 
 test('a saved draft never pairs a stale range count with newer checkbox marks',async()=>{
@@ -157,10 +247,12 @@ test('a collision arriving before the checkbox still applies its quantity change
  assert.equal(repeat.partyCount,1);assert.equal(markedPartyCount(repeat.slots),1);
 });
 
-test('automatic relocation releases the old manual marker before a later checkbox edit',()=>{
- const s=session(),p=party(2),initial=createSlots().map(slot=>({...slot,party:['top','jungle'].includes(slot.role),...(slot.role==='top'?{partyManual:true}:{})}));
+test('automatic collision relocation stays distinct from an explicit checkbox exclusion',()=>{
+ // Detected marks may relocate. An explicit checkbox is a user's lane intent,
+ // and incomplete premade detection cannot override that choice.
+ const s=session(),p=party(2),initial=createSlots().map(slot=>({...slot,party:['top','jungle'].includes(slot.role)}));
  s.myTeam[2].championId=key('Garen');s.myTeam[2].assignedPosition='TOP';
- const moved=merge(initial,s,2,p);assert.equal(moved[0].party,false);assert.equal(markedPartyCount(moved),2);
+ const moved=merge(initial,s,2,p);assert.equal(moved[0].party,false);assert.equal(moved[0].partyManual,undefined);assert.equal(markedPartyCount(moved),2);
  const removed=editPartyRange(moved,'top',false,{count:2,session:s,champions:data.champions,party:p});
  assert.equal(removed.partyCount,1,'An automatic relocation must not look like another player already unchecked this position');
  assert.equal(markedPartyCount(removed.slots),1);assert.equal(removed.slots[0].champion,'Garen');
@@ -171,7 +263,7 @@ test('main range handler changes only this draft, preserves newer champions, and
  const from=source.indexOf(" guard('party-range',"),to=source.indexOf(" guard('stage-selection',",from);assert.ok(from>=0&&to>from);
  const s=session(),p=party(2);s.myTeam[2].championId=key('Garen');s.myTeam[2].assignedPosition='TOP';
  const board=merge(createSlots(),s,2,p),current=validateState({...defaultState(),draft:{slots:board,partyCount:2,clientGameId:'101',scope:'party',soloRole:''}});
- let handler;const context=vm.createContext({state:current,stateRevision:1,data,validPartyCount,editPartyRange,partyWithPregameIntents,rankedDraftPolicy,roomService:null,publicClientGameId,rankedClientRoles:()=>({}),
+ let handler;const context=vm.createContext({state:current,stateRevision:1,data,validPartyCount,initialPartyCount,markedPartyCount,reconcilePartyRange,partyRangeCount,partyRangeMode,editPartyRange,partyWithPregameIntents,rankedDraftPolicy,roomService:null,publicClientGameId,rankedClientRoles:()=>({}),
   latestClient:{connected:true,phase:'ChampSelect',mode:{id:'rift'},session:s,party:p},status:async()=>{},guard:(name,run)=>{assert.equal(name,'party-range');handler=run;},
   saveCurrentState:async update=>{context.state=validateState(update(structuredClone(context.state)));context.stateRevision++;}});
  vm.runInContext(source.slice(from,to),context);
@@ -183,7 +275,12 @@ test('main range handler changes only this draft, preserves newer champions, and
  context.latestClient.phase='ChampSelect';context.latestClient.session=session();context.latestClient.party.members[1]={cellId:1,displayName:'Buddy',firstPosition:'UTILITY'};
  context.roomService={snapshot:()=>({members:[{nick:'Buddy#CN1',online:true,share:{intent:{role:'mid',champion:null}}}]})};
  context.state=validateState({...defaultState(),draft:{slots:createSlots().map(slot=>({...slot,party:['top','jungle'].includes(slot.role)})),partyCount:2,clientGameId:'101',scope:'party',soloRole:'bottom'}});
- const shared=await handler({...value,role:'bottom'});assert.equal(shared.state.draft.partyCount,3);assert.equal(shared.state.draft.slots[2].party,true,'The main range edit must preserve the live shared mid-lane intention');assert.equal(shared.state.draft.slots[4].party,false);
+ const shared=await handler({...value,role:'bottom'});assert.equal(shared.state.draft.partyCount,3);assert.equal(shared.state.draft.partyRangeMode,'manual');assert.equal(shared.state.draft.slots[2].party,false,'A manual range click must keep the visible choice instead of following a newer shared lane hint');assert.equal(shared.state.draft.slots[1].party,true);assert.equal(shared.state.draft.slots[4].party,false);
+ const automatic=await handler({mode:'auto',gameId:'101',cellId:0});assert.equal(automatic.state.draft.partyRangeMode,'auto');assert.equal(automatic.state.draft.slots[2].party,true,'Returning to auto follows the shared member lane again');
+ context.state=validateState({...defaultState(),draft:{slots:createSlots().map(slot=>({...slot,party:['jungle','mid'].includes(slot.role),...(slot.role==='top'?{champion:'Garen',locked:true,clientCellId:2}:{})})),partyCount:2,partyRangeMode:'auto',clientGameId:'101',scope:'party'}});
+ const frozen=await handler({role:'top',checked:false,selectedRoles:['jungle'],gameId:'101',cellId:0});assert.equal(frozen.state.draft.partyCount,1);assert.equal(frozen.state.draft.slots[0].champion,'Garen');assert.equal(frozen.state.draft.partyRangeMode,'manual');
+ const concurrent=await handler({role:'support',checked:true,selectedRoles:['mid','support'],gameId:'101',cellId:0});assert.deepEqual(concurrent.state.draft.slots.filter(slot=>slot.party).map(slot=>slot.role),['jungle','support'],'A second window stale full range must not overwrite the first explicit edit');
+ await assert.rejects(handler({role:'top',checked:false,selectedRoles:['top'],gameId:'101',cellId:0}));
  const currentState=structuredClone(context.state);
  delete context.latestClient.session.gameId;
  await assert.rejects(handler({...value,gameId:null}),'Missing public game identity cannot establish the same selection');

@@ -1,0 +1,163 @@
+{
+  "sourceRelease": "ad137872c5c0776356c7a0894b855d460a3f6217d9b42349aa0a66a9d6683059",
+  "patch": "16.21",
+  "version": "16.21.1",
+  "sources": {
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json"
+  },
+  "augments": [
+    {
+      "id": 3118,
+      "key": "ArcaneAxiom",
+      "name": "奥术公理",
+      "description": "在你对一名敌方英雄造成伤害后，如果该英雄在3秒内阵亡，则会返还你终极技能的部分总冷却时间。",
+      "descriptionStatus": "complete",
+      "rarity": "kGold",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3121,
+      "key": "Fruitify",
+      "name": "水果化",
+      "description": "参与击杀会引发水果爆炸。\n\n水果可回复生命值和法力值。",
+      "descriptionStatus": "complete",
+      "rarity": "kSilver",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3063,
+      "key": "GiftoftheDrowned",
+      "name": "溺水之赠礼",
+      "description": "额外生命值转化为\n穿甲。\n\n获得10–25（随等级）穿甲。",
+      "descriptionStatus": "complete",
+      "rarity": "kSilver",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3172,
+      "key": "GoH_PentakillAug_E",
+      "name": "鞭挞",
+      "description": "强化【适用技能】技能!\n\n强化版技能获得适用技能20技能急速、10%额外伤害、以及10%治疗和护盾效果。",
+      "descriptionStatus": "partial",
+      "rarity": "kGold",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3176,
+      "key": "GoH_PentakillAug_Generic",
+      "name": "GoH_PentakillAug_Generic_BlankName",
+      "description": "强化【适用技能】技能!\n\n强化版技能获得适用技能20技能急速、10%额外伤害、以及10%治疗和护盾效果。",
+      "descriptionStatus": "partial",
+      "rarity": "kGold",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3170,
+      "key": "GoH_PentakillAug_Q",
+      "name": "重型",
+      "description": "强化【适用技能】技能!\n\n强化版技能获得适用技能20技能急速、10%额外伤害、以及10%治疗和护盾效果。",
+      "descriptionStatus": "partial",
+      "rarity": "kGold",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3173,
+      "key": "GoH_PentakillAug_R",
+      "name": "厄运",
+      "description": "强化【适用技能】技能!\n\n强化版技能获得适用技能20技能急速、10%额外伤害、以及10%治疗和护盾效果。",
+      "descriptionStatus": "partial",
+      "rarity": "kGold",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3171,
+      "key": "GoH_PentakillAug_W",
+      "name": "力量",
+      "description": "强化【适用技能】技能!\n\n强化版技能获得适用技能20技能急速、10%额外伤害、以及10%治疗和护盾效果。",
+      "descriptionStatus": "partial",
+      "rarity": "kGold",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3052,
+      "key": "HandsOffTheTalent",
+      "name": "远射天资",
+      "description": "在接近最大攻击距离处打出的攻击会附带额外物理伤害攻击特效。",
+      "descriptionStatus": "complete",
+      "rarity": "kSilver",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3094,
+      "key": "LichBrain",
+      "name": "巫妖大脑",
+      "description": "获得30 + 4%额外生命值法术强度。",
+      "descriptionStatus": "complete",
+      "rarity": "kSilver",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3134,
+      "key": "LonelyWarrior",
+      "name": "孤勇者",
+      "description": "附近每有一个敌方英雄，你就会获得攻击速度、护甲和魔法抗性。",
+      "descriptionStatus": "complete",
+      "rarity": "kSilver",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3059,
+      "key": "NoManaNoProblem",
+      "name": "没法力，没问题",
+      "description": "来自你的装备的法力值转化\n为法术强度。\n\n使你的总法术强度提升15%。",
+      "descriptionStatus": "complete",
+      "rarity": "kSilver",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3129,
+      "key": "SapMagic",
+      "name": "吸元秘术",
+      "description": "每20秒，你的下次攻击造成额外物理伤害，并为你回复生命值攻击特效。\n\n施放技能会缩减该效果的冷却时间。",
+      "descriptionStatus": "complete",
+      "rarity": "kGold",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3025,
+      "key": "Sound_Barrier",
+      "name": "音之屏障",
+      "description": "为一名友军提供护盾时，会在1.5秒内提供持续衰减的移动速度和幽灵状态。",
+      "descriptionStatus": "complete",
+      "rarity": "kSilver",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3016,
+      "key": "ThirdTimesTheHarm",
+      "name": "伤不过三",
+      "description": "对一个敌方英雄的每第三次连续攻击会造成真实伤害并永久提升由这个技能造成的伤害。",
+      "descriptionStatus": "complete",
+      "rarity": "kPrismatic",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3150,
+      "key": "Upgrade_Stormsurge",
+      "name": "升级：风暴狂涌",
+      "description": "风暴狂涌 - 风啸现在总会在一个区域内引爆，基于最大生命值造成魔法伤害。\n\n被初段引爆命中的敌方英雄会被风啸标记。\n\n获得金币500金币。",
+      "descriptionStatus": "complete",
+      "rarity": "kGold",
+      "catalogEnabled": true
+    },
+    {
+      "id": 3081,
+      "key": "WeaponOfDestiny",
+      "name": "命运之武器",
+      "description": "你的第一件传说级装备成为命运之武器，属性基于参与击杀英雄数提升。",
+      "descriptionStatus": "complete",
+      "rarity": "kGold",
+      "catalogEnabled": true
+    }
+  ]
+}

@@ -1,4 +1,5 @@
-import {escape as e,button,portrait,roleIcon,icon} from './ui.mjs';
+import {clientChampion} from './core/client-dictionary.mjs';
+import {escape as e,button,portrait,roleIcon,icon,formatNumber} from './ui.mjs';
 import {championUsageView} from './champion-usage-view.mjs';
 import {filterMatches,queueName,QUEUES} from './core/match-history/model.mjs';
 import {analyzeMatches} from './core/match-history/analysis.mjs';
@@ -11,7 +12,7 @@ import {historyComparisonView} from './match-history-comparison-view.mjs';
 import {historyDetailTableView} from './match-history-detail-table-view.mjs';
 import {historyAsset,historyTipAttributes} from './match-history-hover.mjs';
 
-const num=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('zh-CN',{maximumFractionDigits:d}):'未读取';
+const num=(v,d=0)=>Number.isFinite(v)?formatNumber(v,d):'未读取';
 const pct=v=>Number.isFinite(v)?(v*100).toFixed(0)+'%':'未读取';
 const time=v=>Number.isFinite(v)?`${Math.floor(v/60)}:${String(Math.floor(v%60)).padStart(2,'0')}`:'未读取';
 const resultName={win:'胜利',loss:'失败',remake:'重开',abort:'已中止',unknown:'结果未读取'};
@@ -19,7 +20,7 @@ const positions={TOP:'上路',JUNGLE:'打野',MIDDLE:'中路',BOTTOM:'下路',UT
 const roles={TOP:'top',JUNGLE:'jungle',MIDDLE:'mid',BOTTOM:'bottom',UTILITY:'support'};
 const options=(values,selected)=>values.map(([v,label])=>`<option value="${e(v)}" ${String(selected??'')===String(v)?'selected':''}>${e(label)}</option>`).join('');
 const select=(name,label,values,value)=>`<label>${label}<select data-history-field="${name}">${options(values,value)}</select></label>`;
-const hero=(data,id)=>(data.champions||[]).find(c=>Number(c.key)===id);
+const hero=(data,id)=>clientChampion(data,id);
 const participantResult=p=>(resultName[p?.result||'unknown']||resultName.unknown)+(p?.surrender===true?' · 投降':'');
 const context=(p,game)=>({participant:p,game});
 function playerHero(data,p,game,tip=true){const c=hero(data,p?.champion);return c?`<span class="history-champion-tip" ${tip?historyTipAttributes('champion',p.champion,context(p,game)):''}>${portrait(c)}${Number.isFinite(p.level)?`<small class="history-level">${p.level}</small>`:''}</span>`:'<span class="history-empty-icon">?</span>';}
@@ -38,12 +39,13 @@ function relationshipRecord(player,games){
  const ids=new Set(player.games),records=games.filter(game=>ids.has(game.id)&&!game.pve),wins=records.filter(game=>game.self?.result==='win').length,losses=records.filter(game=>game.self?.result==='loss').length,other=player.count-wins-losses;
  return `${player.ally?'同队':'对手'} ${player.count} 局 · 我方 ${wins} 胜 / ${losses} 负${other>0?' · 其他 '+other+' 局（重开 / 中止 / 未知）':''}`;
 }
-function summary(data,games,page){
+export function historySummaryView(data,games,page){
  const a=analyzeMatches(games),full=page.fullAnalysis===undefined?originalAnalysis(games):page.fullAnalysis;
  a.score=Number.isFinite(full?.akariScore?.total)?full.akariScore:null;
  if(full?.count>0&&full.summary){a.kda=full.summary.avgKda;a.kp=full.summary.avgKillParticipation;a.damage=full.summary.avgChampionDamagePercentageOfTeam;a.cs=full.summary.avgCsPerMinute;}
  return `<aside class="history-summary"><h2>总览</h2><p class="muted">已加载 ${page.games.length} 局 · 筛选后 ${games.length} 局</p><div class="history-win"><strong>${pct(a.winRate)}</strong><span>${a.wins} 胜 / ${a.losses} 负</span></div><p class="muted">有效样本 ${a.count} 局${a.remakes?' · '+a.remakes+' 局重开':''}${a.aborted?' · '+a.aborted+' 局中止':''}</p><dl><div><dt>Akari 参考评分</dt><dd>${a.score?num(a.score.total,2)+' / 17':'资料不足'}</dd></div><div><dt>平均 KDA</dt><dd>${num(a.kda,2)}</dd></div><div><dt>平均参团率</dt><dd>${pct(a.kp)}</dd></div><div><dt>平均伤害占比</dt><dd>${pct(a.damage)}</dd></div><div><dt>分均补刀</dt><dd>${num(a.cs,1)}</dd></div></dl>${page.start===0&&a.streak.count>=2?`<p class="history-streak">${a.streak.count} 连${a.streak.result==='win'?'胜':'败'}</p>`:''}<h3>英雄使用</h3><div class="history-champion-usage">${a.champions.slice(0,12).map(c=>`<button data-action="history-champion" data-id="${c.champion}" title="${e(hero(data,c.champion)?.name||c.champion)} · ${c.count} 局 · ${pct(c.wins/c.count)}">${playerHero(data,c,undefined,false)}<small>${c.count}</small></button>`).join('')||'<p class="muted">没有有效样本</p>'}</div>${a.positions.length?`<details><summary>分路统计</summary>${a.positions.map(p=>`<p>${e(positions[p.position]||p.position)} · ${p.count} 局 · ${pct(p.wins/p.count)}</p>`).join('')}</details>`:''}<details><summary>近期共同对局</summary>${a.relationships.slice(0,20).map(p=>`<button class="history-related" data-action="history-player" data-puuid="${e(p.puuid)}" data-server="${e(page.server)}">${e(p.name||'玩家')}<small>${e(relationshipRecord(p,games))}</small></button>`).join('')||'<p>没有读取到共同对局</p>'}</details><small class="history-summary-note">参考评分为 Akari 自定义权重，非官方评分。未读取的数据不计作零。</small></aside>`;
 }
+const summary=historySummaryView;
 const OBJECTIVES={baron:'大龙',dragon:'小龙',tower:'防御塔',inhibitor:'水晶',riftHerald:'先锋',horde:'巢虫',atakhan:'厄塔汗'};
 const total=(players,key)=>players.length&&players.every(p=>Number.isFinite(p[key]))?players.reduce((sum,p)=>sum+p[key],0):null;
 function damageCell(p,game,key){
@@ -89,15 +91,36 @@ function profileView(tab,page,state,data){
 function masteryView(tab,data){
  if(!tab.profile)return '';
  const all=tab.profile.mastery||[];
- return `<section class="history-mastery-panel"><header><h3>英雄点数</h3><small>${all.length} 位英雄</small></header>${all.slice(0,8).map(p=>`<div class="history-mastery-row">${playerHero(data,p)}<span><b>${e(hero(data,p.champion)?.name||p.champion)}</b><small>${num(p.level)} 级</small></span><span>${num(p.points)}<small>英雄点数</small></span></div>`).join('')||'<p class="muted">暂未读取</p>'}${tab.profile.notice?`<small>${e(tab.profile.notice)}</small>`:''}</section>`;
+ return `<section class="history-mastery-panel"><header><h3>英雄点数</h3><small>${all.length} 位英雄</small></header>${all.slice(0,8).map(p=>`<div class="history-mastery-row">${playerHero(data,p)}<span><b>${e(hero(data,p.champion)?.name||(Number(p.champion)>0?`英雄 ${p.champion}`:p.champion))}</b><small>${num(p.level)} 级</small></span><span>${num(p.points)}<small>英雄点数</small></span></div>`).join('')||'<p class="muted">暂未读取</p>'}${tab.profile.notice?`<small>${e(tab.profile.notice)}</small>`:''}</section>`;
 }
 export function matchHistorySearchView(state){return `<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="玩家搜索结果"><header class="modal-header"><h2>选择玩家</h2>${button('close','','close','quiet icon-only')}</header><div class="panel-body">${state.searchResults.map(p=>`<button class="history-related" data-action="history-player" data-puuid="${e(p.puuid)}" data-server="${e(p.server)}">${e(p.name)}<small>查看战绩</small></button>`).join('')}</div></section></div>`;}
-export function matchHistoryView(state,data){
+// Every detail update lists all cards again, and an expanded events or builds
+// card is a large HTML string. Reuse a card's markup until its game, detail
+// state, page analysis or bundled data changes. Large objects are compared by
+// identity (the controller replaces them); small detail fields by value.
+const cardCache=new WeakMap(),objectIds=new WeakMap();let nextObjectId=0;
+const objectId=value=>{if(!value||typeof value!=='object')return '';let id=objectIds.get(value);if(id===undefined)objectIds.set(value,id=++nextObjectId);return id;};
+const detailKey=d=>d?JSON.stringify(Object.keys(d).sort().map(key=>[key,key==='game'||key==='timeline'||key==='flight'?objectId(d[key]):d[key]])):'';
+function cachedCard(data,game,d,fullAnalysis){
+ const key=[objectId(data),objectId(fullAnalysis),detailKey(d)].join('|'),cached=cardCache.get(game);
+ if(cached?.key===key)return cached.html;
+ const html=card(data,game,d,fullAnalysis);cardCache.set(game,{key,html});return html;
+}
+export function historyCardsView(state,data){
+ const tab=state.tabs.find(t=>t.id===state.current),page=tab?.page,games=filterMatches(page?.games||[],tab?.filter);
+ return {tab:tab?.id??0,items:games.map(game=>({id:game.id,html:cachedCard(data,game,tab.details[game.id],page.fullAnalysis)})),empty:page?.games.length?'已加载对局中没有符合条件的战绩':'客户端返回的战绩为空'};
+}
+export function matchHistoryView(state,data,{vueCards=false}={}){
  const tab=state.tabs.find(t=>t.id===state.current),page=tab?.page,games=filterMatches(page?.games||[],tab?.filter),servers=[['','当前大区'],...(state.servers||[]).map(s=>[s.id,s.name])];
  const searchOptions=`<details class="history-search-disclosure" data-disclosure-key="history-search"><summary class="history-search-options-btn" title="高级搜索设置（数据源 / 大区）" aria-label="数据源与大区设置">⋯</summary><div class="history-search-options-dropdown">${select('source','数据源',[['auto','自动（后台优先）'],['lcu','客户端'],['sgp','游戏后台']],state.source)}${select('server','大区',servers,state.server)}</div></details>`;
- const searchBar=`<form id="history-search" class="history-search-bar"><div class="history-search-input-wrap">${icon('search')}<input id="history-query" value="${e(state.query)}" placeholder="名字#标签" maxlength="81" autocomplete="off" aria-label="搜索玩家 ID"></div>${searchOptions}<button class="btn primary small history-search-btn" type="submit">查询战绩</button></form>`;
+ const searchBar=`<form id="history-search" class="history-search-bar"><div class="history-search-input-wrap">${icon('search')}<input id="history-query" value="${e(state.query)}" placeholder="名字#标签" maxlength="81" autocomplete="off" aria-label="搜索玩家 ID"></div>${searchOptions}<button class="btn primary small history-search-btn" type="submit">查询战绩</button>${state.searchResults?.length?button('history-search-results','上次结果','','small quiet','title="查看已加载的玩家搜索结果，不重新查询"'):''}</form>`;
  const tabs=`<div class="history-tabs" role="tablist" aria-label="查询玩家">${state.tabs.map(t=>`<div class="${state.current===t.id?'active':''}"><button role="tab" aria-selected="${state.current===t.id}" data-action="history-tab" data-id="${t.id}">${e(t.page?.player.name||t.options.query||'我的战绩')}</button><button data-action="history-close" data-id="${t.id}" aria-label="关闭玩家标签">×</button></div>`).join('')}</div>`;
  const controls=page?`${state.compact?'<details class="history-sidebar-controls" data-disclosure-key="history-query-controls"><summary>队列、分页与筛选</summary>':'<section class="history-sidebar-controls">'}<div data-history-slot="sidebar-controls"></div><details class="history-filter-panel" data-disclosure-key="history-filter-panel"><summary>页内筛选</summary>${filters(tab,page,data)}<div data-history-slot="advanced-filters"></div></details>${state.compact?'</details>':'</section>'}`:'';
- const content=!tab?(state.championUsage?.status==='loading'?'':'<div class="history-empty">连接客户端后自动加载最近对局</div>'):!page?(!tab.loading?'<div class="history-empty">连接客户端后重试查询</div>':''):`${profileView(tab,page,state,data)}<div class="history-layout"><div class="history-left-column">${controls}${summary(data,games,page)}${masteryView(tab,data)}<div data-history-slot="sidebar-extra"></div></div><div class="history-list"><div class="history-pagination">${button('history-prev','','arrow','small quiet',`aria-label="上一页" ${tab.loading||page.start===0?'disabled':''}`)}<span>第 ${Math.floor(page.start/page.count)+1} 页 · 每页 ${page.count} 局</span>${button('history-next','','arrow','small quiet',`aria-label="下一页" ${tab.loading||!page.hasMore?'disabled':''}`)}${button('history-refresh','','refresh','small quiet','aria-label="刷新战绩"')}${button('history-collect','批量加载','','small quiet',tab.loading?'disabled':'')}</div>${games.map(m=>card(data,m,tab.details[m.id],page.fullAnalysis)).join('')||`<div class="history-empty">${page.games.length?'已加载对局中没有符合条件的战绩':'客户端返回的战绩为空'}</div>`}</div></div>`;
- return `<div class="history-page"><header class="history-heading"><div><h1>历史战绩</h1></div><div class="history-heading-actions">${searchBar}${button('history-self','我的战绩','user','small quiet')}</div></header>${championUsageView(state.championUsage,data,{mass:state.familiarityMass})}${tabs}${tab?.error?`<p class="history-error" role="alert">${e(tab.error)} ${button('history-refresh','重试','','small')}</p>`:''}${tab?.loading?`<p class="history-loading" role="status">${tab.collecting?'正在收集更多对局，已加载 '+(page?.games.length||0)+' 局':'正在查询战绩…'} ${tab.collecting?button('history-stop','停止','','small quiet'):''}</p>`:''}${content}<footer class="history-footer">数据来自已登录客户端与游戏后台 · 接口不可用时保留错误说明 · 不读取游戏内存</footer></div>`;
+ const content=!tab?(state.championUsage?.status==='loading'?'':'<div class="history-empty">连接客户端后自动加载最近对局</div>'):!page?(!tab.loading?(tab.error
+ // The error banner already explains the failure and offers a retry. Do not
+ // blame the client connection when the client is connected but the data
+ // source failed, and say what still works.
+ ?(state.championUsage?.cached?'<div class="history-empty">战绩列表暂时无法读取；常用英雄统计来自本机缓存，选人推荐不受影响。</div>':'')
+  :'<div class="history-empty">连接客户端后重试查询</div>'):''):`${profileView(tab,page,state,data)}<div class="history-layout"><div class="history-left-column">${controls}${summary(data,games,page)}${masteryView(tab,data)}<div data-history-slot="sidebar-extra"></div></div><div class="history-list"><div class="history-pagination">${button('history-prev','','arrow','small quiet',`aria-label="上一页" ${tab.loading||page.start===0?'disabled':''}`)}<span>第 ${Math.floor(page.start/page.count)+1} 页 · 每页 ${page.count} 局</span>${button('history-next','','arrow','small quiet',`aria-label="下一页" ${tab.loading||!page.hasMore?'disabled':''}`)}${button('history-refresh','','refresh','small quiet','aria-label="刷新战绩"')}${button('history-collect','批量加载','','small quiet',tab.loading?'disabled':'')}</div>${vueCards?'<div data-vue-route="history"></div>':games.map(m=>card(data,m,tab.details[m.id],page.fullAnalysis)).join('')||`<div class="history-empty">${page.games.length?'已加载对局中没有符合条件的战绩':'客户端返回的战绩为空'}</div>`}</div></div>`;
+ return `<div class="history-page"><header class="history-heading"><div class="history-heading-actions">${searchBar}${button('history-self','我的战绩','user','small quiet')}</div></header>${championUsageView(state.championUsage,data,{mass:state.familiarityMass})}${tabs}${tab?.error?`<p class="history-error" role="alert">${e(tab.error)} ${button('history-refresh','重试','','small')}</p>`:''}${tab?.loading?`<p class="history-loading" role="status">${tab.collecting?'正在收集更多对局，已加载 '+(page?.games.length||0)+' 局':'正在查询战绩…'} ${tab.collecting?button('history-stop','停止','','small quiet'):''}</p>`:''}${content}<footer class="history-footer">数据来自已登录客户端与游戏后台 · 接口不可用时保留错误说明 · 不读取游戏内存</footer></div>`;
 }

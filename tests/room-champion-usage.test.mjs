@@ -8,6 +8,7 @@ import {createRoomUsagePublisher} from '../services/room-champion-usage.mjs';
 import {createRoomService} from '../services/room.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
+import {recommendationConditionsKey} from '../src/core/recommendation-input.mjs';
 const usage=(counts={Ashe:400,Jinx:100},mass=.85)=>({version:1,mass,usage:{sampled:Object.values(counts).reduce((a,b)=>a+b,0),counts}});
 const summary=value=>({status:'ready',session:'a'.repeat(32),usage:value.usage});
 const frame=value=>({kind:'state',v:1,from:'本人',at:1000,lineup:[],pick:null,championUsage:value});
@@ -73,10 +74,10 @@ test('case and NFKC nickname aliases cannot bind one public player to two provis
 test('unavailable own history retry cycles do not change room recommendation inputs or restart the actual app worker',async()=>{
  const source=fs.readFileSync(new URL('../src/app.mjs',import.meta.url),'utf8'),extract=(a,b)=>source.slice(source.indexOf(a),source.indexOf(b,source.indexOf(a))),f=binding();
  let cancelled=0,queued=0;f.summary={revision:1,status:'error',session:'a'.repeat(32),usage:{sampled:0,counts:{}}};
- const context=vm.createContext({data:{},client:f.client,room:f.room,championUsage:f.summary,saved:{preferences:{familiarityMass:.85}},history:{observeClient(){}},windowLayout:{docked:false},route:'draft',recommendationKey,
+ const context=vm.createContext({data:{},client:f.client,room:f.room,championUsage:f.summary,saved:{preferences:{familiarityMass:.85}},history:{observeClient(){}},windowLayout:{docked:false},route:'draft',recommendationKey,recommendationRunner:null,recommendationSearchActive:false,communityAfter:'',
   results:[{id:'existing'}],offset:0,generating:true,recommendationRun:0,autoRecommendationKey:'existing',activeRecommendation:{cancel(){cancelled++;}},cancelRecommendationReveal(){},clearTimeout,markResultStale(){},render(){},queueCompanionRecommendation(){queued++;},
   recommendationInput(){return {slots:f.slots,...roomFamiliarityContext({...f,summary:context.championUsage})};}});
- vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function cancelRecommendation(){','\n'),context);
+ vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+source.split('\n').find(line=>line.startsWith('function cancelRecommendation(')),context);
  const before=recommendationKey(context.recommendationInput());
  for(let n=2;n<12;n++){context.acceptChampionUsage({...f.summary,revision:n,status:n%2?'error':'loading',scanned:0,target:500,error:'后台维护'});assert.equal(recommendationKey(context.recommendationInput()),before);}
  assert.equal(cancelled,0);assert.equal(queued,0);assert.equal(context.results[0].id,'existing');assert.equal(context.generating,true);
@@ -97,10 +98,10 @@ test('actual app room RPC and notifications clear changed candidates once and re
   if(change==='role')next.members[1].share.pick.role='jungle';
   if(change==='leave'){next.mode='idle';next.members=[];}
   const c=vm.createContext({...f,data:{},championUsage:f.summary,saved:{preferences:{familiarityMass:.85}},route:'draft',windowLayout:{docked:false},roomShareRoom:f.room.room,roomShareSig:'',roomShareWarned:false,roomQuietTimer:null,roomAutoQuiet:false,roomScanResults:[],roomError:'',AUTO_QUIET_MS:60000,
-   recommendationKey,roomFamiliarityContext,results:[{id:'visible-old'}],offset:6,generating:false,recommendationRun:0,autoRecommendationKey:'old',activeRecommendation:null,autoRecommendTimer:null,recommendationError:'',resultsSignature:'',showAllCandidates:false,clearTimeout,render(){},markResultStale(){},cancelRecommendationReveal(){},toast(){},scheduleRoomPublish(){},queueCompanionRecommendation(){queued++;},roomSharePayload:()=>({lineup:[],pick:null}),resultCreativePlan(){throw Error('A stale worker was committed');},
-   calculateRecommendation(){c.activeRecommendation={cancel(){cancelled++;}};return new Promise(resolve=>finish=resolve);},
-   recommendationInput(){return {slots:c.slots,...roomFamiliarityContext({client:c.client,room:c.room,slots:c.slots,scope:'party',ownRole:'mid',summary:c.championUsage,mass:.85})};},api:{roomPublish:async()=>next,roomLeave:async()=>next}});
-  vm.runInContext(extract('function applyRoomSnapshot(','function rememberPreparation(')+extract('async function publishRoomShare(','function scheduleRoomPublish(')+extract('function cancelRecommendation(){','\n')+extract('async function generate(next=false,automatic=false){','const sync=createClientSync')+`async function leaveRoom(){const action='room-leave';${extract("if(action==='room-leave'){","if(action==='room-transport')")}}`,c);
+   recommendationKey,recommendationConditionsKey,performance,recommendationFactoryGeneration:1,recommendationSearchActive:false,recommendationRunner:null,communityAfter:'',roomFamiliarityContext,results:[{id:'visible-old'}],offset:6,generating:false,recommendationRun:0,autoRecommendationKey:'old',activeRecommendation:null,autoRecommendTimer:null,recommendationError:'',resultsSignature:'',showAllCandidates:false,clearTimeout,render(){},markResultStale(){},cancelRecommendationReveal(){},toast(){},scheduleRoomPublish(){},queueCompanionRecommendation(){queued++;},roomSharePayload:()=>({lineup:[],pick:null}),resultCreativePlan(){throw Error('A stale worker was committed');},
+   calculateRecommendation(_input,accept){c.activeRecommendation={cancel(){cancelled++;}};return new Promise(resolve=>finish=rows=>{assert.equal(accept(rows),false,'The worker acceptance gate must reject the old room context');resolve({rows});});},
+   recommendationInput(){return {factoryGeneration:c.recommendationFactoryGeneration,slots:c.slots,...roomFamiliarityContext({client:c.client,room:c.room,slots:c.slots,scope:'party',ownRole:'mid',summary:c.championUsage,mass:.85})};},api:{roomPublish:async()=>next,roomLeave:async()=>next}});
+  vm.runInContext(extract('function applyRoomSnapshot(','function rememberPreparation(')+extract('async function publishRoomShare(','function scheduleRoomPublish(')+source.split('\n').find(line=>line.startsWith('function cancelRecommendation('))+extract('async function generate(next=false,automatic=false){','const sync=createClientSync')+`async function leaveRoom(){const action='room-leave';${extract("if(action==='room-leave'){","if(action==='room-transport')")}}`,c);
   const pending=c.generate(),metadata=structuredClone(f.room);metadata.members[1].share.at=99999;metadata.members[1].lastSeen=99999;
   c.applyRoomSnapshot(metadata);assert.equal(cancelled,0);assert.equal(queued,0);assert.equal(c.results[0].id,'visible-old');
   if(notificationFirst)c.applyRoomSnapshot(next);

@@ -1,0 +1,553 @@
+{
+  "schema": 1,
+  "scope": "hex-routes-and-choices",
+  "patch": "16.21",
+  "reviewedAt": "2026-10-24",
+  "basis": "Explicit compatibility review of these 16 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim. Effects 1305 and 2132 reviewed on 2026-10-24; prior hero reviews unchanged. Lillia has a separate community-route-only review. On 2026-10-24 reviewed TheBoomAndTheBass trigger only; Yasuo community kit anchor remains separate. Gluttonous Greaves3008 condition reviewed for the new Yasuo route; unresolved tooltip coefficients are not restated. On 2026-10-24 reviewed DoubleTime and ArmoredImpact trigger descriptions and conditional item dependencies for six separately scoped creator-inspired community directions; no shared hero or popularity review renewed. On 2026-10-24 reviewed GetJinxed and TakeemDownDownDown triggers plus the current map12 Hubris126697, Serylda6694, EndlessHunger2517 and Youmuu3142 item dependencies for the separate Hecarim creator route; no rocket damage coefficient or permanent movement-speed claim. On 2026-10-24 reviewed current BEES, StillHere, WeaponOfDestiny and Recursion summaries and community-only Ekko/Graves/Corki kit anchors. Gear3100/4645 checked for map12. Unresolved CrimsonCobalt SpellName and cooldown text remain unmodified and unadmitted. WeaponOfDestiny full tooltip is independently fingerprinted for its non-resale cost; a detailed-only change withdraws the route. On 2026-10-25 reviewed LichBrain current bonus-health-to-AP text, community-only Malphite/TahmKench kit anchors, and map12 FrozenHeart/Thornmail/DuskAndDawn dependencies. Reddit author only supplies W priority, not a complete skill order. Older video map context is explicitly unresolved in visible source details; no shared hero review renewed. Additional current-only Kaisa/Teemo community anchors and 4646/6655/3118 conditional item effects reviewed; Teemo mushroom route requires R and cannot treat BEES as ultimate damage. New source anecdotes do not establish complete augment eligibility or popularity. On 2026-10-25 independently reviewed community-only Taric/KSante/Jax kit anchors and six map12 author item dependencies. MadScientist exclusive respawn states and FinalForm R/cooldown cost are full-tooltip fingerprinted. No permanent R armor, old KSante armor-to-AD, zero cooldown or all-hit trigger claims admitted; unparsed item coefficients are not restated. On 2026-10-25 reviewed community-only Morgana/Nautilus/Udyr source kits and current control triggers1018/1375/1323 plus optional1318. Unknown combat counters remain unresolved; 1318 mobile stasis numbers require complete detailed text,1323 delays/limits retain their own detailed fingerprint. 3119 is only the purchasable evolution path, not unearned3121 effects; Udyr EH and unnamed boots are not inferred. No shared kit review or popularity renewed. On 2026-10-25 reviewed five exact summoner/movement augment summaries and four item dependencies for two dated DeepARAM editorial references. Zoe missile stacking and Poltergeist double triggers remain unknown; Quinn2077/2078 spell binding remains unadmitted. Only two independent community kit anchors added; no shared hero review renewed.",
+  "sources": {
+    "notes": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+    "characters": "https://raw.communitydragon.org/16.21/game/data/characters/",
+    "augments": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json"
+  },
+  "championReview": {
+    "schema": 2,
+    "patch": "16.21",
+    "champions": {
+      "Gwen": "94ed9252d63745ca",
+      "Kayle": "24bd683389a6d92b",
+      "Teemo": "b29454e3375baf8c",
+      "Sona": "2313d851c59e6f93",
+      "Soraka": "46ec394f508ebcc0",
+      "Jax": "1776e83d7e3a24c7",
+      "Volibear": "bf39a7d23077a7fc",
+      "Brand": "dfe0f7f6ef8e7e6e",
+      "Jinx": "98d589f2c16be412",
+      "Caitlyn": "d19bdcd858382502",
+      "Veigar": "b0c876605f73d7f8",
+      "Lux": "50314ad04c92f1a6",
+      "Yasuo": "d36ebea001e3d1cb",
+      "Hecarim": "f9c4c9b8aea59e68",
+      "Jhin": "226e6c11b8a992f5",
+      "Camille": "d8925ce8a69d2250"
+    },
+    "sourceAnchors": {
+      "Gwen": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "94ed9252d63745ca",
+        "observedAt": "2026-10-21T19:28:20.426Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Gwen",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/gwen/gwen.bin.json",
+            "sha256": "fde56c4e7aef9c24c89959e4a94e35d9456ced213d8589f6dbb12e0fc26ecb04"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "f5954f9fcb6d02f3"
+          }
+        }
+      },
+      "Kayle": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "24bd683389a6d92b",
+        "observedAt": "2026-10-21T19:28:20.432Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Kayle",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/kayle/kayle.bin.json",
+            "sha256": "c1e9422851c8d29227427f204b92d005a842e9c1685ee491a9193c64bc82eef3"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "3fa2585bed59105f"
+          }
+        }
+      },
+      "Teemo": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "b29454e3375baf8c",
+        "observedAt": "2026-10-21T19:28:20.529Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Teemo",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/teemo/teemo.bin.json",
+            "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "0795d6a5dc4ba5bb"
+          }
+        }
+      },
+      "Sona": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "2313d851c59e6f93",
+        "observedAt": "2026-10-21T19:28:20.453Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Sona",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/sona/sona.bin.json",
+            "sha256": "8ad8fdcf17aff949bc7a9f8b6e0c7235f396346f7cba27f7bff26528975560a1"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "8146f69f6cdef897"
+          }
+        }
+      },
+      "Soraka": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "46ec394f508ebcc0",
+        "observedAt": "2026-10-21T19:28:20.454Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Soraka",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/soraka/soraka.bin.json",
+            "sha256": "efdf1cfccf0fbb6bb3de9f8e2e7e5641eb0e628955c602dbe93be699b2ce8e83"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "43b0fc1302f2816c"
+          }
+        }
+      },
+      "Jax": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "1776e83d7e3a24c7",
+        "observedAt": "2026-10-21T19:28:20.429Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Jax",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/jax/jax.bin.json",
+            "sha256": "ef33ab080cbdbb35cabda5172f687bcba9d7e2c49c62cf9c7e4cfe8903d27f28"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "bfaaae4c0ee698a4"
+          }
+        }
+      },
+      "Volibear": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "bf39a7d23077a7fc",
+        "observedAt": "2026-10-21T19:28:20.534Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Volibear",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/volibear/volibear.bin.json",
+            "sha256": "ec12da034e4cfecc17c38d4d3368793d30a0c56d08fa723af06a071d3555022c"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "340dacf5c50799b2"
+          }
+        }
+      },
+      "Brand": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "dfe0f7f6ef8e7e6e",
+        "observedAt": "2026-10-21T19:28:20.340Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Brand",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/brand/brand.bin.json",
+            "sha256": "6fa48fcc58833650750981e3f64657fdd6ba8392741ee11947fd48d6a7da96d4"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "12112af12e321441"
+          }
+        }
+      },
+      "Jinx": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "98d589f2c16be412",
+        "observedAt": "2026-10-21T19:28:20.430Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Jinx",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/jinx/jinx.bin.json",
+            "sha256": "5ca25fc97c2da4874b88de6faec7dcfd5ea991b8edd1773d9a2cb9ecd5b2091f"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "18a489971bd9889a"
+          }
+        }
+      },
+      "Caitlyn": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d19bdcd858382502",
+        "observedAt": "2026-10-21T19:28:20.341Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Caitlyn",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+            "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "6c728252e5826813"
+          }
+        }
+      },
+      "Veigar": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "b0c876605f73d7f8",
+        "observedAt": "2026-10-21T19:28:20.532Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Veigar",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
+            "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "0d5181fbdf1760ef"
+          }
+        }
+      },
+      "Lux": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "50314ad04c92f1a6",
+        "observedAt": "2026-10-21T19:28:20.437Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Lux",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/lux/lux.bin.json",
+            "sha256": "9223cdf0a3d94223309fc69eb0c3865444b2884004b443dbcd066e70ffe0b952"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "cc7818802b8d5fc7"
+          }
+        }
+      },
+      "Yasuo": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d36ebea001e3d1cb",
+        "observedAt": "2026-10-21T19:28:20.536Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Yasuo",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+            "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "5c4d9aa5346ca2f7"
+          }
+        }
+      },
+      "Hecarim": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "f9c4c9b8aea59e68",
+        "observedAt": "2026-10-21T19:28:20.427Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Hecarim",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/hecarim/hecarim.bin.json",
+            "sha256": "8107a10cc214af38a79ff9f0551fd3a8c77231a1998aeda6f8b5a6c0bf8a4dc1"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "2a4e6af555abb6c6"
+          }
+        }
+      },
+      "Jhin": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "226e6c11b8a992f5",
+        "observedAt": "2026-10-21T19:28:20.430Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Jhin",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
+            "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "3aaa1bcaed04d760"
+          }
+        }
+      },
+      "Camille": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d8925ce8a69d2250",
+        "observedAt": "2026-10-21T19:28:20.342Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Camille",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/camille/camille.bin.json",
+            "sha256": "032045fc45a37b5c7e01084660a1e374e98463d64bfbfb16238213f44a028907"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "67751120f662608d"
+          }
+        }
+      }
+    }
+  },
+  "effects": {
+    "1002": "5342b67e91c66da7",
+    "1004": "faa7bd8ba40f8373",
+    "1006": "14eb693646ab808a",
+    "1011": "875e5f339120b690",
+    "1018": "ee9994eafadf6717",
+    "1019": "39433b09f45bad44",
+    "1022": "f9a340a945b0ef7d",
+    "1029": "cea5e62837932d77",
+    "1030": "97d81d287bd887dd",
+    "1045": "45f67c9c58d41f19",
+    "1047": "f399682185614aef",
+    "1048": "618f747d50e3039c",
+    "1053": "f64e303270bd11af",
+    "1056": "4e2d61bdf7c0e4e3",
+    "1058": "d51dae206a24d183",
+    "1068": "d34d7a01433a86a1",
+    "1077": "5c8235dd21ddee01",
+    "1080": "300d567292578364",
+    "1088": "2f50aa7d5b45f39f",
+    "1112": "d3c6d04abbdd2f6d",
+    "1116": "e1cc765d570228e3",
+    "1118": "d636a9fe1a99004d",
+    "1129": "dc220ccf50570edf",
+    "1141": "8728ab2e82374914",
+    "1187": "3bdd8bbc859eab31",
+    "1194": "22915c624608c9fe",
+    "1205": "f17a627ad7e21e23",
+    "1211": "d963d75ae1e9b2bb",
+    "1214": "d10779ed0f10b84c",
+    "1305": "143de88d1c83d389",
+    "1311": "f31174789bb24e9e",
+    "1314": "f9b04d2fe7aadef8",
+    "1315": "1cee2338a5490aee",
+    "1318": "28967e6c09fc3a3c",
+    "1323": "6bebf2ec0ff80c89",
+    "1328": "730654a0bb845761",
+    "1344": "93745b9978f7bac3",
+    "1347": "99719d749e1ae0ac",
+    "1348": "5d0eeef52b77f812",
+    "1349": "8d402b2315f9dd91",
+    "1375": "5a05df95311bf608",
+    "1413": "4e961bfa657a1320",
+    "1996": "3fa82b9c2eb5aa74",
+    "2132": "4ea87025478b03be",
+    "2134": "225eb737c87a5ab5",
+    "3004": "b57a900efdeb77a8",
+    "3036": "bd1608245289e556",
+    "3049": "ded7ca341242c59d",
+    "3078": "8232e380baff1ebc",
+    "3081": "b06d402b5eec2638",
+    "3086": "eb16992035c1c40e",
+    "3094": "824a51a6baaf4bda",
+    "3116": "4d38261370cf1dd7",
+    "3131": "51d21ab12c3299f6",
+    "3132": "ae505dbea3354e28"
+  },
+  "items": {
+    "2501": "6640c33bd563b853",
+    "2502": "b2d7ea0c096329ce",
+    "2510": "51bf0af3a3609a5f",
+    "2517": "0992511be8e60a36",
+    "3003": "6e4dddc2dc647407",
+    "3004": "8dcf37b4538a7a3c",
+    "3006": "a91edf4d1fd8d2bc",
+    "3008": "c12ff3f6551c4c72",
+    "3031": "399e9523f1b7d20a",
+    "3036": "638d1f3db688cb2e",
+    "3047": "87db48ef54ce5ce0",
+    "3053": "f263cbbf40846cc2",
+    "3065": "65f6f24f8b1e8e92",
+    "3070": "63c2fbc934170788",
+    "3071": "f76d06cba940936d",
+    "3072": "025dc8a402ea9021",
+    "3075": "b71d7617bf7d6366",
+    "3078": "521032faa395a097",
+    "3084": "816d39824d4e6e02",
+    "3089": "999d4b976fe2d546",
+    "3094": "29f19115313f6301",
+    "3100": "61419a0480e75737",
+    "3110": "4a80ab29e7d70877",
+    "3111": "85a8e879d855181c",
+    "3115": "ef85e0677b1ae84c",
+    "3116": "0527cd04d01e94a8",
+    "3118": "5115ccce2d4d3946",
+    "3119": "979784440a37efbb",
+    "3135": "4ccdf3ad2cfbc06c",
+    "3142": "029df8a14db27c06",
+    "3153": "15587a38452aa78b",
+    "3156": "4fd9ccb5534d5d0a",
+    "3157": "b2f73e80d3e77fe7",
+    "3158": "63ebe65f86d913b8",
+    "3161": "ef48fd76ee21d277",
+    "3302": "1fb6331234614176",
+    "3504": "4d964e703de16015",
+    "4633": "ca994325451939bb",
+    "4645": "b114a6b51546e040",
+    "4646": "d7f54fc27b1c146c",
+    "6333": "65943886b530ef44",
+    "6610": "b989ba466079a218",
+    "6617": "85c508b874bbbc69",
+    "6653": "af920af056ef62d1",
+    "6655": "bb83fa4bc9949283",
+    "6657": "b1acf20d25d6c10f",
+    "6662": "084d5ca9a18203f8",
+    "6665": "7ed4134687d387da",
+    "6675": "ed7cef16ced3de1b",
+    "6676": "2227ece5ba86c42d",
+    "6694": "6a7a039571140166",
+    "6696": "c7d6e8cf7987593a",
+    "123430": "24b48c9ae384a467",
+    "126697": "ba473d572f19a3ee"
+  },
+  "micro": {
+    "routeIds": [],
+    "augmentIds": [],
+    "itemIds": [],
+    "basis": "仅收录有当前正式版本依据的社区配套；16.20来源未取得当版作者资料前不进入16.21推荐。"
+  },
+  "communityPolicy": "current-source-only",
+  "completeDetails": [
+    1053,
+    1344,
+    1318
+  ],
+  "effectDetails": {
+    "1053": "854e9f581d96742e",
+    "1318": "27a2e4120845948f",
+    "1323": "7ea75a48f353bc94",
+    "1344": "8fa6a6e6144b21b5",
+    "3081": "8851c37a2fa46d87"
+  }
+}

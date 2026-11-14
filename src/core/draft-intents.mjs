@@ -124,3 +124,14 @@ export function recommendationDraft(slots,session,champions,{ownRole='',bans=[],
  }
  return next;
 }
+// Display-only ownership for lane dragging. This must not change the confirmed
+// recommendation scope or persist a hover as a selected champion.
+export function companionRosterDraft(slots,session,champions,options={}){
+ const visible=recommendationDraft(slots,session,champions,options),team=session?.myTeam||[],keys=new Map(champions.map(c=>[c.id,c.key]));
+ return visible.map(slot=>{
+  if(!slot.publicIntent)return slot;
+  const owners=team.filter(p=>Number.isInteger(p.cellId)&&p.cellId>=0&&p.cellId<30&&!Number(p.championId)&&Number(p.championPickIntent)===keys.get(slot.champion));
+  if(owners.length!==1||team.filter(p=>p.cellId===owners[0].cellId).length!==1)return slot;
+  return {...slot,clientCellId:owners[0].cellId};
+ });
+}

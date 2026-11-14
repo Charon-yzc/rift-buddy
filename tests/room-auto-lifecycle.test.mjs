@@ -24,10 +24,30 @@ function harness({derive=auto.deriveAutoRoom}={}){
  const createRoomService=options=>{const service=actualCreateRoomService({...options,webSocketFactory:factory,now:()=>clock.value,relayOpenTimeoutMs:600000,relaySilenceMs:600000,discovery:false,listenHost:'127.0.0.1'});services.push(service);return service;};
  const create=new Function('createRoomUsagePublisher','createRoomService','sanitizeNick','initialRelayUrl','deriveAutoRoom','autoRoomNick','autoRoomDecision','decorateAutoRoom','AUTO_ROOM_PHASES','AUTO_RETRY_MS','publishWindows','diagnostic','guard','os','Date',`
   let roomService=null,state={preferences:{roomAuto:true,autoSync:true,roomNick:'Test#CN1',relayUrl:'ws://127.0.0.1'}},latestClient=null;
+  let observeRoomPreferences=()=>{},saveTask=Promise.resolve(),readStatus=async()=>latestClient,writeState=async()=>{};
   const roomUsagePublisher=createRoomUsagePublisher({getService:()=>roomService,getSummary:()=>({status:'offline'}),getMass:()=>.85});
-  const status=async()=>latestClient,saveCurrentState=async update=>{state=update(state);};
+  const status=()=>readStatus();
+  const saveCurrentState=update=>saveTask=saveTask.catch(()=>{}).then(async()=>{
+   const previous=state.preferences;
+   const next=update(state);
+   await writeState(next);
+   state=next;
+   observeRoomPreferences(previous,state.preferences);
+   return state;
+  });
   ${snippet}
-  return {queueRoomAuto,roomAutoStep,closeAutoRoomIfRevoked,setClient:value=>latestClient=value,setPreferences:value=>Object.assign(state.preferences,value),advanceRound:clearRoomBallot,snapshot:()=>({key:roomAutoKey,code:roomAutoCode,pin:roomAutoPin,blocked:roomAutoBlockedKey,error:roomAutoError,goneSince:roomAutoGoneSince,offlineSince:roomAutoOfflineSince,failedUntil:roomAutoFailedUntil,room:roomService?.snapshot()}),dispose:()=>roomService?.dispose()};`);
+  const track=task=>{if(typeof trackRoomSwitchOff==='function')trackRoomSwitchOff(task);};
+  const disableWhileSaving=write=>{
+   const saved=saveTask=saveTask.catch(()=>{}).then(async()=>{
+    const previous=state.preferences;
+    await write;
+    state={...state,preferences:{...previous,roomAuto:false}};
+    observeRoomPreferences(previous,state.preferences);
+   });
+   track(saved);
+   return saved.then(()=>closeAutoRoomIfRevoked());
+  };
+  return {queueRoomAuto,roomAutoStep,closeAutoRoomIfRevoked,disableWhileSaving,setStatus:value=>readStatus=value,setWriteState:value=>writeState=value,setClient:value=>latestClient=value,setPreferences:value=>Object.assign(state.preferences,value),advanceRound:clearRoomBallot,snapshot:()=>({key:roomAutoKey,code:roomAutoCode,pin:roomAutoPin,blocked:roomAutoBlockedKey,error:roomAutoError,goneSince:roomAutoGoneSince,offlineSince:roomAutoOfflineSince,failedUntil:roomAutoFailedUntil,room:roomService?.snapshot()}),dispose:()=>roomService?.dispose()};`);
  const api=create(createRoomUsagePublisher,createRoomService,sanitizeNick,initialRelayUrl,derive,auto.autoRoomNick,auto.autoRoomDecision,auto.decorateAutoRoom,auto.AUTO_ROOM_PHASES,auto.AUTO_RETRY_MS,(_name,value)=>updates.push(value),message=>reports.push(message),(name,handler)=>handlers.set(name,handler),{networkInterfaces:()=>({})},MockDate);
  return {...api,clock,sockets,updates,reports,handlers,services};
 }
@@ -121,6 +141,52 @@ test('manual leave cancels pending handshake and blocks the same party',async t=
  h.setClient(party());const joining=h.queueRoomAuto();await spin(()=>h.sockets.length===1);h.sockets[0].open();
  h.handlers.get('room-leave')();await joining;await h.queueRoomAuto();
  assert.equal(h.snapshot().room.mode,'idle');assert.equal(h.sockets.length,1);assert.equal(h.snapshot().blocked,'party-aaaaaa');assert.equal(h.snapshot().error,'');
+});
+
+test('leaving during an explicit reconnect read keeps the same party blocked',async t=>{
+ const h=harness();t.after(()=>h.dispose());h.setClient({...party(),phase:'ChampSelect'});
+ const joined=h.queueRoomAuto();await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();await joined;
+ const read=deferred();h.setStatus(()=>read.promise);
+ const reconnect=h.handlers.get('room-reconnect')();reconnect.catch(()=>{});
+ h.handlers.get('room-leave')();read.resolve();
+ // Allow the original behavior to settle so failure distinguishes rejoining from a timeout.
+ let settled=false;reconnect.then(()=>settled=true,()=>settled=true);
+ await spin(()=>settled||h.sockets.length===2);
+ if(h.sockets[1]){h.sockets[1].open();h.sockets[1].welcome();}
+ await assert.rejects(reconnect,/已取消重新连接/);
+ assert.equal(h.snapshot().room.mode,'idle');assert.equal(h.snapshot().blocked,'party-aaaaaa');assert.equal(h.sockets.length,1);
+});
+
+test('automatic join waits for switch-off storage and resumes once if the write fails',async t=>{
+ const h=harness();t.after(()=>h.dispose());h.setClient({...party(),phase:'ChampSelect'});
+ const write=deferred();
+ const failed=h.disableWhileSaving(write.promise.then(()=>{throw Error('fixture write failed');}));
+ const failure=assert.rejects(failed,/fixture write failed/);
+ const joining=h.queueRoomAuto();
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(h.snapshot().key,null,'Do not claim a room before the switch-off save settles');
+ assert.equal(h.sockets.length,0);
+ write.resolve();await failure;
+ await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();await joining;
+ assert.equal(h.snapshot().room.link,'connected');assert.equal(h.sockets.length,1);
+});
+
+test('leaving a manual room during a reconnect enable write blocks the next automatic poll',async t=>{
+ const h=harness();t.after(()=>h.dispose());h.setClient({...party(),phase:'ChampSelect'});h.setPreferences({roomAuto:false});
+ const manual=h.handlers.get('room-relay')({url:'ws://127.0.0.1',room:'123456',pin:'654321'},'Test#CN1');
+ await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();await manual;
+ const written=deferred(),started=deferred();h.setWriteState(next=>{started.resolve(next);return written.promise;});
+ const first=assert.rejects(h.handlers.get('room-reconnect')(),/已取消重新连接/);
+ assert.equal((await started.promise).preferences.roomAuto,true);
+ const read=deferred();h.setStatus(()=>read.promise);
+ const second=assert.rejects(h.handlers.get('room-reconnect')(),/已取消重新连接/);
+ assert.equal(h.snapshot().room.room,'123456');h.handlers.get('room-leave')();
+ written.resolve();read.resolve();await Promise.all([first,second]);
+ assert.equal(h.snapshot().room.mode,'idle');
+ const poll=h.queueRoomAuto();
+ assert.equal(h.snapshot().blocked,'party-aaaaaa');
+ assert.equal(h.snapshot().key,null);
+ await poll;assert.equal(h.sockets.length,1);
 });
 
 test('manual room wins if it is established during auto derivation',async t=>{

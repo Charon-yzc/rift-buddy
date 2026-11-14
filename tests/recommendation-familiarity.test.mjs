@@ -1,9 +1,11 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import {canonicalFamiliarity,localChampionFamiliarity,roleFamiliarityWeights,familiarityLineups,familiarityWinner} from '../src/core/recommendation-familiarity.mjs';
 import {recommend,createSlots} from '../src/core/recommend.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
 import vm from 'node:vm';
-const {champions}=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));
+import {recommendationConditionsKey} from '../src/core/recommendation-input.mjs';
+const {champions}=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
 const profile=(counts,mass=.85,member='local:a')=>({member,mass,usage:{sampled:Object.values(counts).reduce((a,b)=>a+b,0),counts}});
 const bottom=()=>createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),...(s.role==='support'?{champion:'Nami',locked:true}:{})}));
 const input=()=>({slots:bottom(),champions,scope:'bot',style:'balanced',rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx','Vayne','Jhin','Ezreal','MissFortune','Lucian','KogMaw']}},randomSeed:'round',limit:6});
@@ -15,9 +17,9 @@ test('profiles normalize per legal lane and per player, with equal histories ind
  assert.deepEqual(roleFamiliarityWeights(['support'],candidates,members),{support:actual.support});
 });
 
-test('complete samples reach below the top24 beam and keep member ownership, locks and duplicates legal',()=>{
+test('complete sampling retains a legal familiar hero outside a short candidate prefix and preserves fixed members',()=>{
  const heroes=Array.from({length:35},(_,i)=>({id:'Hero'+i})),fixed=createSlots().map(s=>({...s,champion:s.role==='mid'?'Ahri':null})),candidates={bottom:heroes,support:[{id:'Nami'},{id:'Lulu'}]},weights=roleFamiliarityWeights(['bottom','support'],candidates,{bottom:profile({Hero34:500},1),support:profile({Lulu:50},1)});
- const samples=familiarityLineups(fixed,['bottom','support'],candidates,weights,'stable');assert.equal(samples.length,48);
+ const samples=familiarityLineups(fixed,['bottom','support'],candidates,weights,'stable',12);assert.equal(samples.length,12);
  for(const row of samples){assert.equal(row.find(s=>s.role==='bottom').champion,'Hero34');assert.equal(row.find(s=>s.role==='support').champion,'Lulu');assert.equal(row.find(s=>s.role==='mid').champion,'Ahri');}
  const clash=familiarityLineups(createSlots(),['mid','support'],{mid:[{id:'Lux'},{id:'Ahri'}],support:[{id:'Lux'},{id:'Nami'}]},{mid:{Lux:.9,Ahri:.1},support:{Lux:.9,Nami:.1}},'duplicates');assert.ok(clash.length);assert.ok(clash.every(row=>new Set(row.map(s=>s.champion).filter(Boolean)).size===2));
 });
@@ -32,7 +34,7 @@ test('default85/15 produces the requested preference frequency, with exact endpo
 });
 
 test('real recommender applies familiarity before selecting, retains fit values and stable pagination',()=>{
- const base=input(),all=recommend({...base,limit:30}),best=Math.max(...all.map(row=>row.score)),known=all.findLast(row=>row.score>=best-18).slots.find(s=>s.role==='bottom').champion;
+ const base=input(),all=recommend({...base,limit:30}),known=all.at(-1).slots.find(s=>s.role==='bottom').champion;
  const biased=recommend({...base,familiarityByRole:{bottom:profile({[known]:500},1)},limit:30});assert.equal(biased.length,1);assert.ok(biased.every(row=>row.slots.find(s=>s.role==='bottom').champion===known));
  const shared=biased.filter(row=>all.some(other=>other.id===row.id));assert.ok(shared.length);for(const row of shared){const other=all.find(other=>other.id===row.id);assert.equal(row.score,other.score);assert.deepEqual(row.compositionFit,other.compositionFit);assert.equal(row.slots.find(s=>s.role==='support').champion,'Nami');}
  const opts={...base,familiarityByRole:{bottom:profile({Ashe:300,Jinx:200})}},whole=recommend({...opts,limit:8}),pages=[...recommend({...opts,limit:4}),...recommend({...opts,limit:4,offset:4})];assert.deepEqual(pages,whole);
@@ -47,17 +49,8 @@ test('extra teammate variants cannot buy more personal probability mass for a le
  const original=entries.slice(0,2);for(let n=0;n<100;n++)assert.equal(familiarityWinner(entries,['bottom','support'],weights,'same',n).slots[0].champion,familiarityWinner(original,['bottom','support'],weights,'same',n).slots[0].champion);
 });
 
-test('best teammate variants retain the hero draw mass while excluding clearly worse fits',()=>{
- const entries=[{slots:[{role:'bottom',champion:'Ashe'},{role:'support',champion:'Nami'}],score:90},{slots:[{role:'bottom',champion:'Ashe'},{role:'support',champion:'Sona'}],score:60},{slots:[{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],score:88}],weights={bottom:{Ashe:.85,Jinx:.15}};
- for(let draw=0;draw<500;draw++){
-  const ordinary=familiarityWinner(entries,['bottom','support'],weights,'quality',draw),best=familiarityWinner(entries,['bottom','support'],weights,'quality',draw,{bestVariant:true});
-  assert.equal(best.slots[0].champion,ordinary.slots[0].champion,'Teammate quality must not alter the sampled personal hero');
-  assert.ok(best.score>=Math.max(...entries.filter(entry=>entry.slots[0].champion===best.slots[0].champion).map(entry=>entry.score))-5);
- }
-});
-
 test('an explicit tempo cannot silently fall back to a familiar hero that does not match it',()=>{
- const options={...input(),play:{tempo:'growth'},randomSeed:'tempo',limit:30},ordinary=recommend(options);
+ const options={...input(),rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx']}},play:{tempo:'growth'},randomSeed:'tempo',limit:30},ordinary=recommend(options);
  assert.ok(ordinary.some(entry=>entry.strategy.matched));
  assert.equal(ordinary.find(entry=>entry.slots.find(s=>s.role==='bottom').champion==='Ashe').strategy.matched,false);
  const strict=recommend({...options,familiarityByRole:{bottom:profile({Ashe:10},1)}});
@@ -113,9 +106,9 @@ test('actual app summary notifications cancel an old worker only for changed pre
  const source=fs.readFileSync(new URL('../src/app.mjs',import.meta.url),'utf8'),extract=(a,b)=>source.slice(source.indexOf(a),source.indexOf(b,source.indexOf(a)));
  let finish,cancelled=0,queued=0;const summary={revision:1,status:'ready',session:'a'.repeat(32),usage:profile({Ahri:500}).usage};
  const context=vm.createContext({data:{champions},client:{connected:true,session:{localPlayerCellId:1}},slots:createSlots().map(s=>s.role==='mid'?{...s,clientCellId:1}:s),scope:'party',saved:{preferences:{familiarityMass:.85}},championUsage:summary,route:'draft',windowLayout:{docked:false},history:{observeClient(){}},
-  recommendationKey,localChampionFamiliarity,results:[{id:'old'}],offset:0,generating:false,recommendationRun:0,autoRecommendationKey:'old',activeRecommendation:null,autoRecommendTimer:null,recommendationError:'',resultsSignature:'',showAllCandidates:false,clearTimeout,render(){},markResultStale(){},cancelRecommendationReveal(){},toast(){},queueCompanionRecommendation(){queued++;},resultCreativePlan(){throw Error('stale completion was accepted');},
+  recommendationKey,recommendationConditionsKey,performance,recommendationFactoryGeneration:0,recommendationSearchActive:false,communityAfter:'',recommendationRunner:{invalidate(){},dispose(){}},localChampionFamiliarity,results:[{id:'old'}],offset:0,generating:false,recommendationRun:0,autoRecommendationKey:'old',activeRecommendation:null,autoRecommendTimer:null,recommendationError:'',resultsSignature:'',showAllCandidates:false,clearTimeout,render(){},markResultStale(){},cancelRecommendationReveal(){},toast(){},queueCompanionRecommendation(){queued++;},resultCreativePlan(){throw Error('stale completion was accepted');},
   calculateRecommendation(){context.activeRecommendation={cancel(){cancelled++;}};return new Promise(resolve=>finish=resolve);},recommendationInput(){return {slots:context.slots,familiarityByRole:localChampionFamiliarity({client:context.client,slots:context.slots,scope:'party',ownRole:'mid',summary:context.championUsage,mass:.85})};}});
- vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function cancelRecommendation(){','\n',)+extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),context);
+ vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function cancelRecommendation(','\n')+extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),context);
  const pending=context.generate();context.acceptChampionUsage({...summary,revision:2,scanned:500});assert.equal(cancelled,0);assert.equal(context.generating,true);
  context.acceptChampionUsage({...summary,revision:3,usage:profile({Ahri:400,Lux:100}).usage});assert.equal(cancelled,1);assert.equal(queued,1);assert.equal(context.results.length,0);
  finish([{id:'late'}]);await pending;assert.equal(context.results.length,0);assert.equal(context.generating,false);

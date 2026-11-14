@@ -70,7 +70,7 @@ test('packaged guide model wires resources and powers to a dedicated readable ta
  const actual={...live(feed([event(1,'DragonKill',500,{DragonType:'Fire',KillerName:own.riotId})]),{gameTime:750}),available:true,champion:'Ashe',mode:'rift',at:Date.now(),level:7,gold:800,inventory:[],skills:{Q:1,W:3,E:1,R:1},enemies:[],allies:[]};
  const m=createGuideModel(data,selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'}),actual);
  assert.equal(m.objectives.rows.find(r=>r.id==='dragon').remaining,50);
- const html=renderGuide({model:m},'rhythm',false,()=>'<img>');assert.match(html,/data-tab="rhythm"/);assert.match(html,/还有 0:50/);assert.match(html,/自己的技能与成装节点/);assert.doesNotMatch(html,/private-own/);
+ const html=renderGuide({model:m},'rhythm',false,()=>'<img>');assert.match(html,/compact-guide-main/);assert.doesNotMatch(html,/data-tab=|private-own|还有 0:50/);
 });
 test('clock formatting keeps minute boundaries readable',()=>{assert.equal(clockLabel(59.5),'1:00');assert.equal(clockLabel(0),'0:00');assert.equal(clockLabel(null),'—');});
 test('known live haste and flat magic penetration are retained without guessing percentage wire semantics',()=>{

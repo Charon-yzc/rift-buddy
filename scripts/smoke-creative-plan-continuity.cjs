@@ -10,6 +10,7 @@ async function run(){
  global.fetch=async()=>{throw Error('Isolated creative workflow: external network disabled');};
  let phase=restart?'ChampSelect':'Lobby',gameId=restart?'1510':'0',support='Rell',formalPosition=restart?'TOP':'MIDDLE';
  const output=options=>{
+  if((options.method||'GET')==='GET'&&['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path)){assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);return [{id:999999,name:'隔离字典'}];}
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);if(options.method&&options.method!=='GET'){writes++;throw Error('No rune writes allowed in creative workflow');}
   if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
@@ -37,7 +38,7 @@ async function run(){
   assert.deepEqual(plan,sourcePlan,'Saving or reopening changed the original reordered plan');
   assert.notDeepEqual(plan.members.map(m=>m.champion),plan.ordered.map(m=>m.champion));assert.equal(favorite.configurations.length,3);
   for(const member of plan.members){
-   await click('.plan-drawer [data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');await until(()=>js('!!document.querySelector("#build-role,.configuration-current")'),'Reordered member could not open');
+   main.webContents.send('open-build',{...favorite.configurations.find(c=>c.id===member.champion&&c.role===member.role),id:member.champion,role:member.role,mode:'rift',creativePlan:plan,comboId:plan.id,readOnly:true});await until(()=>js('!!document.querySelector("#build-role,.configuration-current")'),'Reordered member could not open');
    assert.equal(await js('document.querySelector("#build-role")?.value||JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].role'),member.role);
    for(const job of plan.ordered)assert.ok((await js('document.querySelector(".combo-config,.companion-note").textContent')).includes(job.job));
    await click('[data-action=close]');await click('[data-action=result-detail][data-index="0"]');
@@ -77,10 +78,10 @@ async function run(){
  await click('[data-action=guide-current]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Creative guide missing');
  const guideJs=code=>guide.webContents.executeJavaScript(code,true);await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model?.combo?.origin==="creative")'),'Creative context did not reach guide');
  const payload=await guideJs('window.guide.bootstrap()'),model=payload.model;assert.equal(model.comboConfirmed,true);assert.deepEqual(model.combo.creativePlan,original);assert.deepEqual(model.combo.steps,original.steps);assert.equal(model.combo.window,original.window);assert.equal(model.runes.length,9);assert.equal(model.selection.role,'mid');assert.equal(payload.current.formalRole,'top');
- await guideJs('window.guide.control("layout","details")');await guideJs('document.querySelector("[data-tab=team]").click()');await until(()=>guideJs('!!document.querySelector(".team-steps")'),'Creative guide steps were not rendered');
- const guideText=await guideJs('document.querySelector(".expanded main").textContent');for(const step of original.steps)assert.ok(guideText.includes(step));assert.ok(guideText.includes(original.window));assert.ok(guideText.includes(original.ordered.find(m=>m.champion==='Annie').job));assert.ok(guideText.includes(original.dataVersion));
- await guideJs('document.querySelector(".team-steps").scrollIntoView({block:"center"})');
- await capture(guide,restart?'creative-reopened-guide.png':'creative-original-guide.png');
+ assert.equal(await guideJs('!!document.querySelector("[data-tab]")'),false);
+ main.webContents.send("open-build",model.selection);await until(()=>js('!!document.querySelector(".drawer-content .play-steps")'),"Saved plan configuration missing");
+ const guideText=await js('document.querySelector(".drawer-content").textContent');for(const step of original.steps)assert.ok(guideText.includes(step));assert.ok(guideText.includes(original.window));assert.ok(guideText.includes(original.ordered.find(m=>m.champion==="Annie").job));assert.ok(guideText.includes(original.dataVersion));
+ await capture(main,restart?"creative-reopened-configuration.png":"creative-original-configuration.png");await click('[data-action=close]');
  await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await js('document.querySelector("#toast").className=""');
  await fs.writeFile(path.join(root,restart?'creative-reopened.png':'creative-loaded.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  if(restart){

@@ -1,8 +1,10 @@
+import {HEX_OWNED_LIMIT} from './hex-note-limits.mjs';
 import {validateSharedEquipment} from './shared-equipment.mjs';
 import {jungleGuidance,validateJungleNotes} from './jungle-guidance.mjs';
 import {completeGearPlan} from './complete-gear.mjs';
 import {itemConflicts} from './mechanics.mjs';
 import {validateSummonerIds} from './summoner-selection.mjs';
+import {validateHexWindows} from './hex-micro.mjs';
 import {publicEquipment} from './scoreboard.mjs';
 import {getBuild,SHARDS} from './builds.mjs';
 import {ROLES,profile} from './rules.mjs';
@@ -10,7 +12,11 @@ import {purchasePlan,liveGuideStatus,purchaseAction} from './purchase.mjs';
 import {compareAugments} from './hex-compare.mjs';
 import {hexAugmentReference} from './hex-augment-reference.mjs';
 import {hexPlayerRoutes} from './hex-routes.mjs';
+import {hexItemSynergies} from './hex-item-synergies.mjs';
+import {hexPairedMicroRoutes,hexMicroFallback} from './hex-micro-routes.mjs';
+import {hexRouteCard} from './hex-route-card.mjs';
 import {hexDecision} from './hex-decisions.mjs';
+import {isCurrentHexData,isReadableHexData,HEX_DATA_PENDING} from './hex-data-current.mjs';
 import {comboStage,playStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {validateCreativePlan,creativeMemberCombo} from './creative-plan.mjs';
@@ -40,6 +46,7 @@ export function validateDuelPick(value){
 }
 export function validateLoadoutSelection(value){
  const selected={};
+ if(value.coreAuto!==undefined){if(value.mode!=='rift'||value.coreAuto!==true)throw Error('核心自动选择格式不正确');selected.coreAuto=true;}
  if(value.sharedEquipment!==undefined){if(value.mode!=='rift')throw Error('共享出装只适用于召唤师峡谷');selected.sharedEquipment=validateSharedEquipment(value.sharedEquipment);}
  if(value.sourceOpponent!==undefined){if(value.mode!=='rift'||!hero(value.sourceOpponent)||value.sourceOpponent===(value.id||value.champion))throw Error('来源对手筛选格式不正确');selected.sourceOpponent=value.sourceOpponent;}
  if(value.customRunePage!==undefined){if(value.mode!=='rift')throw Error('自选符文只适用于召唤师峡谷');selected.customRunePage=validateCustomRunePage(value.customRunePage);}
@@ -64,7 +71,7 @@ export function validateGuideSelection(value){
  if(value.coreIndex!==undefined&&(!Number.isInteger(value.coreIndex)||value.coreIndex<0||value.coreIndex>14))throw Error('核心方案格式不正确');
  if(value.conditions!==undefined&&(!Array.isArray(value.conditions)||value.conditions.length>5||!value.conditions.every(c=>conditions.includes(c))))throw Error('局势选项格式不正确');
  if(value.augmentIds!==undefined&&(!Array.isArray(value.augmentIds)||value.augmentIds.length>5||!value.augmentIds.every(Number.isInteger)))throw Error('强化备选格式不正确');
- for(const [key,max] of [['compareIds',3],['ownedAugmentIds',6]])if(value[key]!==undefined&&(!Array.isArray(value[key])||value[key].length>max||!value[key].every(Number.isInteger)))throw Error('强化比较格式不正确');
+ for(const [key,max] of [['compareIds',3],['ownedAugmentIds',HEX_OWNED_LIMIT]])if(value[key]!==undefined&&(!Array.isArray(value[key])||(key==='ownedAugmentIds'?new Set(value[key]).size:value[key].length)>max||!value[key].every(Number.isInteger)))throw Error('强化比较格式不正确');
  const focus={};for(const key of ['threatId','protectId'])if(value[key]){if(!hero(value[key]))throw Error('局势关注英雄格式不正确');if(value.mode==='rift')focus[key]=value[key];}
  if(value.matchupGameId!==undefined){if(value.mode!=='rift'||!focus.threatId||!/^\d{1,20}$/.test(String(value.matchupGameId))||Number(value.matchupGameId)<=0)throw Error('本局对手上下文格式不正确');focus.matchupGameId=String(value.matchupGameId);}
  if(value.combatFocus!==undefined&&!['lane','teamfight'].includes(value.combatFocus))throw Error('局势关注格式不正确');if(value.mode==='rift'&&value.combatFocus)focus.combatFocus=value.combatFocus;
@@ -72,12 +79,19 @@ export function validateGuideSelection(value){
 }
 const sizeOf=b=>Number.isInteger(b?.width)&&b.width>=100&&b.width<=1000&&Number.isInteger(b?.height)&&b.height>=40&&b.height<=1200?{width:b.width,height:b.height}:{};
 const sizeField=b=>Object.keys(sizeOf(b?.size)).length?{size:sizeOf(b.size)}:{};
+export function guideProgressSnapshot(value){
+ const s=value?.selection||{};
+ return {completedItems:value?.completedItems||[],bottomQuestConfirmed:value?.bottomQuestConfirmed===true,jungleNotes:value?.jungleNotes||null,purchaseTarget:value?.purchaseTarget||null,purchaseTargetKind:value?.purchaseTargetKind||null,stage:value?.stage||null,duelPick:value?.duelPick||null,compareIds:s.compareIds||[],ownedAugmentIds:s.ownedAugmentIds||[],threatId:s.threatId||null,matchupGameId:s.matchupGameId||null,protectId:s.protectId||null,combatFocus:s.combatFocus||null};
+}
+export function hasGuideProgress(value){
+ const p=guideProgressSnapshot(value);return !!(p.completedItems.length||p.bottomQuestConfirmed||validateJungleNotes(p.jungleNotes)||p.purchaseTarget||p.stage||validateDuelPick(p.duelPick)||p.compareIds.length||p.ownedAugmentIds.length||p.threatId||p.matchupGameId||p.protectId||p.combatFocus);
+}
 export function validateGuideState(value){
  if(!value)return null;
  const selection=validateGuideSelection(value.selection);
  const completedItems=Array.isArray(value.completedItems)?[...new Set(value.completedItems.filter(id=>typeof id==='string'&&/^\d{1,8}$/.test(id)))].slice(0,selection.bottomQuestPlan?7:6):[];
  const b=value.bounds,bounds=b&&Number.isInteger(b.x)&&Math.abs(b.x)<30000&&Number.isInteger(b.y)&&Math.abs(b.y)<30000&&Number.isInteger(b.width)&&b.width>=360&&b.width<=1000&&Number.isInteger(b.height)&&b.height>=480&&b.height<=1200?{x:b.x,y:b.y,width:b.width,height:b.height}:null;
- const m=value.match,match=m&&typeof m==='object'?{...(typeof m.phase==='string'&&m.phase.length<40?{phase:m.phase}:{}),...(m.entered===true?{entered:true}:{}),...(/^\d{1,20}$/.test(String(m.gameId||''))?{gameId:String(m.gameId)}:{}),...(Number.isFinite(m.gameTime)&&m.gameTime>=0&&m.gameTime<1e6?{gameTime:m.gameTime}:{}),...(Number.isFinite(m.liveAt)&&m.liveAt>0?{liveAt:m.liveAt}:{})}:null;
+ const m=value.match,match=m&&typeof m==='object'?{...(typeof m.phase==='string'&&m.phase.length<40?{phase:m.phase}:{}),...(m.entered===true?{entered:true}:{}),...(/^\d{1,20}$/.test(String(m.gameId||''))&&Number(m.gameId)>0?{gameId:String(m.gameId)}:{}),...(Number.isFinite(m.gameTime)&&m.gameTime>=0&&m.gameTime<1e6?{gameTime:m.gameTime}:{}),...(Number.isFinite(m.liveAt)&&m.liveAt>0?{liveAt:m.liveAt}:{})}:null;
  const duelPick=validateDuelPick(value.duelPick);
  const jungleOffset=value.jungleWidget?.offset,validJungleOffset=jungleOffset&&Number.isInteger(jungleOffset.x)&&Math.abs(jungleOffset.x)<30000&&Number.isInteger(jungleOffset.y)&&Math.abs(jungleOffset.y)<30000?{x:jungleOffset.x,y:jungleOffset.y}:null;
  const offset=value.skillWidget?.offset,skillOffset=offset&&Number.isInteger(offset.x)&&Math.abs(offset.x)<30000&&Number.isInteger(offset.y)&&Math.abs(offset.y)<30000?{x:offset.x,y:offset.y}:null;
@@ -85,7 +99,7 @@ export function validateGuideState(value){
  const sb=value.stripBounds,stripBounds=sb&&Number.isInteger(sb.x)&&Math.abs(sb.x)<30000&&Number.isInteger(sb.y)&&Math.abs(sb.y)<30000?{x:sb.x,y:sb.y,...sizeOf(sb)}:null;
  const targetKind=value.purchaseTargetKind==='situation'&&/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTargetKind:'situation'}:{};
  const bottomQuestConfirmed=!!(selection.bottomQuestPlan&&value.bottomQuestConfirmed===true);
- return {selection,completedItems,bottomQuestConfirmed,...(validateJungleNotes(value.jungleNotes)?{jungleNotes:validateJungleNotes(value.jungleNotes)}:{}),compact:value.compact!==false,jungleWidget:{enabled:value.jungleWidget?.enabled!==false,...sizeField(value.jungleWidget),...(validJungleOffset?{offset:validJungleOffset}:{})},skillWidget:{enabled:value.skillWidget?.enabled!==false,...sizeField(value.skillWidget),...(skillOffset?{offset:skillOffset}:{})},...(compactBounds?{compactBounds}:{}),...(stripBounds?{stripBounds}:{}),collapsed:value.collapsed===true,ball:value.ball===true&&value.strip!==true,strip:value.strip===true,clickThrough:value.clickThrough!==false,liveAdvice:value.liveAdvice!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget,...targetKind}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{}),...(duelPick?{duelPick}:{})};
+ return {selection,completedItems,bottomQuestConfirmed,...(value.progressGameUnknown===true||!match?.gameId&&!(/^\d{1,20}$/.test(String(value.progressGameId||''))&&Number(value.progressGameId)>0)&&hasGuideProgress({...value,selection,completedItems,bottomQuestConfirmed})?{progressGameUnknown:true}:{}),...(/^\d{1,20}$/.test(String(value.progressGameId||''))&&Number(value.progressGameId)>0&&value.progressGameUnknown!==true?{progressGameId:String(value.progressGameId)}:{}),...(validateHexWindows(value.hexWindows)?{hexWindows:validateHexWindows(value.hexWindows)}:{}),...(validateJungleNotes(value.jungleNotes)?{jungleNotes:validateJungleNotes(value.jungleNotes)}:{}),compact:true,jungleWidget:{enabled:value.jungleWidget?.enabled!==false,...sizeField(value.jungleWidget),...(validJungleOffset?{offset:validJungleOffset}:{})},skillWidget:{enabled:value.skillWidget?.enabled!==false,...sizeField(value.skillWidget),...(skillOffset?{offset:skillOffset}:{})},...(compactBounds?{compactBounds}:{}),...(stripBounds?{stripBounds}:{}),collapsed:false,ball:false,strip:false,clickThrough:value.clickThrough!==false,liveAdvice:value.liveAdvice!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget,...targetKind}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{}),...(duelPick?{duelPick}:{})};
 }
 export function guideIdentity(selection){
  const s=validateGuideSelection(selection);
@@ -97,7 +111,17 @@ export function selectGuide(previous,selection){
  // Reusable preparations omit opponents. Keep an explicitly chosen opponent
  // only while replacing a configuration for the same known current game.
  if(same&&!Object.hasOwn(selection,'threatId')&&previous.selection.matchupGameId&&previous.selection.matchupGameId===previous.match?.gameId){next.threatId=previous.selection.threatId;next.matchupGameId=previous.selection.matchupGameId;}
- return {selection:next,...(same&&previous.jungleNotes?{jungleNotes:previous.jungleNotes}:{}),bottomQuestConfirmed:!!(same&&next.bottomQuestPlan&&previous.bottomQuestConfirmed),completedItems:same?[...previous.completedItems]:[],compact:previous?.compact!==false,jungleWidget:previous?.jungleWidget||{enabled:true},skillWidget:previous?.skillWidget||{enabled:true},...(previous?.compactBounds?{compactBounds:previous.compactBounds}:{}),...(previous?.stripBounds?{stripBounds:previous.stripBounds}:{}),collapsed:previous?.collapsed??false,ball:previous?.ball===true&&previous?.strip!==true,strip:previous?.strip===true,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
+ return {selection:next,...(previous?.progressGameUnknown===true?{progressGameUnknown:true}:{}),...(previous?.progressGameId?{progressGameId:previous.progressGameId}:{}),...(validateHexWindows(previous?.hexWindows)?{hexWindows:validateHexWindows(previous.hexWindows)}:{}),...(same&&previous.jungleNotes?{jungleNotes:previous.jungleNotes}:{}),bottomQuestConfirmed:!!(same&&next.bottomQuestPlan&&previous.bottomQuestConfirmed),completedItems:same?[...previous.completedItems]:[],compact:true,jungleWidget:previous?.jungleWidget||{enabled:true},skillWidget:previous?.skillWidget||{enabled:true},...(previous?.compactBounds?{compactBounds:previous.compactBounds}:{}),...(previous?.stripBounds?{stripBounds:previous.stripBounds}:{}),collapsed:false,ball:false,strip:false,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
+}
+// Discard only game-scoped state when its game cannot be established. Keep
+// the user's selection and window preferences as a reusable reference.
+export function clearUnknownGuideProgress(value){
+ const current=validateGuideState(value);if(!current)return null;
+ const selection={...current.selection};for(const key of ['compareIds','ownedAugmentIds','threatId','matchupGameId','protectId','combatFocus'])delete selection[key];
+ const guide={...current,selection,completedItems:[],bottomQuestConfirmed:false};
+ for(const key of ['progressGameUnknown','progressGameId','jungleNotes','purchaseTarget','purchaseTargetKind','stage','duelPick'])delete guide[key];
+ if(guide.match){guide.match={...guide.match};for(const key of ['gameId','gameTime','liveAt','entered'])delete guide.match[key];}
+ return guide;
 }
 export function prepareGuideOpponent(value,selection,opponentId,{gameId,enemyIds}={}){
  const id=String(gameId||'');if(!/^\d{1,20}$/.test(id)||Number(id)<=0)throw Error('本局尚未确认，请同步客户端后重试');
@@ -134,7 +158,7 @@ const clean=v=>String(v??'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'')
 const item=i=>({id:String(i.id),name:i.name,cost:i.gold.total,description:clean(i.description),...(i.purchaseBase?{purchaseBase:{id:String(i.purchaseBase.id),name:i.purchaseBase.name,cost:i.purchaseBase.gold.total}}:{})});
 export function createGuideModel(data,value,live=null,current=null){
  const guide=validateGuideState(value);if(!guide)return null;
- const s=guide.selection,champion=data.champions.find(c=>c.id===s.id);
+ const s=guide.selection,hexReady=s.mode==='hex'&&isCurrentHexData(data),hexReadable=s.mode==='hex'&&isReadableHexData(data),champion=data.champions.find(c=>c.id===s.id);
  if(!champion)throw Error('当前资料没有这位英雄，请重新选择');
  const build=getBuild(champion,s.role,data,s);
  if(s.sourceOpponent&&s.threatId&&s.sourceOpponent!==s.threatId)build.selectionWarnings.push(`配置来源仍筛选对 ${data.champions.find(c=>c.id===s.sourceOpponent)?.name||s.sourceOpponent}，当前关注 ${data.champions.find(c=>c.id===s.threatId)?.name||s.threatId}；请在助手刷新并选择新参考，已有装备与符文不会自动更改。`);
@@ -143,19 +167,29 @@ export function createGuideModel(data,value,live=null,current=null){
  const inventoryKnown=matched&&live.inventoryKnown!==false,inventory=inventoryKnown&&Array.isArray(live?.inventory)?live.inventory:[];
  const runeNames=new Map(data.runes.flatMap(t=>t.slots.flatMap(slot=>slot.runes.map(r=>[r.id,r.name]))));
  const referenceIds=build.reference?.augmentIds||[];
- const augmentIds=s.augmentIds.length?s.augmentIds:referenceIds.slice(0,5);
+ const augmentIds=s.augmentIds.length?s.augmentIds:s.mode==='hex'&&!hexReady?[]:referenceIds.slice(0,5);
  const augmentRecord=id=>{
+  if(s.mode==='hex'&&!hexReady&&!hexReadable)return null;
   const a=hexAugmentReference(data.augments.find(a=>a.id===id),{patch:data.patch,mode:s.mode});
   return a?{id:a.id,name:a.name,rarity:a.rarity,description:a.description,status:a.descriptionStatus||'complete',...(a.review?{review:a.review}:{})}:null;
  };
  const augments=augmentIds.map(augmentRecord).filter(Boolean);
  const ownedAugments=s.mode==='hex'?(s.ownedAugmentIds||[]).map(id=>augmentRecord(id)||{id,name:'未收录强化 #'+id,description:'当前资料未收录，请核对局内强化。',status:'missing'}):[];
- const hexChoices=s.mode==='hex'?hexDecision({data,hero:s.id,options:s.compareIds,owned:s.ownedAugmentIds}):null;
+ const hexChoices=hexReady?hexDecision({data,hero:s.id,options:s.compareIds,owned:s.ownedAugmentIds}):null;
+ const authored=s.mode==='hex'&&(hexReady||hexReadable)?hexPlayerRoutes({data,hero:s.id,owned:s.ownedAugmentIds,options:s.compareIds}):[];
+ const synergies=hexItemSynergies({data,hero:s.id,mode:s.mode,owned:s.ownedAugmentIds,options:s.compareIds,preparedItems:preparedRoute,inventory,inventoryKnown}).filter(route=>!authored.some(other=>other.augment.id===route.augment.id));
+ const hexRoutes=[...authored,...synergies].sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered'));
+ const paired=hexPairedMicroRoutes({data,hero:s.id,owned:s.ownedAugmentIds,options:s.compareIds,routes:hexRoutes,limit:30});
+ const remaining=paired.some(r=>r.kind==='item-synergy')&&paired.length<3?hexMicroFallback({data,hero:s.id,items:preparedRoute.filter(i=>!paired.some(r=>r.items.some(p=>String(p.id)===String(i.id)))),augments:ownedAugments.filter(a=>!paired.some(r=>r.augments.some(p=>p.id===a.id))).map(a=>({...a,owned:true}))}):[];
+ const actualAugments=[...ownedAugments.map(a=>({...a,owned:true})),...(s.compareIds||[]).map(augmentRecord).filter(Boolean).map(a=>({...a,offered:true}))];
+ const microRoutes=(paired.length?[...paired,...remaining].slice(0,30):hexReady?hexMicroFallback({data,hero:s.id,items:preparedRoute,augments:[...ownedAugments.map(a=>({...a,owned:true})),...augments]}):hexReadable?hexMicroFallback({data,hero:s.id,items:preparedRoute,augments:actualAugments,reference:build.reference,build}):[]).map(route=>({...route,card:hexRouteCard(route,build)}));
  const formalRole=current?.formalRole||(['top','jungle','mid','bottom','support'].includes(matched&&live?.position)?live.position:null);
  const bottomQuestEligible=live?.queueId!==480&&(!formalRole||formalRole==='bottom');
  const bottomQuestReason=!bottomQuestEligible?live?.queueId===480?'当前快速模式不提供普通峡谷下路任务额外装备位。':`本局客户端分路为${ROLES.find(r=>r.id===formalRole)?.name}，手动方案位置不会授予下路任务额外装备位。`:'先确认本局正式下路任务已完成，鞋子已移入任务位，再使用额外装备位。';
  const bottomQuestConfirmed=guide.bottomQuestConfirmed===true&&!mismatch&&bottomQuestEligible;
  const situation=assessSituation({data,champion:champion.id,build,selection:s,live:matched?{...live,inventory}:null,enabled:guide.liveAdvice});
+ // Current raw/source readiness does not renew the old situation rules.
+ if(s.mode==='hex'&&!hexReady){situation.signals=[];situation.candidates=[];situation.preferred=null;situation.automatic=false;situation.stale=true;situation.summary='当前模式局势规则待核，保留来源装备参考。';}
  const completeGear=completeGearPlan({data,build,selection:s,live:matched?{...live,matched:true}:null,completedItems:guide.completedItems,purchaseTarget:guide.purchaseTarget,signals:situation.signals,enabled:guide.liveAdvice,bottomQuestConfirmed,bottomQuestEligible});
  // Every displayed complete item participates in the same purchase plan and
  // explicit offline progress controls. Filling a runtime route never changes
@@ -171,7 +205,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const laterChoices=(build.laterOptions||[]).map(row=>{const choice=item(row.items[0]),selected=build.selectedLaterIds.includes(Number(choice.id));return {...choice,selected,fitsRoute:row.fitsRoute,blockedReason:selected?null:itemIssue(choice)|| (itemConflicts(Number(choice.id),preparedRoute.map(i=>Number(i.id)))?'与当前路线互斥，请先取消冲突备选':null)};});
  const laterNeeded=laterChoices.length?Math.max(0,build.maxLaterItems-build.selectedLaterIds.length):0;
  const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id)&&!itemIssue(i))||null;
- const pinned=guide.purchaseTargetKind==='situation'?pinnedSituationItem({data,id:guide.purchaseTarget,mode:s.mode,champion:champion.id,inventory:matched?inventory:[]}):null;
+ const pinned=guide.purchaseTargetKind==='situation'&&(s.mode!=='hex'||hexReady)?pinnedSituationItem({data,id:guide.purchaseTarget,mode:s.mode,champion:champion.id,inventory:matched?inventory:[]}):null;
  const choices=[...new Map([...preparedRoute,...route,...build.early.map(item),...situation.candidates.map(c=>item(data.items[c.id])),...completeGear.alternatives.map(c=>item(data.items[c.id])),...(pinned?[item(pinned)]:[])].map(i=>[i.id,i])).values()];
  const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':preparedRoute.some(p=>p.id===i.id)?'原准备':build.early.some(early=>String(early.id)===i.id)?'提前应对':'局势备选',owned:inventoryKnown&&(inventoryFulfillsItem({data,id:i.id,inventory})||purchasePlan([i],data.items,inventory,live.gold)[0].owned),blockedReason:itemIssue(i)}));
  const chosen=shoppingTargets.find(i=>i.id===guide.purchaseTarget&&!i.owned&&!i.blockedReason&&(matched||!completedItems.includes(i.id)));
@@ -181,7 +215,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const suggested=inventoryKnown&&!targetBlockedReason?chooseSituationTarget({situation,mainNext,purchase:mainPurchase,gold:live.gold}):null;
  const next=chosen||(suggested?choices.find(i=>i.id===suggested.id):null)||mainNext,targetPlan=next?purchasePlan([next],data.items,inventory,inventoryKnown?live.gold:null)[0]:null;
  const liveModel=matched?{matched:true,inventoryKnown,gold:live.gold,level:live.level,skills:live.skills,inventory:live.inventory,gameTime:live.gameTime,mapId:live.mapId,queueId:live.queueId,objectives:live.objectives,at:live.at}:liveStatus;
- const skillAdvice=recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,order:build.skillOrder,live:liveModel,signals:situation.signals,custom:!!s.customSkillOrder||!!build.combo||build.loadoutId!=='default'||!!s.skillId&&s.skillId!==build.skillChoices[0]?.id,reviewed:!situation.stale});
+ const skillAdvice=build.unavailable||s.mode==='hex'&&!hexReady?{next:null,base:null,changed:false,priority:null,reason:build.configurationNote||'当前模式技能规则待核，请以局内为准。',caution:''}:recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,order:build.skillOrder,live:liveModel,signals:situation.signals,custom:!!s.customSkillOrder||!!build.combo||build.loadoutId!=='default'||!!s.skillId&&s.skillId!==build.skillChoices[0]?.id,reviewed:!situation.stale});
  const nextCandidate=situation.candidates.find(c=>c.id===next?.id);
  const nextReason=nextCandidate?.reason||`${chosen?'保留你选择的回城目标。'+(pinned?'当前公开数据不再触发这项自动建议，你仍可手动保留或更换。':''):'继续你选择的成装方案。'}${targetPlan?.credit?`已持有组件抵扣约 ${targetPlan.credit} 金，优先利用已有投入。`:''}`;
  const ownChampion=data.champions.find(c=>c.id===s.id);
@@ -265,7 +299,7 @@ export function createGuideModel(data,value,live=null,current=null){
   priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillNote:build.selectedSkill?.when,skillMechanism:build.skillMechanism,attributePlan:build.attributePlan,skillTitle:build.selectedSkill?.name,skillPatch:build.selectedSkill?.patch,skillStale:build.selectedSkill?.stale,skillSources:build.selectedSkill?.sources,skillReference:build.selectedSkill?.reference,skillSourceUrl:build.selectedSkill?.sourceUrl,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
   title:build.title,sourceOpponentName:s.sourceOpponent?(data.champions.find(c=>c.id===s.sourceOpponent)?.name||s.sourceOpponent):null,runeTitle:build.selectedRune?.name||null,combo:build.combo,comboConfirmed:current?.comboKnown===true&&!mismatch,selectionWarnings:build.selectionWarnings,tips:build.tips,adjustments:build.adjustments,source:build.source,sourceNote:build.sourceNote,configurationNote:build.configurationNote,configurationSources:build.configurationSources,sourceUrl:build.reference?.sourceUrl||null,fetchedAt:build.reference?.fetchedAt||null,
-  rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,ownedAugments,hexRoutes:s.mode==='hex'?hexPlayerRoutes({data,hero:s.id,owned:s.ownedAugmentIds,options:s.compareIds}):[],augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',hexDecision:hexChoices?{reroll:hexChoices.reroll,set:hexChoices.set}:null,comparison:hexChoices?.rows||compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key,patch:data.patch,mode:s.mode}),
+  rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,ownedAugments,hexMicroRoutes:microRoutes,hexMicroPending:!hexReady?HEX_DATA_PENDING:'该英雄的配套路线尚待核对；可在主界面查看单项强化与装备来源。',hexRoutes,augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',hexDecision:hexChoices?{reroll:hexChoices.reroll,set:hexChoices.set}:null,comparison:hexChoices?.rows||(s.mode==='hex'&&!hexReady?[]:compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key,patch:data.patch,mode:s.mode})),
   collapsed:guide.collapsed,clickThrough:guide.clickThrough,opacity:guide.opacity,imageOverrides:data.imageOverrides||{}};
 }
 export function currentPlayerSelection(session,champions,slots=[]){

@@ -2,6 +2,7 @@ import {profile,conventionalRole,TRIOS,DUOS} from './rules.mjs';
 import {COOPERATION_SKILLS} from './cooperation-skills.mjs';
 import {explorationPool} from './recommendation-diversity.mjs';
 import {comboMembers,comboKey} from './combo-members.mjs';
+import {mechanicReview} from './mechanic-review.mjs';
 
 // Creative trio archetypes. Each one is defined only by role-function traits
 // (engage/peel/poke/sustain/aoe/damage) that already exist in the data model.
@@ -82,11 +83,13 @@ function orderMembers(members,profiles,order){
  });
 }
 
-export function generateCreativeTrios({targets,candidateSets,champions,style='fun',randomSeed='',familiarity={}}){
+export function generateCreativeTrios({targets,candidateSets,champions,patch,style='fun',randomSeed='',familiarity={}}){
  // Creative trios fill exactly the three open party roles. Anything else
  // (duo lane, single补位) is covered by the curated/duos path.
  if(!Array.isArray(targets)||targets.length!==3)return [];
- const byId=new Map(champions.map(c=>[c.id,c]));
+ // Every archetype uses authored role functions and skill jobs. A new raw
+ // snapshot cannot renew those rules, even for a trio without a named link.
+ const byId=new Map(champions.filter(c=>mechanicReview(c,patch)==='current').map(c=>[c.id,c]));
  // Per-call role-profile cache: generation evaluates up to a thousand triples,
  // each needing three profiles, so sharing them matters.
  const profCache=new Map();
@@ -125,6 +128,32 @@ export function generateCreativeTrios({targets,candidateSets,champions,style='fu
   .sort((x,y)=>y.score-x.score||x.arch.id.localeCompare(y.arch.id))
   .slice(0,3)
   .map(entry=>buildDescriptor(entry,byId));
+}
+
+// The incremental product search visits complete triples itself. Describe
+// only the triple it is grading; a synchronous 12 x 12 x 12 seed tournament
+// is unnecessary before the first cancellable slice.
+export function createCreativeTrioLookup({targets,candidateSets,champions,patch,style='fun',profiles=new Map(),reviews=new Map()}){
+ if(targets.length!==3)return ()=>null;
+ const byId=new Map(champions.map(champion=>[champion.id,champion]));
+ const allowed=targets.map(role=>new Set(candidateSets[role].map(champion=>champion.id)));
+ const trios=new Set(TRIOS.map(comboKey)),duos=new Set(DUOS.map(comboKey));
+ const authored=new Set([...TRIOS,...DUOS].flatMap(combo=>comboMembers(combo).map(member=>member.champion)));
+ return slots=>{
+  const members=targets.map(role=>slots.find(slot=>slot.role===role)),heroes=members.map(member=>byId.get(member?.champion));
+  if(heroes.some((hero,i)=>!hero||!allowed[i].has(hero.id))||new Set(heroes.map(hero=>hero.id)).size!==3)return null;
+  const keys=members.map(member=>member.role+':'+member.champion);
+  if(trios.has([...keys].sort().join('|'))||[[0,1],[0,2],[1,2]].some(([a,b])=>duos.has([keys[a],keys[b]].sort().join('|'))))return null;
+  for(let i=0;i<heroes.length;i++){
+   const hero=heroes[i];if(!reviews.has(hero.id))reviews.set(hero.id,mechanicReview(hero,patch));
+   if(reviews.get(hero.id)!=='current'||!conventionalRole(hero,targets[i],profiles))return null;
+  }
+  const prof=heroes.map((hero,i)=>{const key=hero.id+':'+targets[i];if(!profiles.has(key))profiles.set(key,profile(hero,targets[i]));return profiles.get(key);});
+  const traits=trioTraits(prof,heroes);if(traits.difficulty>(style==='wild'?8:7))return null;
+  const novelty=heroes.filter(hero=>!authored.has(hero.id)).length;
+  const choices=ARCHETYPES.filter(arch=>arch.need(traits)&&traits.ad>=arch.floor.ad&&traits.ap>=arch.floor.ap).map(arch=>({arch,score:arch.fit(traits)+novelty})).sort((a,b)=>b.score-a.score||a.arch.id.localeCompare(b.arch.id));
+  const best=choices[0];return best?buildDescriptor({...best,t:traits,profiles:prof,roles:targets,champs:heroes},byId):null;
+ };
 }
 
 function cartesian([a,b,c]){

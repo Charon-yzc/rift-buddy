@@ -16,10 +16,10 @@ for(const phase of phases){
   state.favorites=[{id:'old-pair',type:'team',title:'旧蔚阿狸计划',scope:'party',style:'fun',slots,configurations:[]}];
   await saveState(profile,state);
  }
- const log=await fs.open(path.join(root,phase+'.log'),'wx'),child=spawn(electronExecutable(),[path.resolve('scripts/smoke-pick-eligibility.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:profile,RIFT_BUDDY_PICK_PHASE:phase},windowsHide:true,stdio:['ignore',log.fd,log.fd]}),timer=setTimeout(()=>child.kill(),95000);
+ const log=await fs.open(path.join(root,phase+'.log'),'wx'),child=spawn(electronExecutable(),['--force-device-scale-factor=1',path.resolve('scripts/smoke-pick-eligibility.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:profile,RIFT_BUDDY_PICK_PHASE:phase},windowsHide:true,stdio:['ignore',log.fd,log.fd]}),timer=setTimeout(()=>child.kill(),95000);
  try{const [code]=await once(child,'exit');if(code!==0)throw Error('Pick eligibility package smoke failed ('+phase+'): '+await fs.readFile(path.join(root,phase+'.log'),'utf8'));}
  finally{clearTimeout(timer);await log.close();}
 }
-const release=JSON.parse(await fs.readFile('release/latest.json')),results=[];
+const release=JSON.parse(await fs.readFile(process.env.RIFT_BUDDY_SMOKE_RELEASE||'release/latest.json')),results=[];
 for(const phase of phases)results.push(JSON.parse(await fs.readFile(path.join(root,phase==='restart'?'owned':phase==='position-restart'?'position':phase,phase+'-result.json'))));
 const record={root,archiveSha256:release.archiveSha256,results};await fs.writeFile('.local/latest-pick-eligibility-smoke.json',JSON.stringify(record,null,2));console.log(JSON.stringify(record,null,2));

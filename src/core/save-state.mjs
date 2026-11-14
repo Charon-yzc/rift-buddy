@@ -22,6 +22,26 @@ function restoreValue(before,failed,current){
 }
 const selectionFields=['champion','locked','clientCellId','manualPosition','automaticPosition','publicIntent'];
 const selection=slot=>Object.fromEntries(selectionFields.filter(field=>slot&&Object.hasOwn(slot,field)).map(field=>[field,slot[field]]));
+const player=slot=>Number.isInteger(slot?.clientCellId)?'cell:'+slot.clientCellId:slot?.champion?'hero:'+slot.champion:null;
+function dependentSwapRoles(before,failed,current){
+ const identities=slots=>slots.map(player).filter(Boolean).sort();
+ const initial=identities(before),rejected=identities(failed);
+ if(!same(initial,rejected)||new Set(initial).size!==initial.length)return new Set();
+ const moved=before.filter(slot=>player(slot)!==player(failed.find(value=>value.role===slot.role))).map(slot=>slot.role);
+ if(!moved.length)return new Set();
+ const linked=new Set(moved);
+ // A later move sharing a player or lane depends on the rejected swap. Keep
+ // that whole connected roster instead of rolling back just one endpoint.
+ let changed=true;
+ while(changed){
+  changed=false;
+  for(const id of new Set([...failed,...current].map(player).filter(Boolean))){
+   const roles=[...failed,...current].filter(slot=>player(slot)===id).map(slot=>slot.role);
+   if(roles.some(role=>linked.has(role)))for(const role of roles)if(!linked.has(role)){linked.add(role);changed=true;}
+  }
+ }
+ return [...linked].some(role=>!same(selection(failed.find(slot=>slot.role===role)),selection(current.find(slot=>slot.role===role))))?linked:new Set();
+}
 function restoreSlot(before,failed,current){
  const restored=restoreValue(before,failed,current);
  if(object(restored)&&object(failed)&&object(current)){
@@ -40,11 +60,14 @@ export function rollbackUnacceptedState(before,failed,current){
  const restored=restoreValue(before,failed,current);
  if(Array.isArray(before.draft?.slots)&&Array.isArray(failed.draft?.slots)&&Array.isArray(current.draft?.slots)){
   const previous=new Map(before.draft.slots.map(slot=>[slot.role,slot])),rejected=new Map(failed.draft.slots.map(slot=>[slot.role,slot])),latest=new Map(current.draft.slots.map(slot=>[slot.role,slot]));
+  const dependent=dependentSwapRoles(before.draft.slots,failed.draft.slots,current.draft.slots);
   for(const role of new Set([...previous.keys(),...rejected.keys()])){
    const value=restoreSlot(previous.get(role),rejected.get(role),latest.get(role));
+   if(value&&dependent.has(role))for(const field of [...selectionFields,'party','partyManual']){if(Object.hasOwn(latest.get(role),field))value[field]=structuredClone(latest.get(role)[field]);else delete value[field];}
    if(value===undefined)latest.delete(role);else latest.set(role,value);
   }
   restored.draft.slots=[...latest.values()];
+  if(dependent.size)for(const field of ['playerPosition','soloRole','partyCount','partyRangeMode','partyAutoCount']){if(Object.hasOwn(current.draft,field))restored.draft[field]=structuredClone(current.draft[field]);else delete restored.draft[field];}
  }
  const previous=new Map((before.preparations||[]).map(value=>[preparationIdentity(value),value]));
  const rejected=new Map((failed.preparations||[]).map(value=>[preparationIdentity(value),value]));

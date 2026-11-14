@@ -4,7 +4,7 @@ import {publicMatchupOpponent,matchupPlan} from './matchup-plans.mjs';
 import {profile} from './rules.mjs';
 import {fingerprint} from './catalog-review.mjs';
 import {selectedOpponentBuild} from './opponent-build-source.mjs';
-import {validReference} from './builds.mjs';
+import {validReferenceForUse} from './builds.mjs';
 import {normalizeBuildSource} from './build-source.mjs';
 
 export const MATCHUP_PREPARATION_PATCH='16.20';
@@ -90,14 +90,14 @@ export function contextualPreparationChoices({data,selection,build,enemies=[]}={
  const currentRune=evaluate(runeRules,rule=>has(build.runePage,rule.perk));
  const runes=build.runeOptions.filter(option=>option.source==='OP.GG'&&option.samples>=Math.max(200,(build.runeOptions[0]?.samples||0)*.05)&&validateRunePage(option.page,data.runes)).map(option=>({option,...evaluate(runeRules,rule=>has(option.page,rule.perk))})).sort((a,b)=>b.score-a.score||b.option.samples-a.option.samples);
  const rune=runes[0];if(rune&&rune.option.id!==build.selectedRuneId&&rune.score>currentRune.score+2)suggestions.push({kind:'rune',id:rune.option.id,name:rune.hits[0].rule.title,page:rune.option.page,samples:rune.option.samples,hits:rune.hits.map(({enemy,rule})=>({enemy:enemy.champion,why:rule.why,cost:rule.cost})),fields:{runeId:rune.option.id,customRunePage:undefined}});
- const currentCore=build.reference.core[build.selectedCoreIndex],currentEquipment=evaluate(coreRules,rule=>rule.ids.some(id=>currentCore.items.includes(id)));
- const cores=build.reference.core.map((option,index)=>({option,index,...evaluate(coreRules,rule=>rule.ids.some(id=>option.items.includes(id)))})).filter(row=>row.option.samples>=Math.max(200,(build.reference.core[0]?.samples||0)*.05)).sort((a,b)=>b.score-a.score||b.option.samples-a.option.samples);
- const core=cores[0];if(core&&core.index!==build.selectedCoreIndex&&core.score>currentEquipment.score+2)suggestions.push({kind:'core',id:'core-'+core.option.items.join('-'),name:core.hits[0].rule.title,items:core.option.items,samples:core.option.samples,hits:core.hits.map(({enemy,rule})=>({enemy:enemy.champion,why:rule.why,cost:rule.cost})),fields:{coreId:'core-'+core.option.items.join('-'),coreIndex:core.index}});
+ const currentCore=build.reference.core[build.selectedCoreIndex].items.filter(id=>build.items.some(item=>Number(item.id)===id)),currentEquipment=evaluate(coreRules,rule=>rule.ids.some(id=>currentCore.includes(id)));
+ const cores=build.reference.core.map((option,index)=>({option,index,...evaluate(coreRules,rule=>rule.ids.some(id=>option.items.includes(id)))})).filter(row=>!build.unavailableCoreRoutes?.[row.index]&&row.option.samples>=Math.max(200,(build.reference.core[0]?.samples||0)*.05)).sort((a,b)=>b.score-a.score||b.option.samples-a.option.samples);
+ const core=cores[0];if(core&&core.index!==build.selectedCoreIndex&&core.score>currentEquipment.score+2)suggestions.push({kind:'core',id:'core-'+core.option.items.join('-'),name:core.hits[0].rule.title,items:core.option.items,samples:core.option.samples,hits:core.hits.map(({enemy,rule})=>({enemy:enemy.champion,why:rule.why,cost:rule.cost})),fields:{coreId:'core-'+core.option.items.join('-'),coreIndex:core.index,coreAuto:undefined}});
  return suggestions;
 }
 function sourcePage(option,ref){return {...option,kind:option.source==='OP.GG'?ref?.opponent?'OP.GG 所选对手完整页':'OP.GG 同位置完整页':option.source==='个人自选'?'个人自选，无统计样本':'机制完整页',patch:option.patch||MATCHUP_PREPARATION_PATCH,opponent:option.source==='OP.GG'?ref?.opponent:null,samples:option.samples||0};}
 function coreSelection(data,selection,core,index){
- const next={...selection,variant:'default',loadoutId:'default',coreIndex:index,coreId:'core-'+core.items.join('-'),laterIds:[]};
+ const next={...selection,variant:'default',loadoutId:'default',coreIndex:index,coreId:'core-'+core.items.join('-'),coreAuto:undefined,laterIds:[]};
  const b=getBuild(data.champions.find(c=>c.id===selection.id),selection.role,data,next);
  if(!b.reference||b.selectedCoreId!==next.coreId||!core.items.every(id=>b.items.some(i=>Number(i.id)===id)))return null;
  return {selection:{...next,runeId:b.selectedRuneId,skillId:b.selectedSkillId||undefined},build:b};
@@ -107,7 +107,7 @@ export function matchupPreparation({data,selection,enemyIds=[],targetId='',publi
  const enemy=publicMatchupOpponent(data,enemyIds,targetId),champion=data?.champions.find(c=>c.id===selection?.id);
  if(!enemy||!champion||selection.mode!=='rift')return null;
  const b=build||getBuild(champion,selection.role,data,selection),tags=enemyPressures(enemy),mechanism=matchupPlan({data,champion,role:selection.role,enemyId:enemy.id});
- const candidate=selectedOpponentBuild(data,champion.id,selection.role,enemy.id),scoped=validReference(candidate,champion,selection.role,data,{allowOlder:true,opponent:enemy.id})?candidate:null;
+ const candidate=selectedOpponentBuild(data,champion.id,selection.role,enemy.id),scoped=validReferenceForUse(candidate,champion,selection.role,data,{allowOlder:true,opponent:enemy.id})?candidate:null;
  const choiceSelection=scoped?{...selection,sourceOpponent:enemy.id,variant:'default',loadoutId:'default'}:{...selection};
  if(!scoped)delete choiceSelection.sourceOpponent;
  const choices=scoped||selection.sourceOpponent?getBuild(champion,selection.role,data,choiceSelection):b;

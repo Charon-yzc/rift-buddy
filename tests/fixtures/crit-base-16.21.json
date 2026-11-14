@@ -1,0 +1,2955 @@
+{
+  "patch": "16.21",
+  "version": "16.21.1",
+  "sourceRelease": "ad137872c5c0776356c7a0894b855d460a3f6217d9b42349aa0a66a9d6683059",
+  "champions": [
+    {
+      "id": "Ashe",
+      "key": 22,
+      "name": "艾希",
+      "title": "寒冰射手",
+      "tags": [
+        "Marksman",
+        "Support"
+      ],
+      "info": {
+        "attack": 7,
+        "defense": 3,
+        "magic": 2,
+        "difficulty": 4
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 101,
+        "mp": 280,
+        "mpperlevel": 35,
+        "movespeed": 325,
+        "armor": 26,
+        "armorperlevel": 4.6,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
+        "attackrange": 600,
+        "hpregen": 3.5,
+        "hpregenperlevel": 0.55,
+        "mpregen": 7,
+        "mpregenperlevel": 0.65,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.658,
+        "attackspeedratio": 0.658,
+        "attacktype": "ranged"
+      },
+      "combatStatsSource": {
+        "patch": "16.21",
+        "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json"
+      },
+      "mechanicSource": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Ashe",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "observedAt": "2026-10-22T11:36:02.148Z",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json",
+          "sha256": "ada00af1ea15a42094a914a05794e0d3cedcb66c150ed52e8d3762b8d12dc6b5"
+        },
+        "dataDragonURL": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+        "passive": {
+          "name": "冰霜射击",
+          "description": "艾希的攻击会让目标减速，并使艾希对这些目标造成更高伤害。<br><br>艾希的暴击不会造成额外伤害，但会对目标施加一个强化版减速效果。",
+          "image": {
+            "full": "Ashe_P.png",
+            "sprite": "passive0.png",
+            "group": "passive",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          }
+        },
+        "spells": [
+          {
+            "id": "AsheQ",
+            "name": "射手的专注",
+            "description": "艾希会在攻击时聚集【全神贯注】效果。在【全神贯注】到达最大值时，艾希就能施放【射手的专注】来消耗掉所有【全神贯注】效果，以临时提升她的攻击速度，并在持续期间将她的普攻转变为一阵强力的飓风箭阵。",
+            "tooltip": "<spellPassive>被动：</spellPassive>艾希的攻击提供一层持续{{ stackduration }}秒的效果。在{{ maxstacks }}层时，她就可以激活这个技能。<br /><br /><spellPassive>主动：</spellPassive>艾希获得<attackSpeed>{{ bonusas }}%攻击速度</attackSpeed>并且她的攻击转而造成<physicalDamage>{{ empowereddamage }}伤害</physicalDamage>，持续{{ buffduration }}秒。{{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "攻击速度",
+                "飓风箭阵的攻击力收益系数"
+              ],
+              "effect": [
+                "{{ bonusas }}% -> {{ bonusasNL }}%",
+                "{{ damageperstrike*100.000000 }}% -> {{ damageperstrikenl*100.000000 }}%"
+              ]
+            },
+            "maxrank": 5,
+            "cooldown": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "cooldownBurn": "0",
+            "cost": [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            "costBurn": "30",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                4,
+                4,
+                4,
+                4,
+                4
+              ],
+              [
+                4,
+                4,
+                4,
+                4,
+                4
+              ],
+              [
+                6,
+                6,
+                6,
+                6,
+                6
+              ],
+              [
+                20,
+                30,
+                40,
+                50,
+                60
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "4",
+              "4",
+              "6",
+              "20/30/40/50/60",
+              "0",
+              "0",
+              "1",
+              "1",
+              "1",
+              "0"
+            ],
+            "vars": [],
+            "costType": " {{ abilityresourcename }}",
+            "maxammo": "-1",
+            "range": [
+              400,
+              400,
+              400,
+              400,
+              400
+            ],
+            "rangeBurn": "400",
+            "image": {
+              "full": "AsheQ.png",
+              "sprite": "spell1.png",
+              "group": "spell",
+              "x": 192,
+              "y": 144,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "{{ cost }} {{ abilityresourcename }}"
+          },
+          {
+            "id": "Volley",
+            "name": "万箭齐发",
+            "description": "艾希向前方的锥形范围射出多支箭，对敌人造成额外伤害。也会触发冰霜射击的效果。",
+            "tooltip": "艾希射出一排共{{ numberofarrowstooltip }}支箭矢，每支箭矢造成<physicalDamage>{{ totaldamage }}物理伤害</physicalDamage>。敌方单位可以一次性格挡多支箭矢，但只会受到一次伤害。{{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "已发射的箭矢数",
+                "伤害",
+                "冷却时间",
+                "@AbilityResourceName@消耗"
+              ],
+              "effect": [
+                "{{ numberofarrowstooltip }} -> {{ numberofarrowstooltipNL }}",
+                "{{ basedamage }} -> {{ basedamageNL }}",
+                "{{ cooldown }} -> {{ cooldownNL }}",
+                "{{ cost }} -> {{ costNL }}"
+              ]
+            },
+            "maxrank": 5,
+            "cooldown": [
+              18,
+              14.5,
+              11,
+              7.5,
+              4
+            ],
+            "cooldownBurn": "18/14.5/11/7.5/4",
+            "cost": [
+              75,
+              70,
+              65,
+              60,
+              55
+            ],
+            "costBurn": "75/70/65/60/55",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                5,
+                7,
+                9,
+                11,
+                13
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "5/7/9/11/13",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": " {{ abilityresourcename }}",
+            "maxammo": "-1",
+            "range": [
+              1200,
+              1200,
+              1200,
+              1200,
+              1200
+            ],
+            "rangeBurn": "1200",
+            "image": {
+              "full": "Volley.png",
+              "sprite": "spell1.png",
+              "group": "spell",
+              "x": 240,
+              "y": 144,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "{{ cost }} {{ abilityresourcename }}"
+          },
+          {
+            "id": "AsheSpiritOfTheHawk",
+            "name": "鹰击长空",
+            "description": "艾希将她的猎鹰之灵派去执行侦查任务，可派往地图上的任意地点。",
+            "tooltip": "艾希派出一只鹰，在地图上的任一位置提供5秒的视野。它还会在飞行时显形附近的区域。<br /><br />这个技能可持有2层充能（{{ chargecooldown }}秒充能时间）。{{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "充能时间"
+              ],
+              "effect": [
+                "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
+              ]
+            },
+            "maxrank": 5,
+            "cooldown": [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            "cooldownBurn": "5",
+            "cost": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "costBurn": "0",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                3,
+                3,
+                3,
+                3,
+                3
+              ],
+              [
+                50,
+                90,
+                130,
+                170,
+                210
+              ],
+              [
+                25000,
+                25000,
+                25000,
+                25000,
+                25000
+              ],
+              [
+                5,
+                5,
+                5,
+                5,
+                5
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "3",
+              "50/90/130/170/210",
+              "25000",
+              "5",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": "无消耗",
+            "maxammo": "2",
+            "range": [
+              25000,
+              25000,
+              25000,
+              25000,
+              25000
+            ],
+            "rangeBurn": "25000",
+            "image": {
+              "full": "AsheSpiritOfTheHawk.png",
+              "sprite": "spell1.png",
+              "group": "spell",
+              "x": 288,
+              "y": 144,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "无消耗"
+          },
+          {
+            "id": "EnchantedCrystalArrow",
+            "name": "魔法水晶箭",
+            "description": "艾希射出一支沿直线飞行的魔法水晶箭。如果水晶箭命中了一名敌方英雄，那么它会对该英雄造成伤害和晕眩效果，晕眩时长取决于水晶箭的飞行距离。此外，该英雄附近的敌方单位会受到伤害和减速效果。",
+            "tooltip": "艾希射出魔法水晶箭，<status>晕眩</status>命中的第一个敌方英雄，并造成<magicDamage>{{ rmaindamage }}魔法伤害</magicDamage>。<status>晕眩</status>时长取决于飞行距离，至多{{ maxstunduration }}秒。目标周围的敌人会受到<spellName>冰霜射击</spellName>的<status>减速</status>效果。{{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "伤害",
+                "冷却时间"
+              ],
+              "effect": [
+                "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+                "{{ cooldown }} -> {{ cooldownNL }}"
+              ]
+            },
+            "maxrank": 3,
+            "cooldown": [
+              100,
+              80,
+              60
+            ],
+            "cooldownBurn": "100/80/60",
+            "cost": [
+              100,
+              100,
+              100
+            ],
+            "costBurn": "100",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": " {{ abilityresourcename }}",
+            "maxammo": "-1",
+            "range": [
+              25000,
+              25000,
+              25000
+            ],
+            "rangeBurn": "25000",
+            "image": {
+              "full": "EnchantedCrystalArrow.png",
+              "sprite": "spell1.png",
+              "group": "spell",
+              "x": 336,
+              "y": 144,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "{{ cost }} {{ abilityresourcename }}"
+          }
+        ]
+      },
+      "mechanics": {
+        "passive": {
+          "name": "冰霜射击",
+          "description": "艾希的攻击会让目标减速，并使艾希对这些目标造成更高伤害。\n\n艾希的暴击不会造成额外伤害，但会对目标施加一个强化版减速效果。"
+        },
+        "spells": [
+          {
+            "name": "射手的专注",
+            "description": "艾希会在攻击时聚集【全神贯注】效果。在【全神贯注】到达最大值时，艾希就能施放【射手的专注】来消耗掉所有【全神贯注】效果，以临时提升她的攻击速度，并在持续期间将她的普攻转变为一阵强力的飓风箭阵。",
+            "maxrank": 5,
+            "cooldown": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "cost": [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            "effect": [
+              null,
+              [
+                4,
+                4,
+                4,
+                4,
+                4
+              ],
+              [
+                4,
+                4,
+                4,
+                4,
+                4
+              ],
+              [
+                6,
+                6,
+                6,
+                6,
+                6
+              ],
+              [
+                20,
+                30,
+                40,
+                50,
+                60
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              [
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          },
+          {
+            "name": "万箭齐发",
+            "description": "艾希向前方的锥形范围射出多支箭，对敌人造成额外伤害。也会触发冰霜射击的效果。",
+            "maxrank": 5,
+            "cooldown": [
+              18,
+              14.5,
+              11,
+              7.5,
+              4
+            ],
+            "cost": [
+              75,
+              70,
+              65,
+              60,
+              55
+            ],
+            "effect": [
+              null,
+              [
+                5,
+                7,
+                9,
+                11,
+                13
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          },
+          {
+            "name": "鹰击长空",
+            "description": "艾希将她的猎鹰之灵派去执行侦查任务，可派往地图上的任意地点。",
+            "maxrank": 5,
+            "cooldown": [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            "cost": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "effect": [
+              null,
+              [
+                3,
+                3,
+                3,
+                3,
+                3
+              ],
+              [
+                50,
+                90,
+                130,
+                170,
+                210
+              ],
+              [
+                25000,
+                25000,
+                25000,
+                25000,
+                25000
+              ],
+              [
+                5,
+                5,
+                5,
+                5,
+                5
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          },
+          {
+            "name": "魔法水晶箭",
+            "description": "艾希射出一支沿直线飞行的魔法水晶箭。如果水晶箭命中了一名敌方英雄，那么它会对该英雄造成伤害和晕眩效果，晕眩时长取决于水晶箭的飞行距离。此外，该英雄附近的敌方单位会受到伤害和减速效果。",
+            "maxrank": 3,
+            "cooldown": [
+              100,
+              80,
+              60
+            ],
+            "cost": [
+              100,
+              100,
+              100
+            ],
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ]
+          }
+        ]
+      },
+      "keywords": "艾希,寒冰,爱射,艾射,冰弓,Ashe,aixi,hanbing,aishe,aishe,binggong,ax,hb,as,bg",
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/champion/Ashe.png"
+    },
+    {
+      "id": "Jinx",
+      "key": 222,
+      "name": "金克丝",
+      "title": "暴走萝莉",
+      "tags": [
+        "Marksman"
+      ],
+      "info": {
+        "attack": 9,
+        "defense": 2,
+        "magic": 4,
+        "difficulty": 6
+      },
+      "stats": {
+        "hp": 610,
+        "hpperlevel": 105,
+        "mp": 260,
+        "mpperlevel": 50,
+        "movespeed": 325,
+        "armor": 26,
+        "armorperlevel": 4.2,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
+        "attackrange": 525,
+        "hpregen": 3.75,
+        "hpregenperlevel": 0.5,
+        "mpregen": 6.7,
+        "mpregenperlevel": 1,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 59,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 1,
+        "attackspeed": 0.625,
+        "attackspeedratio": 0.625,
+        "attacktype": "ranged"
+      },
+      "combatStatsSource": {
+        "patch": "16.21",
+        "url": "https://raw.communitydragon.org/16.21/game/data/characters/jinx/jinx.bin.json"
+      },
+      "mechanicSource": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Jinx",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "observedAt": "2026-10-22T11:36:02.246Z",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/jinx/jinx.bin.json",
+          "sha256": "5ca25fc97c2da4874b88de6faec7dcfd5ea991b8edd1773d9a2cb9ecd5b2091f"
+        },
+        "dataDragonURL": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+        "passive": {
+          "name": "罪恶快感",
+          "description": "金克丝每当参与击杀或摧毁一名英雄、一个史诗级野怪或一座建筑物后，她的移动速度和攻击速度就会得到显著提升。",
+          "image": {
+            "full": "Jinx_Passive.png",
+            "sprite": "passive1.png",
+            "group": "passive",
+            "x": 192,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          }
+        },
+        "spells": [
+          {
+            "id": "JinxQ",
+            "name": "枪炮交响曲！",
+            "description": "金克丝可以通过切换武器来改变普通攻击的方式。在用她的轻机枪“砰砰”攻击时，她的攻击速度会提升。在用她的火箭发射器“鱼骨头”攻击时，她的普通攻击会造成范围伤害，攻击距离提升，但会消耗法力值并且攻击得更慢。",
+            "tooltip": "金克丝可在【鱼骨头—火箭发射器】和【砰砰枪—轻机枪】之间切换武器。<br /><br />在使用火箭发射器时，金克丝的攻击会对目标和附近的敌人造成<physicalDamage>{{ rocketdamage }}物理伤害</physicalDamage>，提升{{ rocketbonusrange }}距离，消耗法力，但所享的攻速加成减少{{ rocketaspdpenalty*100 }}%。<br /><br />在使用轻机枪时，金克丝的攻击提供<attackSpeed>攻击速度</attackSpeed>，持续{{ minigunattackspeedduration }}秒，可叠加至多{{ minigunattackspeedstacks }}次(<attackSpeed>最大攻速加成为+{{ minigunattackspeedmax }}% %i:scaleAS%</attackSpeed>)。{{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "火箭额外射程",
+                "轻机枪总攻速加成"
+              ],
+              "effect": [
+                "{{ rocketbonusrange }} -> {{ rocketbonusrangeNL }}",
+                "{{ minigunattackspeedmax }}% -> {{ minigunattackspeedmaxNL }}%"
+              ]
+            },
+            "maxrank": 5,
+            "cooldown": [
+              0.9,
+              0.9,
+              0.9,
+              0.9,
+              0.9
+            ],
+            "cooldownBurn": "0.9",
+            "cost": [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            "costBurn": "20",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": "法力值",
+            "maxammo": "-1",
+            "range": [
+              600,
+              600,
+              600,
+              600,
+              600
+            ],
+            "rangeBurn": "600",
+            "image": {
+              "full": "JinxQ.png",
+              "sprite": "spell6.png",
+              "group": "spell",
+              "x": 0,
+              "y": 48,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "每发火箭{{ cost }}法力值"
+          },
+          {
+            "id": "JinxW",
+            "name": "震荡电磁波！",
+            "description": "金克丝使用她的震荡手枪“电磁器”来发射震荡波，让被命中的第一个敌人暴露在己方视野中（可使隐形英雄现形），并对其造成伤害和减速效果。",
+            "tooltip": "金克丝发射一束震荡波，对命中的第一个目标造成<physicalDamage>{{ totaldamage }}物理伤害</physicalDamage>，使其<status>减速</status>{{ slowpercent }}%并显形，持续{{ slowduration }}秒。{{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "伤害",
+                "减速",
+                "冷却时间",
+                "@AbilityResourceName@消耗"
+              ],
+              "effect": [
+                "{{ damage }} -> {{ damageNL }}",
+                "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+                "{{ cooldown }} -> {{ cooldownNL }}",
+                "{{ cost }} -> {{ costNL }}"
+              ]
+            },
+            "maxrank": 5,
+            "cooldown": [
+              8,
+              7,
+              6,
+              5,
+              4
+            ],
+            "cooldownBurn": "8/7/6/5/4",
+            "cost": [
+              40,
+              45,
+              50,
+              55,
+              60
+            ],
+            "costBurn": "40/45/50/55/60",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": " {{ abilityresourcename }}",
+            "maxammo": "-1",
+            "range": [
+              1450,
+              1450,
+              1450,
+              1450,
+              1450
+            ],
+            "rangeBurn": "1450",
+            "image": {
+              "full": "JinxW.png",
+              "sprite": "spell6.png",
+              "group": "spell",
+              "x": 48,
+              "y": 48,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "{{ cost }} {{ abilityresourcename }}"
+          },
+          {
+            "id": "JinxE",
+            "name": "嚼火者手雷！",
+            "description": "金克丝扔出一串陷阱手雷。手雷会在5秒后爆炸，让敌人着火。嚼火者手雷将会袭击路过的敌方英雄，并将他们束缚在原地。",
+            "tooltip": "金克丝扔出3颗持续{{ grenadeduration }}秒的嚼火者手雷，手雷会在接触到敌方英雄时爆炸，将其<status>禁锢</status>{{ rootduration }}秒并对附近敌人造成<magicDamage>{{ totaldamage }}魔法伤害</magicDamage>。{{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "伤害",
+                "冷却时间"
+              ],
+              "effect": [
+                "{{ damage }} -> {{ damageNL }}",
+                "{{ cooldown }} -> {{ cooldownNL }}"
+              ]
+            },
+            "maxrank": 5,
+            "cooldown": [
+              24,
+              20.5,
+              17,
+              13.5,
+              10
+            ],
+            "cooldownBurn": "24/20.5/17/13.5/10",
+            "cost": [
+              90,
+              90,
+              90,
+              90,
+              90
+            ],
+            "costBurn": "90",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": " {{ abilityresourcename }}",
+            "maxammo": "-1",
+            "range": [
+              925,
+              925,
+              925,
+              925,
+              925
+            ],
+            "rangeBurn": "925",
+            "image": {
+              "full": "JinxE.png",
+              "sprite": "spell6.png",
+              "group": "spell",
+              "x": 96,
+              "y": 48,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "{{ cost }} {{ abilityresourcename }}"
+          },
+          {
+            "id": "JinxR",
+            "name": "超究极死神飞弹！",
+            "description": "金克丝发射一枚能够跨越整个地图的飞弹，并且飞行的时间越长，伤害值越高。飞弹会在命中一名敌方英雄后爆炸，对目标和目标附近的敌人造成伤害，且目标的生命值越低，所受的伤害值越高。",
+            "tooltip": "金克丝发射一枚飞弹，在首次命中敌方英雄后爆炸，造成<physicalDamage>{{ damagefloor }}到{{ damagemax }}+{{ percentdamage }}%已损失生命值的物理伤害</physicalDamage>，飞弹在飞行时间超过1秒后会持续提升伤害。目标附近的敌人受到{{ aoedamagemult*100 }}%伤害。<br /><br /><rules>对野怪的已损失生命值伤害无法超过{{ monsterexecutemax }}。</rules>{{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "最小伤害",
+                "最大伤害",
+                "百分比已损失生命值伤害",
+                "冷却时间"
+              ],
+              "effect": [
+                "{{ basedamage }} -> {{ basedamageNL }}",
+                "{{ maxdamage }} -> {{ maxdamageNL }}",
+                "{{ percentdamage }}% -> {{ percentdamageNL }}%",
+                "{{ cooldown }} -> {{ cooldownNL }}"
+              ]
+            },
+            "maxrank": 3,
+            "cooldown": [
+              85,
+              65,
+              45
+            ],
+            "cooldownBurn": "85/65/45",
+            "cost": [
+              100,
+              100,
+              100
+            ],
+            "costBurn": "100",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": " {{ abilityresourcename }}",
+            "maxammo": "-1",
+            "range": [
+              25000,
+              25000,
+              25000
+            ],
+            "rangeBurn": "25000",
+            "image": {
+              "full": "JinxR.png",
+              "sprite": "spell6.png",
+              "group": "spell",
+              "x": 144,
+              "y": 48,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "{{ cost }} {{ abilityresourcename }}"
+          }
+        ]
+      },
+      "mechanics": {
+        "passive": {
+          "name": "罪恶快感",
+          "description": "金克丝每当参与击杀或摧毁一名英雄、一个史诗级野怪或一座建筑物后，她的移动速度和攻击速度就会得到显著提升。"
+        },
+        "spells": [
+          {
+            "name": "枪炮交响曲！",
+            "description": "金克丝可以通过切换武器来改变普通攻击的方式。在用她的轻机枪“砰砰”攻击时，她的攻击速度会提升。在用她的火箭发射器“鱼骨头”攻击时，她的普通攻击会造成范围伤害，攻击距离提升，但会消耗法力值并且攻击得更慢。",
+            "maxrank": 5,
+            "cooldown": [
+              0.9,
+              0.9,
+              0.9,
+              0.9,
+              0.9
+            ],
+            "cost": [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          },
+          {
+            "name": "震荡电磁波！",
+            "description": "金克丝使用她的震荡手枪“电磁器”来发射震荡波，让被命中的第一个敌人暴露在己方视野中（可使隐形英雄现形），并对其造成伤害和减速效果。",
+            "maxrank": 5,
+            "cooldown": [
+              8,
+              7,
+              6,
+              5,
+              4
+            ],
+            "cost": [
+              40,
+              45,
+              50,
+              55,
+              60
+            ],
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          },
+          {
+            "name": "嚼火者手雷！",
+            "description": "金克丝扔出一串陷阱手雷。手雷会在5秒后爆炸，让敌人着火。嚼火者手雷将会袭击路过的敌方英雄，并将他们束缚在原地。",
+            "maxrank": 5,
+            "cooldown": [
+              24,
+              20.5,
+              17,
+              13.5,
+              10
+            ],
+            "cost": [
+              90,
+              90,
+              90,
+              90,
+              90
+            ],
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          },
+          {
+            "name": "超究极死神飞弹！",
+            "description": "金克丝发射一枚能够跨越整个地图的飞弹，并且飞行的时间越长，伤害值越高。飞弹会在命中一名敌方英雄后爆炸，对目标和目标附近的敌人造成伤害，且目标的生命值越低，所受的伤害值越高。",
+            "maxrank": 3,
+            "cooldown": [
+              85,
+              65,
+              45
+            ],
+            "cost": [
+              100,
+              100,
+              100
+            ],
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ]
+          }
+        ]
+      },
+      "keywords": "暴走萝莉,萝莉,金克丝,Jinx,jks,ll,bzll,baozouluoli,luoli,jinkesi,金克丝",
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/champion/Jinx.png"
+    },
+    {
+      "id": "Yone",
+      "key": 777,
+      "name": "永恩",
+      "title": "封魔剑魂",
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
+      "info": {
+        "attack": 8,
+        "defense": 4,
+        "magic": 4,
+        "difficulty": 8
+      },
+      "stats": {
+        "hp": 620,
+        "hpperlevel": 105,
+        "mp": 500,
+        "mpperlevel": 0,
+        "movespeed": 345,
+        "armor": 33,
+        "armorperlevel": 4.6,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 7.5,
+        "hpregenperlevel": 0.75,
+        "mpregen": 0,
+        "mpregenperlevel": 0,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 62,
+        "attackdamageperlevel": 2,
+        "attackspeedperlevel": 3.5,
+        "attackspeed": 0.625,
+        "attackspeedratio": 0.625,
+        "attacktype": "melee"
+      },
+      "combatStatsSource": {
+        "patch": "16.21",
+        "url": "https://raw.communitydragon.org/16.21/game/data/characters/yone/yone.bin.json"
+      },
+      "mechanicSource": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Yone",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "observedAt": "2026-10-22T11:36:02.349Z",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/yone/yone.bin.json",
+          "sha256": "686924ad8cd0bf22941513230c18e6acdc5f9ac2d02755e8d369a51155d70112"
+        },
+        "dataDragonURL": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+        "passive": {
+          "name": "狩人之道",
+          "description": "永恩每第二次攻击造成魔法伤害。此外，他的暴击几率提升。",
+          "image": {
+            "full": "YonePassive.png",
+            "sprite": "passive5.png",
+            "group": "passive",
+            "x": 48,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          }
+        },
+        "spells": [
+          {
+            "id": "YoneQ",
+            "name": "错玉切",
+            "description": "向前出剑，呈直线造成伤害。<br><br>在命中时，错玉切会获得一层旋风烈斩效果，持续数秒。在2层时，错玉切会使永恩向前冲刺并带着一阵能够<status>击飞</status>敌人的旋风。",
+            "tooltip": "永恩向前出剑，造成<physicalDamage>{{ qdamage }}物理伤害</physicalDamage>。<br /><br />在命中时，提供一层持续{{ buffduration }}秒的可叠加效果。在积攒2层效果后，这个技能会使永恩向前冲刺，并带着一阵能够<status>击飞</status>敌人{{ q3knockupduration }}秒的的旋风，造成<physicalDamage>{{ qdamage }}物理伤害</physicalDamage>。 {{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "基础伤害"
+              ],
+              "effect": [
+                "{{ basedamage }} -> {{ basedamageNL }}"
+              ]
+            },
+            "maxrank": 5,
+            "cooldown": [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "cooldownBurn": "4",
+            "cost": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "costBurn": "0",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": "无消耗",
+            "maxammo": "-1",
+            "range": [
+              450,
+              450,
+              450,
+              450,
+              450
+            ],
+            "rangeBurn": "450",
+            "image": {
+              "full": "YoneQ.png",
+              "sprite": "spell16.png",
+              "group": "spell",
+              "x": 384,
+              "y": 144,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "无消耗"
+          },
+          {
+            "id": "YoneW",
+            "name": "凛神斩",
+            "description": "向前顺劈，对锥形范围内的所有敌人造成伤害。为永恩提供一个护盾，护盾生命值会基于被顺劈到的敌方英雄的数量而得到提升。<br><br>凛神斩的冷却时间和施放时间可通过攻击速度来缩短。",
+            "tooltip": "永恩向前顺劈，造成<physicalDamage>{{ basedamage*0.5 }}+目标{{ maxhealthdamage*50 }}%最大生命值的物理伤害</physicalDamage>和<magicDamage>{{ basedamage*0.5 }}+目标{{ maxhealthdamage*50 }}%最大生命值的魔法伤害</magicDamage>。<br /><br />如果永恩命中了敌方单位，那么他会获得<shield>{{ wshield }}护盾</shield>，持续{{ shieldduration }}秒。每命中一名敌方英雄，<shield>护盾</shield>生命值都会提升。 {{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "基础伤害",
+                "最大生命值伤害总和"
+              ],
+              "effect": [
+                "{{ basedamage }} -> {{ basedamageNL }}",
+                "{{ maxhealthdamage*100.000000 }}% -> {{ maxhealthdamagenl*100.000000 }}%"
+              ]
+            },
+            "maxrank": 5,
+            "cooldown": [
+              14,
+              14,
+              14,
+              14,
+              14
+            ],
+            "cooldownBurn": "14",
+            "cost": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "costBurn": "0",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": "无消耗",
+            "maxammo": "-1",
+            "range": [
+              700,
+              700,
+              700,
+              700,
+              700
+            ],
+            "rangeBurn": "700",
+            "image": {
+              "full": "YoneW.png",
+              "sprite": "spell16.png",
+              "group": "spell",
+              "x": 432,
+              "y": 144,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "无消耗"
+          },
+          {
+            "id": "YoneE",
+            "name": "破障之锋",
+            "description": "永恩的灵体离开他的身体，并获得移动速度。当这个技能结束时，永恩的灵体会被强制返回他的身体，并且他会再次造成伤害，伤害值相当于一部分他在灵体形态中造成的伤害。",
+            "tooltip": "永恩进入灵体形态{{ returntimer }}秒，期间会将他的身体留在原地，并获得<speed>不断提升的{{ startingms*100 }}%</speed>到<speed>{{ movementspeed*100 }}%移动速度</speed>。<br /><br />当灵体形态结束时，永恩会返回他的身体，并再次造成伤害，伤害值相当于他在此期间对英雄造成伤害的{{ deathmarkpercent*100 }}%。你可以在灵体形态期间<recast>再次</recast>施放这个技能。<br /><br /><recast>再次施放：</recast>提前结束灵体形态。{{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "重复伤害",
+                "冷却时间"
+              ],
+              "effect": [
+                "{{ deathmarkpercent*100.000000 }}% -> {{ deathmarkpercentnl*100.000000 }}%",
+                "{{ cooldown }} -> {{ cooldownNL }}"
+              ]
+            },
+            "maxrank": 5,
+            "cooldown": [
+              22,
+              19,
+              16,
+              13,
+              10
+            ],
+            "cooldownBurn": "22/19/16/13/10",
+            "cost": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "costBurn": "0",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": "无消耗",
+            "maxammo": "-1",
+            "range": [
+              25000,
+              25000,
+              25000,
+              25000,
+              25000
+            ],
+            "rangeBurn": "25000",
+            "image": {
+              "full": "YoneE.png",
+              "sprite": "spell17.png",
+              "group": "spell",
+              "x": 0,
+              "y": 0,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "无消耗"
+          },
+          {
+            "id": "YoneR",
+            "name": "封尘绝念斩",
+            "description": "永恩沿直线进行斩击，闪烁至最后一名敌方英雄身后，并将命中的所有敌人拉向他。",
+            "tooltip": "永恩对一条路径上的所有敌人进行打击，造成<physicalDamage>{{ tooltipdamage }}物理伤害</physicalDamage>和<magicDamage>{{ tooltipdamage }}魔法伤害</magicDamage>，传送至命中的最后一名敌方英雄身后，并将命中的所有敌人<status>击飞</status>向永恩。 {{ spellmodifierdescriptionappend }}",
+            "leveltip": {
+              "label": [
+                "基础伤害",
+                "冷却时间"
+              ],
+              "effect": [
+                "{{ basedamage }} -> {{ basedamageNL }}",
+                "{{ cooldown }} -> {{ cooldownNL }}"
+              ]
+            },
+            "maxrank": 3,
+            "cooldown": [
+              120,
+              100,
+              80
+            ],
+            "cooldownBurn": "120/100/80",
+            "cost": [
+              0,
+              0,
+              0
+            ],
+            "costBurn": "0",
+            "datavalues": {},
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "effectBurn": [
+              null,
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0",
+              "0"
+            ],
+            "vars": [],
+            "costType": "无消耗",
+            "maxammo": "-1",
+            "range": [
+              1000,
+              1000,
+              1000
+            ],
+            "rangeBurn": "1000",
+            "image": {
+              "full": "YoneR.png",
+              "sprite": "spell17.png",
+              "group": "spell",
+              "x": 48,
+              "y": 0,
+              "w": 48,
+              "h": 48
+            },
+            "resource": "无消耗"
+          }
+        ]
+      },
+      "mechanics": {
+        "passive": {
+          "name": "狩人之道",
+          "description": "永恩每第二次攻击造成魔法伤害。此外，他的暴击几率提升。"
+        },
+        "spells": [
+          {
+            "name": "错玉切",
+            "description": "向前出剑，呈直线造成伤害。\n\n在命中时，错玉切会获得一层旋风烈斩效果，持续数秒。在2层时，错玉切会使永恩向前冲刺并带着一阵能够击飞敌人的旋风。",
+            "maxrank": 5,
+            "cooldown": [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "cost": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          },
+          {
+            "name": "凛神斩",
+            "description": "向前顺劈，对锥形范围内的所有敌人造成伤害。为永恩提供一个护盾，护盾生命值会基于被顺劈到的敌方英雄的数量而得到提升。\n\n凛神斩的冷却时间和施放时间可通过攻击速度来缩短。",
+            "maxrank": 5,
+            "cooldown": [
+              14,
+              14,
+              14,
+              14,
+              14
+            ],
+            "cost": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          },
+          {
+            "name": "破障之锋",
+            "description": "永恩的灵体离开他的身体，并获得移动速度。当这个技能结束时，永恩的灵体会被强制返回他的身体，并且他会再次造成伤害，伤害值相当于一部分他在灵体形态中造成的伤害。",
+            "maxrank": 5,
+            "cooldown": [
+              22,
+              19,
+              16,
+              13,
+              10
+            ],
+            "cost": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ]
+          },
+          {
+            "name": "封尘绝念斩",
+            "description": "永恩沿直线进行斩击，闪烁至最后一名敌方英雄身后，并将命中的所有敌人拉向他。",
+            "maxrank": 3,
+            "cooldown": [
+              120,
+              100,
+              80
+            ],
+            "cost": [
+              0,
+              0,
+              0
+            ],
+            "effect": [
+              null,
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ]
+          }
+        ]
+      },
+      "keywords": "永恩,封魔剑魂,ye,fmjh,Yone,yongen,fengmojianhun",
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/champion/Yone.png"
+    }
+  ],
+  "items": {
+    "3031": {
+      "id": 3031,
+      "name": "无尽之刃",
+      "description": "75攻击力\n25%暴击几率\n30%暴击伤害\n\n",
+      "tags": [
+        "CriticalStrike",
+        "Damage"
+      ],
+      "gold": {
+        "base": 725,
+        "purchasable": true,
+        "total": 3500,
+        "sell": 2450
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "1038",
+        "1037",
+        "1018"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatCritChanceMod": 0.25,
+        "FlatPhysicalDamageMod": 75
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3031.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "75攻击力\n25%暴击几率\n30%暴击伤害",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    }
+  }
+}

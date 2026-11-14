@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {recommendationDraft,comparisonDraft} from '../src/core/draft-intents.mjs';
+import {recommendationDraft,comparisonDraft,companionRosterDraft,clientRecommendationDraft} from '../src/core/draft-intents.mjs';
 import {createSlots,recommend,mergeClientSession} from '../src/core/recommend.mjs';
 import {draftTargets} from '../src/core/draft.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
@@ -11,6 +11,15 @@ const key=id=>data.champions.find(c=>c.id===id).key;
 const slots=()=>createSlots().map(s=>({...s,party:['jungle','mid','bottom'].includes(s.role)}));
 const player=(cellId,champion,assignedPosition='')=>({cellId,championId:0,championPickIntent:key(champion),assignedPosition});
 const session=(bottom='Ashe',mid='Ahri')=>({localPlayerCellId:0,myTeam:[player(0,bottom,'BOTTOM'),player(1,mid,'MIDDLE')],theirTeam:[],bans:[],allowDuplicatePicks:false});
+test('the sidebar display binds a public hover for dragging without admitting it to confirmed recommendations',()=>{
+ const canonical=slots(),client=session(),before=structuredClone(canonical),displayed=companionRosterDraft(canonical,client,data.champions);
+ assert.equal(displayed.find(s=>s.role==='bottom').clientCellId,0);assert.equal(displayed.find(s=>s.role==='bottom').champion,'Ashe');
+ assert.equal(displayed.find(s=>s.role==='mid').clientCellId,1);assert.equal(displayed.find(s=>s.role==='mid').publicIntent,true);
+ assert(clientRecommendationDraft(canonical,client,data.champions,{includePreselected:false}).slots.every(s=>!s.champion));
+ assert.deepEqual(canonical,before);
+ const duplicate=companionRosterDraft(canonical,{...client,myTeam:[...client.myTeam,{...client.myTeam[0]}]},data.champions);
+ assert(!Number.isInteger(duplicate.find(s=>s.role==='bottom').clientCellId),'Ambiguous public ownership cannot authorize a position change');
+});
 const input=temporary=>({slots:temporary,champions:data.champions,scope:'party',style:'fun',limit:3,poolMode:'only',pool:['Vi','JarvanIV','Amumu','Sejuani']});
 
 test('compare another lineup releases a proposal without erasing it or replacing actual client and manual picks',()=>{

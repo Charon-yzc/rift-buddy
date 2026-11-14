@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,7 +9,7 @@ import {captureCreativePlan,creativePlanId,validateCreativePlan} from '../src/co
 import {defaultState,saveState,readState} from '../services/storage.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 
-const data=JSON.parse(await fs.readFile('data/game.json'));
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
 const base={champions:data.champions,scope:'party',style:'balanced'};
 function fixture(trio=false){
  const slots=createSlots().map(s=>({...s,party:['jungle','mid',...(trio?['top']:[])].includes(s.role),...(s.role==='mid'?{champion:'Ahri',locked:true,manualPosition:true,clientCellId:3}:{})}));

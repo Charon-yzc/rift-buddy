@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -19,7 +20,7 @@ import {companionView} from '../src/companion-view.mjs';
 import {favoriteTeamSummary} from '../src/favorites-view.mjs';
 import {generateCreativeTrios} from '../src/core/creative-trios.mjs';
 import {BUNDLED_CATALOG,validateCatalog} from '../src/core/catalog.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),member=(champion,role)=>({champion,role});
 const cases=[['Garen','MasterYi'],['Nasus','MasterYi'],['Gwen','Graves','Akali'],['Kayle','Karthus','Vladimir'],['Garen','MasterYi','Katarina'],['Kindred','Vladimir'],['Khazix','Zed'],['Kaisa','Lucian']];
 const members=ids=>ids.map((id,i)=>member(id,['top','jungle','mid'][i]));

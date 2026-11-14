@@ -3,27 +3,22 @@ import {renameSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import path from 'node:path';
 import {atomicJSON} from './data.mjs';
-import {DATA_FEED_KEYS,DATA_FEED_ORIGIN} from './data-feed.mjs';
+import {DATA_FEED_KEYS} from './data-feed.mjs';
+import {downloadSignedFeed} from './signed-feed-download.mjs';
 import {GENERATION_NAMES,GENERATION_MAX_MANIFEST,compareGenerationVersions,verifyGenerationEnvelope,decodeGenerationAssets,generationBaseIdentity} from './data-generation.mjs';
 
-export async function downloadDataGeneration(relative,{limit,fetcher=fetch}={}){
+export async function downloadDataGeneration(relative,{limit,fetcher=fetch,signal}={}){
  if(!/^\/v2\/(?:latest\.json|assets\/[a-f0-9]{64}\.json\.gz)$/.test(relative)||!Number.isSafeInteger(limit)||limit<1||limit>8*1024*1024)throw Error('整套资料下载地址或限制无效');
- const response=await fetcher(DATA_FEED_ORIGIN+relative,{redirect:'error',credentials:'omit',signal:AbortSignal.timeout(20000),headers:{Accept:'application/json, application/octet-stream'}});
- if(!response.ok){await response.body?.cancel();const error=Error('整套资料服务暂不可用');if(relative.startsWith('/v2/assets/')&&[404,410].includes(response.status))error.code='DATA_GENERATION_REPLACED';throw error;}
- if(Number(response.headers.get('content-length'))>limit){await response.body?.cancel();throw Error('整套资料响应过大');}
- const reader=response.body?.getReader(),parts=[];let bytes=0;if(!reader)throw Error('整套资料响应为空');
- try{while(true){const part=await reader.read();if(part.done)break;bytes+=part.value.byteLength;if(bytes>limit)throw Error('整套资料响应过大');parts.push(part.value);}}
- finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
- return Buffer.concat(parts);
+ return downloadSignedFeed(relative,{limit,fetcher,signal,label:'整套资料',replacedCode:'DATA_GENERATION_REPLACED'});
 }
 
 // prepare performs all awaited derivation without mutating active data.
 // replace is a synchronous, non-throwing reference assignment by the owner.
 export function preserveGameContext(getData,data=getData()){
- const entries=Object.entries(data).filter(([key])=>key!=='dataFeed'),base=generationBaseIdentity(data),catalog=JSON.stringify(data.catalog);
- return ()=>getData()===data&&Object.keys(data).filter(key=>key!=='dataFeed').length===entries.length&&entries.every(([key,value])=>data[key]===value)&&JSON.stringify(data.catalog)===catalog&&generationBaseIdentity(data)===base;
+ const semantic=key=>!['dataFeed','communityFeed'].includes(key),entries=Object.entries(data).filter(([key])=>semantic(key)),base=generationBaseIdentity(data),catalog=JSON.stringify(data.catalog);
+ return ()=>getData()===data&&Object.keys(data).filter(semantic).length===entries.length&&entries.every(([key,value])=>data[key]===value)&&JSON.stringify(data.catalog)===catalog&&generationBaseIdentity(data)===base;
 }
-export async function createDataGenerationCache({root,getData,prepare,replace,canActivate=()=>false,manualBase=null,onChange=()=>{},restoreAtStartup=true,download=downloadDataGeneration,keys=DATA_FEED_KEYS,clock=()=>Date.now(),write=atomicJSON,promote=renameSync}){
+export async function createDataGenerationCache({root,getData,prepare,replace,getContext=()=>null,canActivate=()=>false,manualBase=null,onChange=()=>{},restoreAtStartup=true,download=downloadDataGeneration,keys=DATA_FEED_KEYS,clock=()=>Date.now(),write=atomicJSON,promote=renameSync}){
  if(typeof prepare!=='function'||typeof replace!=='function')throw Error('整套资料缺少准备与启用操作');
  const filename=path.join(root,'data-generation.json'),pendingFile=path.join(root,'data-generation.pending.json');
  let active=null,activeData=null,pending=null,flight=null,activation=null,lastAttempt=-Infinity,lastVersion=null,manual=manualBase;
@@ -46,7 +41,7 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
   const wanted=new Set(GENERATION_NAMES.map(name=>manifest.files[name].sha256));
   if(!record.assets||Object.keys(record.assets).length!==wanted.size||Object.keys(record.assets).some(key=>!wanted.has(key)))throw Error('整套资料缓存资产不完整');
   const assets={};for(const hash of wanted){const encoded=record.assets[hash],file=Object.values(manifest.files).find(file=>file.sha256===hash);if(typeof encoded!=='string'||encoded.length!==Math.ceil(file.bytes/3)*4)throw Error('整套资料缓存大小无效');const bytes=Buffer.from(encoded,'base64');if(bytes.toString('base64')!==encoded)throw Error('整套资料缓存编码无效');assets[hash]=bytes;}
-  return {record,manifest,bundle:await decodeGenerationAssets(manifest,assets),file};
+  return {record,manifest,bundle:await decodeGenerationAssets(manifest,assets,{allowInvalidEquipment:true}),file};
  }
  async function read(file){try{const stat=await fs.stat(file);if(stat.size>36*1024*1024)throw Error('整套资料缓存过大');return await decode(JSON.parse(await fs.readFile(file,'utf8')),file);}catch(error){if(error.code!=='ENOENT')status={...status,phase:'offline',message:'使用内置或本地有效资料'};return null;}}
  active=await read(filename);
@@ -54,7 +49,7 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
   try{
    currentVersion(active.manifest,active.bundle.game);
    if(manualConflict(active))pending=active;
-   else{const original=getData(),contextCurrent=preserveGameContext(getData,original),manualContext=manual,next=prepared(await prepare(active.bundle,active.manifest,{current:original,restore:true}),active);if(!contextCurrent()||manual!==manualContext)throw Error('基础资料已变化');replace(next);activeData=next;status={...status,phase:'ready',source:'server',updatedAt:active.manifest.publishedAt,serverCheckedAt:active.manifest.checkedAt,message:'已载入本地整套资料'};}
+   else{const original=getData(),contextCurrent=preserveGameContext(getData,original),externalContext=getContext(),manualContext=manual,next=prepared(await prepare(active.bundle,active.manifest,{current:original,restore:true}),active);if(!contextCurrent()||getContext()!==externalContext||manual!==manualContext)throw Error('基础资料已变化');replace(next);activeData=next;status={...status,phase:'ready',source:'server',updatedAt:active.manifest.publishedAt,serverCheckedAt:active.manifest.checkedAt,message:'已载入本地整套资料'};}
   }catch{status={...status,phase:'offline',message:'使用内置或本地有效资料'};}
  }
  const storedPending=await read(pendingFile);
@@ -64,13 +59,13 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
  function activate({release=null,explicit=false}={}){
   if(activation)return activation;
   if(!pending||!canActivate()||explicit&&release!==pending.manifest.release||manualConflict(pending)&&!explicit)return Promise.resolve(false);
-  const selected=pending,original=getData(),contextCurrent=preserveGameContext(getData,original),manualContext=manual,stage=filename+'.'+process.pid+'-'+randomUUID()+'.stage';
+  const selected=pending,original=getData(),contextCurrent=preserveGameContext(getData,original),externalContext=getContext(),manualContext=manual,stage=filename+'.'+process.pid+'-'+randomUUID()+'.stage';
   activation=(async()=>{
    try{
     currentVersion(selected.manifest,selected.bundle.game);
     const next=prepared(await prepare(selected.bundle,selected.manifest,{current:original,restore:false}),selected);
     const record={...selected.record,manualToken:manualContext?.token||null};await write(stage,record);
-    if(pending!==selected||!contextCurrent()||manual!==manualContext||!canActivate())return false;
+    if(pending!==selected||!contextCurrent()||getContext()!==externalContext||manual!==manualContext||!canActivate())return false;
     currentVersion(selected.manifest,selected.bundle.game);
     promote(stage,filename);replace(next);active={...selected,record,file:filename};activeData=next;pending=null;
     publish({phase:'ready',source:'server',reason:null,release:null,availableVersion:null,updatedAt:selected.manifest.publishedAt,serverCheckedAt:selected.manifest.checkedAt,message:'整套资料已更新'});return true;
@@ -92,7 +87,7 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
      if(!follows(manifest,pending?.manifest||active?.manifest))throw Error('整套资料序列或复查时间倒退');
      const assets={},record={schema:1,envelope,assets:{},checkedAt:new Date(clock()).toISOString(),manualToken:manualContext?.token||null};
      for(const name of GENERATION_NAMES){const file=manifest.files[name],cached=pending?.record.assets[file.sha256]||active?.record.assets[file.sha256];assets[file.sha256]=cached?Buffer.from(cached,'base64'):await download('/v2/assets/'+file.file,{limit:file.bytes});record.assets[file.sha256]=assets[file.sha256].toString('base64');}
-     const bundle=await decodeGenerationAssets(manifest,assets);
+     const bundle=await decodeGenerationAssets(manifest,assets,{allowInvalidEquipment:true});
      currentVersion(manifest,bundle.game);
      if(getData()!==original||manual!==manualContext)throw Error('基础资料已变化');
      if(active&&JSON.stringify(manifest)===JSON.stringify(active.manifest)&&!pending&&activeData===getData()){publish({phase:'ready',checkedAt:record.checkedAt,serverCheckedAt:manifest.checkedAt,message:'整套资料已是最新'});break;}

@@ -1,11 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {validReference,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
+import {validReferenceForUse,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
 import {atomicJSON} from './data.mjs';
 import {createReferenceContext,commitReferenceCache} from './reference-cache-write.mjs';
 import {fetchChampionBuild} from './build-sources.mjs';
 import {fetchHexBuild} from './hex-sources.mjs';
 import {buildSourceKey,buildSourcePendingKey,collectBuildSources,normalizeBuildSource,preferBuildReference,projectBuildSources,requireBuildSource,sameBuildSource} from '../src/core/build-source.mjs';
+import {mergeHexPoolEvidence} from '../src/core/hex-pool-evidence.mjs';
 
 export async function loadBuildSources(roots,data){
  const result={};
@@ -15,7 +16,7 @@ export async function loadBuildSources(roots,data){
     // Derived authority is restored only from the separately verified feed.
     const {serverCheckedAt,...ref}=stored||{};
     const champion=data.champions.find(c=>c.id===ref?.champion);
-    if(!champion||!validReference(ref,champion,ref.role,data,{allowOlder:true}))continue;
+    if(!champion||!validReferenceForUse(ref,champion,ref.role,data,{allowOlder:true}))continue;
     const cacheKey=buildSourceKey(champion.id,ref.role,ref,ref.patch);
     if((key===`${champion.id}:${ref.role}`||key===cacheKey)&&preferBuildReference(ref,result[cacheKey]))result[cacheKey]=ref;
    }
@@ -32,7 +33,10 @@ export async function loadHexBuilds(roots,data){
     const {serverCheckedAt,...ref}=stored||{};
     const champion=data.champions.find(c=>c.id===key);
     const current=result[key],patchOrder=current?compareBuildPatches(ref?.patch,current.patch):1;
-    if(champion&&validHexReference(ref,champion,data,{allowOlder:true})&&(!current||patchOrder>0||patchOrder===0&&Date.parse(ref.fetchedAt)>Date.parse(current.fetchedAt)))result[key]=ref;
+    if(champion&&validHexReference(ref,champion,data,{allowOlder:true})){
+     if(!current||patchOrder>0||patchOrder===0&&Date.parse(ref.fetchedAt)>Date.parse(current.fetchedAt))result[key]=mergeHexPoolEvidence(ref,current);
+     else if(patchOrder===0)result[key]=mergeHexPoolEvidence(current,ref);
+    }
    }
   }catch{}
  }
@@ -52,13 +56,13 @@ export function createBuildCache({root,getData,fetchRift=fetchChampionBuild,fetc
    if(!request.current())throw new Error('资料版本已更新，请重新刷新配置');
    const ref=role==='hex'?await fetchHex(champion,data):await fetchRift(champion,role,data,{allowOlder:true,...selected});
    const current=getData();if(!request.current())throw new Error('资料版本已更新，请重新刷新配置');
-   if(!(role==='hex'?validHexReference(ref,champion,current,{allowOlder:true}):validReference(ref,champion,role,current,{allowOlder:true})))throw new Error('来源配置不完整，已保留本地方案');
+   if(!(role==='hex'?validHexReference(ref,champion,current,{allowOlder:true}):validReferenceForUse(ref,champion,role,current,{allowOlder:true})))throw new Error('来源配置不完整，已保留本地方案');
    if(role!=='hex'&&!sameBuildSource(ref,selected))throw Error('来源地域或段位不一致，已保留本地方案');
    const entries=role==='hex'?null:collectBuildSources(current);
    const existing=role==='hex'?current.hexBuilds?.[id]:projectBuildSources(entries,selected,current.patch)[key];
    if(existing&&(compareBuildPatches(existing.patch,ref.patch)>0||existing.patch===ref.patch&&!preferBuildReference(ref,existing)))return existing;
    if(role==='hex'){
-    const previous=current.hexBuilds,next={...previous,[id]:ref};
+    const previous=current.hexBuilds,next={...previous,[id]:mergeHexPoolEvidence(ref,existing)};
     await commitReferenceCache(path.join(root,'hex-builds.json'),{schema:1,entries:next},{write,current:()=>request.current()&&current.hexBuilds===previous,commit:()=>{current.hexBuilds=next;}});
    }else{
     const previous=current.buildSources,previousBuilds=current.builds,previousSource=current.buildSource,next={...entries,[buildSourceKey(id,role,selected,ref.patch)]:ref},projected=projectBuildSources(next,previousSource,current.patch);

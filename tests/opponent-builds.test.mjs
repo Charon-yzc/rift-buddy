@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -17,7 +18,7 @@ import {selectedBuildFields,buildFavoriteId,findSavedBuild} from '../src/core/bu
 import {createGuideModel,selectGuide,validateGuideSelection} from '../src/core/guide.mjs';
 import {defaultState,saveState,readState} from '../services/storage.mjs';
 
-const game=JSON.parse(await fs.readFile('data/game.json')),builds=JSON.parse(await fs.readFile('data/builds.json')).entries,fixture=JSON.parse(await fs.readFile('tests/fixtures/opgg-galio-ahri.json'));
+const game=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries,fixture=JSON.parse(await fs.readFile('tests/fixtures/opgg-galio-ahri.json'));
 const champion=game.champions.find(c=>c.id==='Galio'),opponent=game.champions.find(c=>c.id==='Ahri'),source={region:'global',tier:'emerald_plus'};
 const html=fragments=>`<script>self.__next_f.push([1,${JSON.stringify(fragments.map((n,i)=>i.toString(16)+':'+JSON.stringify(n)).join('\n'))}])</script>`;
 const page=html(fixture.fragments),options={champion,role:'mid',opponent,data:game,page,url:fixture.url};

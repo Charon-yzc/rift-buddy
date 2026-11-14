@@ -4,7 +4,7 @@ const same=(a=[],b=[])=>JSON.stringify(a)===JSON.stringify(b);
 const set=v=>[...new Set(v||[])].sort((a,b)=>a-b);
 const hexFields=v=>({augmentIds:[...(v.augmentIds||[])],compareIds:[...(v.compareIds||[])],ownedAugmentIds:[...(v.ownedAugmentIds||[])]});
 
-export function selectedBuildFields(v,{preserveUnavailable=false}={}){
+export function selectedBuildFields(v,{preserveUnavailable=false,preparation=false}={}){
  const b=v.build;
  const fields=v.mode==='hex'?{...hexFields(v),...(b.selectedCoreId?{coreId:b.selectedCoreId}:{})}:{...(b.bottomQuestPlan?{bottomQuestPlan:true}:{}),loadoutId:b.loadoutId,runeId:b.selectedRuneId,laterIds:[...(b.selectedLaterIds||[])],
   ...(b.selectedCoreId?{coreId:b.selectedCoreId}:{}),...(b.selectedSkillId?{skillId:b.selectedSkillId}:{}),...(b.selectedStartId?{startId:b.selectedStartId}:{}),...(b.selectedBootsId?{bootsId:b.selectedBootsId}:{}),...(b.combo?{comboId:b.combo.id,...(b.combo.creativePlan?{creativePlan:structuredClone(b.combo.creativePlan)}:{})}:{})};
@@ -13,6 +13,15 @@ export function selectedBuildFields(v,{preserveUnavailable=false}={}){
  if(preserveUnavailable&&v.mode==='rift'){
   for(const key of ['coreId','runeId','skillId','startId','bootsId','loadoutId'])if(v[key])fields[key]=v[key];
   if(Array.isArray(v.laterIds))fields.laterIds=[...v.laterIds];
+ }
+ // Keep an automatic core dynamic in preparations; favorites freeze the displayed core.
+ if(preparation&&v.mode==='rift'&&v.coreAuto===true&&!v.coreId){fields.coreAuto=true;delete fields.coreId;}
+ // A displayed automatic combination is not a newly chosen configuration.
+ // Keep explicit fields, including old ambiguous selections, unchanged.
+ if(preparation&&v.mode==='rift'&&v.comboId&&(v.loadoutId===undefined||v.loadoutId==='auto')){
+  for(const key of ['coreId','runeId','skillId','startId','bootsId','loadoutId','laterIds']){
+   if(v[key]===undefined)delete fields[key];else fields[key]=structuredClone(v[key]);
+  }
  }
  if(v.mode==='rift'&&(v.customRunePage||b.selectedRune?.source==='个人自选'))fields.customRunePage=structuredClone(v.customRunePage||b.selectedRune.page);
  if(v.mode==='rift'&&(v.customSkillOrder||b.selectedSkill?.source==='个人自选'))fields.customSkillOrder=structuredClone(v.customSkillOrder||{order:b.selectedSkill.order,patch:b.selectedSkill.patch});

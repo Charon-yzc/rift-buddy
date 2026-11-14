@@ -1,6 +1,6 @@
 export const RELEASE_FEED_URL='https://github.com/Legender134/rift-buddy/releases.atom';
 export const GITEE_REPOSITORY_URL='https://gitee.com/legender134/rift-buddy';
-export const GITEE_RELEASE_FEED_URL=GITEE_REPOSITORY_URL.replace('gitee.com/','gitee.com/api/v5/repos/')+'/releases?per_page=10';
+export const GITEE_RELEASE_FEED_URL=GITEE_REPOSITORY_URL.replace('gitee.com/','gitee.com/api/v5/repos/')+'/releases?per_page=10&direction=desc';
 export const mirrorManifestName=v=>`RiftBuddy-${v}-Mirror.json`;
 export const mirrorPartName=(v,index)=>`${setupFileName(v)}.part${String(index+1).padStart(2,'0')}`;
 export const MIRROR_PART_BYTES=90*1024*1024;

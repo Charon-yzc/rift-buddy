@@ -3,18 +3,49 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import vm from 'node:vm';
 import {createSlots,mergeClientSession} from '../src/core/recommend.mjs';
 import {moveChampion,clearManualPlayerPosition,publicClientGameId,reconcileClientDraft} from '../src/core/draft.mjs';
 import {currentPlayerSelection,selectGuide,createGuideModel} from '../src/core/guide.mjs';
 import {createCurrentGameTracker} from '../src/core/game-context.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {companionView} from '../src/companion-view.mjs';
+import {movePartyMark,reconcilePartyRange} from '../src/core/party-range.mjs';
 import {defaultState,saveState,readState} from '../services/storage.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id);
 const session=(id='Lux',position='MIDDLE')=>({localPlayerCellId:1,myTeam:[{cellId:1,championId:hero(id).key,assignedPosition:position},{cellId:2,championId:hero('LeeSin').key,assignedPosition:'JUNGLE'}]});
 const client=(phase='ChampSelect',s=session())=>({connected:true,phase,mode:{id:'rift'},game:{gameId:'manual-position'},session:phase==='ChampSelect'?s:null});
+
+test('lane controls keep the same marked players as dragging, including an explicitly excluded self',async()=>{
+ const source=await fs.readFile('src/app.mjs','utf8'),start=source.indexOf('function setCompanionRole(role){'),end=source.indexOf('\nfunction changeConfigurationRole(',start);
+ assert.ok(start>=0&&end>start);
+ for(const preview of [false,true,'planned'])for(const target of ['mid','support','top']){
+  const s=session('Lux','TOP');s.myTeam[1].assignedPosition='MIDDLE';
+  const initial=mergeClientSession(createSlots(),s,data.champions).slots.map(slot=>({...slot,party:slot.clientCellId===2,partyManual:true}));
+  if(preview){s.myTeam[0].championPickIntent=s.myTeam[0].championId;s.myTeam[0].championId=0;Object.assign(initial.find(slot=>slot.clientCellId===1),{champion:null,locked:false,manualPosition:true});}
+  if(preview==='planned')initial.find(slot=>slot.role==='support').champion='Zyra';
+  const context=vm.createContext({slots:structuredClone(initial),client:client('ChampSelect',s),data,saved:{draft:{partyCount:1}},clientPreparing:false,runeApplying:false,itemSetPending:false,
+   ROLES:initial.map(slot=>({id:slot.role})),currentPlayerSelection,moveChampion,movePartyMark,
+   taskOwnRole:()=> 'top',assignedPlayerRole:()=> 'top',invalidate:()=>{},unassignedPublicPicks:()=>[],unassigned:[],soloRole:'top',companionPreview:null,pendingIntentPreparation:null});
+  vm.runInContext(source.slice(start,end),context);
+  if(preview&&target==='mid'){assert.throws(()=>context.setCompanionRole(target),/阵容板交换位置/);assert.deepEqual(JSON.parse(JSON.stringify(context.slots)),initial);continue;}
+  context.setCompanionRole(target);
+  if(preview==='planned'&&target==='support'){
+   assert.equal(context.slots.find(slot=>slot.role==='support').champion,'Zyra');assert.equal(context.slots.find(slot=>slot.role==='support').clientCellId,undefined);
+   context.setCompanionRole('jungle');
+  }
+  const own=context.slots.find(slot=>slot.clientCellId===1),ally=context.slots.find(slot=>slot.clientCellId===2);
+  const expected=preview==='planned'&&target==='support'?'jungle':target;
+  assert.equal(own.role,expected);assert.equal(own.party,false);assert.equal(own.partyManual,true);
+  assert.equal(ally.party,true);assert.equal(ally.partyManual,true);assert.equal(context.saved.draft.partyCount,1);
+  const polled=mergeClientSession(context.slots,s,data.champions,{partyCount:1}).slots;
+  const range=reconcilePartyRange(polled,s,data.champions,{count:1,party:{status:'known',members:[{cellId:1},{cellId:2}]},ownRole:expected});
+  assert.equal(range.find(slot=>slot.clientCellId===1).party,false,'Polling must preserve the explicit exclusion');
+  assert.equal(range.find(slot=>slot.clientCellId===2).party,true);assert.equal(range.filter(slot=>slot.party).length,1);
+ }
+});
 
 test('manual Lux support preparation persists through two syncs, restart and live guidance without becoming the formal task position',async()=>{
  let slots=mergeClientSession(createSlots(),session(),data.champions).slots;

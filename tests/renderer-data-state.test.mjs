@@ -11,10 +11,19 @@ const base=()=>({patch:'16.20',version:'16.20.1',catalog:{version:1,name:'one'},
 function fixture({requestSnapshot,onAccepted=()=>{}}={}){
  let source={...DEFAULT_BUILD_SOURCE};const calls={catalog:0,images:0,source:0,inspect:0},changes=[],errors=[];
  const store=createRendererDataState({getSource:()=>source,requestSnapshot,onChange:change=>{changes.push(change);onAccepted(change);},onError:error=>errors.push(error.message),
-  catalog:{prepare:value=>{if(value.invalid)throw Error('invalid catalog');return structuredClone(value);},install:()=>calls.catalog++,inspect:()=>{calls.inspect++;return {status:{one:'rechecked'}};}},
+  catalog:{prepare:value=>{if(value.invalid)throw Error('invalid catalog');return {duos:[],trios:[],links:[],...structuredClone(value)};},install:()=>calls.catalog++,inspect:()=>{calls.inspect++;return {status:{one:'rechecked'}};}},
   images:{prepare:value=>{if(value.invalidImages)throw Error('invalid images');return {};},install:()=>calls.images++},projectSource:(data,selected)=>{calls.source++;selectBuildSource(data,selected);}});
  return {store,calls,changes,errors,choose:value=>source=value};
 }
+
+test('client display metadata refreshes image indexes without changing the base or recommendation source generation',()=>{
+ const f=fixture();f.store.bootstrap({data:base(),revision:0});const original=f.store.current(),before={...f.calls},generation=f.store.baseGeneration();
+ const clientDictionary={champions:[{id:'FutureHero',key:999999}],items:[{id:999998,icon:'https://raw.communitydragon.org/latest/example.png'}]};
+ f.store.accept({revision:1,changes:{clientDictionary}});const change=f.changes.at(-1);
+ assert.equal(change.assetsChanged,true);assert.equal(change.baseChanged,false);assert.equal(change.sourceChanged,false);assert.equal(f.store.baseGeneration(),generation);
+ assert.equal(f.calls.images,before.images+1);assert.equal(f.calls.source,before.source);assert.equal(f.calls.catalog,before.catalog);
+ assert.equal(f.store.current().champions,original.champions);assert.equal(f.store.current().items,original.items);assert.equal(f.store.current().clientDictionary,clientDictionary);
+});
 
 test('subscribe-before-bootstrap buffers the update that arrives while other startup calls wait',()=>{
  const f=fixture();f.store.accept({revision:8,changes:{rankings:{latest:true}}});
@@ -49,6 +58,12 @@ test('unrelated statistics preserve projected build references and active catalo
  for(let i=1;i<=20;i++)f.store.accept({revision:i,changes:{[['rankings','pairStatistics','opponentBuildSources','hexBuilds'][(i-1)%4]]:{revision:i}}});
  assert.deepEqual(f.calls,calls);assert.equal(f.store.current().catalog,before.catalog);assert.equal(f.store.current().builds,before.builds);assert.equal(f.store.current().buildSources,before.buildSources);
  assert.equal(f.changes.length,21);assert.equal(f.store.revision(),20);
+});
+
+test('community progress is status-only while an accepted catalog and Hex overlay arrive together',()=>{
+ const f=fixture();f.store.bootstrap({data:base(),revision:0});const original=f.store.current(),calls={...f.calls};
+ f.store.accept({revision:1,changes:{communityFeed:{phase:'checking'}}});assert.equal(f.changes.at(-1).statusOnly,true);assert.deepEqual(f.calls,calls);assert.equal(f.store.current().catalog,original.catalog);
+ const communityHexRoutes={patch:'16.20',routes:[{title:'new source'}]};f.store.accept({revision:2,changes:{catalog:{version:2,name:'signed'},catalogInfo:{status:{}},communityHexRoutes,communityFeed:{phase:'ready'}}});assert.equal(f.changes.at(-1).statusOnly,false);assert.equal(f.changes.at(-1).catalogChanged,true);assert.equal(f.store.current().communityHexRoutes,communityHexRoutes);assert.equal(f.store.current().catalog.version,2);assert.equal(f.calls.images,calls.images);
 });
 test('the selected window source survives another source refresh and remains separate from raw builds',()=>{
  const f=fixture(),kr=ref('kr');f.store.bootstrap({data:{...base(),buildSources:{[buildSourceKey('Ashe','bottom',kr,kr.patch)]:kr}},revision:0});

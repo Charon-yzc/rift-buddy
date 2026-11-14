@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$InstallDir,[string]$PreviousInstallDir='', [string]$StagedDir='', [string]$BaseManifest='', [string]$BlockPatch='', [switch]$StopOnly,[string]$RegistryId='RiftBuddy',[string]$ShortcutName='开黑搭子')
+param([Parameter(Mandatory=$true)][string]$InstallDir,[string]$PreviousInstallDir='', [string]$StagedDir='', [string]$BaseManifest='', [string]$BlockPatch='', [switch]$StopOnly,[string]$RegistryId='RiftBuddy',[string]$ShortcutName='开黑搭子',[string]$FailureFile='')
 $ErrorActionPreference='Stop'
 # Use Windows PowerShell's own modules even when launched from pwsh/Node.
 $env:PSModulePath=Join-Path $PSHOME 'Modules'
@@ -125,6 +125,18 @@ function WriteShortcut([string]$File,[string]$Executable){
   if(!(Test-Path -LiteralPath $File -PathType Leaf) -or $Readback.TargetPath -ine $Executable -or $Readback.WorkingDirectory -ine $Target){throw 'Installed shortcut verification failed'}
  }finally{foreach($Object in @($Readback,$Shortcut,$Shell)){if($Object -and [Runtime.InteropServices.Marshal]::IsComObject($Object)){$null=[Runtime.InteropServices.Marshal]::FinalReleaseComObject($Object)}}}
 }
+function FailureReason([string]$Message){
+ switch -Regex ($Message){
+  'Incremental base changed' {return '增量补丁与本机版本不匹配，请下载完整安装包。'}
+  'Payload integrity check failed|Block patch' {return '安装文件校验未通过，请重新下载安装包。'}
+  'Unsafe installation directory|Installation links|Payload links|Target contains an existing file|Target file remains' {return '安装位置不适用，请选择独立的开黑搭子文件夹。'}
+  'Previous uninstaller is missing|Previous application identity is incomplete' {return '旧版程序不完整，请使用完整安装包修复。'}
+  'Previous uninstallation failed|Previous application files are still present' {return '旧版卸载未完成，请关闭开黑搭子后重试。'}
+  'registration has nested entries' {return '旧版安装信息异常，请保留现有程序并反馈此错误。'}
+  'denied|拒绝访问|being used by another process|另一进程' {return '文件被占用或没有写入权限，请关闭开黑搭子后重试。'}
+  default {return '请保留详细原因后重试，或使用完整安装包修复。'}
+ }
+}
 try {
  if($RegistryId -notmatch '^[A-Za-z0-9-]{1,80}$'){throw 'Invalid registry identity'}
  if(!$ShortcutName -or $ShortcutName -match '[\\/:*?"<>|\r\n$]'){throw 'Invalid shortcut identity'}
@@ -215,11 +227,11 @@ try {
    foreach($Snapshot in $RegistrationBackups){try{RestoreRegistration $Snapshot}catch{$RestoreErrors+=$_.Exception.Message}}
   }
   foreach($Directory in $ShortcutDirectories|Sort-Object Length -Descending){try{if((Test-Path -LiteralPath $Directory) -and !(Get-ChildItem -LiteralPath $Directory -Force)) {Remove-Item -LiteralPath $Directory}}catch{$RestoreErrors+=$_.Exception.Message}}
-  if($RestoreErrors.Count){throw ($Failure+'. Recovery requires attention; backup: '+$Backup+'. '+($RestoreErrors -join '; '))}
-  $RecoveryMessage=if($Removed -or $IntegrationStarted){'Previous installation restored.'}else{'Previous installation was not changed.'}
-  try{ClearBackup $Backup}catch{[Console]::WriteLine($RecoveryMessage+' Temporary backup retained: '+$Backup)}
-  throw ($Failure+'. '+$RecoveryMessage)
+   if($RestoreErrors.Count){throw ('安装未完成，自动恢复尚未完成。请保留备份并反馈此错误。'+[Environment]::NewLine+'备份位置：'+$Backup+[Environment]::NewLine+'详细原因：'+$Failure+'；'+($RestoreErrors -join '; '))}
+   $RecoveryMessage=if($Removed){'已恢复旧版程序、快捷方式和安装信息。'}elseif($IntegrationStarted){'已撤回本次新增的程序、快捷方式和安装信息。'}else{'原有程序未改动，本次写入已撤回。'}
+   try{ClearBackup $Backup}catch{[Console]::WriteLine($RecoveryMessage+' 临时备份保留在：'+$Backup)}
+   throw ('安装未完成。'+$RecoveryMessage+[Environment]::NewLine+(FailureReason $Failure)+[Environment]::NewLine+'详细原因：'+$Failure)
  }
- try{ClearBackup $Backup}catch{[Console]::WriteLine('Installation succeeded; temporary backup retained: '+$Backup)}
+  try{ClearBackup $Backup}catch{[Console]::WriteLine('安装成功，临时备份尚未清理：'+$Backup)}
  exit 0
-} catch { [Console]::Error.WriteLine($_.Exception.Message);exit 1 }finally{if($RegistryRoot){$RegistryRoot.Dispose()}}
+} catch { $Failure=$_.Exception.Message;if(!$Failure.StartsWith('安装未完成')){$Failure='安装未完成，原有程序未改动。'+[Environment]::NewLine+(FailureReason $Failure)+[Environment]::NewLine+'详细原因：'+$Failure};if($FailureFile){try{[IO.File]::WriteAllText($FailureFile,$Failure,[Text.Encoding]::Unicode)}catch{}};[Console]::Error.WriteLine($Failure);exit 1 }finally{if($RegistryRoot){$RegistryRoot.Dispose()}}

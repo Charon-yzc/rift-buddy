@@ -2,23 +2,76 @@ import crypto from 'node:crypto';
 import {discoverClient,lcuRequest} from './lcu.mjs';
 import {SGP_SERVERS,sgpServerId,sgpRequest} from './match-history-sgp.mjs';
 import {normalizeTimeline,validPuuid,looksLikePuuid,text,number} from '../src/core/match-history/model.mjs';
-import {normalizeAkariMatch as normalizeMatch} from '../src/core/akari/bridge.mjs';
+import {normalizeAkariMatch as normalizeMatch,compactAkariTimeline} from '../src/core/akari/bridge.mjs';
 import {riotAliasRequest} from './match-history-riot.mjs';
 import {ongoingRoster} from '../src/core/ongoing-game.mjs';
 import {cleanPlayerChallenges,cleanPlayerProfile,normalizePublicRanked,normalizePublicMastery} from './match-history-profile.mjs';
 
 const profile=p=>({puuid:p.puuid,name:text(p.gameName||p.displayName||p.summonerName||p.name)+(p.tagLine?'#'+text(p.tagLine):''),level:number(p.summonerLevel||p.level),icon:number(p.profileIconId),privacy:['PUBLIC','PRIVATE'].includes(p.privacy)?p.privacy:'unknown'});
 const fail=message=>{throw Error(message);};
-export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now}={}){
- let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0;const waiting=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map();let totalCacheBytes=0;
- function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();tokens.clear();totalCacheBytes=0;rosterCache=null;gsmCache=null;usageScan=null;usageReplay=null;usageRevision++;}
+// Remember a healthy source without suppressing the other allowed fallback.
+const SOURCE_COOLDOWN_MS=60000;
+// A session or account change must never be reported as a source outage.
+// Only an outage earns a cooldown. A rejected token or a local refusal is
+// retried on the next query so a refreshed credential can succeed at once.
+// A batch must not hang because one page never answers.
+function withDeadline(promise,ms,message){
+ let timer=null;
+ const guard=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(message)),ms);timer.unref?.();});
+ return Promise.race([promise,guard]).finally(()=>{if(timer)clearTimeout(timer);});
+}
+const isSourceOutage=error=>{const status=Number(error?.status);if(status>=400&&status<=599)return status>=500;return /超时|中断|无法连接|暂不可用|不可达|连接失败/.test(String(error?.message||''));};
+const isSessionChange=error=>/会话|账号|重新查询|重新连接/.test(String(error?.message||''));
+const HISTORY_SOURCES_ALL_FAILED='战绩数据源暂时不可用：游戏后台与当前大区客户端的战绩接口都返回了错误。这通常是战绩服务正在维护或暂时不可达，请稍后重试。';
+// One hero-statistics read returns a bounded batch. The backend page is 20 games,
+const SCAN_PAGE=20,SCAN_BATCH=80,SCAN_LOCAL_BATCH=100,SCAN_DEADLINE_MS=15000,FOREGROUND_WAIT_MS=3000;
+// Bound visible waiting without freeing a real transport slot before it settles.
+const OPERATION_DEADLINE_MS=8000;
+// Paging back and forth re-read the same page from the network every time.
+// A short-lived page cache keeps navigation instant; an explicit refresh, or
+// a session change, bypasses and drops it.
+const LIST_CACHE_MS=60000,LIST_CACHE_MAX=12;
+export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now,operationDeadlineMs=OPERATION_DEADLINE_MS}={}){
+ let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0,foreground=0;const waiting=[],lowWaiting=[],idleWaiters=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map(),listCache=new Map();let totalCacheBytes=0;
+ const preferredSource=new Map(),failedSource=new Map();
+ const rememberSource=(server,source)=>preferredSource.set(server,source);
+ const sourceBlocked=(server,source)=>now()<(failedSource.get(server+':'+source)??-Infinity);
+ const blockSource=(server,source)=>failedSource.set(server+':'+source,now()+SOURCE_COOLDOWN_MS);
+ function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();tokens.clear();totalCacheBytes=0;listCache.clear();rosterCache=null;gsmCache=null;usageScan=null;usageReplay=null;usageRevision++;preferredSource.clear();failedSource.clear();}
  function clear(){clearGeneration++;discovery=null;discoveredAt=0;resetSession();}
- async function limited(fn){if(waiting.length>=12)fail('战绩查询正在排队，请稍后重试');if(running>=3)await new Promise(resolve=>waiting.push(resolve));running++;try{return await fn();}finally{running--;waiting.shift()?.();}}
+ // Ongoing-game samples and deeper pages wait in a low-priority lane, so a page
+ // or player the user opens starts at the next free slot instead of behind them.
+ async function limited(fn,low=false){if(waiting.length+lowWaiting.length>=12)fail('战绩查询正在排队，请稍后重试');if(running>=3)await new Promise(resolve=>(low?lowWaiting:waiting).push(resolve));running++;try{return await fn();}finally{running--;(waiting.shift()||lowWaiting.shift())?.();}}
+ // The usage scan reads the shared backend quota four pages at a time.
+ // A foreground read must not queue behind it, so the scan waits for the
+ // running foreground read to finish. The wait is bounded: the scan still
+ // progresses when a foreground read stalls.
+ function waitForeground(ms){
+  if(!foreground)return Promise.resolve();
+  return new Promise(resolve=>{
+   const entry={resolve:()=>{clearTimeout(timer);resolve();}};
+   const timer=setTimeout(()=>{const index=idleWaiters.indexOf(entry);if(index>=0)idleWaiters.splice(index,1);resolve();},ms);
+   timer.unref?.();idleWaiters.push(entry);
+  });
+ }
+ function releaseForeground(){if(--foreground>0)return;for(const waiter of idleWaiters.splice(0))waiter.resolve();}
  async function context(generation,fresh=false){
   const startedEpoch=epoch,assertCurrent=()=>{if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');};
-  let auth;try{if(fresh||!discovery||now()-discoveredAt>3000||now()<discoveredAt){discoveredAt=now();discovery=discover(typeof installPath==='function'?installPath():installPath,{includeRegion:true});}auth=await discovery;}catch{assertCurrent();if(startedEpoch===epoch){discovery=null;resetSession();}fail('暂时无法读取客户端连接');}assertCurrent();
-  if(!auth?.port){if(startedEpoch===epoch)resetSession();fail(auth?.unreadable?'需要先确认 Windows 权限，再读取战绩':'请先登录并连接英雄联盟客户端');}
-  let own;try{own=await request(auth,'/lol-summoner/v1/current-summoner');}catch{assertCurrent();if(startedEpoch===epoch){discovery=null;resetSession();}fail('无法确认当前账号，请重新连接客户端');}assertCurrent();
+  // Discovery queries the client process through PowerShell (about 0.6 s), so
+  // a known connection is reused while the client still answers on it. A
+  // failed identity read re-discovers once; a failed discovery is not kept.
+  const lookup=async force=>{
+   let auth;try{if(force||!discovery||now()<discoveredAt){discoveredAt=now();discovery=discover(typeof installPath==='function'?installPath():installPath,{includeRegion:true});}auth=await discovery;}catch{assertCurrent();if(startedEpoch===epoch){discovery=null;resetSession();}fail('暂时无法读取客户端连接');}assertCurrent();
+   if(!auth?.port){if(startedEpoch===epoch){discovery=null;resetSession();}fail(auth?.unreadable?'需要先确认 Windows 权限，再读取战绩':'请先登录并连接英雄联盟客户端');}
+   return auth;
+  };
+  const reused=!fresh&&!!discovery&&now()>=discoveredAt,used=discovery;
+  let auth=await lookup(fresh),own,read=false;
+  try{own=await request(auth,'/lol-summoner/v1/current-summoner');read=true;}catch{assertCurrent();}
+  // Concurrent reads that held the same stale connection share one re-discovery.
+  if(!read&&reused){auth=await lookup(discovery===used);try{own=await request(auth,'/lol-summoner/v1/current-summoner');read=true;}catch{assertCurrent();}}
+  if(!read){if(startedEpoch===epoch){discovery=null;resetSession();}fail('无法确认当前账号，请重新连接客户端');}
+  assertCurrent();
   if(!validPuuid(own?.puuid)){if(startedEpoch===epoch)resetSession();fail('客户端尚未返回当前账号，请等待登录完成后重试');}
   let locale={};if(!auth.region)try{locale=await request(auth,'/riotclient/region-locale');}catch{if(fresh){assertCurrent();if(startedEpoch===epoch)resetSession();fail('无法确认当前大区，请重新连接客户端');}}assertCurrent();
   const localServer=sgpServerId(auth,locale),key=crypto.createHash('sha256').update(JSON.stringify([auth.port,auth.password,own.puuid,localServer])).digest('hex');
@@ -78,7 +131,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    const finalPhase=await request(c.auth,'/lol-gameflow/v1/gameflow-phase');if(finalPhase!==phase)fail('对局阶段已变化，正在重新同步');
    if(phase==='ChampSelect'||['None','Lobby','Matchmaking','ReadyCheck'].includes(phase)){
     const finalSnapshot=await safe(phase==='ChampSelect'?'/lol-champ-select/v1/session':'/lol-lobby/v2/lobby'),before=ongoingRoster({phase,own:c.own,lobby,draft,game},sessionId),after=ongoingRoster({phase,own:c.own,lobby:phase==='ChampSelect'?lobby:finalSnapshot,draft:phase==='ChampSelect'?finalSnapshot:draft,game},sessionId);
-    if(!finalSnapshot||before.key!==after.key)fail('当前对局成员已变化，正在重新同步');
+    if(phase==='ChampSelect'&&!finalSnapshot||before.key!==after.key)fail('当前对局成员已变化，正在重新同步');
    }
   if(['GameStart','InProgress','Reconnect'].includes(phase)){const finalGame=await safe('/lol-gameflow/v1/session');if(finalGame?.gameData?.gameId!==game?.gameData?.gameId)fail('当前对局已变化，正在重新同步');}
   await check(c);
@@ -118,10 +171,13 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   const scan=p.cursor?usageScan:{cursor:crypto.randomBytes(16).toString('hex'),epoch:c.epoch,scanned:0,identified:0,counts:{},seen:new Set(),source:p.source==='lcu'||!SGP_SERVERS[c.localServer]?'lcu':'sgp',complete:false};
   const revision=++usageRevision;
   if(scan.complete){await checkUsage(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');return usageResult(scan);}
-  const start=scan.scanned;let source=scan.source,count=Math.min(source==='sgp'?20:100,500-start),entries;
+  const start=scan.scanned;let source=scan.source,count=Math.min(source==='sgp'?(start?SCAN_BATCH:SCAN_PAGE):SCAN_LOCAL_BATCH,500-start),entries;
+  // Each page uses an independent offset; counts need no per-game details.
   if(source==='sgp'){
-   try{const result=await remote(c,c.localServer,'entitlements',`/match-history-query/v1/products/lol/player/${c.own.puuid}/SUMMARY?startIndex=${start}&count=${count}`);if(!Array.isArray(result?.games))fail('游戏后台返回的战绩格式异常');entries=result.games;}
-   catch{await check(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');if(start)fail('英雄统计暂时中断，已保留读取结果，请重试');source='lcu';count=Math.min(100,500);}
+   // Yield the backend to a running foreground read before fanning out.
+   await waitForeground(FOREGROUND_WAIT_MS);
+   try{entries=await summaryPages(c,c.localServer,c.own.puuid,start,count);}
+   catch{await check(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');if(start)fail('英雄统计暂时中断，已保留读取结果，请重试');source='lcu';count=Math.min(SCAN_LOCAL_BATCH,500-start);}
   }
   if(source==='lcu'){const result=await request(c.auth,`/lol-match-history/v1/products/lol/${c.own.puuid}/matches?begIndex=${start}&endIndex=${start+count-1}`);if(!Array.isArray(result?.games?.games))fail('客户端尚未返回有效战绩，请稍后重试');entries=result.games.games;}
   const next={...scan,cursor:crypto.randomBytes(16).toString('hex'),source,counts:{...scan.counts},seen:new Set(scan.seen)};
@@ -137,19 +193,75 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   await checkUsage(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');usageReplay=p.cursor?{cursor:p.cursor,scan:next}:null;usageScan=next;return usageResult(next);
  }
  function usageResult(scan){return {session:sessionId,cursor:scan.cursor,scanned:scan.scanned,identified:scan.identified,target:500,complete:scan.complete,source:scan.source,counts:{...scan.counts}};}
+ // Start a bounded set together, then consume only its contiguous prefix.
+ // A short page ends history; speculative later failures cannot erase it.
+ async function summaryPages(c,server,puuid,start,count,tag=''){
+  const chunks=[];for(let offset=0;offset<count;offset+=SCAN_PAGE)chunks.push([offset,Math.min(SCAN_PAGE,count-offset)]);
+  const pending=chunks.map(async([offset,chunk])=>{
+   const result=await remote(c,server,'entitlements',`/match-history-query/v1/products/lol/player/${puuid}/SUMMARY?startIndex=${start+offset}&count=${chunk}${tag?'&tag='+tag:''}`);assertSession(c);
+   if(!Array.isArray(result?.games))fail('游戏后台返回的战绩格式异常');return result.games.slice(0,chunk);
+  }).map(promise=>promise.then(games=>({games}),error=>({error})));
+  return withDeadline((async()=>{const entries=[];for(let i=0;i<pending.length;i++){
+   assertSession(c);const part=await pending[i];assertSession(c);if(part.error)throw part.error;entries.push(...part.games);if(part.games.length<chunks[i][1])break;
+  }return entries;})(),SCAN_DEADLINE_MS,'英雄战绩读取超时');
+ }
+ async function loadList(c,t,{start,count,tag,batch=false}){
+  const server=t.server,hasBackend=!!SGP_SERVERS[server];
+  const backendAllowed=hasBackend&&t.preferred!=='lcu';
+  // LCU offsets count all modes; SGP tagged offsets count only that queue.
+  // Never switch between those cursors midway through a filtered history.
+  const localAllowed=!t.cross&&(!tag||!backendAllowed);
+  const readLocal=async()=>{const raw=await request(c.auth,`/lol-match-history/v1/products/lol/${t.player.puuid}/matches?begIndex=${start}&endIndex=${start+count-1}`);const entries=raw?.games?.games;if(!Array.isArray(entries))fail('客户端尚未返回有效战绩，请稍后重试');return {raw,source:'lcu',entries};};
+  const readBackend=async()=>{const games=await summaryPages(c,server,t.player.puuid,start,count,tag);return {raw:{games},source:'sgp',entries:games};};
+  // The first page is what the user waits for. A healthy client answers it in
+  // tens of milliseconds, while the game backend needs about a second and shares
+  // a rate limit with the usage scan. Deeper pages keep the order that last
+  // worked: the client route cannot page past its own recent window on every
+  // build, so it is only trusted for the first page. A roster batch is the
+  // exception: the client serves other players' histories one at a time (about
+  // a second each, so ten cards fill one by one), while the backend answers
+  // three at once in about the same time.
+  const localFirst=t.preferred==='lcu'||t.preferred==='auto'&&start===0&&!tag&&!batch;
+  const preferred=t.preferred==='sgp'?'sgp':localFirst?'lcu':preferredSource.get(server),order=preferred==='lcu'?['lcu','sgp']:['sgp','lcu'];
+  const attempts=order.filter(source=>(source==='sgp'?backendAllowed:localAllowed)&&!sourceBlocked(server,source));
+  if(!attempts.length){
+   if(t.cross)fail('该大区战绩后台不可用');
+   if(!backendAllowed)fail('当前大区客户端战绩接口暂不可用，请稍后重试');
+   fail(tag?'当前模式的后台战绩暂不可用，请稍后重试，或选择客户端来源':HISTORY_SOURCES_ALL_FAILED);
+  }
+  let lastError=null,emptyLocal=null,backendFailed=sourceBlocked(server,'sgp');
+  const resultOf=result=>{assertSession(c);if(start>0)rememberSource(server,result.source);const notice=result.source==='lcu'&&backendAllowed&&backendFailed?'游戏后台暂不可用，已改用当前大区客户端数据':result.source==='lcu'&&t.preferred==='sgp'&&!hasBackend?'未检测到可用的后台大区配置，已使用客户端数据':'';return {raw:result.raw,source:result.source,notice};};
+  for(const source of attempts){
+   assertSession(c);
+   try{
+    const result=await (source==='sgp'?readBackend():readLocal());assertSession(c);
+    if(source==='lcu'&&!result.entries.length&&attempts.includes('sgp')&&!backendFailed){emptyLocal=result;continue;}
+    return resultOf(result);
+   }catch(error){
+    assertSession(c);lastError=error;
+    if(isSessionChange(error))throw error;
+    if(source==='sgp')backendFailed=true;
+    if(isSourceOutage(error))blockSource(server,source);
+    if(source==='sgp'&&t.cross)throw error;
+   }
+  }
+  if(emptyLocal)return resultOf(emptyLocal);
+  if(t.cross)throw lastError||Error('该大区战绩后台不可用');
+  if(!backendAllowed)throw lastError||Error('当前大区客户端战绩接口暂不可用，请稍后重试');
+  fail(tag?'当前模式的后台战绩暂不可用，请稍后重试，或选择客户端来源':HISTORY_SOURCES_ALL_FAILED);
+ }
  async function page(c,p){
   const start=p.start??0,count=p.count??20;if(!Number.isInteger(start)||start<0||start>9900||!Number.isInteger(count)||count<1||count>100||start+count>10000)fail('战绩分页参数不正确');
   if(p.rosterKey&&(!rosterCache||rosterCache.key!==p.rosterKey||now()-rosterCache.at>15000||!rosterCache.players.some(v=>v.puuid===p.puuid&&!v.hidden)))fail('当前对局成员已变化，请刷新实时对局');
    let handle=p.handle,t=handle?handles.get(handle):null;if(handle&&!t)fail('战绩会话已失效，请重新查询');if(!t){t=await target(c,p);handle=crypto.randomBytes(16).toString('hex');}
    if(p.rosterKey&&t.player.puuid!==p.puuid)fail('对局成员与查询句柄不匹配');
   if(t.epoch!==c.epoch)fail('战绩会话已变化，请重新查询');if(t.cross&&t.preferred==='lcu')fail('客户端数据源不支持跨区查询，请选择游戏后台');
-  const local=()=>request(c.auth,`/lol-match-history/v1/products/lol/${t.player.puuid}/matches?begIndex=${start}&endIndex=${start+count-1}`);
-  const tag=p.queue?`q_${Number(p.queue)}`:'';if(p.queue!==undefined&&p.queue!==''&&(!Number.isInteger(Number(p.queue))||Number(p.queue)<0||Number(p.queue)>10000))fail('战绩模式参数不正确');
-  let raw,source='lcu',notice='';
-  if(t.preferred!=='lcu'&&SGP_SERVERS[t.server]){
-    try{const games=[];for(let offset=0;offset<count;offset+=20){const chunk=Math.min(20,count-offset),result=await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/player/${t.player.puuid}/SUMMARY?startIndex=${start+offset}&count=${chunk}${tag?'&tag='+tag:''}`);if(!Array.isArray(result?.games))fail('游戏后台返回的战绩格式异常');games.push(...result.games.slice(0,chunk));if(result.games.length<chunk)break;}raw={games};source='sgp';}
-   catch(error){if(t.cross)throw error;notice='游戏后台暂不可用，已改用当前大区客户端数据';raw=await local();}
-  }else{if(t.cross)fail('该大区战绩后台不可用');raw=await local();if(t.preferred==='sgp')notice='未检测到可用的后台大区配置，已使用客户端数据';}
+  const tag=p.queue?`q_${Number(p.queue)}`:'';
+  const pageKey=`${handle}|${start}|${count}|${tag}|${t.preferred}`;if(p.queue!==undefined&&p.queue!==''&&(!Number.isInteger(Number(p.queue))||Number(p.queue)<0||Number(p.queue)>10000))fail('战绩模式参数不正确');
+  const cachedPage=p.fresh===true?null:listCache.get(pageKey);
+  if(cachedPage&&now()-cachedPage.at<LIST_CACHE_MS)return {...cachedPage.value,games:[...cachedPage.value.games]};
+  const loaded=await loadList(c,t,{start,count,tag,batch:p.batch===true});
+  const raw=loaded.raw,source=loaded.source;let notice=loaded.notice;
   const entries=source==='sgp'?raw?.games:raw?.games?.games;if(!Array.isArray(entries))fail('客户端尚未返回有效战绩，请稍后重试');
   const games=entries.slice(0,count).map(g=>normalizeMatch(g,source,t.player.puuid)).filter(Boolean);
   // LCU pages can omit identities/full teams. Match Akari's completion pass,
@@ -183,18 +295,26 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    for(const game of games)for(const player of game.participants)delete player.publicStats;
   await check(c);if(p.rosterKey&&rosterCache?.key!==p.rosterKey)fail('当前对局已变化，已忽略旧查询');handles.set(handle,t);while(handles.size>48)handles.delete(handles.keys().next().value);
   for(const game of games){t.ids.set(game.id,source);while(t.ids.size>500)t.ids.delete(t.ids.keys().next().value);const key=`${handle}:${game.id}`,current=cache.get(key);put(key,{origin:source,...(current?.origin===source&&current.complete?{}:{game}),at:now()});}
-  return {handle,session:sessionId,player:t.player,server:t.server,localServer:c.localServer,cross:t.cross,source,notice,start,count,hasMore:entries.length>=count,games,servers:Object.entries(SGP_SERVERS).map(([id,s])=>({id,name:s.name})),receivedAt:now()};
+  const result={handle,session:sessionId,player:t.player,server:t.server,localServer:c.localServer,cross:t.cross,source,notice,start,count,hasMore:entries.length>=count,games,servers:Object.entries(SGP_SERVERS).map(([id,s])=>({id,name:s.name})),receivedAt:now()};
+  listCache.delete(pageKey);listCache.set(pageKey,{at:now(),value:result});
+  while(listCache.size>LIST_CACHE_MAX)listCache.delete(listCache.keys().next().value);
+  return result;
  }
  async function execute(operation,payload={}){
     if(!['own-summary-context','own-summary-page','page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))fail('不支持此战绩操作');
   if(!payload||typeof payload!=='object'||Array.isArray(payload))fail('战绩查询参数不正确');if(operation==='clear'){clear();return true;}
-  const generation=clearGeneration;return limited(async()=>{
-  if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
+  const generation=clearGeneration,background=operation==='own-summary-page';let expired=false;
+  const pending=limited(async()=>{
+  if(expired)fail('战绩查询超时，请重试');
+  if(!background)foreground++;
+  try{
+   const work=async()=>{
+    if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
    const c=await context(generation,operation==='own-summary-context');
    if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
    if(operation==='own-summary-context')return {session:sessionId,server:c.localServer,cacheKey:SGP_SERVERS[c.localServer]?crypto.createHash('sha256').update(JSON.stringify(['own-champion-usage-v1',c.localServer,c.own.puuid])).digest('hex'):''};
-   if(operation==='own-summary-page')return ownSummaryPage(c,payload);
-   if(operation==='roster')return roster(c,payload);
+   if(operation==='own-summary-page')return await ownSummaryPage(c,payload);
+   if(operation==='roster')return await roster(c,payload);
   if(operation==='search'){
    const query=text(payload.query);if(!query||query.length>81)fail('请输入游戏名字或完整游戏 ID');
     let results;try{results=await aliases(c.auth,query);}catch{const t=await target(c,payload);results=[{puuid:t.player.puuid,gameName:t.player.name.split('#')[0],tagLine:t.player.name.split('#')[1]||''}];}
@@ -203,7 +323,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
     if(!SGP_SERVERS[server]||!players.length&&server===c.localServer){for(let i=0;i<results.length;i+=3)await Promise.all(results.slice(i,i+3).map(async alias=>{try{const raw=await request(c.auth,'/lol-summoner/v2/summoners/puuid/'+alias.puuid);if(raw?.puuid===alias.puuid)players.push({...profile(raw),name:alias.gameName?alias.gameName+(alias.tagLine?'#'+alias.tagLine:''):profile(raw).name,server});}catch{}}));}
     await check(c);return {players,servers:Object.entries(SGP_SERVERS).map(([id,s])=>({id,name:s.name}))};
   }
-  if(operation==='page')return page(c,payload);
+  if(operation==='page')return await page(c,payload);
   const t=handles.get(payload.handle);if(!t||t.epoch!==c.epoch)fail('战绩会话已失效，请重新查询');
   if(operation==='challenges'){
    if(!SGP_SERVERS[t.server])fail('当前大区未提供挑战数据源');
@@ -222,15 +342,32 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    if(!game){
     assertSession(c);let raw,actual=source;
     try{raw=source==='sgp'?await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${SGP_SERVERS[t.server].region}_${id}/SUMMARY`):cache.get(completedKey(c,id))?.raw||await request(c.auth,'/lol-match-history/v1/games/'+id);}
-    catch(error){if(source!=='sgp'||t.cross)throw error;raw=await request(c.auth,'/lol-match-history/v1/games/'+id);actual='lcu';notice='后台详情暂不可用，已使用当前大区客户端数据';}
+    catch(error){
+     if(t.cross)throw error;
+     if(source==='sgp'){raw=await request(c.auth,'/lol-match-history/v1/games/'+id);actual='lcu';notice='后台详情暂不可用，已使用当前大区客户端数据';}
+     else{const remoteServer=SGP_SERVERS[t.server];if(!remoteServer)throw error;raw=await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${remoteServer.region}_${id}/SUMMARY`);actual='sgp';notice='客户端详情暂不可用，已改用游戏后台数据';}
+    }
     game=normalizeMatch(raw,actual,t.player.puuid);if(!game||game.id!==id)fail('对局详情与当前对局不匹配');
     if(actual==='lcu')keepCompleted(c,id,raw);
    }
    await check(c);if(t.ids.get(id)!==source)fail('对局数据源已变化，请重新读取详情');put(key,{origin:source,game,complete:true,detailNotice:notice});return {game,notice};
   }
   if(operation==='timeline'){
-   let timeline=cached?.timeline,actual=cached?.timelineSource||source,notice=cached?.timelineNotice||'';if(!timeline){let raw;try{raw=source==='sgp'?await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${SGP_SERVERS[t.server].region}_${id}/DETAILS`):await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);}catch(error){if(source!=='sgp'||t.cross)throw error;raw=await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);actual='lcu';notice='后台时间线暂不可用，已使用当前大区客户端数据；部分属性和出装事件可能缺失';}timeline=normalizeTimeline(raw,actual);}
-   await check(c);if(t.ids.get(id)!==source)fail('对局数据源已变化，请重新读取时间线');put(key,{origin:source,timeline,timelineSource:actual,timelineNotice:notice});return {id,timeline,source:actual,notice};
+   // The client timeline route returns only kills, epic monsters and buildings.
+   // An automatic first page is read locally for speed, so its timelines still
+   // come from the backend; only an explicit client source keeps the client route.
+   const primary=source==='lcu'&&t.preferred!=='lcu'&&SGP_SERVERS[t.server]&&!sourceBlocked(t.server,'sgp')?'sgp':source;
+   let timeline=cached?.timeline,actual=cached?.timelineSource||primary,notice=cached?.timelineNotice||'';if(!timeline){let raw;try{raw=primary==='sgp'?await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${SGP_SERVERS[t.server].region}_${id}/DETAILS`):await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);}catch(error){
+    if(t.cross)throw error;
+    if(primary==='sgp'){raw=await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);actual='lcu';notice='后台时间线暂不可用，已使用当前大区客户端数据；部分属性和出装事件可能缺失';}
+    else{const remoteServer=SGP_SERVERS[t.server];if(!remoteServer)throw error;raw=await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${remoteServer.region}_${id}/DETAILS`);actual='sgp';notice='客户端时间线暂不可用，已改用游戏后台数据';}
+   }timeline=normalizeTimeline(raw,actual);}
+   await check(c);if(t.ids.get(id)!==source)fail('对局数据源已变化，请重新读取时间线');
+   // Ongoing-game analysis reads only positions, levels, farm, damage, kills and
+   // epic monsters: return that compact copy (about a twentieth of the bytes over
+   // the helper pipe and IPC) and keep the full timeline out of the shared cache.
+   if(payload.compact===true)return {id,timeline:compactAkariTimeline(timeline),source:actual,notice};
+   put(key,{origin:source,timeline,timelineSource:actual,timelineNotice:notice});return {id,timeline,source:actual,notice};
   }
    if(t.cross)fail('跨区对局不支持在当前客户端播放回放');
    if(operation==='replay-status'){const metadata=await request(c.auth,'/lol-replays/v1/metadata/'+id);await check(c);return {id,state:text(metadata?.state),progress:['downloading','watch','download'].includes(metadata?.state)?number(metadata?.downloadProgress):null};}
@@ -244,6 +381,16 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   }
   if(action!=='status'){const phase=await request(c.auth,'/lol-gameflow/v1/gameflow-phase');if(!['None','Lobby','EndOfGame','PreEndOfGame'].includes(phase))fail('请在大厅中下载或观看回放');await check(c);await request(c.auth,`/lol-replays/v1/rofls/${id}/${action}`,'POST',{componentType:'replay-button_match-history'});metadata=await request(c.auth,'/lol-replays/v1/metadata/'+id);}
   await check(c);return {id,state:text(metadata?.state),progress:['downloading','watch','download'].includes(metadata?.state)?number(metadata?.downloadProgress):null,action};
- });}
+   };
+   return await work();
+ }finally{if(!background)releaseForeground();}
+ },payload.background===true&&['page','timeline'].includes(operation));
+  // The caller may stop waiting, but limited() owns its slot until the native
+  // transport completes. Expired queued reads must not start another request.
+  // Explicit replay actions settle with their actual operation, never later
+  // than a timeout reported to the player.
+  if(background||operation==='replay')return pending;
+  return withDeadline(pending,operationDeadlineMs,'战绩查询超时，请重试').catch(error=>{expired=true;throw error;});
+ }
  return {execute,clear};
 }

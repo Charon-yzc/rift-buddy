@@ -26,8 +26,8 @@ export function skillCoverageText(order){
  return '尚无逐级序列 · 按开局、优先级与游戏内可升级技能决定';
 }
 
-export function skillPlanCaption({order,champion,source,patch,when,reference,sourceUrl,sources=[],stale=false},{compact=false}={}){
- const basis=[source,patch,stale?'待复核':null].filter(Boolean).join(' · ');
+export function skillPlanCaption({order,champion,source,patch,displayPatch,when,reference,sourceUrl,sources=[],stale=false},{compact=false}={}){
+ const basis=[source,displayPatch||patch,stale?'待复核':null].filter(Boolean).join(' · ');
  const links=[...(reference?.url?[{name:'前 '+reference.order.length+' 点来源',url:reference.url}]:sourceUrl?[{name:'原始加点来源',url:sourceUrl}]:[]),...sources];
  const evidence=links.map(s=>compact?`<p class="note">${e(s.name)}：${e(s.url)}</p>`:button('link',`${e(s.name)} ↗`,'link','quiet small',`data-url="${e(s.url)}"`)).join('');
  return `<p class="skill-coverage ${compact?'note':'bottom-note'}">${e(skillCoverageText(order))}</p>${milestoneView(order,champion)}${basis?`<p class="${compact?'note':'bottom-note'} skill-plan-basis">${e(basis)}</p>`:''}${when||evidence?`<details class="skill-plan-purpose more-builds" ${compact?'data-guide-section="skill-plan-purpose"':'data-companion-disclosure="skill-plan-purpose"'}><summary>加点用途与依据</summary>${when?`<p class="${compact?'note':'bottom-note'}">${e(when)}</p>`:''}${evidence}</details>`:''}`;

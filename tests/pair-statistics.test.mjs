@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -9,7 +10,7 @@ import {pairStatisticsText,pairStatisticsView} from '../src/pair-statistics-view
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8')),source={region:'global',tier:'emerald_plus'},own=data.champions.find(c=>c.id==='Graves');
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8')),source={region:'global',tier:'emerald_plus'},own=data.champions.find(c=>c.id==='Graves');
 const member=(champion,role)=>({champion,role}),a=member('Graves','jungle'),b=member('Vex','mid');
 const entry=(m,p,games=1000,wins=550)=>({...m,url:pairApiUrl(data.champions.find(c=>c.id===m.champion).key,m.role,source,data.patch),sourceUrl:pairSourceUrl(m.champion,m.role,source,data.patch),fetchedAt:'2026-10-09T17:00:00Z',rawSha256:'a'.repeat(64),pairs:[{...p,games,wins}]});
 const snapshot=()=>({schema:1,source:'OP.GG',...source,patch:data.patch,entries:[entry(a,b),entry(b,a)]});

@@ -1,9 +1,10 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {getBuild} from '../src/core/builds.mjs';
 import {rankedConfigurationAdvice,adoptRankedConfigurationAdvice} from '../src/core/ranked-configuration.mjs';
 import {rankedConfigurationAdviceView} from '../src/ranked-configuration-view.mjs';
 import {changeEnemyRole,enemyRoleContext} from '../src/core/enemy-roles.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries;
 const key=id=>data.champions.find(champion=>champion.id===id).key,selection={id:'Nami',role:'support',mode:'rift',laterIds:[3107],summonerIds:['SummonerFlash','SummonerHeal'],bootsId:'boots-3158',conditions:['ap']};
 const fixture=()=>({connected:true,phase:'ChampSelect',game:{queueId:420,mapId:11,gameMode:'CLASSIC',gameId:'800'},session:{gameId:'800',localPlayerCellId:0,myTeam:[{cellId:0,championId:key('Nami'),assignedPosition:'UTILITY'}],theirTeam:['Vladimir','Zed','Tristana','Morgana','Soraka'].map((id,i)=>({cellId:i+5,championId:key(id)})),actions:[]}});
 test('public draft updates produce read-only configuration suggestions without changing personal fields or choosing a hidden lane',()=>{

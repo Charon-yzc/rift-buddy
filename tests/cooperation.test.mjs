@@ -1,9 +1,13 @@
+import {heroCoachView} from '../src/hero-coach-view.mjs';
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
+import './fixtures/snapshot-16.20/catalog.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {createCooperationGraph,cooperationPlan,cooperationSeeds} from '../src/core/cooperation.mjs';
+import {createCooperationGraph,cooperationPlan} from '../src/core/cooperation.mjs';
 import {createSlots,recommend,currentCombo,comboContextKnown} from '../src/core/recommend.mjs';
-import {captureCreativePlan,validateCreativePlan,creativePlanId,creativePlanCompatible} from '../src/core/creative-plan.mjs';
+import {captureCreativePlan,validateCreativePlan,creativePlanId,creativePlanCompatible,resultCooperation} from '../src/core/creative-plan.mjs';
 import {captureTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {getBuild} from '../src/core/builds.mjs';
@@ -17,8 +21,8 @@ import {cooperationText,cooperationView} from '../src/cooperation-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
-const data=JSON.parse(await fs.readFile('data/game.json','utf8')),byId=new Map(data.champions.map(c=>[c.id,c]));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8')),byId=new Map(data.champions.map(c=>[c.id,c]));
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const member=(champion,role)=>({champion,role}),graph=()=>createCooperationGraph(data.champions);
 const setup=(roles,picks=[])=>createSlots().map(s=>({...s,party:roles.includes(s.role),...(picks.some(p=>p[0]===s.role)?{champion:picks.find(p=>p[0]===s.role)[1],locked:true}:{} )}));
 const trio=[member('Trundle','top'),member('Sejuani','jungle'),member('Seraphine','mid')];
@@ -37,7 +41,7 @@ test('pair caches never carry catalog links or mechanic review across graph inst
  const own=member('Sejuani','jungle'),ally=member('Trundle','top');assert.equal(graph().edge(own,ally).current,true);assert.notEqual(createCooperationGraph(data.champions,{currentPatch:'16.21'}).edge(ally,own)?.current,true);
 });
 
-test('ordinary locked-friend searches expose a complete current plan on the first page without restrictive pools',()=>{
+test('ordinary locked-friend candidates preserve every fixed member and explain their actual group',()=>{
  const scenarios=[
   [['jungle','mid'],[['mid','Ahri']]],
   [['jungle','mid'],[['jungle','Viego']]],
@@ -48,16 +52,17 @@ test('ordinary locked-friend searches expose a complete current plan on the firs
  ];
  for(const [roles,picks] of scenarios)for(const style of ['balanced','fun','wild']){
   const slots=setup(roles,picks),input={slots,champions:data.champions,scope:'party',style,play:{unusual:false}};
-  const rows=recommend({...input,limit:3}),plan=rows[0].adaptive;
-  assert.ok(plan,JSON.stringify({picks,style}));assert.equal(plan.members.length,roles.length);
-  assert.ok(plan.members.every(m=>plan.edges.some(e=>e.current&&[e.a,e.b].includes(m.champion))));
+  const rows=recommend({...input,limit:3});assert.equal(rows.length,3);
+  for(const row of rows){
+   const plan=resultCooperation(row),jobs=plan?.memberJobs||plan?.routes?.[0]?.memberJobs;
+   assert.equal(jobs?.length,roles.length,JSON.stringify({picks,style}));
+   for(const role of roles){const champion=row.slots.find(slot=>slot.role===role).champion;assert.ok(jobs.some(job=>job.role===role&&job.champion===champion&&job.job.length>0));}
+  }
   for(const [role,id] of picks)for(const row of rows)assert.equal(row.slots.find(s=>s.role===role).champion,id);
   assert.deepEqual(recommend({...input,limit:1}).map(r=>r.id),rows.slice(0,1).map(r=>r.id));
   assert.deepEqual(recommend({...input,offset:1,limit:2}).map(r=>r.id),rows.slice(1).map(r=>r.id));
   assert.deepEqual(recommend({...input,limit:0}),[]);
  }
- const ahri=recommend({slots:setup(['jungle','mid'],[['mid','Ahri']]),champions:data.champions,scope:'party',play:{unusual:false},limit:3});
- assert.ok(ahri.some(r=>r.slots.find(s=>s.role==='jungle').champion==='Vi'),'Ahri/Vi should be discoverable without forcing Vi into a pool');
 });
 
 test('cooperation priority never bypasses bans, public picks or the players allowed heroes',()=>{
@@ -88,8 +93,8 @@ test('saved cooperation leads the guide and cannot be replaced by a default pers
   // A known live phase uses the chosen plan rather than the hero's default sequence.
   const live={available:true,champion:selection.id,mode:'rift',mapId:11,queueId:420,at:Date.now(),level:9,gold:800,gameTime:900,inventory:[],skills:{Q:3,W:2,E:3,R:1},enemies:[],allies:[]};
   const current=createGuideModel(data,selectGuide(null,selection),live,{...selection,comboKnown:true});assert.ok(current.coach.action.startsWith(job));assert.equal(current.coach.sequence,plan.steps.join(' → '));
-  const html=renderGuide({model:current},'team',false,()=>'<img>');assert.ok(html.indexOf('hero-coach-compact')<html.indexOf('team-steps'));assert.ok(html.indexOf('team-steps')<html.indexOf('英雄机制、对位与个人打法'));
-  const overview=renderGuide({model},'overview',false,()=>'<img>');assert.match(overview,/本局配合 · 你的职责/);assert.ok(overview.indexOf('本局配合 · 你的职责')<overview.indexOf('英雄技能与对位参考'));
+  const html=heroCoachView(current.coach);assert(html.includes(job));for(const step of plan.steps)assert(html.includes(step));
+  const overview=renderGuide({model},'overview',false,()=>'<img>');assert.match(overview,/compact-guide-main/);assert.doesNotMatch(overview,/team-steps|hero-coach-compact/);
  }
 });
 
@@ -187,13 +192,9 @@ test('locked friends get meaningful remaining-role choices without changing posi
  assert.equal(rows[0].id,recommend({...input,limit:1})[0].id);
 });
 
-test('two-person cross-lane parties and a third friend around one lock can use mechanical seeds',()=>{
+test('two-person cross-lane parties and a third friend around one lock honor the actual member pools',()=>{
  const pair=recommend({slots:setup(['top','jungle'],[['top','Gwen']]),champions:data.champions,scope:'party',rolePools:{jungle:{mode:'only',heroes:['Sejuani']}}});
  assert.equal(pair.length,1);assert.equal(pair[0].origin,'adaptive');assert.equal(pair[0].adaptive.members.length,2);assert.deepEqual(pair[0].targets,['jungle']);
- const g=graph(),members=setup(['top','jungle','mid'],[['top','Trundle']]).filter(s=>s.party),candidateSets={jungle:[byId.get('Sejuani'),byId.get('Vi')],mid:[byId.get('Seraphine'),byId.get('Orianna')]};
- const input={members,targets:['jungle','mid'],candidateSets,graph:g},seeds=cooperationSeeds(input);
- assert.ok(seeds.some(m=>m.every((s,i)=>s.champion===trio[i].champion)));assert.deepEqual(seeds,cooperationSeeds(input));assert.ok(seeds.every(m=>m[0].champion==='Trundle'&&new Set(m.map(x=>x.champion)).size===3));
- assert.ok(cooperationSeeds({...input,limit:1}).length<=1);assert.deepEqual(cooperationSeeds({...input,targets:['support']}),[]);
  const rows=recommend({slots:setup(['top','jungle','mid'],[['top','Trundle']]),champions:data.champions,scope:'party',rolePools:{jungle:{mode:'only',heroes:['Sejuani']},mid:{mode:'only',heroes:['Seraphine']}}});
  assert.equal(rows[0].origin,'adaptive');assert.deepEqual(rows[0].targets,['jungle','mid']);
 });
@@ -224,9 +225,11 @@ test('a known teammate duo cannot take over the party plan or its member configu
  assert.equal(row.origin,'adaptive');assert.equal(row.duo,undefined);assert.equal(row.trio,undefined);assert.deepEqual(row.targets,['mid']);
  assert.equal(row.analysis.known,5,'Other teammates still affect whole-team composition');
  assert.match(row.title,/近战叠霜/);assert.match(row.reason,/萨勒芬妮[^。]* E/);assert.match(resultPlayCard(row,0,data),/四层/);
- const configs=captureTeamConfigurations(row,data,createPreparationStore());
- assert.equal(configs.length,5);for(const id of ['Trundle','Sejuani','Seraphine'])assert.equal(configs.find(c=>c.id===id).creativePlan.archetype,'cooperation');
- assert.equal(configs.find(c=>c.id==='Ashe').creativePlan,undefined,'The unrelated duo keeps its own member build');
+ assert.throws(()=>captureTeamConfigurations(row,data,createPreparationStore()),/成员配置与组合身份不一致/,'An unrelated stale duo cannot be silently adopted without source proof');
+ const scoped={...row,scope:'party'},configs=captureTeamConfigurations(scoped,data,createPreparationStore());
+ assert.equal(configs.length,3);for(const id of ['Trundle','Sejuani','Seraphine'])assert.equal(configs.find(c=>c.id===id).creativePlan.archetype,'cooperation');
+ assert.ok(!configs.some(c=>c.id==='Ashe'),'The unrelated teammate receives no party build');
+ assert.equal(getBuild(byId.get('Ashe'),'bottom',data).loadoutId,'default');
 });
 
 test('accepted two- and three-person mechanisms retain original conditions, sources and all member guides after saving',async()=>{

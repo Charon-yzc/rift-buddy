@@ -8,7 +8,10 @@ export function clientConnectionControl(client={},busy=false){
 }
 
 export function clientConnectionNotice(client={},preferences={},busy=false,{compact=false}={}){
- if(client.connected)return '';
+ if(client.connected){
+  if(client.gameDisplay!=='fullscreen'||preferences.guideAutoShow===false)return '';
+  return `<section class="client-connection-status game-display-notice" aria-label="局内小窗提示"><div role="status"><strong>全屏会遮住局内小窗</strong></div><div class="client-connection-actions">${button('game-display-borderless','切换到无边框','','primary small')}${button('game-display-dismiss','暂不切换','','quiet small')}</div></section>`;
+ }
  const connecting=busy||client.connecting,paused=preferences.autoSync===false;
  const title=connecting?'正在连接客户端':client.needsElevation?'连接需要 Windows 权限':'未连接英雄联盟客户端';
  const detail=connecting?'正在读取客户端状态…':client.needsElevation?'客户端以管理员身份运行；助手只在最近的窗口快照显示没有对局时自动请求一次 Windows 权限，确认后自动读取公开数据，取消后可点击重试。':paused?'自动连接已关闭。':client.message&&client.message!=='正在检查客户端…'?client.message:'打开英雄联盟后会自动连接。';

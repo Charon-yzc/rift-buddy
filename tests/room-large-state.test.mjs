@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -14,8 +15,8 @@ import {createRoomService} from '../services/room.mjs';
 import {roomBallotView} from '../src/room-ballot-view.mjs';
 import {roomPanel} from '../src/room-view.mjs';
 
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
-data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url))).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
+data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries;
 const roles=['top','jungle','mid','bottom','support'];
 function proposal(ids,enemies=[]){
  const slots=createSlots().map((s,i)=>({...s,party:true,champion:ids[i],locked:true}));

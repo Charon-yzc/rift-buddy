@@ -6,9 +6,35 @@ import {tacticalCooperationPlan} from './tactical-cooperation.mjs';
 import {independentCooperationAction} from './shared-cooperation.mjs';
 import {sidePressureRoute} from './side-pressure.mjs';
 import {sharedResourceConflict} from './cooperation-resources.mjs';
+import {catalogEntryRevision} from './catalog-choice.mjs';
+import {reviewedCatalogEntry} from './mechanic-review.mjs';
+import {LOADOUTS,RUNE_PLANS,SKILL_PLANS} from './loadouts.mjs';
+import {mechanicSourceInput} from './mechanic-source.mjs';
 
 const roles=['top','jungle','mid','bottom','support'];
 const same=(a,b)=>a.role===b.role&&a.champion===b.champion;
+// Outside the skill graph's reviewed patch, only the independently proven
+// catalog subgroup may supply specific actions. Other party members receive
+// neutral responsibilities, not inferred current spells or control edges.
+export function historicalPartyPlan(members,graph,catalogStatus,catalogReviewPatch){
+ if(![4,5].includes(members.length)||graph.currentPatch!==catalogReviewPatch||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length||members.some(m=>!roles.includes(m.role)||!graph.byId.has(m.champion)))return null;
+ const sorted=[...members].sort((a,b)=>roles.indexOf(a.role)-roles.indexOf(b.role));
+ const sources=sorted.map(member=>{const source=mechanicSourceInput(graph.byId.get(member.champion),graph.currentPatch);return source?`https://ddragon.leagueoflegends.com/cdn/${source.version}/data/en_US/champion/${member.champion}.json`:null;});
+ if(sources.some(source=>!source))return null;
+ const t=TRIOS.find(entry=>catalogStatus?.[entry.id]?.historicalCompatible===true&&reviewedCatalogEntry(entry,catalogStatus,catalogReviewPatch)&&entry.members.every(member=>sorted.some(value=>same(member,value))));
+ if(!t||!Object.hasOwn(TEMPOS,t.tempo))return null;
+ const revision=catalogEntryRevision(t,{loadouts:LOADOUTS,runes:RUNE_PLANS,skillPlans:SKILL_PLANS});
+ const step=t.steps.join(' → '),confirm='每位成员自行确认当前技能、资源和退路；没有读取实时技能。';if(!revision||step.length>400||[confirm,t.window].join(' ').length>400||t.risk.length>400)return null;
+ const group={id:t.id,kind:'trio',reviewedAt:t.reviewedAt,early:t.early,economy:t.economy,sources:t.sources||[],revision,members:t.members.map(member=>({role:member.role,champion:member.champion,loadoutId:member.loadoutId||'default'}))};
+ const jobs=sorted.map(member=>{const own=t.members.find(value=>same(member,value));return {role:member.role,champion:member.champion,job:own?`${own.job}（沿用 ${t.patch} 组合说明）`:'先处理自己的兵线或安全营地，确认队友到位和退路后再接应；条件不成立就回撤。'};});
+ const fallbackJobs=sorted.map(member=>({role:member.role,champion:member.champion,job:'本轮取消深入，先确认队友和退路，接应撤退后处理安全资源。'}));
+ const routes=[{id:'curated:'+t.id,label:t.name.length<=100?t.name:'原三人配合',tempo:t.tempo,step,condition:t.window,failure:t.risk,memberJobs:jobs,loadoutGroup:group},{id:'reset',label:'取消进场，接应撤退',tempo:'growth',step:'条件不成立就取消深入，接应队友撤退，再处理安全兵线或营地。',condition:'队友和退路可以确认；先避免分散。',failure:'退路不安全时停止继续追击，重新确认集合方向。',memberJobs:fallbackJobs}];
+ const opening=`原三人组：${t.early} 其他成员先处理自己的安全资源，报告能否到场。`,economy=`原三人组：${t.economy} 其他成员按自己的位置保留安全资源。`;
+ if(economy.length>500)return null;
+ const steps=[opening,'主线：'+step,'备选：'+routes[1].step];
+ if(steps.some(value=>value.length>400))return null;
+ return {kind:'shared',historicalNeutral:true,historicalPatch:t.patch,name:`${sorted.length}人分工 · ${TEMPOS[t.tempo]}`,members:sorted.map(({role,champion})=>({role,champion})),memberJobs:jobs,routes,edges:[],bonus:0,tempo:t.tempo,steps,relaySteps:steps,opening,economy,why:'保留已审三人技能配合；其余成员按实际到场和退路接应，不推断额外技能联动。',conditions:[confirm,t.window],failures:['关键成员无法到场或退路不安全时取消本轮，先接应撤退。',t.risk],sourceNote:`三人组整理于 ${t.patch}，已审技能来源指纹一致；装备效果、任务与视野按当前核对，其余成员只列通用分工。未验证全队独特协同或对局胜率。`,patch:graph.currentPatch,reviewedAt:t.reviewedAt,sourceUrls:sources};
+}
 function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
  const name=id=>graph.byId.get(id).name;
  const priority=['pair:Malphite:Yasuo','pair:Diana:Yasuo','pair:Yasuo:Zac'];
@@ -33,14 +59,15 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
     else if(m.champion===carrier)job=`本轮由自己带球，先确认发条 E 的球已到且仍跟随、队友能覆盖落点才安全进场。${action} ${carrier==='Nautilus'?'Q 实际命中并接近或安全步行到位才算带球到场；R 的追踪冲击波不会移动自己。':carrier==='Vi'?'Q 被前方英雄截住就停在实际碰撞处；R 只有实际到达目标才算进场。':''} 球返回或队友赶不到就取消接大并接应退出，不为留球独自深入。`;
     else job=`本轮由${carrierName}带球，自己的进场留作第二波或接应，等主线实际生效且安全覆盖才跟进；主线失败就一起退出，不要求第二次发条 R。${action}`;
    }
-   else if(lead.actors.includes(m.champion))job=lead.curated?lead.curated.members.find(p=>same(m,p)).job+`（沿用组合说明 ${lead.curated.patch}${lead.curated.patch!==SKILL_COOPERATION_PATCH?' · 旧版本说明保留':''}）`:lead.edge?cooperationCoordination([m],graph,[lead.edge]).memberJobs[0].job:row[3]+' '+row[0];
+   else if(lead.actors.includes(m.champion))job=lead.curated?lead.curated.members.find(p=>same(m,p)).job+`（沿用组合说明 ${lead.curated.patch}）`:lead.edge?cooperationCoordination([m],graph,[lead.edge]).memberJobs[0].job:row[3]+' '+row[0];
    else if(p.peel&&(!p.engage||m.role==='support')&&protectedMember&&protectedMember.champion!==m.champion)job=`本轮优先接应${name(protectedMember.champion)}，不与主线同时深入。${action}`;
    else if(relay&&p.engage&&row[3])job=`${action} 进场留作第二波或反打，先等主线实际生效与队友到位；主线失败就接应退出，不为补一次控制独自深入。`;
    else job=action+' '+(relay?'先确认主线实际生效、同一目标在自己安全覆盖内再跟进。':'与主线保持可接应距离，按自己的安全接触条件行动，不等队友先控制。')+' 跟不上就回到队友，不转追第二个目标。';
    return {role:m.role,champion:m.champion,job:job+' 成立前先确认：'+row[1]+' 停止条件：'+row[2]};
   });
   const t=lead.curated;
-  const loadoutGroup=t?{id:t.id,kind:'trio',reviewedAt:t.reviewedAt,early:t.early,economy:t.economy,sources:t.sources||[],members:t.members.map(m=>({role:m.role,champion:m.champion,loadoutId:m.loadoutId||'default'}))}:null;
+  const revision=t&&catalogEntryRevision(t,{loadouts:LOADOUTS,runes:RUNE_PLANS,skillPlans:SKILL_PLANS});
+  const loadoutGroup=t?{id:t.id,kind:'trio',reviewedAt:t.reviewedAt,early:t.early,economy:t.economy,sources:t.sources||[],...(revision?{revision}:{}),members:t.members.map(m=>({role:m.role,champion:m.champion,loadoutId:m.loadoutId||'default'}))}:null;
   return {id:lead.id,label:members.filter(m=>lead.actors.includes(m.champion)).map(m=>name(m.champion)).join(' / '),tempo:lead.curated?.tempo||lead.edge?.tempo||'teamfight',step:lead.step,condition:lead.condition,failure:lead.failure,memberJobs:jobs,...(loadoutGroup?{loadoutGroup}:{})};
  });
  const tactical=tacticalCooperationPlan(members,graph,{tempo:requestedTempo});
@@ -69,7 +96,8 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
 // Four/five players need a whole-party resource and action plan, even when
 // only a subgroup has a reviewed interaction. This adds no synergy bonus and
 // does not claim that the whole group has a unique or measured advantage.
-export function partyCooperationPlan(members,graph,{catalogStatus={},tempo:requestedTempo='any',basePlan=null}={}){
+export function partyCooperationPlan(members,graph,{catalogStatus={},catalogReviewPatch,tempo:requestedTempo='any',basePlan=null}={}){
+ if(graph.currentPatch!==SKILL_COOPERATION_PATCH)return historicalPartyPlan(members,graph,catalogStatus,catalogReviewPatch);
  if(members.some(member=>!graph.byId.has(member.champion)||!graph.profile(member).reviewed))return null;
  if(![3,4,5].includes(members.length)||members.some(m=>!roles.includes(m.role)||!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
  members=[...members].sort((a,b)=>roles.indexOf(a.role)-roles.indexOf(b.role));
@@ -77,13 +105,13 @@ export function partyCooperationPlan(members,graph,{catalogStatus={},tempo:reque
  const name=id=>graph.byId.get(id).name,edges=[];
  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)edges.push(edge);}
  if(members.length===3&&!sidePressureRoute(members,graph)&&!sharedResourceConflict(edges))return null;
- const curated=TRIOS.filter(t=>!catalogStatus[t.id]?.invalid&&!catalogStatus[t.id]?.stale&&t.patch===SKILL_COOPERATION_PATCH&&t.members.every(m=>members.some(p=>same(m,p))));
+ const curated=TRIOS.filter(t=>graph.currentPatch===catalogReviewPatch&&reviewedCatalogEntry(t,catalogStatus,catalogReviewPatch)&&t.members.every(m=>members.some(p=>same(m,p))));
  const coordination=basePlan||cooperationCoordination(members,graph,[]);
  let memberJobs=members.map(m=>{
   const row=COOPERATION_SKILLS[m.champion],original=curated.find(t=>t.members.some(p=>same(m,p))),authored=original?.members.find(p=>same(m,p));
   const edge=edges.find(e=>[e.a,e.b].includes(m.champion));
   const local=edge?cooperationCoordination([m],graph,[edge]).memberJobs[0].job:null;
-  return {role:m.role,champion:m.champion,job:`${authored?.job||local||independentCooperationAction(m.champion)}${original?`（沿用组合说明 ${original.patch}${original.patch!==SKILL_COOPERATION_PATCH?' · 旧版本说明保留':''}）`:''} 成立前先确认：${row[1]} 停止条件：${row[2]}`};
+  return {role:m.role,champion:m.champion,job:`${authored?.job||local||independentCooperationAction(m.champion)}${original?`（沿用组合说明 ${original.patch}）`:''} 成立前先确认：${row[1]} 停止条件：${row[2]}`};
  });
  const profiles=members.map(m=>graph.profile(m)),traits=Object.fromEntries(['engage','aoe','peel','sustain','poke'].map(k=>[k,profiles.filter(p=>p[k]).length]));
  const inferredTempo=preferredTempo({traits,members});

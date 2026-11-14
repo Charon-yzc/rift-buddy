@@ -1,0 +1,846 @@
+{
+  "schema": 1,
+  "scope": "hex-1141-ally-protection",
+  "patch": "16.21",
+  "reviewedAt": "2026-10-22",
+  "basis": "Explicit review of named ally-heal/shield ability paths only. Does not approve other hero affinities, offer eligibility, builds, strength or event attribution for unlisted transfer effects.",
+  "sources": {
+    "notes": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+    "dataDragon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "characters": "https://raw.communitydragon.org/16.21/game/data/characters"
+  },
+  "heroes": {
+    "Alistar": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Alistar",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+          "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "60b70b49d6326ac5"
+        }
+      },
+      "channels": [
+        {
+          "slot": "P",
+          "condition": "P 怒吼层数攒满后，治疗附近的友方英雄。"
+        }
+      ]
+    },
+    "Annie": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Annie",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/annie/annie.bin.json",
+          "sha256": "639eb1e2a65e1fccac7797899348741f46f0b8fe1be6e39a0e67810c89721af7"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "e388b73359b4c909"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "E 以友方英雄为目标提供护盾；不把提伯斯的护盾算作队友收益。"
+        }
+      ]
+    },
+    "Bard": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Bard",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/bard/bard.bin.json",
+          "sha256": "4b73426120b4a794709001352620eeb7b5644f1b7c78d674aee68a5e2b0ac692"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "20f447261a6d2716"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "W 圣坛被友方英雄实际接触后治疗该英雄；自己吃圣坛不算治疗队友。"
+        }
+      ]
+    },
+    "Fiora": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Fiora",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/fiora/fiora.bin.json",
+          "sha256": "090506b4d3dd2d7319a8f915c4ab60b8055f06d2335fe8fb5124df6b6561e25c"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "f93af67e3da46305"
+        }
+      },
+      "channels": [
+        {
+          "slot": "R",
+          "condition": "R 标记期间命中四处破绽，或至少命中一处后目标阵亡，才生成治疗区；友军须在区域内。"
+        }
+      ]
+    },
+    "Galio": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Galio",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+          "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "e3a8cfa71c0b2970"
+        }
+      },
+      "channels": [
+        {
+          "slot": "R",
+          "condition": "R 为着陆区域内的友方英雄提供魔法护盾；W 被动只给自己护盾。"
+        }
+      ]
+    },
+    "Hwei": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Hwei",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/hwei/hwei.bin.json",
+          "sha256": "432285db911de128098ca01317bc135933fba477da091654a7742f23c754ae04"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "5220abe71b75d212"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "WW「渲浓」持续为池中的友方英雄提供护盾；WQ 加速和 WE 回蓝不能替代。"
+        }
+      ]
+    },
+    "Ivern": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Ivern",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/ivern/ivern.bin.json",
+          "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "a8c07de58a4e8f6d"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "E 以友方英雄为目标提供护盾；只给小菊施盾不能据此算作治疗护盾队友。"
+        }
+      ]
+    },
+    "Janna": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Janna",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/janna/janna.bin.json",
+          "sha256": "4cec640827c538d66a8dba07f2330b0d11a6749bdbf85691628f6a2fd08320cf"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "59f8d2d99e76564e"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "E 以友方英雄为目标提供护盾；防御塔或自身护盾不能替代队友收益。"
+        },
+        {
+          "slot": "R",
+          "condition": "R 引导期间治疗附近友军；移动或使用技能会提前结束。"
+        }
+      ]
+    },
+    "Karma": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Karma",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/karma/karma.bin.json",
+          "sha256": "7b6328b43d94f80ea6eec0998d8f81d9e54f3f8c6bb7a37a12ebbd04d569bcf5"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "1f2620463bdb38d1"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "E 以友方英雄为目标提供护盾；无需梵咒，RW 自疗不能替代。"
+        }
+      ]
+    },
+    "Kayle": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Kayle",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/kayle/kayle.bin.json",
+          "sha256": "c1e9422851c8d29227427f204b92d005a842e9c1685ee491a9193c64bc82eef3"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "3fa2585bed59105f"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "W 同时治疗自己与一名友方英雄；只有对队友的治疗满足这里的对象条件。"
+        }
+      ]
+    },
+    "Kindred": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Kindred",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/kindred/kindred.bin.json",
+          "sha256": "c9ad94593cde53e26f5382a09be44bed274f4ec29a63fedd51500aecaa852c85"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "70b671b76c9f1fba"
+        }
+      },
+      "channels": [
+        {
+          "slot": "R",
+          "condition": "R 结束时治疗区域内的单位，敌人也会获益；区域中单位降至10%生命值后暂不能被治疗，不能当作即时救急奶。"
+        }
+      ]
+    },
+    "KSante": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "KSante",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/ksante/ksante.bin.json",
+          "sha256": "e02f140f4c0d4528cfbea56ca70e7098fcab424821ec03f93e56fb63f93bb91e"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "b9823f303cf354fa"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "E 冲向友方英雄时也为该英雄提供护盾；只给自己施盾不算。"
+        }
+      ]
+    },
+    "LeeSin": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "LeeSin",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/leesin/leesin.bin.json",
+          "sha256": "dedb71d6b7311cb46c30a5ab8160d9a6fce2abc2eedff722a7dd18b1f59df8a3"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "ff3d80024e24db09"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "第一段 W 以友方英雄为目标才同时给其护盾；摸眼和第二段自身吸血不能替代。"
+        }
+      ]
+    },
+    "Lulu": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Lulu",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+          "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "33e697bcb063b28b"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "E 以友方英雄为目标提供护盾；对敌施放或给非英雄友军不能替代。"
+        }
+      ]
+    },
+    "Lux": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Lux",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/lux/lux.bin.json",
+          "sha256": "9223cdf0a3d94223309fc69eb0c3865444b2884004b443dbcd066e70ffe0b952"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "cc7818802b8d5fc7"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "W 魔杖去程或返程实际经过友方英雄，才为其提供护盾。"
+        }
+      ]
+    },
+    "Milio": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Milio",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+          "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "32194f4e3319e474"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "W 炉火范围内的友方英雄持续受到治疗。"
+        },
+        {
+          "slot": "E",
+          "condition": "E 以友方英雄为目标提供护盾。"
+        },
+        {
+          "slot": "R",
+          "condition": "R 治疗附近的友方英雄。"
+        }
+      ]
+    },
+    "Morgana": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Morgana",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/morgana/morgana.bin.json",
+          "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "57d5f698304a1f45"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "E 以友方英雄为目标提供魔法护盾；不能将其当作吸收物理伤害的护盾。"
+        }
+      ]
+    },
+    "Nami": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Nami",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+          "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "d41e55e60af3c37e"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "W 命中或弹到友方英雄时治疗该英雄；只治疗自己不算队友收益。"
+        }
+      ]
+    },
+    "Nidalee": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Nidalee",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/nidalee/nidalee.bin.json",
+          "sha256": "f5c3a3abf2db4ddfe9a86ad3f27f03b36b2bcd063b64900ab5d55108ecd43180"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "60b5273e0f23a85d"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "仅人类形态 E 可治疗友方英雄；美洲狮形态 E 是伤害技能。"
+        }
+      ]
+    },
+    "Nilah": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Nilah",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+          "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "2f18ee1a98588cd1"
+        }
+      },
+      "channels": [
+        {
+          "slot": "R",
+          "condition": "R 根据对敌方英雄造成的伤害治疗附近友方英雄，过量治疗转为护盾；未核实被动转授的增幅归属。"
+        }
+      ]
+    },
+    "Orianna": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Orianna",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/orianna/orianna.bin.json",
+          "sha256": "b1c48967c70298c50b2324aed6a5c501348eac8811984027ba7598fd54801573"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "032f33bbd9d369d4"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "E 主动将魔偶送到友方英雄身上并提供护盾；被动双抗不是治疗或护盾。"
+        }
+      ]
+    },
+    "Rakan": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Rakan",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+          "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "14165b7ab2f27514"
+        }
+      },
+      "channels": [
+        {
+          "slot": "Q",
+          "condition": "Q 命中英雄或史诗级野怪后，经延迟或接触友方英雄触发附近友军治疗。"
+        },
+        {
+          "slot": "E",
+          "condition": "E 冲向友方英雄并为其提供护盾。"
+        }
+      ]
+    },
+    "Renata": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Renata",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+          "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "849f2ea81ec5e47e"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "E 飞弹命中友军时提供护盾；不把 W 延缓死亡或复活当作已核实的治疗增幅。"
+        }
+      ]
+    },
+    "Senna": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Senna",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/senna/senna.bin.json",
+          "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "58582c22f3d6346b"
+        }
+      },
+      "channels": [
+        {
+          "slot": "Q",
+          "condition": "Q 治疗光束途经的友方英雄。"
+        },
+        {
+          "slot": "R",
+          "condition": "R 为光束命中的友方英雄提供护盾。"
+        }
+      ]
+    },
+    "Seraphine": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Seraphine",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+          "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "b29132146d6ad36b"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "W 为附近友方英雄提供护盾；额外治疗须自己已有护盾，且友军在延迟后的治疗范围内。"
+        }
+      ]
+    },
+    "Shen": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Shen",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/shen/shen.bin.json",
+          "sha256": "ff70810a319271f9cc076508d6e6a5d877b06899ac6f69516963d975575284e5"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "56dbf98c4bc9628e"
+        }
+      },
+      "channels": [
+        {
+          "slot": "R",
+          "condition": "R 为选定的友方英雄提供护盾。"
+        }
+      ]
+    },
+    "Sona": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Sona",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/sona/sona.bin.json",
+          "sha256": "8ad8fdcf17aff949bc7a9f8b6e0c7235f396346f7cba27f7bff26528975560a1"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "8146f69f6cdef897"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "W 治疗附近受伤友方英雄，旋律光环再为接触到的友军提供护盾。"
+        }
+      ]
+    },
+    "Soraka": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Soraka",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/soraka/soraka.bin.json",
+          "sha256": "efdf1cfccf0fbb6bb3de9f8e2e7e5641eb0e628955c602dbe93be699b2ce8e83"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "43b0fc1302f2816c"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "W 消耗自身生命治疗友方英雄；强化不抵消这项代价。"
+        },
+        {
+          "slot": "R",
+          "condition": "R 回复所有友方英雄的生命值。"
+        }
+      ]
+    },
+    "TahmKench": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "TahmKench",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/tahmkench/tahmkench.bin.json",
+          "sha256": "2c4d245e198a57458a95879789133f011276421c3cbc2f5a5293507a8ba34073"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "324a3700d293797b"
+        }
+      },
+      "channels": [
+        {
+          "slot": "R",
+          "condition": "R 吞下友方英雄，并在其被吐出后提供护盾；E 只给自己回复或护盾。"
+        }
+      ]
+    },
+    "Taric": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Taric",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+          "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "a0599325a1012892"
+        }
+      },
+      "channels": [
+        {
+          "slot": "Q",
+          "condition": "Q 消耗已储存充能治疗附近友方英雄。"
+        },
+        {
+          "slot": "W",
+          "condition": "W 主动绑定友方英雄并提供护盾；被动护甲不算。"
+        }
+      ]
+    },
+    "Thresh": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Thresh",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
+          "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "9d08c31186ec4f58"
+        }
+      },
+      "channels": [
+        {
+          "slot": "W",
+          "condition": "W 灯笼为第一个前来接触的友方英雄提供护盾；不是所有经过者都获得护盾。"
+        }
+      ]
+    },
+    "Yuumi": {
+      "source": {
+        "schema": 1,
+        "normalizer": 1,
+        "champion": "Yuumi",
+        "patch": "16.21",
+        "version": "16.21.1",
+        "locale": "zh_CN",
+        "character": {
+          "algorithm": "canonical-json-sha256-v1",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/yuumi/yuumi.bin.json",
+          "sha256": "b65fd4e92df3a120fe88ee2ebd588f55a7f1a642f249c22d0668eae860f9c3aa"
+        },
+        "dataDragon": {
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "fingerprint": "2bfcd21ddb05bd3f"
+        }
+      },
+      "channels": [
+        {
+          "slot": "E",
+          "condition": "E 只有在附身时才将护盾转给附身的友方英雄。"
+        },
+        {
+          "slot": "R",
+          "condition": "R 波纹实际命中友方英雄时治疗，过量治疗转为护盾。"
+        }
+      ]
+    }
+  }
+}

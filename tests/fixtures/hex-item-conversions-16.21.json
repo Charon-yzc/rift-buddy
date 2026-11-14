@@ -1,0 +1,349 @@
+{
+  "source": {
+    "binUrl": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "binSha256": "e1ed4bfa49ae574f9ea27e9261587e363f2ac3b0f2299a78b5ca42e518053351",
+    "stringsUrl": "https://raw.communitydragon.org/16.21/game/zh_cn/data/menu/en_us/lol.stringtable.json",
+    "stringsSha256": "5fca25e067fa2b83701bb407f9c68707fd50056785cbb22fee7790b697b985d7",
+    "official": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/"
+  },
+  "catalog": [
+    {
+      "id": 1205,
+      "key": "ARAM_ADAPt",
+      "name": "物理转魔法",
+      "rarity": "kSilver"
+    },
+    {
+      "id": 3063,
+      "key": "GiftoftheDrowned",
+      "name": "溺水之赠礼",
+      "rarity": "kSilver"
+    },
+    {
+      "id": 3059,
+      "key": "NoManaNoProblem",
+      "name": "没法力，没问题",
+      "rarity": "kSilver"
+    },
+    {
+      "id": 3058,
+      "key": "TickleMonster",
+      "name": "嗡嗡怪兽",
+      "rarity": "kGold"
+    }
+  ],
+  "bin": {
+    "Maps/ModeSpecificData/Augments/ARAM_ADAPt": {
+      "AugmentNameId": "ARAM_ADAPt",
+      "NameTra": "Kiwi_ARAM_ADAPt_Name",
+      "DescriptionTra": "Cherry_ADAPt_Summary",
+      "AugmentTooltipTra": "Cherry_ADAPt_Tooltip",
+      "RootSpell": "Maps/ModeSpecificData/Augments/ARAM_ADAPt/Augment_ARAM_ADAPt",
+      "mAugmentTags": 2,
+      "mBuildTags": 2082,
+      "AugmentLargeIconPath": "assets/ux/cherry/augments/icons/adapt_large.tex",
+      "AugmentSmallIconPath": "assets/ux/cherry/augments/icons/adapt_small.tex",
+      "AugmentDisplayTags": [
+        2
+      ],
+      "AugmentPlatformId": 1205,
+      "__type": "AugmentData"
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_ADAPt/Augment_ARAM_ADAPt": {
+      "ObjectName": "Augment_ARAM_ADAPt",
+      "objectPath": "Maps/ModeSpecificData/Augments/ARAM_ADAPt/Augment_ARAM_ADAPt",
+      "mScriptName": "Augment_ARAM_ADAPt",
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "ConversionRate",
+            "values": [
+              1.666659951210022,
+              1.666659951210022,
+              1.666659951210022,
+              1.666659951210022,
+              1.666659951210022,
+              1.666659951210022,
+              1.666659951210022
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "InverseRate",
+            "values": [
+              0.6000000238418579,
+              0.6000000238418579,
+              0.6000000238418579,
+              0.6000000238418579,
+              0.6000000238418579,
+              0.6000000238418579,
+              0.6000000238418579
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "APAmp",
+            "values": [
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "APAmpCalcTooltip": {
+            "mFormulaParts": [
+              {
+                "mDataValue": "APAmp",
+                "__type": "StatByNamedDataValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        },
+        "mImgIconName": [
+          "ASSETS/Spells/Icons2D/Terrify.dds"
+        ],
+        "__type": "SpellDataResource"
+      },
+      "__type": "SpellObject"
+    },
+    "{d01dd487}": {
+      "AugmentNameId": "GiftoftheDrowned",
+      "NameTra": "Kiwi_Augment_GiftoftheDrowned_Name",
+      "DescriptionTra": "Kiwi_Augment_GiftoftheDrowned_Description",
+      "AugmentTooltipTra": "Kiwi_Augment_GiftoftheDrowned_Tooltip",
+      "RootSpell": "{f3ea7185}",
+      "AugmentLargeIconPath": "assets/ux/kiwi/augments/icons/giftofthedrowned_large.tex",
+      "AugmentSmallIconPath": "assets/ux/kiwi/augments/icons/giftofthedrowned_small.tex",
+      "AugmentDisplayTags": [
+        1
+      ],
+      "AugmentPlatformId": 3063,
+      "__type": "AugmentData"
+    },
+    "{f3ea7185}": {
+      "ObjectName": "Augment_GiftoftheDrowned",
+      "objectPath": "{f3ea7185}",
+      "mScriptName": "Augment_GiftoftheDrowned",
+      "mSpell": {
+        "mSpellCalculations": {
+          "{6f2c817a}": {
+            "mFormulaParts": [
+              {
+                "mNumber": 100,
+                "__type": "NumberCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "{5e8e8820}": {
+            "mFormulaParts": [
+              {
+                "mNumber": 5,
+                "__type": "NumberCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "{18255baa}": {
+            "mFormulaParts": [
+              {
+                "mStartValue": 10,
+                "mEndValue": 25,
+                "__type": "ByCharLevelInterpolationCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        },
+        "__type": "SpellDataResource"
+      },
+      "__type": "SpellObject"
+    },
+    "{b2d9e618}": {
+      "AugmentNameId": "NoManaNoProblem",
+      "NameTra": "Kiwi_Augment_NoManaNoProblem_Name",
+      "DescriptionTra": "Kiwi_Augment_NoManaNoProblem_Description",
+      "AugmentTooltipTra": "Kiwi_Augment_NoManaNoProblem_Tooltip",
+      "RootSpell": "{af3c9f19}",
+      "AugmentLargeIconPath": "assets/ux/kiwi/augments/icons/nomananoproblem_large.tex",
+      "AugmentSmallIconPath": "assets/ux/kiwi/augments/icons/nomananoproblem_small.tex",
+      "AugmentDisplayTags": [
+        1
+      ],
+      "AugmentPlatformId": 3059,
+      "__type": "AugmentData"
+    },
+    "{af3c9f19}": {
+      "ObjectName": "Augment_NoManaNoProblem",
+      "objectPath": "{af3c9f19}",
+      "mScriptName": "Augment_NoManaNoProblem",
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "APAmp",
+            "values": [
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "{8e5ab46a}": {
+            "mSimpleTooltipCalculationDisplay": 6,
+            "mExpandedTooltipCalculationDisplay": 5,
+            "mFormulaParts": [
+              {
+                "mNumber": 10,
+                "__type": "NumberCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "{f717dc88}": {
+            "mSimpleTooltipCalculationDisplay": 5,
+            "mExpandedTooltipCalculationDisplay": 5,
+            "mFormulaParts": [
+              {
+                "mNumber": 0.800000011920929,
+                "__type": "NumberCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "{efe39699}": {
+            "mFormulaParts": [
+              {
+                "mDataValue": "APAmp",
+                "__type": "StatByNamedDataValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        },
+        "__type": "SpellDataResource"
+      },
+      "__type": "SpellObject"
+    },
+    "{31a9b8be}": {
+      "AugmentNameId": "TickleMonster",
+      "NameTra": "Kiwi_Augment_TickleMonster_Name",
+      "DescriptionTra": "Kiwi_Augment_TickleMonster_Description",
+      "AugmentTooltipTra": "Kiwi_Augment_TickleMonster_Tooltip",
+      "RootSpell": "{e53b51f5}",
+      "AugmentLargeIconPath": "assets/ux/kiwi/augments/icons/ticklemonster_large.tex",
+      "AugmentSmallIconPath": "assets/ux/kiwi/augments/icons/ticklemonster_small.tex",
+      "AugmentDisplayTags": [
+        4
+      ],
+      "rarity": 1,
+      "AugmentPlatformId": 3058,
+      "__type": "AugmentData"
+    },
+    "{e53b51f5}": {
+      "ObjectName": "Augment_TickleMonster",
+      "objectPath": "{e53b51f5}",
+      "mScriptName": "Augment_TickleMonster",
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "ADMultiplier",
+            "values": [
+              1.75,
+              1.75,
+              1.75,
+              1.75,
+              1.75,
+              1.75,
+              1.75
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "CalcASVal",
+            "values": [
+              0.017500000074505806,
+              0.017500000074505806,
+              0.017500000074505806,
+              0.017500000074505806,
+              0.017500000074505806,
+              0.017500000074505806,
+              0.017500000074505806
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "{9f10151d}": {
+            "mSimpleTooltipCalculationDisplay": 6,
+            "mExpandedTooltipCalculationDisplay": 5,
+            "mFormulaParts": [
+              {
+                "mNumber": 1,
+                "__type": "NumberCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "{71323e7d}": {
+            "mSimpleTooltipCalculationDisplay": 5,
+            "mExpandedTooltipCalculationDisplay": 5,
+            "mFormulaParts": [
+              {
+                "mDataValue": "{536abdab}",
+                "__type": "NamedDataValueCalculationPart"
+              }
+            ],
+            "mDisplayAsPercent": true,
+            "mPrecision": 1,
+            "__type": "GameCalculation"
+          },
+          "{ece391e0}": {
+            "mFormulaParts": [
+              {
+                "mNumber": 0.30000001192092896,
+                "__type": "NumberCalculationPart"
+              }
+            ],
+            "mDisplayAsPercent": true,
+            "__type": "GameCalculation"
+          },
+          "{8577d32c}": {
+            "mFormulaParts": [
+              {
+                "mStartValue": 5,
+                "mEndValue": 50,
+                "__type": "ByCharLevelInterpolationCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        },
+        "__type": "SpellDataResource"
+      },
+      "__type": "SpellObject"
+    }
+  },
+  "entries": {
+    "cherry_adapt_summary": "将<scaleAD>额外攻击力</scaleAD>转化为<scaleAP>法术强度</scaleAP>。获得<scaleAP>@APAmp*100@%法术强度</scaleAP>。",
+    "cherry_adapt_tooltip": "将<scaleAD>额外攻击力</scaleAD>转化为<scaleAP>法术强度</scaleAP>，并获得<scaleAP>@APAmpCalcTooltip@法术强度</scaleAP>。<br><br>当前转化：@f1@<br><br><rules>每点<scaleAD>攻击力</scaleAD>转化为<scaleAP>@ConversionRate@法术强度</scaleAP>。</rules>",
+    "{1f7dc0a455}": "<scaleHealth>%i:scaleHealth%额外生命值</scaleHealth>转化为<br><scaleLethality>%i:scaleAPen%穿甲</scaleLethality>。<br><br>获得<scaleLethality>@Calc_BonusLethality@穿甲</scaleLethality>。",
+    "{24b5d56143}": "<scaleHealth>%i:scaleHealth%额外生命值</scaleHealth>转化为<scaleLethality>%i:scaleAPen%穿甲</scaleLethality>。<br>(每<scaleHealth>@Calc_HPtoLethality@生命值</scaleHealth>转为<scaleLethality>@Calc_LethalitytoHP@穿甲</scaleLethality>)<br><br>获得<scaleLethality>@Calc_BonusLethality@穿甲</scaleLethality>。<br><br><rules>额外穿甲：@f1.1@</rules>",
+    "{2593d74b83}": "来自你的装备的<scaleMana>%i:scaleMana%法力值</scaleMana>转化<br>为<scaleAP>%i:scaleAP%法术强度</scaleAP>。<br><br>使你的总<scaleAP>法术强度提升@APAmp*100@%</scaleAP>。",
+    "{3b1fd50ef5}": "来自你的装备的<scaleMana>%i:scaleMana%法力值</scaleMana>转化为<scaleAP>%i:scaleAP%法术强度</scaleAP>。<br>(每<scaleMana>@Calc_ManaToAP@法力值</scaleMana>转为<scaleAP>@Calc_APPerMana@法术强度</scaleAP>)<br><br>使你的总<scaleAP>法术强度提升@APAmp*100@%</scaleAP>。<br><br><rules>额外法术强度：@f1.1@</rules>",
+    "{32090728f2}": "<scaleAD>%i:scaleAD%攻击力</scaleAD>转化<br>为<attackSpeed>%i:scaleAS%攻击速度</attackSpeed>。<br><br>普攻附带<magicDamage>额外魔法伤害</magicDamage><OnHit>%i:OnHit%攻击特效</OnHit>。",
+    "{19f6e3f250}": "<scaleAD>%i:scaleAD%攻击力</scaleAD>转化为<attackSpeed>%i:scaleAS%攻击速度</attackSpeed>。<br>(每<scaleAD>@Calc_ADtoAS@攻击力</scaleAD>转为<attackSpeed>@Calc_ASPerAD@攻击速度</attackSpeed>)<br><br>普攻附带<magicDamage>@Calc_OnHitDamage@额外魔法伤害</magicDamage><OnHit>%i:OnHit%攻击特效</OnHit>。<br><br><rules>额外攻击速度：@f1.1*100@%</rules>"
+  }
+}

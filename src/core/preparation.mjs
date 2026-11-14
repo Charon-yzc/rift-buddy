@@ -1,5 +1,4 @@
 import {validateGuideSelection} from './guide.mjs';
-import {validateCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboContext} from './creative-plan.mjs';
 import {champSelectGameId} from './rune-context.mjs';
 import {effectiveDraftScope} from './draft.mjs';
 import {canonicalFamiliarity} from './recommendation-familiarity.mjs';
@@ -8,7 +7,7 @@ import {enemyRolesSignature} from './enemy-roles.mjs';
 
 export const preparationIdentity=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
 export const PREPARATION_LIMIT=500;
-export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','customRunePage','skillId','customSkillOrder','summonerIds','comboId','creativePlan','laterIds','bottomQuestPlan','startId','bootsId','sourceOpponent','sharedEquipment'];
+export const CONFIGURATION_FIELDS=['coreIndex','coreId','coreAuto','conditions','loadoutId','runeId','customRunePage','skillId','customSkillOrder','summonerIds','comboId','creativePlan','laterIds','bottomQuestPlan','startId','bootsId','sourceOpponent','sharedEquipment'];
 export function configurationKey(selection){return JSON.stringify([selection.id,selection.role,selection.mode,CONFIGURATION_FIELDS.map(field=>field==='conditions'?[...(selection.conditions||[])].sort():field==='bottomQuestPlan'?!!selection[field]:selection[field]??null)]);}
 export function configurationPatch(previous,next){
  return CONFIGURATION_FIELDS.filter(field=>JSON.stringify(previous?.[field])!==JSON.stringify(next?.[field]));
@@ -37,19 +36,30 @@ export function storedPreparation(values,context){
  const s=values?.findLast(value=>preparationIdentity(value)===preparationIdentity(context));
  return s?structuredClone(s):null;
 }
+// Persisting the exact choice already being applied is idempotent. A distinct
+// choice from another window still invalidates the remaining client writes.
+export function preparationSnapshotCurrent(before,current,intended,resolve){
+ const key=value=>value?configurationKey(validatePreparation(value)):null;
+ const latest=key(current);
+ if(latest===key(before)||!!intended&&latest===key(intended))return true;
+ if(!current||!intended||!resolve)return false;
+ try{const expected=resolve(intended);return typeof expected==='string'&&!!expected&&resolve(current)===expected;}catch{return false;}
+}
 export function upsertPreparation(values,value){
  const s=validatePreparation(value),key=preparationIdentity(s);
  return [...(values||[]).filter(entry=>preparationIdentity(entry)!==key),s].slice(-PREPARATION_LIMIT);
 }
 // These are reusable preferences, not a record of previous matches.
 export function createPreparationStore(limit=PREPARATION_LIMIT){
- const choices=new Map();
+ const choices=new Map(),revisions=new Map();let revision=0;
+ const mark=key=>revisions.set(key,++revision);
  return {
-  remember(value){const s=validatePreparation(value),key=preparationIdentity(s);if(JSON.stringify(choices.get(key))!==JSON.stringify(s)){choices.delete(key);choices.set(key,s);if(choices.size>limit)choices.delete(choices.keys().next().value);}return structuredClone(s);},
+  remember(value){const s=validatePreparation(value),key=preparationIdentity(s);if(JSON.stringify(choices.get(key))!==JSON.stringify(s)){choices.delete(key);choices.set(key,s);mark(key);if(choices.size>limit){const oldest=choices.keys().next().value;choices.delete(oldest);mark(oldest);}}return structuredClone(s);},
+  revision(value){return revisions.get(preparationIdentity(value))||0;},
   recall(value){const s=choices.get(preparationIdentity(value));return s?structuredClone(s):null;},
   snapshot(){return structuredClone([...choices.values()]);},
-  restore(values){const valid=validatePreparations(values);choices.clear();for(const s of valid.slice(-limit))choices.set(preparationIdentity(s),s);},
-  clear(){choices.clear();},
+  restore(values){const valid=validatePreparations(values),next=new Map(valid.slice(-limit).map(s=>[preparationIdentity(s),s]));for(const key of new Set([...choices.keys(),...next.keys()]))if(JSON.stringify(choices.get(key))!==JSON.stringify(next.get(key)))mark(key);choices.clear();for(const [key,s] of next)choices.set(key,s);},
+  clear(){for(const key of choices.keys())mark(key);choices.clear();},
  };
 }
 export function recallPreparation(store,guide,context,{allowSavedCombo=false}={}){
@@ -103,26 +113,10 @@ export function recommendationKey(input){
  const sourceSamples=Object.values(input.builds||{}).map(ref=>[ref.champion,ref.role,Number.isFinite(ref.runeSamples)?ref.runeSamples:null]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
  const rankedContext=input.rankedDraft?.ranked?[input.rankedDraft.queue,enemyRolesSignature(input.rankedDraft),Object.values(input.builds||{}).filter(ref=>ref.rankedStatistics).map(ref=>[ref.champion,ref.role,ref.patch,ref.region,ref.tier,ref.rankedStatistics,ref.matchups])]:null;
  const sourceRoles=[...new Set((input.sourceRoles||[]).map(ref=>[ref.champion,ref.role].join(':')))].sort();
- return JSON.stringify([slots,publicContext,rankedContext,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.publicBans,input.eligibleByRole,input.confirmedPick,input.enemy,input.visibleEnemies,input.publicPicks,input.publicAllies,input.catalogStatus,input.version,input.catalogVersion,input.creativePlan?.id,input.includePreselected===true,input.randomSeed||'',sourceSamples,sourceRoles,input.patch,input.buildSource,input.pairStatistics?.revision||input.pairStatistics,canonicalFamiliarity(input.familiarityByRole),canonicalRoomFamiliarity(input.roomFamiliarity),input.familiarityRevision||0]);
-}
-// Only an explicitly adopted alternate route inherits this result's personal
-// choices. The frozen plan and any previously edited destination stay separate.
-export function partyRoutePreparations(store,original,selected){
- if(!original||!selected)return [];
- const from=validateCreativePlan(original),to=validateCreativePlan(selected);
- if(from.id===to.id)return [];
- const routes=to.shared?.routes;
- if(!routes?.length)throw Error('个人配置只能随当前方案的备选路线保留');
- // Repeated previews also reorder the remaining alternatives. Reconstruct
- // that exact order from the original family, without weakening plan identity.
- let candidate=from;
- for(const route of [...routes].reverse())candidate=selectPartyRoute(candidate,route.id);
- if(candidate.id!==to.id)throw Error('个人配置只能随当前方案的备选路线保留');
- return to.members.flatMap(member=>{
-  const context=plan=>({id:member.champion,role:member.role,mode:'rift',...creativeComboContext(creativeMemberCombo(plan,member.champion,member.role))});
-  const target=context(to);if(store.recall(target))return [];
-  const previous=recallPreparation(store,null,context(from));if(!previous)return [];
-  const fields=Object.fromEntries(CONFIGURATION_FIELDS.filter(field=>!['comboId','creativePlan'].includes(field)&&previous[field]!==undefined).map(field=>[field,structuredClone(previous[field])]));
-  return [validatePreparation({...fields,...target})];
- });
+ // Only supplemental public championId references can differ from the search
+ // draft. Pure hovers, our editable pick and timer/identity refreshes cannot
+ // cancel a calculation while preselection is off.
+ const visible=input.fitSlots||[],raw=input.fitSession,byId=new Map((input.champions||[]).map(c=>[c.id,Number(c.key)]));
+ const references=effectiveDraftScope(visible,input.scope)==='context'?(raw?.myTeam||[]).filter(p=>p.cellId!==raw.localPlayerCellId&&p.championId>0&&!session?.myTeam?.some(q=>q.cellId===p.cellId&&q.championId===p.championId)&&!(input.includePreselected!==true&&(raw.actions||[]).flat().some(a=>a.type==='pick'&&a.actorCellId===p.cellId&&a.completed===false))).flatMap(p=>visible.filter(s=>!s.party&&s.champion&&byId.get(s.champion)===Number(p.championId)&&(!Number.isInteger(s.clientCellId)||s.clientCellId===p.cellId)).map(s=>[p.cellId,p.championId,p.assignedPosition||'',s.role,s.champion,!!s.manualPosition,Number.isInteger(s.clientCellId)?s.clientCellId:null])).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b))):[];
+ return JSON.stringify([slots,publicContext,rankedContext,input.scope,input.soloRole,input.ownRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.publicBans,input.eligibleByRole,input.confirmedPick,input.enemy,input.visibleEnemies,input.publicPicks,input.publicAllies,input.catalogStatus,input.linkReviewContext,input.catalog?.links,input.catalog?.linkReviews,input.version,input.catalogVersion,input.creativePlan?.id,input.catalogChoice,input.includePreselected===true,input.randomSeed||'',sourceSamples,sourceRoles,input.patch,input.buildSource,input.pairStatistics?.revision||input.pairStatistics,canonicalFamiliarity(input.familiarityByRole),canonicalRoomFamiliarity(input.roomFamiliarity),input.familiarityRevision||0,references]);
 }

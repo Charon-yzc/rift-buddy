@@ -2,8 +2,9 @@ import {createHash,createPublicKey,verify} from 'node:crypto';
 import {gunzip} from 'node:zlib';
 import {promisify} from 'node:util';
 import {validRankingReference,rankingKey,newerRanking} from '../src/core/rankings.mjs';
-import {validReference,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
+import {validReference,validReferenceForUse,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
 import {BUILD_REGIONS,BUILD_TIERS,DEFAULT_BUILD_SOURCE,sameBuildSource,buildSourceKey,preferBuildReference,selectBuildSource} from '../src/core/build-source.mjs';
+import {mergeHexPoolEvidence} from '../src/core/hex-pool-evidence.mjs';
 
 export const DATA_FEED_ORIGIN='https://data.riftbuddy.dpdns.org';
 export const DATA_FEED_KEYS=Object.freeze({'data-20261014':`-----BEGIN PUBLIC KEY-----
@@ -41,7 +42,7 @@ export async function decodeFeedFile(bytes,file){
  if(raw.length!==file.rawBytes||feedHash(raw)!==file.rawSha256)throw Error('资料解压校验失败');
  return JSON.parse(raw);
 }
-export function validateFeedBundle(bundle,game){
+export function validateFeedBundle(bundle,game,{allowInvalidEquipment=false}={}){
  const heroes=new Map(game.champions.map(c=>[c.id,c]));
  for(const name of DATA_FEED_NAMES){
   const entries=bundle[name]?.entries;
@@ -51,7 +52,7 @@ export function validateFeedBundle(bundle,game){
    if(name==='rankings')valid=key===ref?.key&&validRankingReference(ref,game);
    if(name==='builds'){
     const champion=heroes.get(ref?.champion);
-    valid=champion&&validReference(ref,champion,ref.role,game,{allowOlder:true})&&key===buildSourceKey(champion.id,ref.role,ref,ref.patch)&&ref.scope===undefined&&ref.opponent===undefined;
+    valid=champion&&(allowInvalidEquipment?validReferenceForUse(ref,champion,ref.role,game,{allowOlder:true}):validReference(ref,champion,ref.role,game,{allowOlder:true}))&&key===buildSourceKey(champion.id,ref.role,ref,ref.patch)&&ref.scope===undefined&&ref.opponent===undefined;
    }
    if(name==='hex-builds')valid=heroes.has(key)&&validHexReference(ref,heroes.get(key),game,{allowOlder:true});
    if(!valid||Object.hasOwn(ref,'serverCheckedAt'))throw Error('资料与当前游戏版本不兼容');
@@ -63,13 +64,14 @@ export function validateFeedBundle(bundle,game){
 // Mutates only reference collections. Saved drafts, accepted loadouts and LCU
 // state are deliberately outside this operation.
 export function applyFeedBundle(data,bundle,manifest=null){
- validateFeedBundle(bundle,data);
+ validateFeedBundle(bundle,data,{allowInvalidEquipment:true});
  const rankings={...data.rankings},builds={...data.buildSources},hex={...data.hexBuilds};
  for(const [key,ref] of Object.entries(bundle.rankings.entries))if(newerRanking(ref,rankings[key]))rankings[key]=ref;
  for(const [key,ref] of Object.entries(bundle.builds.entries))if(preferBuildReference(ref,builds[key]))builds[key]=ref;
  for(const [key,ref] of Object.entries(bundle['hex-builds'].entries)){
   const old=hex[key],order=old?compareBuildPatches(ref.patch,old.patch):1;
-  if(!old||order>0||order===0&&Date.parse(ref.fetchedAt)>Date.parse(old.fetchedAt))hex[key]=ref;
+  if(!old||order>0||order===0&&Date.parse(ref.fetchedAt)>Date.parse(old.fetchedAt))hex[key]=mergeHexPoolEvidence(ref,old);
+  else if(order===0)hex[key]=mergeHexPoolEvidence(old,ref);
  }
  // Freshness authority comes only from the verified manifest. An asset may
  // retain other scopes or old patches which this collector never rechecked.

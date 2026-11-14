@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHexRoundStore,hexRoundForHero,hexRoundSelection} from '../src/core/hex-round.mjs';
 import {validatePreparation} from '../src/core/preparation.mjs';
-const data={champions:[{id:'Ashe'},{id:'Sona'}],augments:[1002,1047,1048,1141,1205,2072,2005].map(id=>({id}))};
+const data={patch:'16.21',version:'16.21.1',sources:{augmentDescriptions:'https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json'},champions:[{id:'Ashe'},{id:'Sona'}],augments:[1002,1047,1048,1141,1205,2072,2005].map(id=>({id}))};
 const fixture=()=>{let token=0;return createHexRoundStore({newToken:()=>String(++token)});};
 const active={connected:true,phase:'ChampSelect',mode:'hex',gameId:'100',hero:'Ashe'};
 const change=(store,operation,id,record=store.snapshot().live||store.snapshot().manual)=>store.change({...record,operation,id},data);

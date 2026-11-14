@@ -4,8 +4,9 @@ import fs from 'node:fs/promises';
 import {createGuideModel,selectGuide,validateGuideState,currentPlayerSelection} from '../src/core/guide.mjs';
 import {defaultState,validateState,mergeState} from '../services/storage.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+data.builds=projectBuildSources(JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,DEFAULT_BUILD_SOURCE,data.patch);
 try{data.spellbook=JSON.parse(await fs.readFile('data/spells.json','utf8')).champions||{};}catch{data.spellbook={};}
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const selection={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,conditions:[]};
@@ -35,9 +36,9 @@ test('guide requests reject malformed heroes, modes, conditions, plans and overs
 });
 test('guide state round trip retains local progress and importing another backup preserves local guide',()=>{
  const guide={...selectGuide(null,selection),completedItems:['3031'],opacity:.85,collapsed:true};
- const state={...defaultState(),guide},restored=validateState(state);assert.deepEqual(restored.guide,guide);
+ const state={...defaultState(),guide},restored=validateState(state);assert.deepEqual(restored.guide,{...guide,collapsed:false,progressGameUnknown:true});
  const merged=mergeState(restored,{...defaultState(),guide:selectGuide(null,{...selection,id:'Jhin'})},data.champions);
- assert.deepEqual(merged.guide,guide);assert.equal(validateState({...state,guide:{...guide,completedItems:['private',3031],opacity:0}}).guide.opacity,1);
+ assert.deepEqual(merged.guide,{...guide,collapsed:false,progressGameUnknown:true});assert.equal(validateState({...state,guide:{...guide,completedItems:['private',3031],opacity:0}}).guide.opacity,1);
 });
 test('current player shortcut respects manual positions and never substitutes another player',()=>{
  const session={myTeam:[{cellId:1,championId:22,assignedPosition:'BOTTOM'},{cellId:2,championId:99,assignedPosition:'UTILITY'}],localPlayerCellId:1};
@@ -49,18 +50,18 @@ test('current player shortcut respects manual positions and never substitutes an
  const unknown={...session,myTeam:[{cellId:1,championId:22,assignedPosition:''}]};assert.equal(currentPlayerSelection(unknown,data.champions).positionKnown,false);
 });
 
-test('guide display mode persists as a floating ball across selections and saves',()=>{
+test('obsolete floating-ball state migrates without clearing selection or purchase progress',()=>{
  const base=selectGuide(null,selection);
  assert.equal(base.ball,false);
  assert.equal(validateGuideState({...base,ball:1}).ball,false);
  const ball=selectGuide({...base,ball:true},{...selection,coreIndex:1});
- assert.equal(ball.ball,true);assert.deepEqual(ball.completedItems,base.completedItems);
- assert.equal(validateState({...defaultState(),guide:ball}).guide.ball,true);
+ assert.equal(ball.ball,false);assert.equal(ball.compact,true);assert.deepEqual(ball.completedItems,base.completedItems);
+ assert.equal(validateState({...defaultState(),guide:ball}).guide.ball,false);
  assert.equal(validateGuideState({...ball,ball:undefined}).ball,false);
  const strip=selectGuide({...base,strip:true},{...selection,coreIndex:1});
- assert.equal(strip.strip,true);assert.equal(strip.ball,false);
+ assert.equal(strip.strip,false);assert.equal(strip.ball,false);
  assert.equal(validateGuideState({...strip,strip:1}).strip,false);
- assert.equal(validateState({...defaultState(),guide:strip}).guide.strip,true);
+ assert.equal(validateState({...defaultState(),guide:strip}).guide.strip,false);
 });
 
 test('duel picks validate, persist across selections and clear on a new game',async()=>{
@@ -74,4 +75,14 @@ test('duel picks validate, persist across selections and clear on a new game',as
  assert.deepEqual(selectGuide(guide,{...selection,id:'Jhin'}).duelPick,{own:'Janna',foe:'Thresh'});
  const cleared=reconcileGuide({...guide,match:{phase:'ChampSelect',gameId:'2'}},{phase:'InProgress',gameId:'1',now:Date.now()}).guide;
  assert.equal(cleared.duelPick,undefined);
+});
+test('a saved guide without compare options still builds a model at startup',()=>{
+ // validateGuideSelection omits empty compareIds/ownedAugmentIds, so a restored
+ // guide must not assume either list exists.
+ for(const mode of ['rift','hex']){
+  const guide=validateGuideState({selection:{...selection,mode}});
+  assert.equal(guide.selection.compareIds,undefined);
+  const model=createGuideModel(data,guide);
+  assert.equal(model.selection.mode,mode);
+ }
 });

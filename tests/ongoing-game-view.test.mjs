@@ -67,7 +67,7 @@ test('teams are retained, champ-select labels do not assume actual side, and are
  arena.roster.players.forEach((p,i)=>{p.group=Math.floor(i/2)+1;});rendered=ongoingGameView(arena,data);
  assert.equal((rendered.match(/data-ongoing-team="CHERRY-\d+"/g)||[]).length,8);assert.equal((rendered.match(/<h2>斗魂小队 \d+/g)||[]).length,8);
  assert.doesNotMatch(rendered,/is-large|队伍历史分析|历史胜率 <b>/);assert.equal((rendered.match(/--ongoing-cards:2/g)||[]).length,8);
- const css=await readFile(new URL('../src/ongoing-game.css',import.meta.url),'utf8');assert.match(css,/\.ongoing-team-scroll\{[^}]*overflow-x:auto/);assert.match(css,/width:240px;flex:0 0 240px/);assert.doesNotMatch(css,/100vw|position:fixed/);
+ const css=await readFile(new URL('../src/ongoing-game.css',import.meta.url),'utf8');assert.match(css,/\.ongoing-team-scroll\{[^}]*overflow-x:scroll/);assert.match(css,/width:240px;flex:0 0 240px/);assert.doesNotMatch(css,/100vw|position:fixed/);
 });
 
 test('historical sample limits and nine-champion usage cap are respected',()=>{
@@ -107,4 +107,20 @@ test('historical jungle maps, early-gank labels and sample omissions do not inve
  assert.doesNotMatch(ongoingJungleView({...j,avgTopZonePercentage:null,avgMidZonePercentage:null,avgBotZonePercentage:null}),/<meter/);
  const s=state();s.roster.players[0].position='JUNGLE';s.players.p1.analysis.jungle=j;let page=card(ongoingGameView(s,data));assert.match(page,/当前英雄暂无打野样本/);
  s.settings.jungle=false;page=card(ongoingGameView(s,data));assert.doesNotMatch(page,/ongoing-jungle/);
+});
+
+test('a loading card already has every fixed region, so arriving data never resizes it',()=>{
+ const regions=html=>[...card(html).matchAll(/class="(ongoing-rank-slot|ongoing-card-stats|ongoing-card-status|ongoing-jungle-slot|ongoing-tags|ongoing-usage|ongoing-history-list|ongoing-card-actions|ongoing-analysis-slot)(?=[ "])/g)].map(m=>m[1]);
+ const s=state();s.roster.players[0].position='JUNGLE';s.settings={usage:'recent'};const loaded=ongoingGameView(s,data);
+ s.players.p1={loading:true};const loading=ongoingGameView(s,data);
+ assert.deepEqual(regions(loading),regions(loaded));
+ assert.deepEqual(regions(loaded),['ongoing-rank-slot','ongoing-card-stats','ongoing-card-status','ongoing-jungle-slot','ongoing-tags','ongoing-usage','ongoing-history-list','ongoing-card-actions','ongoing-analysis-slot']);
+ assert.equal((card(loading).match(/ongoing-skeleton-tile/g)||[]).length,9,'Usage keeps its nine tiles while loading');
+ assert.match(card(loading),/ongoing-history-skeleton/);assert.match(card(loading),/正在读取历史打野样本/);assert.match(card(loading),/读取中/);
+ for(const kind of ['status','tags','usage','history'])assert.match(card(loaded),new RegExp(`data-scroll-key="ongoing-${kind}:p1"`));
+ assert.match(loaded,/data-scroll-key="ongoing-team:TEAM-100"/);
+ s.players.p1={};assert.match(card(ongoingGameView(s,data)),/暂无历史打野样本/);
+ // A filtered first page can be empty while deeper pages are still loading.
+ s.players.p1={detailsLoading:true,page:{games:[]}};const deeper=card(ongoingGameView(s,data));
+ assert.match(deeper,/正在读取历史对局/);assert.match(deeper,/样本读取中/);assert.match(deeper,/ongoing-skeleton-tile/);assert.doesNotMatch(deeper,/没有读取到历史对局|暂无样本|没有可分析/);
 });

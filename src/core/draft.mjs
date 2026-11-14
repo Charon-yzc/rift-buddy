@@ -10,6 +10,19 @@ export const effectiveDraftScope=(slots,scope='party')=>scope==='party'&&slots.f
 export const draftTargets=(slots,scope='context',soloRole='')=>slots.filter(s=>(scope==='solo'?(!soloRole||s.role===soloRole):scope==='bot'?['bottom','support'].includes(s.role):s.party)&&(!s.champion||!s.locked&&!s.publicIntent)).map(s=>s.role);
 export const scopeSlots=(slots,scope='context')=>scope==='bot'?slots.filter(s=>['bottom','support'].includes(s.role)):scope==='party'?slots.filter(s=>s.party):slots;
 export const clearDraftPicks=slots=>slots.map(s=>({role:s.role,party:s.party,champion:null,locked:false}));
+// An explicit offline choice constrains local recommendations only. Never turn
+// a remembered public client pick into an editable manual champion.
+export function selectManualChampion(slots,role,champion){
+ const target=slots.find(slot=>slot.role===role),source=slots.find(slot=>slot.champion===champion);
+ if(!target||typeof champion!=='string'||!/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(champion))throw Error('请选择英雄和分路');
+ if([target,source].some(slot=>Number.isInteger(slot?.clientCellId)))throw Error('此英雄或位置仍属于客户端选人，请重新连接后确认');
+ const next=source&&source.role!==role?moveChampion(slots,source.role,role):slots;
+ return next.map(slot=>{
+  if(slot.role!==role)return {...slot};
+  const {automaticPosition,publicIntent,...rest}=slot;
+  return {...rest,champion,locked:true};
+ });
+}
 export function clearClientPicks(slots){
  return slots.map(s=>{
   if(!Number.isInteger(s.clientCellId))return {...s};
@@ -22,20 +35,29 @@ export function publicClientGameId(client){return client?.connected?(client.phas
 // evidence of a new game and must not erase an explicit position choice.
 export function reconcileClientDraft(draft,gameId,previousId=null,{phase='',previousPhase=''}={}){
  const queue=['None','Lobby','Matchmaking','ReadyCheck'];
+ let rangeReset=false;
+ if(draft&&phase==='ChampSelect'&&queue.includes(previousPhase)&&(draft.partyRangeMode==='manual'||draft.slots.some(slot=>slot.partyManual))){
+  draft={...draft,partyRangeMode:'auto',slots:draft.slots.map(({partyManual,...slot})=>slot)};delete draft.partyCount;delete draft.partyAutoCount;rangeReset=true;
+ }
  if(draft&&queue.includes(phase)&&(draft.clientGameId||Number.isInteger(draft.partyCount)||['ChampSelect','GameStart','InProgress','Reconnect','WaitingForStats','PreEndOfGame','EndOfGame'].includes(previousPhase))){
-  const {creativePlan,playerPosition,partyCount,preselection,referenceQueue,scopeSelection,enemyRoles,clientGameId:oldId,...rest}=draft;
-  return {draft:{...rest,slots:clearDraftPicks(draft.slots).map(s=>({...s,party:false})),soloRole:''},changed:true,newGame:true};
+  const {creativePlan,catalogChoice,playerPosition,partyCount,partyAutoCount,partyRangeMode,preselection,referenceQueue,scopeSelection,enemyRoles,clientGameId:oldId,...rest}=draft;
+  return {draft:{...rest,...(partyRangeMode!==undefined?{partyRangeMode:'auto'}:{}),slots:clearDraftPicks(draft.slots).map(s=>({...s,party:false})),soloRole:''},changed:true,newGame:true};
  }
  if(queue.includes(phase))return {draft,changed:false,newGame:false};
  gameId=clientGameId(gameId);
- if(!draft||!gameId)return {draft,changed:false,newGame:false};
+ if(!draft||!gameId)return {draft,changed:rangeReset,newGame:false};
  const prior=clientGameId(draft.clientGameId)||clientGameId(previousId),newGame=!!prior&&prior!==gameId;
- if(!newGame&&draft.clientGameId===gameId)return {draft,changed:false,newGame:false};
+ if(!newGame&&draft.clientGameId===gameId)return {draft,changed:rangeReset,newGame:false};
  const clearSoloRole=newGame&&(!!clientGameId(draft.clientGameId)||draft.playerPosition?.role===draft.soloRole||draft.slots.some(s=>s.role===draft.soloRole&&Number.isInteger(s.clientCellId)));
  // A manual party range belongs to this game; it must not overrule the next group.
  const next={...draft,clientGameId:gameId,slots:newGame?clearDraftPicks(draft.slots).map(s=>({...s,party:false})):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
  if(newGame){
   delete next.playerPosition;delete next.partyCount;delete next.referenceQueue;delete next.scopeSelection;delete next.enemyRoles;
+  delete next.partyAutoCount;if(next.partyRangeMode!==undefined)next.partyRangeMode='auto';
+  // A fresh lobby intent and its explicit catalog choice form one operation.
+  // The prior match's saved choice must never hitch a ride into the new game.
+  const freshChoice=!draft.clientGameId&&!next.preselection?.attemptedGameId&&next.preselection?.reviewStamp&&next.preselection?.catalogChoiceToken&&next.preselection.catalogChoiceToken===next.catalogChoice?.token&&next.catalogChoice?.members.some(m=>m.role===next.preselection.role&&m.champion===next.preselection.champion);
+  if(!freshChoice)delete next.catalogChoice;
   // A previous guide may prove that old heroes need clearing on entry. A
   // fresh, unconsumed lobby click was made after that game and must survive.
   if(draft.clientGameId||next.preselection?.attemptedGameId)delete next.preselection;
@@ -79,12 +101,31 @@ export function moveChampion(slots,fromRole,toRole){
  const from=slots.find(s=>s.role===fromRole),to=slots.find(s=>s.role===toRole);
  if(!from||!to||!from.champion)throw Error('请从已选英雄开始拖动');
  if(fromRole===toRole)return structuredClone(slots);
- const a=payload(from),b=payload(to);
+ const a=payload(from),b=payload(to),followsPlayer=[from,to].some(slot=>Number.isInteger(slot.clientCellId));
  return slots.map(s=>{
   if(![fromRole,toRole].includes(s.role))return {...s};
-  // Position ownership stays on the board; champion and client binding move together.
-  return {role:s.role,party:s.party,...(s.partyManual?{partyManual:true}:{}),...(s.role===toRole?a:b)};
+  // Live members keep their recommendation ownership when changing lanes.
+  // Offline suggestions carry no player identity, so their lane range stays put.
+  const owner=followsPlayer?(s.role===toRole?from:to):s;
+  return {role:s.role,party:owner.party,...(owner.partyManual?{partyManual:true}:{}),...(s.role===toRole?a:b)};
  });
+}
+// An unlocked public pick can reserve a lane, but must not be saved as a
+// confirmed champion. Member bindings and their recommendation ownership move together.
+export function moveDisplayedChampion(slots,displayed,fromRole,toRole){
+ const source=displayed.find(s=>s.role===fromRole),target=displayed.find(s=>s.role===toRole);
+ if(!source?.champion||!target||source.publicIntent&&!Number.isInteger(source.clientCellId))throw Error('选人已变化，请重新拖动当前英雄');
+ if(fromRole===toRole)return structuredClone(slots);
+ const roles=new Set([fromRole,toRole]),positionsOnly=new Set();
+ const next=slots.map(slot=>{
+  if(!roles.has(slot.role))return slot;
+  const shown=displayed.find(s=>s.role===slot.role);
+  if(!shown?.publicIntent)return slot;
+  if(!Number.isInteger(shown.clientCellId)||shown.clientCellId<0||shown.clientCellId>=30)throw Error('位置所属尚未确认');
+  positionsOnly.add(shown.clientCellId);
+  return {...slot,champion:shown.champion,locked:false,clientCellId:shown.clientCellId};
+ });
+ return moveChampion(next,fromRole,toRole).map(slot=>positionsOnly.has(slot.clientCellId)?{...slot,champion:null,locked:false}:slot);
 }
 export function assignClientChampion(slots,pick,toRole){
  const target=slots.find(s=>s.role===toRole);

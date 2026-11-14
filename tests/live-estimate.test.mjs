@@ -27,8 +27,8 @@ test('generic damage windows use invested points and agree with the six-second s
  const unknown=duel(c,6,agg,null,target,6,data);assert.equal(unknown.killMine,unknown.mineWindow.total);assert.ok(unknown.mineWindow.skills>0);
  const state=selectGuide(null,{id:'Caitlyn',role:'bottom',mode:'rift',threatId:'Ashe'}),reading={...fresh(),champion:'Caitlyn',level:6,skills:{Q:0,W:0,E:0,R:0},enemies:[{id:'Ashe',name:target.name,level:6,items:[]}]};
  const model=createGuideModel(data,state,reading),html=renderGuide({model},'combat',false,()=>'<img>');
- assert.equal(model.estimate.killThreshold,model.estimate.mineWindow.total);assert.match(html,/技能（通用估算）约 0/);
- assert.match(html,new RegExp('6 秒约 <strong>'+Math.round(model.estimate.mineWindow.total/50)*50+'</strong>'));
+ assert.equal(model.estimate.killThreshold,model.estimate.mineWindow.total);assert.equal(model.estimate.mineWindow.skills,0);
+ assert.doesNotMatch(html,/duel-box|data-tab=|2 秒约|6 秒约|立即斩杀/);assert.match(html,/compact-guide-main/);
 });
 
 test('public defensive purchases reduce outgoing estimates and actual panel resists reduce incoming estimates',()=>{
@@ -101,8 +101,8 @@ test('missing own or enemy levels never become invented damage estimates',()=>{
 test('combat details name the selected target without fabricated lethal or win advice',()=>{
  const live=fresh();live.stats.hp=1;
  const model=createGuideModel(data,selectGuide(null,{...guide.selection,threatId:'Zed'}),live),html=renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
- assert.ok(html.includes('伤害参考 · 劫'));assert.equal(/模型提示|偏你|偏对方|均势/.test(html),false);
- assert.ok(html.includes('不是实际伤害或立即斩杀判断')&&html.includes('不表示对手在附近'));
+ assert.equal(model.estimate.enemy.id,'Zed');
+ assert.doesNotMatch(html,/duel-box|data-tab=|2 秒约|6 秒约|立即斩杀/);assert.match(html,/compact-guide-main/);
  assert.equal(Object.hasOwn(model.estimate,'liveBuy'),false);assert.equal(html.includes('实时出装'),false);
 });
 

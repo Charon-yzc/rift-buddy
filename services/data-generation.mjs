@@ -4,21 +4,22 @@ import {DATA_FEED_KEYS,DATA_FEED_NAMES,DATA_FEED_MAX_PACKED,DATA_FEED_MAX_RAW,fe
 import {validSnapshot} from './data.mjs';
 import {hasCurrentCombatStats} from './champion-stats.mjs';
 import {mechanicSourceInput} from '../src/core/mechanic-source.mjs';
-import {validReference,validHexReference,BUILD_PARSER_VERSION} from '../src/core/builds.mjs';
+import {validReference,validReferenceForUse,validHexReference,BUILD_PARSER_VERSION} from '../src/core/builds.mjs';
 import {BUILD_REGIONS,BUILD_TIERS,DEFAULT_BUILD_SOURCE,buildSourceKey,sameBuildSource} from '../src/core/build-source.mjs';
 import {rankingKey} from '../src/core/rankings.mjs';
 import {defaultBuildJobs} from '../src/core/default-build-jobs.mjs';
+import {validPatchNotes} from '../src/core/patch-notes.mjs';
 
 export const GENERATION_NAMES=Object.freeze(['game',...DATA_FEED_NAMES]);
 export const GENERATION_MAX_MANIFEST=192*1024,GENERATION_MAX_PACKED=24*1024*1024,GENERATION_MAX_RAW=48*1024*1024;
 const hash=/^[a-f0-9]{64}$/,hero=/^[A-Za-z][A-Za-z0-9]+$/;
-const baseFields=new Set('schema contentRevision mechanicSourceRevision itemTooltipRevision version patch fetchedAt checkedAt contentCheckedAt sources cnVersion augmentVersion augmentError champions items runes spells augments'.split(' '));
+const baseFields=new Set('schema contentRevision mechanicSourceRevision itemTooltipRevision version patch fetchedAt checkedAt contentCheckedAt sources cnVersion augmentVersion augmentError champions items runes spells augments patchNotes'.split(' '));
 export const pureGameSnapshot=game=>structuredClone(Object.fromEntries([...baseFields].filter(key=>Object.hasOwn(game,key)).map(key=>[key,game[key]])));
 // Source observations and transport checks do not order two different manual
 // and automatic snapshots. Compare their actual base content separately from
 // the raw local-file token identifying an explicit manual update.
 export function generationBaseIdentity(game){
- const base=Object.fromEntries([...baseFields].filter(key=>Object.hasOwn(game,key)&&!['fetchedAt','checkedAt','contentCheckedAt'].includes(key)).map(key=>[key,game[key]]));
+ const base=Object.fromEntries([...baseFields].filter(key=>Object.hasOwn(game,key)&&!['fetchedAt','checkedAt','contentCheckedAt','patchNotes'].includes(key)).map(key=>[key,game[key]]));
  base.champions=base.champions.map(champion=>{const value={...champion};if(value.mechanicSource){value.mechanicSource={...value.mechanicSource};delete value.mechanicSource.observedAt;}return value;});
  const stable=value=>Array.isArray(value)?value.map(stable):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,stable(value[key])])):value;
  return feedHash(JSON.stringify(stable(base)));
@@ -63,6 +64,7 @@ function localIcon(value){return typeof value==='string'&&/^[A-Za-z0-9_/-]+\.(?:
 const iconAt=(value,prefix)=>typeof value==='string'&&value.startsWith(prefix)&&localIcon(value.slice(prefix.length));
 export function validateGenerationGame(game){
  if(!game||Object.keys(game).some(key=>!baseFields.has(key)))throw Error('整套资料含有非基础字段');
+ if(game.patchNotes!==undefined&&!validPatchNotes(game.patchNotes,game))throw Error('整套版本改动资料无效');
  if(!validSnapshot(game)||game.augmentError||game.augmentVersion!==undefined&&game.augmentVersion!==game.version||!game.augments.length||!game.augments.every(a=>typeof a.description==='string'&&a.description.trim()&&a.descriptionStatus!=='missing')||!game.sources.augmentDescriptions||game.contentRevision<8||game.mechanicSourceRevision!==1||game.itemTooltipRevision!==1||!game.champions.every(c=>hasCurrentCombatStats(c,game.patch)&&mechanicSourceInput(c,game.patch)?.version===game.version))throw Error('整套基础资料来源不完整');
  const dd='https://ddragon.leagueoflegends.com/cdn/'+game.version+'/data/zh_CN/',cd='https://raw.communitydragon.org/'+game.patch;
  const expected={champions:dd+'championFull.json',items:dd+'item.json',runes:dd+'runesReforged.json',names:'https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js',augments:cd+'/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json',augmentDescriptions:cd+'/game/maps/modespecificdata/kiwi.bin.json',championCombatStats:cd+'/game/data/characters'};
@@ -80,16 +82,16 @@ export function createGenerationRecipe(bundle,jobs){
 export function projectGenerationBundle(bundle,recipe){
  return {game:bundle.game,...Object.fromEntries(DATA_FEED_NAMES.map(name=>[name,{schema:name==='builds'?2:1,entries:Object.fromEntries((name==='builds'?recipe.builds:name==='rankings'?recipe.rankings:recipe.hex).map(key=>[key,bundle[name].entries[key]]))}]))};
 }
-export function validateGenerationBundle(bundle,recipe){
+export function validateGenerationBundle(bundle,recipe,{allowInvalidEquipment=false}={}){
  if(!exact(bundle,GENERATION_NAMES))throw Error('整套资料文件不完整');
  const game=validateGenerationGame(bundle.game);validateGenerationRecipe(recipe,game.patch);
  if(recipe.baseSha256!==feedHash(JSON.stringify(game))||recipe.hex.join('\n')!==game.champions.map(c=>c.id).sort().join('\n'))throw Error('整套基础资料或英雄范围不匹配');
  for(const [name,expected] of [['rankings',recipe.rankings],['builds',recipe.builds],['hex-builds',recipe.hex]])if(!bundle[name]?.entries||!sameKeys(bundle[name].entries,expected)||expected.some(key=>!bundle[name].entries[key]))throw Error('整套资料未覆盖预定采集范围');
- validateFeedBundle(bundle,game);
+ validateFeedBundle(bundle,game,{allowInvalidEquipment});
  const expected=new Set(recipe.builds);
  for(const {champion,role} of defaultBuildJobs(game,bundle.rankings.entries,{}))if(!expected.has(buildSourceKey(champion.id,role,DEFAULT_BUILD_SOURCE,game.patch)))throw Error('整套资料缺少基础分路配置');
  const heroes=new Map(game.champions.map(c=>[c.id,c]));
- for(const ref of Object.values(bundle.builds.entries))if(ref.parserVersion!==BUILD_PARSER_VERSION||!sameBuildSource(ref,DEFAULT_BUILD_SOURCE)||!validReference(ref,heroes.get(ref.champion),ref.role,game))throw Error('整套配置不是当前补丁有效来源');
+ for(const ref of Object.values(bundle.builds.entries))if(ref.parserVersion!==BUILD_PARSER_VERSION||!sameBuildSource(ref,DEFAULT_BUILD_SOURCE)||!(allowInvalidEquipment?validReferenceForUse(ref,heroes.get(ref.champion),ref.role,game):validReference(ref,heroes.get(ref.champion),ref.role,game)))throw Error('整套配置不是当前补丁有效来源');
  for(const [id,ref] of Object.entries(bundle['hex-builds'].entries))if(ref.parserVersion!==3||!validHexReference(ref,heroes.get(id),game))throw Error('整套海克斯资料不是当前补丁有效来源');
  return bundle;
 }
@@ -102,9 +104,9 @@ export function packGenerationBundle(bundle,recipe){
  }
  return {files,assets};
 }
-export async function decodeGenerationAssets(manifest,assets){
+export async function decodeGenerationAssets(manifest,assets,{allowInvalidEquipment=false}={}){
  validateGenerationManifest(manifest);const bundle={};
  for(const name of GENERATION_NAMES)bundle[name]=await decodeFeedFile(assets[manifest.files[name].sha256],manifest.files[name]);
  if(bundle.game.version!==manifest.version||bundle.game.patch!==manifest.patch)throw Error('整套资料补丁不匹配');
- return validateGenerationBundle(bundle,manifest.recipe);
+ return validateGenerationBundle(bundle,manifest.recipe,{allowInvalidEquipment});
 }

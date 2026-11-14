@@ -1,0 +1,26 @@
+{
+  "sourceCommit": "092599b669b32d1448230b26310e82943cade193",
+  "purpose": "Historical 16.21 contracts only; never shipped as current data",
+  "files": [
+    {
+      "source": "data/game.json",
+      "bytes": 6176851,
+      "sha256": "5d0933efd26ca2a9ce2de6e9a1a90d012e979226d0434f72d1ecbd5c95913e3f"
+    },
+    {
+      "source": "data/builds.json",
+      "bytes": 4643063,
+      "sha256": "13d61e9458dfb64e254e1575fd26ed7804e0e3c030c9f09790beeb310b91281d"
+    },
+    {
+      "source": "data/hex-builds.json",
+      "bytes": 1762044,
+      "sha256": "52ee597895c9b99b77155a00e1fd37acc7d93b290614bd61f2d2a1fa8b091842"
+    },
+    {
+      "source": "data/rankings.json",
+      "bytes": 565831,
+      "sha256": "d23405f3b1face4a9c7fbb4a3e29f5ad9f026ad4079b4a575423d38168feaff5"
+    }
+  ]
+}

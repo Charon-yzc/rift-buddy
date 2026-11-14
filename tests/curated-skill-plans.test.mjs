@@ -1,20 +1,24 @@
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
+import {skillSummary} from '../src/core/skill-summary.mjs';
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {BUNDLED_CATALOG,validateCatalog,configureCatalog,mergePersonal,catalogDiff} from '../src/core/catalog.mjs';
+import {validateCatalog,configureCatalog,mergePersonal,catalogDiff} from '../src/core/catalog.mjs';
+import {BUNDLED_CATALOG,historicalData,historicalSelection} from './fixtures/snapshot-16.20/catalog.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {legalSkillOrder} from '../src/core/skill-advice.mjs';
-import {createSlots} from '../src/core/recommend.mjs';
+import {createSlots,recommend} from '../src/core/recommend.mjs';
+import {loadoutSelector} from '../src/build-options-view.mjs';
+import {catalogEntryRevision} from '../src/core/catalog-choice.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
-import {captureRoomStrategy,captureRoomConfigurations,roomPreparation} from '../src/core/room-configuration.mjs';
+import {captureRoomConfigurations,roomPreparation} from '../src/core/room-configuration.mjs';
 import {roomConfigurationText} from '../src/room-view.mjs';
 import {selectedBuildFields,buildFavoriteId} from '../src/core/build-favorites.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 import {skillSelector} from '../src/build-options-view.mjs';
 import {companionPlanView} from '../src/companion-view.mjs';
-import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
-const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {skillMilestones} from '../src/skill-plan-view.mjs';
 import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {catalogPreviewDialog} from '../src/catalog-view.mjs';
@@ -22,10 +26,11 @@ import {createCatalogStore} from '../services/catalog-store.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import os from 'node:os';
 import path from 'node:path';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
-data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url))).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
+data.builds=projectBuildSources(JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries,DEFAULT_BUILD_SOURCE,data.patch);
 const hero=id=>data.champions.find(c=>c.id===id),clone=()=>structuredClone(BUNDLED_CATALOG);
 
+historicalData(data);
 test('key skill nodes use the selected order, including partial openings and six-rank stances',()=>{
  assert.deepEqual(skillMilestones('EQWQQRQEQEREEWWRWW','JarvanIV'),{opening:'EQW',firstMax:{key:'Q',level:9},rLevels:[6,11,16]});
  assert.deepEqual(skillMilestones('EQW','Lulu'),{opening:'EQW',firstMax:null,rLevels:[]});
@@ -41,7 +46,7 @@ test('an installed older catalog previews new skill plans and can apply or roll 
  await before.apply(before.preview(legacy).token);
  const local={...structuredClone(legacy.trios[0]),id:'local-skill-upgrade',name:'自己的三人计划'};await before.savePersonal(local);
  const upgraded=await createCatalogStore(options);assert.deepEqual(upgraded.summary().catalog.skillPlans,[]);
- const preview=await upgraded.check();assert.equal(preview.version,BUNDLED_CATALOG.version);
+ const preview=upgraded.preview(clone());assert.equal(preview.version,BUNDLED_CATALOG.version);
  assert.equal(preview.changes.filter(c=>c.kind==='skillPlans'&&c.type==='added').length,BUNDLED_CATALOG.skillPlans.length);
  assert.match(catalogPreviewDialog(preview),/新增 · 加点方案/);assert.doesNotMatch(catalogPreviewDialog(preview),/新增 · undefined/);
  assert.deepEqual(upgraded.summary().catalog.skillPlans,[],'preview must not apply content');
@@ -51,28 +56,15 @@ test('an installed older catalog previews new skill plans and can apply or roll 
  assert(applied.summary().catalog.trios.some(c=>c.id===local.id));
 });
 
-test('ball and protected-carry trios expose distinct 18-point curated preparations without borrowing source statistics',()=>{
- for(const [champion,role,comboId,expected]of [
-  ['Malphite','top','ball-delivery','QEWQQRQEQEREEWWRWW'],
-  ['JarvanIV','jungle','ball-delivery','EQWQQRQEQEREEWWRWW'],
-  ['Orianna','mid','ball-delivery','QWEQQRQWQWRWWEEREE'],
-  ['Ivern','jungle','ivern-kog-lulu','QEWEEREQEQRQQWWRWW'],
-  ['KogMaw','bottom','ivern-kog-lulu','WQEWWRWQWQRQQEEREE'],
-  ['Lulu','support','ivern-kog-lulu','EQWEEREWEWRWWQQRQQ'],
- ]){
-  const b=getBuild(hero(champion),role,data,{comboId});assert.equal(b.skillOrder,expected,champion);assert(legalSkillOrder(b.skillOrder,champion));
-  assert.equal(b.selectedSkill.patch,'16.20');assert.equal(b.selectedSkill.reference.order.length,15);assert(b.skillOrder.startsWith(b.selectedSkill.reference.order));
-  assert.equal(b.selectedSkill.samples,null);assert.equal(b.selectedSkill.winRate,undefined);assert.equal(b.selectedSkill.pickRate,undefined);
-  assert.match(b.selectedSkill.when,/后续节点为机制补齐/);assert.match(b.selectedSkill.when,/无统计样本/);assert.match(b.selectedSkill.when,/获取 2026-10-07/);
- }
-});
 
-test('normal source defaults and explicit source/custom choices survive new trio defaults',()=>{
- const solo=getBuild(hero('Ivern'),'jungle',data),combo=getBuild(hero('Ivern'),'jungle',data,{comboId:'ivern-kog-lulu'});
- assert.equal(solo.selectedSkill.source,'OP.GG');assert.equal(solo.skillOrder.length,15);assert.equal(combo.skillOrder.length,18);
- const source=combo.skillChoices.find(s=>s.source==='OP.GG'),chosen=getBuild(hero('Ivern'),'jungle',data,{comboId:'ivern-kog-lulu',skillId:source.id});
+
+test('normal source defaults and explicit source/custom choices survive manual trio choices',()=>{
+ const solo=getBuild(hero('Ivern'),'jungle',data),combo=getBuild(hero('Ivern'),'jungle',data,historicalSelection('ivern-kog-lulu','Ivern','jungle'));
+ assert.equal(solo.selectedSkill.source,'OP.GG');assert.equal(solo.skillOrder,data.builds['Ivern:jungle'].skillOptions[0].order);
+ assert.equal(combo.skillOrder,BUNDLED_CATALOG.skillPlans.find(p=>p.champion==='Ivern'&&p.loadoutId===combo.loadoutId).order);
+ const source=combo.skillChoices.find(s=>s.source==='OP.GG'),chosen=getBuild(hero('Ivern'),'jungle',data,{...historicalSelection('ivern-kog-lulu','Ivern','jungle'),skillId:source.id});
  assert.equal(chosen.skillOrder,source.order);assert.deepEqual(chosen.runePage,combo.runePage);
- const own=getBuild(hero('Lulu'),'support',data,{comboId:'ivern-kog-lulu',customSkillOrder:{order:'EQW',priority:'EWQ',patch:data.patch}});
+ const own=getBuild(hero('Lulu'),'support',data,{loadoutId:'enchanter-protect',comboId:'ivern-kog-lulu',customSkillOrder:{order:'EQW',priority:'EWQ',patch:data.patch}});
  assert.equal(own.skillOrder,'EQW');assert.equal(own.priority,'EWQ');
  const other=getBuild(hero('Vi'),'jungle',data,{loadoutId:'trio-ad-diver'});assert(!other.skillChoices.some(s=>s.champion==='JarvanIV'));
 });
@@ -80,17 +72,22 @@ test('normal source defaults and explicit source/custom choices survive new trio
 test('a current skill review cannot promote old gear/rune metadata and baselines',()=>{
  const c=clone(),l=c.loadouts.find(l=>l.id==='trio-frontline'),baseline=structuredClone(l.reviewBaseline);l.patch='16.19';
  try{configureCatalog(c);const b=getBuild(hero('Malphite'),'top',data,{loadoutId:l.id,comboId:'ball-delivery'});
-  assert.equal(b.skillOrder.length,18);assert.equal(b.selectedSkill.patch,'16.20');assert.equal(b.rulesPatch,'16.19');assert.equal(b.stale,true);assert.match(b.sourceNote,/16\.19/);
+  assert.equal(b.skillOrder,BUNDLED_CATALOG.skillPlans.find(p=>p.champion==='Malphite'&&p.loadoutId===l.id).order);assert.equal(b.selectedSkill.patch,data.patch);assert.equal(b.rulesPatch,l.patch);assert.equal(b.stale,true);assert.ok(b.sourceNote.includes(l.patch));
   assert.deepEqual(c.loadouts.find(l=>l.id==='trio-frontline').reviewBaseline,baseline);
  }finally{configureCatalog(BUNDLED_CATALOG);}
 });
 
 test('actual selected nodes and basis survive shared trio adoption and recapture',()=>{
  const slots=createSlots().map(s=>({...s,champion:({top:'Malphite',jungle:'JarvanIV',mid:'Orianna'})[s.role]||null,party:['top','jungle','mid'].includes(s.role)}));
- const chosen=captureCreativePlan({slots,scope:'party',trio:BUNDLED_CATALOG.trios.find(row=>row.id==='ball-delivery')},data);
- const strategy=captureRoomStrategy(slots,data,chosen),configs=captureRoomConfigurations(slots,data,createPreparationStore(),{creativePlan:strategy}),store=createPreparationStore();
+ // Manual member choices remain shareable even while the old whole-combo review is pending.
+ const manual=createPreparationStore();for(const slot of slots.filter(s=>s.champion))manual.remember({id:slot.champion,role:slot.role,mode:'rift',...historicalSelection('ball-delivery',slot.champion,slot.role),comboId:undefined});
+ const strategy=null,configs=captureRoomConfigurations(slots,data,manual),store=createPreparationStore();
  assert.equal(configs.length,3);
- for(const c of configs){assert.equal(c.skills.length,18);assert.match(c.basis.skill,/16\.20/);assert.match(c.basis.skill,/无统计样本/);assert.match(roomConfigurationText(c,data,'队友',strategy),/18级/);store.remember(roomPreparation(c,data,strategy));}
+ for(const c of configs){
+  const original=manual.recall({id:c.champion,role:c.role,mode:'rift'}),build=getBuild(hero(c.champion),c.role,data,original);
+  assert.equal(c.skills,build.skillOrder);assert.ok(c.basis.skill.includes(build.selectedSkill.patch));assert.match(c.basis.skill,/无统计样本/);
+  assert.ok(roomConfigurationText(c,data,'队友',strategy).includes(c.skills.length+'级'));store.remember(roomPreparation(c,data,strategy));
+ }
  const again=captureRoomConfigurations(slots,data,store,{creativePlan:strategy});
  assert.deepEqual(again.map(c=>c.skills),configs.map(c=>c.skills));assert.deepEqual(again.map(c=>c.runes.selectedPerkIds),configs.map(c=>c.runes.selectedPerkIds));
 });
@@ -108,7 +105,7 @@ test('catalog scope, source coverage and personal override are validated without
 
 test('saved full, partial source and three-point personal orders reach all preparation surfaces without promoting editor previews',()=>{
  for(const selection of [
-  {id:'Lulu',role:'support',mode:'rift',comboId:'ivern-kog-lulu'},
+  {id:'Lulu',role:'support',mode:'rift',loadoutId:'enchanter-protect',comboId:'ivern-kog-lulu'},
   {id:'Ivern',role:'jungle',mode:'rift'},
   {id:'Lulu',role:'support',mode:'rift',comboId:'ivern-kog-lulu',customSkillOrder:{order:'EQW',priority:'EWQ',patch:data.patch}},
  ]){
@@ -117,7 +114,7 @@ test('saved full, partial source and three-point personal orders reach all prepa
   const restored=state.guide.selection,after=getBuild(hero(restored.id),restored.role,data,restored),model=createGuideModel(data,state.guide);
   assert.equal(after.skillOrder,build.skillOrder);assert.equal(model.skillOrder,build.skillOrder);assert.equal(model.skillPatch,build.selectedSkill.patch);assert.equal(state.favorites[0].skillId,build.selectedSkillId);
   assert.deepEqual(after.runePage,build.runePage);
-  for(const html of [skillSelector(after),companionPlanView(data,{build:after,selection:restored}),renderGuide({model,phase:'Offline',connected:false},'skills',false,()=>'')]){
+  for(const html of [skillSelector(after),companionPlanView(data,{build:after,selection:restored})]){
    assert(html.includes('1–'+build.skillOrder.length+' 级'));assert(html.includes(build.selectedSkill.patch));
    if(build.skillOrder.length<18)assert(!html.includes('完整加点'));
    if(build.skillOrder.length===3)assert(html.includes('4–18 级按已学技能与优先级补点'));
@@ -128,25 +125,25 @@ test('saved full, partial source and three-point personal orders reach all prepa
 test('independent skill baselines notice changed champion data and ignore unvalidated statistical or priority extras',()=>{
  const c=clone();Object.assign(c.skillPlans[0],{priority:'WWW',samples:99999,winRate:99.9,pickRate:99.9});
  try{
-  configureCatalog(c);const b=getBuild(hero('Malphite'),'top',data,{comboId:'ball-delivery'});
+  configureCatalog(c);const b=getBuild(hero('Malphite'),'top',data,{loadoutId:'trio-frontline',comboId:'ball-delivery'});
   assert.equal(b.priority,'QEW');assert.equal(b.selectedSkill.samples,null);assert.equal(b.selectedSkill.winRate,undefined);assert.equal(b.selectedSkill.pickRate,undefined);
   assert.equal(b.selectedSkill.stale,false);
   const changed=structuredClone(data);changed.champions.find(c=>c.id==='Malphite').stats.armor+=1;
   const automatic=getBuild(changed.champions.find(c=>c.id==='Malphite'),'top',changed,{comboId:'ball-delivery'});assert.notEqual(automatic.selectedSkill?.stale,true,'Pending nodes require an explicit selection');
-  const after=getBuild(changed.champions.find(c=>c.id==='Malphite'),'top',changed,{comboId:'ball-delivery',skillId:b.selectedSkill.id});
+  const after=getBuild(changed.champions.find(c=>c.id==='Malphite'),'top',changed,{loadoutId:'trio-frontline',comboId:'ball-delivery',skillId:b.selectedSkill.id});
   assert.equal(after.selectedSkill.stale,true);assert.match(after.selectedSkill.when,/内容已变化，待复核/);assert(after.selectionWarnings.some(w=>w.includes('所选组合加点')));
-  const m=createGuideModel(changed,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',comboId:'ball-delivery',skillId:b.selectedSkill.id}));assert.equal(m.skillStale,true);
-  assert.match(renderGuide({model:m,phase:'Offline',connected:false},'skills',false,()=>''),/机制整理 · 16.20 · 待复核/);
+  const m=createGuideModel(changed,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',loadoutId:'trio-frontline',comboId:'ball-delivery',skillId:b.selectedSkill.id}));assert.equal(m.skillStale,true);
+  assert.match(skillSummary(m).detail,/旧版加点参考/);assert.equal(m.skillSource,'机制整理');assert.equal(m.skillPatch,'16.20');
  }finally{configureCatalog(BUNDLED_CATALOG);}
 });
 
 test('imported partial skill plans render with optional sources and never promise a missing continuation',()=>{
  const c=clone(),p=c.skillPlans[0];p.order=p.order.slice(0,3);p.reference.order=p.order;p.sources=null;
- try{configureCatalog(c);const b=getBuild(hero('Malphite'),'top',data,{comboId:'ball-delivery'});
+ try{configureCatalog(c);const b=getBuild(hero('Malphite'),'top',data,{loadoutId:'trio-frontline',comboId:'ball-delivery',skillId:'scoped-skill-'+p.id});
   assert.equal(b.skillOrder.length,3);assert(!b.selectedSkill.when.includes('后续节点为机制补齐'));
   assert.match(skillSelector(b),/4–18 级按已学技能与优先级补点/);
-  const model=createGuideModel(data,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',comboId:'ball-delivery'}));
-  assert.match(renderGuide({model,phase:'Offline',connected:false},'skills',false,()=>''),/仅覆盖 1–3 级/);
+  const model=createGuideModel(data,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',loadoutId:'trio-frontline',comboId:'ball-delivery',skillId:'scoped-skill-'+p.id}));
+  assert.equal(model.skillOrder.length,3);assert.match(skillSummary(model).text,/^Q→/);
  }finally{configureCatalog(BUNDLED_CATALOG);}
 });
 
@@ -182,10 +179,46 @@ test('the sidebar shows the actual personal or fallback skill and can restore de
  };
  const personal=selectedInSidebar(own);assert.equal(personal.id,personal.build.selectedSkillId);assert.equal(personal.build.skillOrder,'EQW');
  const reset=changeCompanionPlan(data,own,'skill',''),fallback=selectedInSidebar(reset);
- assert.equal(reset.customSkillOrder,undefined);assert.equal(fallback.id,fallback.build.selectedSkillId);assert.equal(fallback.build.skillOrder.length,18);
+ assert.equal(reset.customSkillOrder,undefined);assert.equal(fallback.id,fallback.build.selectedSkillId);assert.equal(fallback.build.skillOrder,data.builds['Lulu:support'].skillOptions[0].order);assert.equal(fallback.build.selectedSkill.source,'OP.GG');
  const source=fallback.build.skillChoices.find(s=>s.source==='OP.GG'),explicit=changeCompanionPlan(data,reset,'skill',source.id),chosen=selectedInSidebar(explicit);
  assert.equal(chosen.id,source.id);assert.equal(chosen.build.skillOrder,source.order);
  for(const s of [reset,explicit]){assert.equal(s.runeId,rune);assert.deepEqual(s.conditions,own.conditions);assert.deepEqual(s.summonerIds,own.summonerIds);assert.deepEqual(getBuild(hero('Lulu'),'support',data,s).runePage,personal.build.runePage);}
  const unavailable={...reset,skillId:'retired-skill'},original=structuredClone(unavailable),displayed=selectedInSidebar(unavailable);
  assert.equal(displayed.id,displayed.build.selectedSkillId);assert(displayed.build.selectionWarnings.some(w=>w.includes('原加点序列')));assert.deepEqual(unavailable,original);
+});
+
+test('four/five-member preparation retains active subgroup preparation and preserves explicit ordinary configuration',()=>{
+ for(const picks of [{top:'Camille',jungle:'Vi',mid:'Galio',bottom:'Ashe'},{top:'Camille',jungle:'Vi',mid:'Galio',bottom:'Ashe',support:'Janna'}]){
+  const slots=createSlots().map(s=>({...s,champion:picks[s.role]||null,party:!!picks[s.role],locked:!!picks[s.role]}));
+  const [result]=recommend({slots,champions:data.champions,scope:'party',builds:data.builds,patch:data.patch,catalogStatus:data.catalogInfo.status});assert(result);
+  const creativePlan=captureCreativePlan(result,data);assert.equal(creativePlan.archetype,'shared');
+  const route=creativePlan.shared.routes.find(r=>r.loadoutGroup?.id==='camille-galio-vi');assert(route,'The active authored subgroup retains its source identity');
+  const source=BUNDLED_CATALOG.trios.find(t=>t.id===route.loadoutGroup.id);
+  assert.equal(route.loadoutGroup.revision,catalogEntryRevision(source,BUNDLED_CATALOG));assert.deepEqual(route.loadoutGroup.sources,source.sources);
+  const selection={comboId:creativePlan.id,creativePlan,loadoutId:'trio-vi-followup'},ordinary=getBuild(hero('Vi'),'jungle',data,selection);assert.equal(ordinary.loadoutId,'trio-vi-followup');assert.equal(ordinary.skillOrder, BUNDLED_CATALOG.skillPlans.find(p=>p.champion==='Vi'&&p.role==='jungle'&&p.loadoutId===selection.loadoutId).order);
+  assert.match(loadoutSelector(ordinary,data),/配置玩法/);
+  const explicit=getBuild(hero('Vi'),'jungle',data,{...selection,loadoutId:'default'});assert.equal(explicit.loadoutId,'default');assert.equal(explicit.skillOrder,data.builds['Vi:jungle'].skillOptions[0].order);assert.match(loadoutSelector(explicit,data),/常规位置配置/);
+  assert(!explicit.selectionWarnings.some(s=>s.includes('个人准备当前使用普通位置参考')));
+ }
+});
+
+test('sharing one loadout does not share independently scoped champion skill plans',()=>{
+ const first=BUNDLED_CATALOG.skillPlans.find(p=>BUNDLED_CATALOG.skillPlans.some(other=>other.loadoutId===p.loadoutId&&other.champion!==p.champion&&other.role===p.role));
+ const second=BUNDLED_CATALOG.skillPlans.find(p=>p.loadoutId===first.loadoutId&&p.champion!==first.champion&&p.role===first.role);
+ for(const plan of [first,second]){
+  const b=getBuild(hero(plan.champion),plan.role,data,{loadoutId:plan.loadoutId,skillId:'scoped-skill-'+plan.id});
+  assert.equal(b.skillOrder,plan.order);assert(legalSkillOrder(b.skillOrder,plan.champion));assert.equal(b.selectedSkill.samples,null);assert.equal(b.selectedSkill.winRate,undefined);
+  assert.ok(b.skillChoices.filter(p=>p.champion).every(p=>p.champion===plan.champion&&p.role===plan.role&&p.loadoutId===plan.loadoutId));
+ }
+});
+
+test('a dedicated page without authored skill nodes uses a labelled partial same-role source without changing its gear',()=>{
+ const c=clone(),plan=c.skillPlans.find(p=>p.reference&&p.loadoutId!=='default'),selection={loadoutId:plan.loadoutId},before=getBuild(hero(plan.champion),plan.role,data,selection);
+ c.skillPlans=c.skillPlans.filter(p=>!(p.champion===plan.champion&&p.role===plan.role&&p.loadoutId===plan.loadoutId));delete c.loadouts.find(l=>l.id===plan.loadoutId).skillOrder;
+ try{configureCatalog(c);const b=getBuild(hero(plan.champion),plan.role,data,selection),reference=data.builds[plan.champion+':'+plan.role];
+  assert.equal(b.selectedSkill.source,'OP.GG');assert.equal(b.skillOrder,reference.skillOptions[0].order);assert.ok(b.skillOrder.length<18);
+  assert.match(b.selectionWarnings.join(' '),/同英雄同位置来源的部分序列/);assert.deepEqual(b.items,before.items);assert.deepEqual(b.runePage,before.runePage);
+  const custom=getBuild(hero(plan.champion),plan.role,data,{...selection,customSkillOrder:{order:b.skillOrder.slice(0,3),priority:'QEW',patch:data.patch}});
+  assert.equal(custom.selectedSkill.source,'个人自选');assert.deepEqual(custom.items,b.items);assert.deepEqual(custom.runePage,b.runePage);
+ }finally{configureCatalog(BUNDLED_CATALOG);}
 });

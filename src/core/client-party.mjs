@@ -24,7 +24,7 @@ export function normalizePartyIds(value) {
  const values = Array.isArray(value) ? value : typeof value === 'string' ? value.split(/[\n,，;]/) : [];
  return [...new Set(values.map(clean).filter(id => /^[^#\r\n\0]{1,64}#[^#\r\n\0]{1,16}$/.test(id) || /^[1-9]\d{0,19}$/.test(id)))].slice(0, 4);
 }
-const sameIdentity = (a, b) => {
+export const sameIdentity = (a, b) => {
  for (const key of ['puuid', 'summonerId', 'riotId']) if (a?.[key] && b?.[key]) return key === 'puuid' || key === 'summonerId' ? a[key] === b[key] : a[key].toLowerCase() === b[key].toLowerCase();
  return false;
 };
@@ -42,11 +42,14 @@ export function sanitizeLobbyParty(raw, receivedAt = Date.now()) {
 export function lobbyPartyMembers(lobby){
  return (lobby?.members||[]).map(m=>({displayName:m.displayName||'',...(m.identity?.riotId?{publicRiotId:m.identity.riotId}:{}),local:sameIdentity(m.identity,lobby.local),source:'lobby',firstPosition:m.firstPosition,secondPosition:m.secondPosition}));
 }
+export function freshDraftLobby(lobby,now){
+ const at=lobby?.receivedAt;
+ return Number.isFinite(at)&&now>=at&&now-at<=3600000;
+}
 export function resolveClientParty(session, lobby, manualIds = [], now = Date.now()) {
  const team = session?.myTeam || [], localCell = session?.localPlayerCellId, own = team.find(p => p.cellId === localCell);
  const identityOf = p => String(p?.nameVisibilityType || '').toUpperCase() === 'HIDDEN' ? {} : p?.identity || publicPlayerIdentity(p);
- const ownIdentity = identityOf(own), at = lobby?.receivedAt;
- const known = !!(lobby && Number.isFinite(at) && now >= at && now - at <= 3600000 && sameIdentity(ownIdentity, lobby.local));
+ const known = freshDraftLobby(lobby,now)&&sameIdentity(identityOf(own),lobby.local);
  const ids = normalizePartyIds(manualIds).map(id => id.toLowerCase());
  const members = team.flatMap(p => {
   if (!Number.isInteger(p.cellId) || p.cellId < 0 || p.cellId >= 30) return [];

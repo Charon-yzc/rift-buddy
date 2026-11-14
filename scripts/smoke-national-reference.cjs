@@ -13,7 +13,7 @@ async function run(){
  const change=async(selector,value,target=js)=>target(`{const e=document.querySelector(${JSON.stringify(selector)});e.value=${JSON.stringify(value)};e.dispatchEvent(new Event('change',{bubbles:true}));}`);
  const capture=async(w,name)=>{await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage()).toPNG());};
  // Enter through the actual main renderer routing and preload bridge.
- await click('.navigation-tools>summary');await click('[data-action=navigate][data-route=rankings]');
+ await click('[data-action=navigate][data-route=rankings]');
  assert.equal(await js('document.querySelector("[data-ranking-filter=provider]").value'),'opgg');await capture(main,'default-opgg.png');
  await change('[data-ranking-filter=provider]','tencent101');await until(()=>js('!!document.querySelector("[data-national-hero]")'),'National rows missing');await capture(main,'national-main.png');
  if(offline){

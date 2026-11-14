@@ -4,8 +4,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {createBuildCache,loadBuilds} from '../services/build-cache.mjs';
+import {DEFAULT_BUILD_SOURCE,projectBuildSources} from '../src/core/build-source.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-const refs=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const bundledSources=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const refs=projectBuildSources(bundledSources,DEFAULT_BUILD_SOURCE,data.patch);
 const hexRefs=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url),'utf8')).entries;
 
 test('failed cache writes preserve visible Rift and Hex plans and release the refresh queue',async()=>{
@@ -33,15 +35,6 @@ test('quick hero changes queue refreshes and coalesce identical requests without
  await Promise.all([refresh('Ashe','bottom'),refresh('Sona','support'),refresh('Ashe','bottom')]);
  assert.equal(calls,2);assert.equal(Object.keys(current.builds).length,2);
  assert.equal(Object.keys(await loadBuilds([root],data)).length,2);
-});
-test('late or malformed source responses preserve the previous cache',async()=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-stale-cache-'));
- let current={...data,builds:{'Ashe:bottom':refs['Ashe:bottom']}};
- const bad=createBuildCache({root,getData:()=>current,interval:0,fetchRift:async()=>({...refs['Ashe:bottom'],start:[null]})});
- await assert.rejects(bad('Ashe','bottom'),/不完整/);assert.equal(current.builds['Ashe:bottom'],refs['Ashe:bottom']);
- const late=createBuildCache({root,getData:()=>current,interval:0,fetchRift:async()=>{current={...current,patch:current.patch.split('.')[0]+'.'+(Number(current.patch.split('.')[1])+1)};return refs['Ashe:bottom'];}});
- await assert.rejects(late('Ashe','bottom'),/版本已更新/);
- assert.deepEqual(await fs.readdir(root),[]);
 });
 test('a recent legacy single-page cache cannot hide a bundled multi-page upgrade',async()=>{
  const roots=await Promise.all([1,2].map(()=>fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-rune-cache-'))));

@@ -8,7 +8,7 @@ let fixture,sourceEntries,runeWrites=0,sourceRefreshes=0;
 globalShortcut.register=()=>false;
 global.fetch=async()=>{throw Error('Isolated recommendation smoke: source network disabled');};
 https.request=()=>{throw Error('Isolated recommendation smoke: game sockets disabled');};
-app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
+app.on('browser-window-created',(_event,w)=>{windows.push(w);const send=w.webContents.send.bind(w.webContents);w.webContents.send=(channel,...args)=>send(channel,...(channel==='client-update'?[structuredClone(fixture)]:args));w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
 const originalHandle=ipcMain.handle.bind(ipcMain);
 ipcMain.handle=(name,handler)=>originalHandle(name,name==='client-status'?()=>structuredClone(fixture):name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes prohibited');}:name==='refresh-build'?(_event,id,role)=>{const ref=structuredClone(sourceEntries[id+':'+role]);assert.ok(ref);sourceRefreshes++;ref.runeSamples+=sourceRefreshes*1000;ref.fetchedAt=new Date(Date.now()+sourceRefreshes*1000).toISOString();return ref;}:name==='companion-mode'?(_event,value)=>{const main=windows[0];main.setMinimumSize(value?360:820,480);main.setContentSize(value?440:1180,value?729:820);const layout={docked:!!value,overlap:false};windows[0].webContents.send('window-layout',layout);return layout;}:handler);
@@ -72,7 +72,9 @@ async function run(){
  await click('[data-action=result-detail]');assert.ok(await js('document.querySelector("#overlay-root [data-opponent-fit]")?.textContent.includes("敌方分路、出装和技能状态未确认")'));await click('[data-action=close]');
  // Hold a real worker before dispatch to prove refresh cancels an unfinished
  // recommendation rather than only clearing an already completed card list.
- await click('.result-card [data-action=build][data-role=mid]');
+ // Browse full configuration explicitly. Candidate avatars now choose the
+ // hero and open its compact default instead of this source-editing surface.
+ const member=await js('(()=>{const el=document.querySelector(".result-card [data-action=build][data-role=mid]");return {id:el.dataset.id,role:el.dataset.role,mode:"rift"};})()');main.webContents.send('open-build',member);await until(()=>js('!!document.querySelector("[data-action=refresh-build]")'),'Full source configuration missing');
  await js('window.__originalPostMessage=Worker.prototype.postMessage;window.__originalTerminate=Worker.prototype.terminate;window.__heldWorkers=[];window.__terminatedWorkers=0;Worker.prototype.postMessage=function(...args){this.heldMessage=args;window.__heldWorkers.push(this);};Worker.prototype.terminate=function(){window.__terminatedWorkers++;return window.__originalTerminate.call(this);};true');
  await click('[data-action=recommend]');await until(()=>js('window.__heldWorkers.length===1'),'Pending source worker missing');
  await click('[data-action=refresh-build]');await until(()=>sourceRefreshes===1,'Source refresh did not reach isolated fixture');
@@ -96,9 +98,11 @@ async function run(){
  await click('[data-action=companion-refresh]');await until(()=>sourceRefreshes===2,'Sidebar source refresh missing');
  await click('[data-action=companion-tab][data-tab=recommend]');
  await until(()=>js('document.querySelectorAll(".companion-candidate").length>0'),'Sidebar did not regenerate after source refresh');
+ // Public pushes use the same fixture, including a terminal snapshot without a timestamp.
+ assert.ok(await js('document.querySelectorAll("[data-opponent-fit]").length>0'),'Current public opponent fit missing before disconnect');await js('window.__lastFitClient=null;window.buddy.onClient(value=>{window.__lastFitClient=value;});true');fixture={connected:false,phase:'Offline',message:'Isolated terminal broadcast'};main.webContents.send('client-update',fixture);await until(()=>js('window.__lastFitClient?.connected===false&&window.__lastFitClient.phase==="Offline"&&window.__lastFitClient.message==="Isolated terminal broadcast"&&document.querySelectorAll("[data-opponent-fit]").length===0'),'Terminal public snapshot did not clear opponent fit');
  assert.equal(runeWrites,0);
  const result={passed:true,source,headingGeometry,systemDpi:'UNPROVEN',testDeviceScaleFactor:1,userScrollCancelsReveal:true,resizeKeepsCompletedResultVisible:true,archiveSha256:release.archiveSha256,frontline,engage,visibleWorkerOrderingChanged:true,mirrorEligibilityIndependent:true,mirrorOnlyChangeInvalidated:true,
-  mainAndSidebarExplain:true,enemyHoverIgnored:true,removedEnemyCleared:true,reconnectNewGameCleared:true,sourceRefreshInvalidatedMain:true,sourceRefreshCancelledPendingWorker:true,sourceRefreshRegeneratedSidebar:true,sourceRefreshes,sidebarOverflow:false,runeWrites};
+  mainAndSidebarExplain:true,enemyHoverIgnored:true,removedEnemyCleared:true,reconnectNewGameCleared:true,sourceRefreshInvalidatedMain:true,sourceRefreshCancelledPendingWorker:true,sourceRefreshRegeneratedSidebar:true,terminalPublicSnapshotPropagated:true,sourceRefreshes,sidebarOverflow:false,runeWrites};
  await fs.writeFile(path.join(root,'result.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'error.txt'),error.stack).catch(()=>{});for(const [i,w]of windows.entries())if(!w.isDestroyed())await fs.writeFile(path.join(root,'failure-'+i+'.png'),(await w.webContents.capturePage()).toPNG()).catch(()=>{});app.exit(1);});

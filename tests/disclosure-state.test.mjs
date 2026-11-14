@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDisclosureState} from '../src/disclosure-state.mjs';
+import fs from 'node:fs/promises';import vm from 'node:vm';import {escape} from '../src/ui.mjs';
 
 // Minimal DOM-shaped fixtures; only standard Element properties are used by the module.
 class Element{
@@ -9,6 +10,7 @@ class Element{
   for(const child of content){if(typeof child==='string')this.content+=child;else{this.children.push(child);child.parentElement=this;}}
  }
  getAttribute(name){return this.attributes[name]??null;}
+ contains(node){for(let current=node;current;current=current.parentElement)if(current===this)return true;return false;}
  get textContent(){return this.content+this.children.map(child=>child.textContent).join(' ');}
  querySelectorAll(selector){
   const nodes=this.children.flatMap(child=>[child,...child.querySelectorAll('*')]);
@@ -27,6 +29,14 @@ const candidate=(index,hero,{role='mid',combo='team-a',plan='接控',open=false,
   el('button',{'data-id':hero,'data-role':role,'data-combo':combo}),el('p',{class:'candidate-summary',title:plan},plan),disclosure)};
 };
 
+test('actual Hex tools render opens the first owned note through disclosure restoration, then respects explicit closing',async()=>{
+ const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8'),start=source.indexOf('function renderHexTools(){'),end=source.indexOf('\n',start),state=createDisclosureState();let round='first';
+ const context=vm.createContext({e:escape,hexOptions:[],hexOwned:[],hexHero:'Sona',data:{},hexPreparedPlan:()=>null,currentHexRound:()=>({context:round}),renderHexComparison:()=>'',renderHexReference:()=>''});vm.runInContext(source.slice(start,end),context);
+ const rendered=()=>{const html=context.renderHexTools(),match=/<details class="hex-handbook-tools"([^>]*)><summary>([^<]*)<\/summary>/.exec(html);assert(match);const key=/data-disclosure-key="([^"]+)"/.exec(match[1])?.[1];return detail(match[2],{class:'hex-handbook-tools',...(key?{'data-disclosure-key':key}:{}),open:/\sopen(?:\s|$)/.test(match[1])});};
+ const empty=rendered();assert.equal(empty.open,false);state.capture('hex',root(empty));context.hexOwned=[1141];const first=rendered();state.restore('hex',root(first));assert.equal(first.open,true,'initial closed empty panel must not hide the first owned note');
+ first.open=false;state.capture('hex',root(first));context.hexOwned=[1141,1048];const closed=rendered();state.restore('hex',root(closed));assert.equal(closed.open,false,'a deliberate close is respected within the same game');round='next';const next=rendered();state.restore('hex',root(next));assert.equal(next.open,true,'another game cannot inherit a closed panel');
+});
+
 test('rendered open and closed choices survive per page and sidebar scope',()=>{
  const state=createDisclosureState(),settings=detail('连接说明',{'data-companion-disclosure':'help',open:true});
  state.capture('page:settings',root(settings));
@@ -36,6 +46,12 @@ test('rendered open and closed choices survive per page and sidebar scope',()=>{
  assert.equal(state.restore('page:settings',root(settingsAgain)),1);assert.equal(settingsAgain.open,true);
  state.restore('sidebar:room',root(roomAgain));assert.equal(roomAgain.open,false);
  const other=detail('连接说明',{'data-companion-disclosure':'help'});assert.equal(state.restore('page:reference',root(other)),0);assert.equal(other.open,false);
+});
+test('Vue-owned disclosures and focus never trigger the legacy subtree scanner',()=>{
+ const state=createDisclosureState(),native=detail('原生说明',{id:'native',open:true}),owned=detail('事件位置',{open:true}),host=el('div',{'data-vue-host':'history'},owned),view=root(native,host);
+ const query=owned.querySelectorAll.bind(owned);owned.querySelectorAll=selector=>{assert.equal(selector,'*','Only the fixture traversal may visit the owned node');return query(selector);};
+ view.ownerDocument={activeElement:owned.children[0]};assert.equal(state.captureFocus(view),null);
+ assert.equal(state.capture('history',view),1);owned.open=false;native.open=false;state.restore('history',view);assert.equal(native.open,true);assert.equal(owned.open,false);
 });
 
 test('a native role select keeps focus across background updates but a changed or ambiguous enum is rejected',()=>{
@@ -109,6 +125,30 @@ test('stable button actions restore without using vote labels and reject disable
  assert.equal(state.restoreFocus(key,root(after,duplicate)),false);
 });
 
+test('capturing a specified opener reads its identity without scanning the page or using another active control',()=>{
+ const state=createDisclosureState(),button=el('button',{'data-action':'pregame-hero'}),other=el('button',{'data-action':'navigate','data-route':'settings'}),view=root(button,other);
+ view.ownerDocument={activeElement:button};const expected=state.captureFocus(view);view.ownerDocument.activeElement=other;
+ view.querySelectorAll=()=>assert.fail('A button opener capture must not scan the page');
+ assert.equal(state.captureButtonFocus(view,button),expected);assert.equal(state.captureButtonFocus(view,el('button',{'data-action':'pregame-hero'})),null);
+ assert.equal(state.captureButtonFocus(view,other),JSON.stringify(['button',[['data-action','navigate'],['data-route','settings']],null,[]]));
+});
+
+test('a narrow candidate capture retains hero and role identity, allows reordering, and rejects ambiguity',()=>{
+ const state=createDisclosureState(),before=candidate(0,'Ahri'),button=before.node.children[0],view=root(before.node);button.attributes['data-action']='build';button.attributes['data-result-index']='0';
+ view.ownerDocument={activeElement:button};const expected=state.captureFocus(view);view.querySelectorAll=()=>assert.fail('Only the owning candidate may be read');
+ const key=state.captureButtonFocus(view,button);assert.equal(key,expected);
+ const make=(hero,role='mid',index=3)=>{const row=candidate(index,hero,{role}),target=row.node.children[0];target.attributes['data-action']='build';target.attributes['data-result-index']=String(index);target.focus=()=>{};return row;};
+ assert.equal(state.restoreFocus(key,root(make('Ahri').node)),true);
+ assert.equal(state.restoreFocus(key,root(make('Lux').node)),false);assert.equal(state.restoreFocus(key,root(make('Ahri','support').node)),false);
+ assert.equal(state.restoreFocus(key,root(make('Ahri').node,make('Ahri','mid',4).node)),false);
+});
+
+test('narrow opener capture continues to ignore Vue-owned buttons and non-button nodes',()=>{
+ const state=createDisclosureState(),button=el('button',{'data-action':'open-favorite'}),summary=el('summary',{},'查看'),view=root(el('div',{'data-vue-host':'favorites'},button),summary);
+ view.querySelectorAll=()=>assert.fail('Owned or non-button controls must not trigger a page scan');
+ assert.equal(state.captureButtonFocus(view,button),null);assert.equal(state.captureButtonFocus(view,summary),null);
+});
+
 test('a reused candidate index never opens a different hero, role, combination or plan',()=>{
  const state=createDisclosureState(),original=candidate(0,'Ahri',{open:true});state.capture('draft',root(original.node));
  for(const replacement of [candidate(0,'Lux'),candidate(0,'Ahri',{role:'support'}),candidate(0,'Ahri',{combo:'team-b'}),candidate(0,'Ahri',{plan:'保护核心'})]){
@@ -154,4 +194,11 @@ test('configuration plan keys and enclosing disclosures separate nested explanat
  const first=detail('依据',{open:true}),second=detail('依据');state.capture('nested',root(detail('装备',{},first),detail('符文',{},second)));
  const firstAgain=detail('依据'),secondAgain=detail('依据');state.restore('nested',root(detail('符文',{},secondAgain),detail('装备',{},firstAgain)));
  assert.equal(firstAgain.open,true);assert.equal(secondAgain.open,false);
+});
+test('a card with many disclosures is scanned once per pass and keeps each disclosure state',()=>{
+ const card=()=>{const node=el('article',{class:'ongoing-player-card','data-disclosure-context':'ongoing-player:mock'},el('button',{'data-id':'22','data-role':'mid'}),...Array.from({length:12},(_,i)=>detail('英雄 '+i,{'data-disclosure-key':'ongoing-champion:'+i})));let scans=0;const all=node.querySelectorAll.bind(node);node.querySelectorAll=selector=>{if(selector==='*')scans++;return all(selector);};return {node,scans:()=>scans};};
+ const before=card(),state=createDisclosureState();before.node.children[5].open=true;
+ assert.equal(state.capture('main:ongoing',root(before.node)),12);assert.equal(before.scans(),2,'The fixture walk plus one control read for all twelve disclosures');
+ const after=card();assert.equal(state.restore('main:ongoing',root(after.node)),12);assert.equal(after.scans(),2);
+ assert.deepEqual(after.node.children.slice(1).map(d=>d.open),Array.from({length:12},(_,i)=>i===4));
 });

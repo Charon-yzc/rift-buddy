@@ -5,6 +5,8 @@ import {resultMemberJobs,cooperationText} from './cooperation-view.mjs';
 import {pairStatisticsText} from './pair-statistics-view.mjs';
 import {teamWindowsText} from './team-windows-view.mjs';
 import {partyCounterplayText} from './core/party-counterplay.mjs';
+import {stageVersionNotice} from './core/stage-versions.mjs';
+import {subgroupText} from './subgroup-view.mjs';
 
 // One serializer for sharing the same original plan used by member pages.
 // Personal prerequisites, exits and unknown coverage remain in copied text.
@@ -12,13 +14,14 @@ export function resultAsText(result,data){
  const name=id=>data.champions.find(c=>c.id===id)?.name||id,role=id=>ROLES.find(r=>r.id===id)?.name||id;
  const saved=result.creativePlan,adaptive=resultCooperation(result),creative=saved&&!adaptive?saved:!adaptive?result.creative:null;
  const jobs=resultMemberJobs(result,data),lines=[result.title,result.slots.filter(s=>s.champion).map(s=>`${role(s.role)}：${name(s.champion)}`).join('\n'),saved?.why||adaptive?.why||result.reason];
+ const subgroup=subgroupText(saved?.archetype==='curated'?saved:!adaptive?result.trio||result.duo:null,result.slots,data);if(subgroup)lines.push(subgroup);
  if(jobs.length)lines.push('成员分工：',...jobs.map(m=>`${name(m.champion)} · ${role(m.role)}：${m.job}`));
  if(!adaptive)lines.push(partyCounterplayText(saved?.counterplay||result.counterplay));
  if(adaptive)lines.push(cooperationText(adaptive,data,{includeJobs:false}));
  else if(creative){lines.push(creative.plan,`顺序：${creative.steps.join(' → ')}`,`行动窗口：${creative.window}`,`注意：${creative.caution}`,creative.feasibility);if(creative.curated)lines.push(`前期：${creative.curated.early}`,`经济：${creative.curated.economy}`,...creative.curated.sources.map(s=>`${s.name}：${s.url}`));}
  else if(result.trio){const t=result.trio;lines.push(t.plan,`顺序：${t.steps.join(' → ')}`,`行动窗口：${t.window}`,`前期：${t.early}`,`经济：${t.economy}`,`注意：${t.risk}`,`组合说明 ${t.patch} · ${t.reviewedAt}${t.patch!==data.patch?' · 旧版本说明保留':''}`);}
- else if(result.duo)lines.push(duoPlayText(duoPlay(result.duo,data))||result.duo.plan,`注意：${result.duo.risk}`);
- if(saved?.stagePlan)for(const phase of Object.values(saved.stagePlan))lines.push(`${phase.label}：`,...phase.steps.map((step,i)=>`${i+1}. ${step}`),`玩家确认的窗口：${phase.window}`,`何时停：${phase.exit}`,`阶段说明 ${phase.patch} · ${phase.reviewedAt}${phase.patch!==data.patch?' · 旧版本说明保留':''}`);
+ else if(result.duo)lines.push(duoPlayText(duoPlay(result.duo,data),data.patch)||result.duo.plan,`注意：${result.duo.risk}`);
+ if(saved?.stagePlan)for(const phase of Object.values(saved.stagePlan)){const notice=stageVersionNotice(phase,saved,data.patch);lines.push(`${phase.label}${notice?' · '+notice:''}：`,...phase.steps.map((step,i)=>`${i+1}. ${step}`),`玩家确认的窗口：${phase.window}`,`何时停：${phase.exit}`,`阶段说明 ${phase.patch} · ${phase.reviewedAt}`);}
  if(result.strategy)lines.push(`打法：${result.strategy.label}；代价与退出：${result.strategy.tradeoff}`);
  if(result.strategy?.threats?.length)lines.push(`对方阵容提示：${result.strategy.threats.join('；')}`);
  lines.push(pairStatisticsText(result.pairEvidence,data),teamWindowsText(result.analysis,{hasCooperation:!!jobs.length}));

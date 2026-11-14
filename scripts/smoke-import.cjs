@@ -6,7 +6,7 @@ const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{if(!file.endsWith('window-obs
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
 async function until(check,label){for(let n=0;n<150;n++){const v=await check();if(v)return v;await delay(100);}throw Error(label);}
 async function run(){
- const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8')),base=source?path.resolve('.'):path.join(release.directory,'resources/app.asar');let file='old-backup.json';
+ const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile(process.env.RIFT_BUDDY_SMOKE_RELEASE||'release/latest.json','utf8')),base=source?path.resolve('.'):path.join(release.directory,'resources/app.asar');let file='old-backup.json';
  dialog.showOpenDialog=async()=>({canceled:false,filePaths:[path.join(root,file)]});require(path.join(base,'electron/main.cjs'));
  const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=c=>main.webContents.executeJavaScript(c,true);await until(()=>js('!!document.querySelector("[data-action=recommend]")'),'UI missing');
  const click=async sel=>{sel=await revealDraftAction(js,sel);assert.ok(await js(`!!document.querySelector(${JSON.stringify(sel)})`),sel);await js(`document.querySelector(${JSON.stringify(sel)}).click()`);};

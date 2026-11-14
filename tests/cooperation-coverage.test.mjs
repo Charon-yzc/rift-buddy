@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,7 +12,7 @@ import {resultPlayCard} from '../src/play-card-view.mjs';
 import {teamFavoriteId} from '../src/core/team-favorites.mjs';
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultMemberJobs} from '../src/cooperation-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
 const member=(champion,role)=>({champion,role});
 const setup=(fixed,open)=>createSlots().map(s=>({...s,party:fixed.some(m=>m.role===s.role)||s.role===open,champion:fixed.find(m=>m.role===s.role)?.champion||null,locked:fixed.some(m=>m.role===s.role),...(fixed.some(m=>m.role===s.role)?{manualPosition:true}:{})}));
 const cases=[

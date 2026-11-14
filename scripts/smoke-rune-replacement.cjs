@@ -9,7 +9,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(check,label){for(let n=0;n<160;n++){if(await check())return;await delay(100);}throw Error(label);}
 async function run(){
  app.setPath('userData',root);
- const release=JSON.parse(await fs.readFile('release/latest.json')),base=path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));
+ const release=JSON.parse(await fs.readFile(process.env.RIFT_BUDDY_SMOKE_RELEASE||'release/latest.json')),base=path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));
  const {getBuild}=await import(pathToFileURL(path.join(base,'src/core/builds.mjs')).href);
  const old=getBuild(data.champions.find(c=>c.id==='Ashe'),'bottom',data).runePage;
  const preset={...old,id:8000,name:'客户端预设',isEditable:false,current:false};
@@ -23,6 +23,7 @@ async function run(){
   if(options.path==='/lol-champ-select/v1/session')return {value:{localPlayerCellId:1,myTeam:[{cellId:1,championId:ownChampion,assignedPosition:'top'}],theirTeam:[],actions:[],bans:{}}};
   if(['/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids'].includes(options.path)){assert.ok(!options.method||options.method==='GET');return {status:404,value:{message:'Optional selection scope unavailable in this fixture'}};}
   if(!options.method||options.method==='GET'){
+   if(['/lol-game-data/assets/v1/champion-summary.json','/lol-game-data/assets/v1/items.json'].includes(options.path))return {value:[{id:999999,name:'隔离字典'}]};
    assert.equal(options.path,'/lol-perks/v1/pages');const value=structuredClone(pages);
    if(changeOnPages==='phase')phase='GameStart';else if(changeOnPages==='game')gameId='1402';else if(changeOnPages==='hero')ownChampion=data.champions.find(c=>c.id==='Zed').key;
    changeOnPages='';return {value};
@@ -49,7 +50,9 @@ async function run(){
  const click=async sel=>{sel=await revealDraftAction(js,sel);await js('(()=>{const el=document.querySelector('+JSON.stringify(sel)+');if(!el||el.disabled)throw Error("Control missing or disabled");el.click();})()');if(sel==='[data-action=task-edit]'){const boot=await js('window.buddy.bootstrap()'),champion=data.champions.find(c=>c.key===ownChampion);const reference=boot.state.preparations.findLast(p=>p.id===champion.id&&p.role==='top')||{id:champion.id,role:'top',mode:'rift'};main.webContents.send('open-build',{...reference,readOnly:false});await until(()=>js('!!document.querySelector("[data-action=apply-runes]")'),'Explicit rune reference missing');}};
  const applyRunes=async()=>{await click('[data-action=apply-runes]');await until(()=>js('document.querySelector("[data-action=apply-runes]")?.disabled===false'),'Rune application did not settle');};
  const sync=async()=>{
-  if(await js('!!document.querySelector("[data-action=close]")'))await click('[data-action=close]');
+  // A phase/hero change may already have closed the stale build drawer. Make
+  // this cleanup atomic instead of checking across several renderer IPC turns.
+  await js('document.querySelector("[data-action=close]")?.click()');
   await click('[data-action=navigate][data-route=settings]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Client sync not ready');await click('[data-action=sync]');
   await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Client sync stayed pending');
   await click('[data-action=navigate][data-route=draft]');

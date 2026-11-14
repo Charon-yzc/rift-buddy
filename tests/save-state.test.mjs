@@ -7,6 +7,29 @@ import {rebaseWindowState} from '../src/core/window-state.mjs';
 
 const hero=(id,extra={})=>({id,role:'mid',mode:'rift',runeId:'confirmed',...extra});
 const state=()=>({preferences:{play:{difficulty:'any',tempo:'any'}},draft:{soloRole:'mid',slots:[]},preparations:[hero('Ahri'),hero('Annie')],favorites:[],excluded:[]});
+
+test('a failed swap cannot duplicate players when a later swap shares its endpoint',()=>{
+ const before=state();before.draft.slots=createSlots().map((slot,i)=>({...slot,champion:['Garen','LeeSin','Ahri','Ashe','Lulu'][i],locked:true,clientCellId:i,party:i===0,partyManual:true}));
+ before.draft.playerPosition={role:'top',cellId:0};before.draft.soloRole='top';before.draft.partyCount=1;
+ const failed=structuredClone(before);failed.draft.slots=moveChampion(failed.draft.slots,'top','mid');failed.draft.playerPosition.role='mid';failed.draft.soloRole='mid';
+ const later=structuredClone(failed);later.draft.slots=moveChampion(later.draft.slots,'mid','jungle');later.draft.playerPosition.role='jungle';later.draft.soloRole='jungle';
+ later.preferences.play.tempo='fast';
+ const restored=rollbackUnacceptedState(before,failed,later),queued=rollbackUnacceptedState(before,failed,later);
+ for(const value of [restored,queued,rebaseWindowState(before,queued,before)]){
+  assert.deepEqual(value.draft,later.draft);assert.equal(new Set(value.draft.slots.map(slot=>slot.clientCellId)).size,5);assert.equal(value.draft.slots.filter(slot=>slot.party).length,1);
+ }
+ assert.equal(restored.preferences.play.tempo,'fast');
+ assert.deepEqual(rollbackUnacceptedState(before,queued,restored).draft,before.draft,'If the later queued save also fails, the whole placement returns coherently');
+});
+
+test('a rejected swap still rolls back when later edits are unrelated to its players',()=>{
+ const before=state();before.draft.slots=createSlots().map((slot,i)=>({...slot,champion:['Garen','LeeSin','Ahri','Ashe','Lulu'][i],locked:true,clientCellId:i}));
+ const failed=structuredClone(before);failed.draft.slots=moveChampion(failed.draft.slots,'top','mid');
+ const later=structuredClone(failed);later.draft.slots=moveChampion(later.draft.slots,'bottom','support');
+ const restored=rollbackUnacceptedState(before,failed,later);
+ for(const role of ['top','mid'])assert.deepEqual(restored.draft.slots.find(slot=>slot.role===role),before.draft.slots.find(slot=>slot.role===role));
+ for(const role of ['bottom','support'])assert.deepEqual(restored.draft.slots.find(slot=>slot.role===role),later.draft.slots.find(slot=>slot.role===role));
+});
 test('rejected rune and draft choices return to the confirmed state without mutating inputs',()=>{
  const before=state(),failed=structuredClone(before);failed.preparations[0].runeId='failed';failed.draft.soloRole='top';
  assert.deepEqual(rollbackUnacceptedState(before,failed,failed),before);assert.equal(failed.preparations[0].runeId,'failed');

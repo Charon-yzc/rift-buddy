@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,7 +9,7 @@ import {captureCreativePlan,creativeMemberCombo,creativeComboContext} from '../s
 import {captureTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {defaultState,validateState,saveState,readState,createBackup,readBackup,mergeState,STATE_MAX_BYTES} from '../services/storage.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 
 test('500 complete three-member favorites and their original configurations survive disk, backup and restoration',async()=>{
  const slots=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role),...(s.role==='top'?{champion:'Darius',locked:true}:s.role==='mid'?{champion:'Ahri',locked:true}:{})}));

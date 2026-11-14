@@ -19,6 +19,9 @@ function keyed(base,local,accepted,identity){
 }
 function rebase(base,local,accepted,field=''){
  if(same(base,local))return structuredClone(accepted);
+ // A selected catalog identity is one indivisible user action. Recursively
+ // merging its id, token and members could manufacture a different choice.
+ if(field==='catalogChoice')return structuredClone(local);
  if(Array.isArray(base)&&Array.isArray(local)&&Array.isArray(accepted)){
   if(field==='preparations')return keyed(base,local,accepted,preparationIdentity);
   if(field==='favorites')return keyed(base,local,accepted,value=>value.id);
@@ -43,8 +46,22 @@ export function rebaseWindowState(base,local,accepted){
  const merged=rebase(base,local,accepted),localGame=String(local.draft?.clientGameId||base.draft?.clientGameId||''),acceptedGame=String(accepted.draft?.clientGameId||'');
  // A queued click made in the old game must not acquire a fresh game ID by
  // rebasing. Independently edited preferences still replay normally.
- if(merged.draft&&localGame&&localGame!==acceptedGame)for(const field of ['scope','scopeSelection','referenceQueue','enemyRoles']){
+ if(merged.draft&&localGame&&localGame!==acceptedGame)for(const field of ['scope','scopeSelection','referenceQueue','enemyRoles','catalogChoice','partyRangeMode','partyAutoCount']){
   if(accepted.draft?.[field]===undefined)delete merged.draft[field];else merged.draft[field]=structuredClone(accepted.draft[field]);
+ }
+ // An automatic/old range queued in another game context cannot acquire
+ // the accepted game's id while retaining its previous member marks.
+ if(merged.draft&&accepted.draft&&(localGame||acceptedGame)&&localGame!==acceptedGame){
+  for(const field of ['partyCount','partyAutoCount','partyRangeMode']){
+   if(accepted.draft[field]===undefined)delete merged.draft[field];else merged.draft[field]=structuredClone(accepted.draft[field]);
+  }
+  const range=new Map((accepted.draft.slots||[]).map(slot=>[slot.role,slot]));
+  merged.draft.slots=merged.draft.slots.map(slot=>{
+   const owner=range.get(slot.role);if(!owner)return slot;
+   const next={...slot,party:owner.party};
+   if(owner.partyManual===undefined)delete next.partyManual;else next.partyManual=owner.partyManual;
+   return next;
+  });
  }
  if(['party','context'].includes(merged.draft?.scopeSelection))merged.draft.scope=merged.draft.scopeSelection;
  return merged;

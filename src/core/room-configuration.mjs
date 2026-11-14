@@ -1,6 +1,6 @@
 import {getBuild} from './builds.mjs';
 import {preparationEquipment} from './complete-gear.mjs';
-import {currentCombo} from './recommend.mjs';
+import {currentCombo,automaticCreativePlan} from './recommend.mjs';
 import {captureCreativePlan,creativeComboContext,validateCreativePlan,creativePlanMatches,creativeMemberCombo} from './creative-plan.mjs';
 import {recallPreparation,preparationIdentity} from './preparation.mjs';
 import {sanitizeRoomConfiguration} from './room.mjs';
@@ -9,6 +9,12 @@ import {validateCustomSkillOrder} from './skill-advice.mjs';
 import {validateSummonerIds,preferredFlashOrder,configuredFlashSlot} from './summoner-selection.mjs';
 import {currentPlayerSelection} from './guide.mjs';
 import {manualPlayerSlot,CLIENT_POSITION_ROLES} from './draft.mjs';
+import {restoreRoomHistoricalPlan} from './room-history.mjs';
+import {catalogPlanGroups} from './catalog-choice.mjs';
+
+// The room protocol caps each basis field at 1000 UTF-16 units. Preserve the
+// provenance at the front and make any shortened explanation explicit.
+const roomBasisText=text=>text.length<=1000?text:text.slice(0,960).replace(/[\uD800-\uDBFF]$/,'')+'…（说明未完整分享，请向发送方查看。）';
 
 // A saved solo preference can outlive its mode or game. When the client has
 // identified this player, share that player's current public/manual slot.
@@ -28,23 +34,23 @@ export function roomPlayerRole(slots,champions,client,soloRole=''){
 
 // Catalog adoption uses the visible lineup rather than an accepted result
 // object. Freeze that same catalog text too, before it crosses machines.
-export function captureRoomStrategy(slots,data,active=null,mode='rift'){
+export function captureRoomStrategy(slots,data,active=null,mode='rift',catalogChoice=null){
  if(mode!=='rift')return null;
  // A cleared slot can retain a local plan for later restoration. Publish the
  // current public lineup now, without claiming its incomplete plan is active.
- if(active){const plan=validateCreativePlan(active);return creativePlanMatches(plan,slots)?plan:null;}
- const combo=currentCombo(slots,null,null,data.catalogInfo?.status,null,null,{patch:data.patch});if(!combo)return null;
+ if(active){const plan=automaticCreativePlan(validateCreativePlan(active),data.catalogInfo?.status,data.patch);return plan&&creativePlanMatches(plan,slots)?plan:null;}
+ const combo=currentCombo(slots,null,null,data.catalogInfo?.status,null,null,{patch:data.patch,catalogChoice});if(!combo)return null;
  return captureCreativePlan({slots,scope:'party',...(combo.members?.length===3?{trio:combo}:{duo:combo})},data);
 }
 
-export function captureRoomConfigurations(slots,data,store,{creativePlan=null,guide=null,current=null,mode='rift'}={}){
+export function captureRoomConfigurations(slots,data,store,{creativePlan=null,catalogChoice=null,guide=null,current=null,mode='rift'}={}){
  return slots.filter(s=>s.champion).map(slot=>{
   const champion=data.champions.find(c=>c.id===slot.champion);if(!champion)return null;
-  const combo=mode==='rift'?currentCombo(slots,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan,{patch:data.patch}):null;
+  const combo=mode==='rift'?currentCombo(slots,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan,{patch:data.patch,catalogChoice}):null;
   const context={id:champion.id,role:slot.role,mode,...creativeComboContext(combo)};
-  const selection=current&&preparationIdentity(current)===preparationIdentity(context)?current:{coreIndex:0,conditions:[],...recallPreparation(store,guide,context),...context};
+  const selection=current&&preparationIdentity(current)===preparationIdentity(context)?current:{coreIndex:0,conditions:[],...(recallPreparation(store,guide,context)||(mode==='rift'?{coreAuto:true}:{})),...context};
   const b=getBuild(champion,slot.role,data,selection);
-  return sanitizeRoomConfiguration({champion:champion.id,role:slot.role,mode:selection.mode,patch:data.patch,start:b.start.map(i=>Number(i.id)),items:preparationEquipment(data,b,selection).map(i=>Number(i.id)),boots:b.boots?[Number(b.boots)]:[],spells:b.summoners,runes:b.runePage,skills:b.skillOrder,first:b.first,attributePlan:b.attributePlan,priority:b.priority,basis:{title:b.title,note:b.sourceNote+' 后续空位按同一局内指引的兼容成装参考补齐，不代表整套联合统计。',rune:b.selectedRune?[b.selectedRune.name,b.selectedRune.source,b.selectedRune.when].filter(Boolean).join('；'):'发送方未提供普通符文',skill:b.selectedSkill?.when||b.attributePlan?.note||b.skillMechanism||'按发送方加点优先与游戏内可升级选项核对，不伪造逐级序列'}});
+  return sanitizeRoomConfiguration({champion:champion.id,role:slot.role,mode:selection.mode,patch:data.patch,start:b.start.map(i=>Number(i.id)),items:preparationEquipment(data,b,selection).map(i=>Number(i.id)),boots:b.boots?[Number(b.boots)]:[],spells:b.summoners,runes:b.runePage,skills:b.skillOrder,first:b.first,attributePlan:b.attributePlan,priority:b.priority,basis:{title:b.title,note:b.sourceNote+' 后续空位按同一局内指引的兼容成装参考补齐，不代表整套联合统计。',rune:roomBasisText(b.selectedRune?[b.selectedRune.name,b.selectedRune.source,b.selectedRune.when].filter(Boolean).join('；'):'发送方未提供普通符文'),skill:roomBasisText(b.selectedSkill?.when||b.attributePlan?.note||b.skillMechanism||'按发送方加点优先与游戏内可升级选项核对，不伪造逐级序列')}});
  }).filter(Boolean);
 }
 
@@ -61,7 +67,9 @@ export function roomPreparation(raw,data,strategy,{localStrategy=null}={}){
  const order=config.skills||config.first;
  const skills=order?validateCustomSkillOrder({order,patch:config.patch,...(order.length===3&&config.priority?{priority:config.priority}:{})},config.champion):undefined;
  const summonerIds=preferredFlashOrder(validateSummonerIds(config.spells,'rift'),configuredFlashSlot(data));
- const incoming=strategy&&strategy.members?.some(m=>m.champion===config.champion&&m.role===config.role)?validateCreativePlan(strategy):null;
+ const candidate=strategy&&strategy.members?.some(m=>m.champion===config.champion&&m.role===config.role)?(restoreRoomHistoricalPlan(strategy,data)||validateCreativePlan(strategy)):null;
+ const bound=candidate&&catalogPlanGroups(candidate).length>0;
+ const incoming=bound?automaticCreativePlan(candidate,data.catalogInfo?.status,data.patch):candidate;
  // An explicit adoption can apply the concrete choices to this same local
  // group despite different catalog text identities. Its duties remain local;
  // the sender's frozen strategy remains visible as a separate reference.

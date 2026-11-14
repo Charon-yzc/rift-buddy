@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {companionView} from '../src/companion-view.mjs';
@@ -8,7 +9,7 @@ import {defaultState,validateState} from '../services/storage.mjs';
 import {recommendationDraft} from '../src/core/draft-intents.mjs';
 import {lineupFit} from '../src/core/room-ballot.mjs';
 import {roomBallotView} from '../src/room-ballot-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json')),hero=id=>data.champions.find(c=>c.id===id);
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),hero=id=>data.champions.find(c=>c.id===id);
 const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:77,localPlayerCellId:0,myTeam:[{cellId:0,championId:hero('Graves').key,assignedPosition:'JUNGLE'},{cellId:1,championId:hero('Vex').key,assignedPosition:'MIDDLE'}],theirTeam:[],bans:[],actions:[[{type:'pick',actorCellId:0,championId:hero('Graves').key,completed:false}]],allowDuplicatePicks:false}};
 
 test('sidebar candidate and room scores ignore a visible preview until that hero is locked',()=>{
@@ -22,13 +23,15 @@ test('sidebar candidate and room scores ignore a visible preview until that hero
  live.session.myTeam[1].championPickIntent=0;html=companionView(props);
  const cleared=lineupFit(proposed,recommendationDraft(slots,live.session,data.champions,{ownRole:'bottom'}),data.champions,{clientSession:live.session});
  assert.doesNotMatch(html,/room-ballot-row conflict/);assert.equal((html.match(new RegExp('契合 '+cleared.score+'<','g'))||[]).length,2);assert.equal(cleared.score,fit.score);assert.deepEqual(slots,before);
- live.session.myTeam[1].championId=hero('Lux').key;live.session.myTeam[1].pickState='locked';html=companionView(props);assert.match(html,/room-ballot-row conflict/);
+ live.session.myTeam[1].championId=hero('Lux').key;live.session.myTeam[1].pickState='locked';html=companionView(props);assert.doesNotMatch(html,/class="room-ballot-row /);assert.match(html,/class="companion-candidate"/);
 });
 
 test('sidebar hero shortcuts distinguish own configuration, public teammate picks, locks and display-only mode',()=>{
  const before=structuredClone(client);assert.equal(companionHeroAction(client,hero('Graves')).prepare,true);assert.equal(companionHeroAction(client,hero('Vex')).prepare,false);assert.match(companionHeroAction(client,hero('Vex')).label,/队友已选/);assert.equal(companionHeroAction(client,hero('Diana')).prepare,true);
  const locked=structuredClone(client);locked.session.actions[0][0].completed=true;assert.equal(companionHeroAction(locked,hero('Diana')).prepare,false);assert.equal(companionHeroAction(locked,hero('Graves')).label,'应用当前配置');
- for(const c of [{...client,connected:false},{...client,phase:'Lobby'},{...client,mode:{id:'hex'}},{...client,session:null}])assert.equal(companionHeroAction(c,hero('Graves')).prepare,false);
+ for(const c of [{...client,connected:false},{...client,phase:'Lobby'},{...client,mode:{id:'aram'}},{...client,session:null}])assert.equal(companionHeroAction(c,hero('Graves')).prepare,false);
+ const hexed={...client,mode:{id:'hex'},session:{...client.session,myTeam:[{cellId:0,championId:hero('Ashe').key}],bench:{championIds:[hero('Graves').key]}}};assert.equal(companionHeroAction(hexed,hero('Graves')).prepare,true);assert.equal(companionHeroAction(hexed,hero('Graves')).hexHover,true);
+ assert.equal(companionHeroAction(client,hero('Graves')).hexHover||false,false);
  assert.equal(companionHeroAction(client,hero('Graves'),false).prepare,false);assert.equal(companionHeroAction({...client,session:{...client.session,bans:[hero('Diana').key]}},hero('Diana')).prepare,false);assert.deepEqual(client,before);
 });
 
@@ -55,6 +58,13 @@ test('live adopted sidebar keeps five slots and range status while recommendatio
  assert.match(html,/中路 · 队友已选 · 看配置/);assert.doesNotMatch(companionView({...props,preferences:{compactTeam:false}}),/companion-team-now companion-team-compact/);
  const unknown=companionView({...props,client:{...live,eligibility:null}});assert.match(unknown,/data-companion-disclosure="eligibility"/);assert.doesNotMatch(unknown,/aria-label="我的下一步"/);
  const state=validateState({...defaultState(),preferences:{compactTeam:false}});assert.equal(state.preferences.compactTeam,false);assert.equal(validateState(defaultState()).preferences.compactTeam,true);
+});
+
+test('painted roster drag identities distinguish public cell zero from unbound and empty lanes',()=>{
+ const slots=createSlots().map(slot=>({...slot,...(slot.role==='mid'?{champion:'Lux',clientCellId:0}:slot.role==='support'?{champion:'Nami'}:{})}));
+ const html=companionView({data,client,slots,displayedRoster:slots,unassigned:[],scope:'party',soloRole:'mid',style:'fun',tab:'recommend',results:[]});
+ assert.match(html,/data-drag-role="mid"[^>]*data-drag-owner="0"/);
+ for(const role of ['top','support'])assert.match(html,new RegExp('data-drag-role="'+role+'"[^>]*data-drag-owner=""'));
 });
 
 test('both sidebar tabs show only explicit proposals even when an old peer sends automatic lineup snapshots',()=>{
@@ -88,6 +98,6 @@ test('rankings retain local actions and five slots in a collapsed context above 
 test('a prepared hover stays visible on the team and ranking tabs without promoting it to a selected roster pick',()=>{
  const slots=createSlots(),live=structuredClone(client);live.session.myTeam[0].championId=0;live.session.myTeam[0].championPickIntent=hero('Graves').key;
  const before=structuredClone({slots,client:live}),props={data,client:live,slots,unassigned:[],scope:'party',soloRole:'jungle',style:'fun',results:[],preparation:null,plan:{preview:true,intent:true,selection:{id:'Graves',role:'jungle',mode:'rift'}},preparationStatus:{complete:true}};
- for(const tab of ['recommend','rankings'])for(const plan of [props.plan,{preview:true,selection:{id:'Vex',role:'mid',mode:'rift'}}]){const html=companionView({...props,tab,plan});assert.match(html,/class="companion-roster-hero roster-display"[^>]+data-id="Graves"/);if(tab==='rankings')assert.match(html,/预选配置已完成 · 尚未选定/);else assert.doesNotMatch(html,/aria-label="我的下一步"/);assert.doesNotMatch(html,/data-local="true"/);}
+ for(const tab of ['recommend','rankings'])for(const plan of [props.plan,{preview:true,selection:{id:'Vex',role:'mid',mode:'rift'}}]){const html=companionView({...props,tab,plan});assert.match(html,/class="companion-roster-hero roster-display"[^>]+data-id="Graves"/);if(tab==='rankings')assert.match(html,/预选配置已完成 · 尚未选定/);else assert.doesNotMatch(html,/aria-label="我的下一步"/);assert.match(html,/data-local="true"/);assert.match(html,/data-pick-state="预选"/);assert.doesNotMatch(html,/data-pick-state="锁定"/);}
  assert.deepEqual({slots,client:live},before);assert(slots.every(s=>!s.champion));
 });

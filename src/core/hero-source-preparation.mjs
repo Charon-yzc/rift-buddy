@@ -2,10 +2,10 @@
 // The first operation only hovers; generic fallback runes are never written
 // while waiting for the selected provider. An existing/offline reference or
 // an explicitly selected mechanism route remains immediately usable.
-export async function prepareHeroWithSource({build,canRefresh,apply,refresh,snapshot,operationSnapshot=snapshot,isSelectedHero=()=>true,rebuild}){
+export async function prepareHeroWithSource({build,canRefresh,preselected=null,apply,refresh,snapshot,operationSnapshot=snapshot,isSelectedHero=()=>true,rebuild}){
  const needsSource=canRefresh&&build.mode==='rift'&&!build.reference&&build.loadoutId==='default'&&!build.sharedEquipment;
  if(!needsSource)return apply(false);
- const operation=operationSnapshot(),hovered=await apply(true);if(hovered?.steps?.hover?.status!=='done')return hovered;
+ const operation=operationSnapshot(),hovered=preselected||await apply(true);if(hovered?.steps?.hover?.status!=='done')return hovered;
  // Hover may succeed in the old draft while its follow-up sync observes a
  // new one. Do not adopt that new identity and continue an old explicit click.
  if(operation!==operationSnapshot()||!isSelectedHero())throw Error('选人或配置已变化，请按当前英雄重新选择配置');

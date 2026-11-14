@@ -1,0 +1,1445 @@
+{
+  "sources": {
+    "binUrl": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+    "binSha256": "8c7b798a7a8ddf4bd7238c05c0864cc6fa29d33b7c57041ae24230f2d26514ec",
+    "stringsUrl": "https://raw.communitydragon.org/16.21/game/zh_cn/data/menu/en_us/lol.stringtable.json",
+    "stringsSha256": "5fca25e067fa2b83701bb407f9c68707fd50056785cbb22fee7790b697b985d7"
+  },
+  "items": {
+    "1004": {
+      "id": 1004,
+      "name": "仙女护符",
+      "description": "50%基础法力回复\n\n",
+      "tags": [
+        "ManaRegen"
+      ],
+      "gold": {
+        "base": 200,
+        "purchasable": true,
+        "total": 200,
+        "sell": 140
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [],
+      "into": [
+        "3114",
+        "3012",
+        "4642"
+      ],
+      "inStore": true,
+      "stats": {},
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/1004.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "〔数值未解析〕%基础法力回复",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      },
+      "modeTooltips": {
+        "hex": {
+          "revision": 1,
+          "patch": "16.21",
+          "mode": "Kiwi",
+          "coverage": "public-data-values",
+          "status": "none",
+          "appliedKeys": [],
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+          "sourceHash": "ff0d344c931e8b50faa7154857611391a97e84137c9220caf82c90719a06a9e4",
+          "basisHash": "f2f2bb3b846bb36a"
+        }
+      }
+    },
+    "1027": {
+      "id": 1027,
+      "name": "蓝水晶",
+      "description": "300法力\n\n",
+      "tags": [
+        "Mana"
+      ],
+      "gold": {
+        "base": 300,
+        "purchasable": true,
+        "total": 300,
+        "sell": 210
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [],
+      "into": [
+        "3024",
+        "3802",
+        "3803"
+      ],
+      "inStore": true,
+      "stats": {
+        "FlatMPPoolMod": 300
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/1027.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "〔数值未解析〕法力",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      },
+      "modeTooltips": {
+        "hex": {
+          "revision": 1,
+          "patch": "16.21",
+          "mode": "Kiwi",
+          "coverage": "public-data-values",
+          "status": "none",
+          "appliedKeys": [],
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+          "sourceHash": "951d07598f1298cdbc406dbd97638469cbfac91e7d0bb592c799bb43f4ea3430",
+          "basisHash": "816a3a32c6c9114e"
+        }
+      }
+    },
+    "1036": {
+      "id": 1036,
+      "name": "长剑",
+      "description": "10攻击力\n\n",
+      "tags": [
+        "Damage",
+        "Lane"
+      ],
+      "gold": {
+        "base": 350,
+        "purchasable": true,
+        "total": 350,
+        "sell": 245
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [],
+      "into": [
+        "1053",
+        "4003",
+        "6701",
+        "2015",
+        "2019",
+        "2021",
+        "3077",
+        "6670",
+        "3133",
+        "2517",
+        "323004",
+        "3142",
+        "3004",
+        "2523",
+        "3032",
+        "3035",
+        "3044",
+        "3051",
+        "3155",
+        "6690",
+        "3123",
+        "3134",
+        "6699",
+        "6671",
+        "6692"
+      ],
+      "inStore": true,
+      "stats": {
+        "FlatPhysicalDamageMod": 10
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/1036.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "10攻击力",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      },
+      "modeTooltips": {
+        "hex": {
+          "revision": 1,
+          "patch": "16.21",
+          "mode": "Kiwi",
+          "coverage": "public-data-values",
+          "status": "none",
+          "appliedKeys": [],
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+          "sourceHash": "9fc77d52796fa17b59e9ab710a1b0a823b59dd8b5ee623fd37fcd9701fd6d496",
+          "basisHash": "3f420530ec74cd20"
+        }
+      }
+    },
+    "2065": {
+      "id": 2065,
+      "name": "舒瑞娅的战歌",
+      "description": "50法术强度\n15技能急速\n4%移动速度\n125%基础法力回复\n\n鼓舞演讲\n为附近友军们提供持续4秒的30%移动速度。",
+      "tags": [
+        "SpellDamage",
+        "ManaRegen",
+        "Active",
+        "CooldownReduction",
+        "NonbootsMovement",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 400,
+        "purchasable": true,
+        "total": 2200,
+        "sell": 1540
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "3113",
+        "4642"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatMagicDamageMod": 50,
+        "PercentMovementSpeedMod": 0.04
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/2065.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "50法术强度\n15技能急速\n4%移动速度\n〔数值未解析〕%基础法力回复\n\n 鼓舞演讲  (75秒)\n为附近友军们提供持续4秒的30%移动速度。",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      },
+      "modeTooltips": {
+        "hex": {
+          "revision": 1,
+          "patch": "16.21",
+          "mode": "Kiwi",
+          "coverage": "public-data-values",
+          "status": "partial",
+          "description": "50法术强度\n15技能急速\n4%移动速度\n〔数值未解析〕%基础法力回复\n\n 鼓舞演讲  (60秒)\n为附近友军们提供持续4秒的30%移动速度。",
+          "appliedKeys": [
+            "Cooldown"
+          ],
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+          "sourceHash": "bd5ebe1fade42078a4e82b1a2830f2dd8f4be5c516f1eaed04338766ef03b51a",
+          "basisHash": "e49569ddcc345ee5"
+        }
+      }
+    },
+    "2503": {
+      "id": 2503,
+      "name": "黯炎火炬",
+      "description": "80法术强度\n600法力\n20技能急速\n\n邪焰\n伤害型技能造成额外魔法伤害，持续3秒。\n\n黯炎\n被你的邪焰影响的每个敌方英雄、史诗级野怪和大型野怪都会为你提供4%法术强度。",
+      "tags": [
+        "SpellDamage",
+        "Mana",
+        "CooldownReduction",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 700,
+        "purchasable": true,
+        "total": 2800,
+        "sell": 1960
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "3802",
+        "2508"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatMPPoolMod": 600,
+        "FlatMagicDamageMod": 80
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/2503.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "80法术强度\n 〔数值未解析〕法力\n20技能急速\n\n邪焰\n伤害型技能造成每秒20 + 2%法术强度额外魔法伤害，持续3秒。\n\n黯炎\n被你的邪焰影响的每个敌方英雄、史诗级野怪和大型野怪都会为你提供4%法术强度。 \n\n'黑雾需要一团程度与之相配的火焰。'",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      },
+      "modeTooltips": {
+        "hex": {
+          "revision": 1,
+          "patch": "16.21",
+          "mode": "Kiwi",
+          "coverage": "public-data-values",
+          "status": "none",
+          "appliedKeys": [],
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+          "sourceHash": "5c0852a6f4fb6b70c53375d4cb970559c3208d93f3e8b67c0a18df962d786b2f",
+          "basisHash": "32f022200e031454"
+        }
+      }
+    },
+    "3100": {
+      "id": 3100,
+      "name": "巫妖之祸",
+      "description": "100法术强度\n6%移动速度\n10技能急速\n\n咒刃\n施放技能后，你的下一次攻击会造成额外魔法伤害攻击特效。",
+      "tags": [
+        "SpellDamage",
+        "OnHit",
+        "NonbootsMovement",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 250,
+        "purchasable": true,
+        "total": 2900,
+        "sell": 2030
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "3057",
+        "3113",
+        "1026"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatMagicDamageMod": 100,
+        "PercentMovementSpeedMod": 0.06
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3100.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "100法术强度\n6%移动速度\n10技能急速\n\n咒刃 (1.5秒)\n施放技能后，你在10秒内的下一次攻击会获得50%攻击速度并造成75%基础攻击力 + 45%法术强度额外魔法伤害攻击特效。",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      },
+      "modeTooltips": {
+        "hex": {
+          "revision": 1,
+          "patch": "16.21",
+          "mode": "Kiwi",
+          "coverage": "public-data-values",
+          "status": "none",
+          "appliedKeys": [],
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+          "sourceHash": "4680a40285bdb0dbe70c3ab49da5f0a9713210bd20c4fe842494873b0e46746b",
+          "basisHash": "ff94ba82adf5b1ec"
+        }
+      }
+    },
+    "3115": {
+      "id": 3115,
+      "name": "纳什之牙",
+      "description": "80法术强度\n50%攻击速度\n15技能急速\n\n艾卡西亚之咬\n普攻造成额外魔法伤害 攻击特效。",
+      "tags": [
+        "AttackSpeed",
+        "SpellDamage",
+        "OnHit",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 500,
+        "purchasable": true,
+        "total": 2900,
+        "sell": 2030
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "1043",
+        "1026",
+        "3108"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatMagicDamageMod": 80,
+        "PercentAttackSpeedMod": 0.5
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3115.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "80法术强度\n50%攻击速度\n15技能急速\n\n艾卡西亚之咬\n普攻造成15 + 15%法术强度额外魔法伤害 攻击特效。",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      },
+      "modeTooltips": {
+        "hex": {
+          "revision": 1,
+          "patch": "16.21",
+          "mode": "Kiwi",
+          "coverage": "public-data-values",
+          "status": "none",
+          "appliedKeys": [],
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+          "sourceHash": "d31a9c78d72e4b1fbe976d77b12042256bd59d7f54771cb527276030278f8ee2",
+          "basisHash": "a0585a38bff0ed08"
+        }
+      }
+    },
+    "3118": {
+      "id": 3118,
+      "name": "残疫",
+      "description": "90法术强度\n600法力\n15技能急速\n\n蔑视\n获得20终极技能急速。\n\n憎恨之雾\n在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面3秒，每秒造成魔法伤害并削减其魔法抗性。\n",
+      "tags": [
+        "SpellDamage",
+        "Mana",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 650,
+        "purchasable": true,
+        "total": 2700,
+        "sell": 1890
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "3802",
+        "1026"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatMPPoolMod": 600,
+        "FlatMagicDamageMod": 90
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3118.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "90法术强度\n 〔数值未解析〕法力\n15技能急速\n\n蔑视\n获得20终极技能急速。\n\n憎恨之雾\n在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面3秒，每秒造成60 + 5%法术强度魔法伤害并削减其10魔法抗性。",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      },
+      "modeTooltips": {
+        "hex": {
+          "revision": 1,
+          "patch": "16.21",
+          "mode": "Kiwi",
+          "coverage": "public-data-values",
+          "status": "partial",
+          "description": "90法术强度\n 〔数值未解析〕法力\n15技能急速\n\n蔑视\n获得20终极技能急速。\n\n憎恨之雾\n在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面3秒，每秒造成40 + 2.8%法术强度魔法伤害并削减其10魔法抗性。",
+          "appliedKeys": [
+            "APRatio",
+            "BaseDamage"
+          ],
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+          "sourceHash": "e8993511705e391c8b17168eba158f29497d93294baac94b44059a4cfefa4793",
+          "basisHash": "2f6779c2dff94d49"
+        }
+      }
+    }
+  },
+  "bin": {
+    "Items/1004": {
+      "mDisplayName": "Item_1004_Name",
+      "itemID": 1004,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default"
+      ],
+      "price": 200,
+      "mCanBeSold": true,
+      "percentBaseMPRegenMod": 0.5,
+      "mCategories": [
+        "ManaRegen"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        32
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "1004",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_1004_Name",
+            "keyColloquialism": "Item_1004_Colloquialism"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "BaseManaRegen",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_1004_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_1004_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_1004_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/1004_class_t1_faeriecharm.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/1004_Class_T1_FaerieCharm.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/1004_Class_T1_FaerieCharm.png",
+        "__type": "ItemDataClient"
+      },
+      "__type": "ItemData"
+    },
+    "Items/1027": {
+      "mDisplayName": "Item_1027_Name",
+      "itemID": 1027,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default"
+      ],
+      "price": 300,
+      "mCanBeSold": true,
+      "flatMPPoolMod": 300,
+      "mCategories": [
+        "Mana"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        16,
+        8
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "1027",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_1027_Name",
+            "keyColloquialism": "Item_1027_Colloquialism"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "Mana",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_1027_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_1027_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_1027_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/1027_base_t1_saphirecrystal.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/1027_Base_T1_SaphireCrystal.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/1027_Base_T1_SaphireCrystal.png",
+        "__type": "ItemDataClient"
+      },
+      "__type": "ItemData"
+    },
+    "Items/2065": {
+      "spellName": "2065Active",
+      "mDisplayName": "Item_2065_Name",
+      "itemID": 2065,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default",
+        "{3179bd6e}"
+      ],
+      "mItemAdviceAttributes": [
+        "{705ee247}",
+        "{32984313}"
+      ],
+      "price": 400,
+      "clickable": true,
+      "mItemCalloutPlayer": true,
+      "mItemCalloutSpectator": true,
+      "mCanBeSold": true,
+      "epicness": 5,
+      "recipeItemLinks": [
+        "Items/3113",
+        "Items/4642"
+      ],
+      "mScripts": [
+        "2065"
+      ],
+      "mEffectAmount": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mDataValues": [
+        {
+          "mName": "ActiveMoveSpeed",
+          "mValue": 0.30000001192092896,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "BuffDuration",
+          "mValue": 4,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "ActiveCooldown",
+          "mValue": 75,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "ItemRange",
+          "mValue": 1000,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "PerChampCD",
+          "mValue": 4,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "Cooldown",
+          "mValue": 75,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "DataValuesModeOverride": {
+        "Kiwi": {
+          "DataValues": [
+            {
+              "mName": "ActiveCooldown",
+              "mValue": 60,
+              "__type": "ItemDataValue"
+            },
+            {
+              "mName": "Cooldown",
+              "mValue": 60,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        }
+      },
+      "mAbilityHasteMod": 15,
+      "mPercentMovementSpeedMod": 0.03999999910593033,
+      "mFlatMagicDamageMod": 50,
+      "percentBaseMPRegenMod": 1.25,
+      "mCategories": [
+        "SpellDamage",
+        "ManaRegen",
+        "Active",
+        "CooldownReduction",
+        "NonbootsMovement",
+        "AbilityHaste"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        32
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "2065",
+          "mFormat": "{32559c50}",
+          "EnableExtendedTooltip": false,
+          "mLocKeys": {
+            "keyName": "Item_2065_Name",
+            "keyBrief": "Item_2065_Brief",
+            "keyActive": "Item_2065_Active",
+            "keyActiveExternal": "Item_2065_ActiveExternal"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AbilityPower",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "AbilityHaste",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "MoveSpeedPercent",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "BaseManaRegen",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_2065_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_2065_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_2065_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/2065_tank_t4_shurelyasbattlesong.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/2065_Tank_T4_ShurelyasBattlesong.png",
+        "epicness": 6,
+        "__type": "ItemDataClient"
+      },
+      "mVFXResourceResolver": {
+        "resourceMap": {
+          "{a18b61f8}": "Items/2065/Particles/SRI_Shurelyas_Battlesong_Proc",
+          "{4cbf9124}": "Items/2065/Particles/SRI_Shurelyas_Battlesong_Self_Buff",
+          "{d08fc76a}": "Items/2065/Particles/SRI_Shurelyas_Battlesong_Hit_Damage_Proc",
+          "{7c2eacc1}": "Items/2065/Particles/SRI_Shurelyas_Battlesong_AOE",
+          "{007413ad}": "Items/2065/Particles/SRI_Shurelyas_Battlesong_Ally_Mis"
+        },
+        "__type": "ResourceResolver"
+      },
+      "__type": "ItemData"
+    },
+    "Items/3118": {
+      "mDisplayName": "Item_3118_Name",
+      "itemID": 3118,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default",
+        "{143b41c4}"
+      ],
+      "mItemAdviceAttributes": [
+        "{8fd6c485}"
+      ],
+      "price": 650,
+      "mItemCalloutPlayer": true,
+      "mItemCalloutSpectator": true,
+      "mCanBeSold": true,
+      "epicness": 5,
+      "recipeItemLinks": [
+        "Items/3802",
+        "Items/1026"
+      ],
+      "mEffectAmount": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mDataValues": [
+        {
+          "mName": "AOESize",
+          "mValue": 250,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "UltimateHaste",
+          "mValue": 20,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "GroundDuration",
+          "mValue": 3,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "BaseDamage",
+          "mValue": 60,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "APRatio",
+          "mValue": 0.05000000074505806,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MaxRadius",
+          "mValue": 550,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "DataValuesModeOverride": {
+        "ARAM": {
+          "DataValues": [
+            {
+              "mName": "APRatio",
+              "mValue": 0.02800000086426735,
+              "__type": "ItemDataValue"
+            },
+            {
+              "mName": "BaseDamage",
+              "mValue": 40,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        },
+        "Kiwi": {
+          "DataValues": [
+            {
+              "mName": "APRatio",
+              "mValue": 0.02800000086426735,
+              "__type": "ItemDataValue"
+            },
+            {
+              "mName": "BaseDamage",
+              "mValue": 40,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        }
+      },
+      "mItemCalculations": {
+        "{8e8f7a34}": {
+          "mMultiplier": {
+            "mNumber": 0.25,
+            "__type": "NumberCalculationPart"
+          },
+          "mSimpleTooltipCalculationDisplay": 5,
+          "mExpandedTooltipCalculationDisplay": 5,
+          "mFormulaParts": [
+            {
+              "mDataValue": "BaseDamage",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mDataValue": "APRatio",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "MagicResistanceShred": {
+          "mFormulaParts": [
+            {
+              "mNumber": 10,
+              "__type": "NumberCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "GroundBurnDamagePerTickTooltipOnly": {
+          "mFormulaParts": [
+            {
+              "mDataValue": "BaseDamage",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mDataValue": "APRatio",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        }
+      },
+      "mAbilityHasteMod": 15,
+      "mFlatMagicDamageMod": 90,
+      "flatMPPoolMod": 600,
+      "mCategories": [
+        "SpellDamage",
+        "Mana",
+        "AbilityHaste"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        16
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "3118",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_3118_Name",
+            "keyBrief": "Item_3118_Brief",
+            "keyTooltip": "Item_3118_Tooltip",
+            "keyColloquialism": "Item_3107_Colloquialism",
+            "keyInventoryOnlyText": "Item_3118_InventoryOnlyText",
+            "keyTooltipExtendedRules": "Item_3118_TooltipExtendedRules",
+            "keyTooltipExternal": "Item_3118_TooltipExternal"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AbilityPower",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "Mana",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "AbilityHaste",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_3118_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_3118_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_3118_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/3118_malignance.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/3118_Malignance44.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/3118_Malignance88.png",
+        "epicness": 5,
+        "__type": "ItemDataClient"
+      },
+      "mVFXResourceResolver": {
+        "resourceMap": {
+          "3118_Ground_Burn": "Items/3118/Particles/3118_Ground_Burn",
+          "{21bdaee6}": "Items/3118/Particles/3118_Burn_tar",
+          "3118_Shred": "Items/3118/Particles/3118_Shred",
+          "3118_Ground_Burn_Enemy": "Items/3118/Particles/3118_Ground_Burn_Enemy"
+        },
+        "__type": "ResourceResolver"
+      },
+      "__type": "ItemData"
+    },
+    "Items/1036": {
+      "mDisplayName": "Item_1036_Name",
+      "itemID": 1036,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default"
+      ],
+      "price": 350,
+      "mCanBeSold": true,
+      "mFlatPhysicalDamageMod": 10,
+      "mCategories": [
+        "Damage",
+        "Lane"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        1,
+        2,
+        4
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "1036",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_1036_Name",
+            "keyColloquialism": "Item_1036_Colloquialism"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AttackDamage",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_1036_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_1036_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_1036_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/1036_class_t1_longsword.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/1036_Class_T1_LongSword.png",
+        "__type": "ItemDataClient"
+      },
+      "__type": "ItemData"
+    },
+    "Items/2503": {
+      "spellName": "BloodthirsterDummySpell",
+      "mDisplayName": "Item_2503_Name",
+      "itemID": 2503,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default",
+        "{693b07b5}"
+      ],
+      "price": 700,
+      "ShowCooldownVfxToAllies": false,
+      "mCanBeSold": true,
+      "epicness": 5,
+      "recipeItemLinks": [
+        "Items/3802",
+        "Items/2508"
+      ],
+      "mDataValues": [
+        {
+          "mName": "BurnFlatDamagePerSecond",
+          "mValue": 20,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "APRatio",
+          "mValue": 0.019999999552965164,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "BurnDuration",
+          "mValue": 3,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MonsterDamageBonus",
+          "mValue": 20,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "TickFrequency",
+          "mValue": 0.5,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "APPerStack",
+          "mValue": 0.03999999910593033,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MinionDPS",
+          "mValue": 20,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MinionAP",
+          "mValue": 0.019999999552965164,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MonsterDPS",
+          "mValue": 40,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MonsterAP",
+          "mValue": 0.019999999552965164,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "mItemCalculations": {
+        "BurnDamagePerSecondCalc": {
+          "mFormulaParts": [
+            {
+              "mDataValue": "BurnFlatDamagePerSecond",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mDataValue": "APRatio",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "MinionBurnCalc": {
+          "mFormulaParts": [
+            {
+              "mDataValue": "{9adc0c64}",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mDataValue": "MinionAP",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "MonsterBurnCalc": {
+          "mFormulaParts": [
+            {
+              "mDataValue": "{afd69c5a}",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mDataValue": "{434396e0}",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        }
+      },
+      "mAbilityHasteMod": 20,
+      "mFlatMagicDamageMod": 80,
+      "flatMPPoolMod": 600,
+      "mCategories": [
+        "SpellDamage",
+        "Mana",
+        "CooldownReduction",
+        "AbilityHaste"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        16
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "2503",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_2503_Name",
+            "keyTooltip": "Item_2503_Tooltip",
+            "keyInventoryOnlyText": "Item_2503_InventoryOnlyText",
+            "keyFlavorText": "Item_2503_FlavorText",
+            "keyBrief": "Item_2503_Brief",
+            "keyTooltipExtendedRules": "Item_2503_TooltipExtendedRules",
+            "keyTooltipExternal": "Item_2503_TooltipExternal"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AbilityPower",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "Mana",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "AbilityHaste",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_2503_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_2503_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_2503_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/2503_blackfiretorch64.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/2503_BlackfireTorch44.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/2503_BlackfireTorch88.png",
+        "epicness": 6,
+        "__type": "ItemDataClient"
+      },
+      "mVFXResourceResolver": {
+        "resourceMap": {
+          "2503_Dot_Tar": "Items/2503/Particles/2503_Dot_Tar"
+        },
+        "__type": "ResourceResolver"
+      },
+      "__type": "ItemData"
+    },
+    "Items/3100": {
+      "mDisplayName": "Item_3100_Name",
+      "mDeathRecapName": "LichBane",
+      "itemID": 3100,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default",
+        "{123d7d35}",
+        "{8b55a7b3}"
+      ],
+      "price": 250,
+      "mItemCalloutSpectator": true,
+      "ShowCooldownVfxToAllies": false,
+      "ShowCooldownInPings": false,
+      "mCanBeSold": true,
+      "epicness": 5,
+      "recipeItemLinks": [
+        "Items/3057",
+        "Items/3113",
+        "Items/1026"
+      ],
+      "mEffectAmount": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mDataValues": [
+        {
+          "mName": "SpellbladeCooldown",
+          "mValue": 1.5,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "LichBaneAPValue",
+          "mValue": 0.44999998807907104,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "SpellbladeADRatio",
+          "mValue": 0.75,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "SheenASBuff",
+          "mValue": 0.5,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "Cooldown",
+          "mValue": 1.5,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "SpellBladeDuration",
+          "mValue": 10,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "mItemCalculations": {
+        "SpellbladeDamage": {
+          "mFormulaParts": [
+            {
+              "mStat": 2,
+              "mStatFormula": 1,
+              "mDataValue": "SpellbladeADRatio",
+              "__type": "StatByNamedDataValueCalculationPart"
+            },
+            {
+              "mDataValue": "LichBaneAPValue",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        }
+      },
+      "mAbilityHasteMod": 10,
+      "mPercentMovementSpeedMod": 0.05999999865889549,
+      "mFlatMagicDamageMod": 100,
+      "mCategories": [
+        "SpellDamage",
+        "OnHit",
+        "NonbootsMovement",
+        "AbilityHaste"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        16
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "3100",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_3100_Name",
+            "keyBrief": "Item_3100_Brief",
+            "keyTooltip": "Item_3100_Tooltip",
+            "keyColloquialism": "Item_3100_Colloquialism",
+            "keySecondaryBrief": "Item_Unique_Spellblade",
+            "keyInventoryOnlyText": "Item_223100_InventoryOnlyText",
+            "keyTooltipExternal": "Item_3100_TooltipExternal"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AbilityPower",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "MoveSpeedPercent",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "AbilityHaste",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_3100_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_3100_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_3100_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/3100_mage_t3_lichbane.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/3100_Mage_T3_Lichbane.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/3100_Mage_T3_Lichbane.png",
+        "epicness": 5,
+        "__type": "ItemDataClient"
+      },
+      "__type": "ItemData"
+    },
+    "Items/3115": {
+      "spellName": "Malady",
+      "mDisplayName": "Item_3115_Name",
+      "mDeathRecapName": "NashorsTooth",
+      "itemID": 3115,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default",
+        "{093b3073}"
+      ],
+      "price": 500,
+      "mItemCalloutSpectator": true,
+      "mCanBeSold": true,
+      "epicness": 5,
+      "recipeItemLinks": [
+        "Items/1043",
+        "Items/1026",
+        "Items/3108"
+      ],
+      "mDataValues": [
+        {
+          "mName": "NashorsBaseValue",
+          "mValue": 15,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "NashorsAPValue",
+          "mValue": 0.15000000596046448,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "mItemCalculations": {
+        "TotalOnHitDamage": {
+          "DamageType": 1,
+          "mFormulaParts": [
+            {
+              "mDataValue": "NashorsBaseValue",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mDataValue": "NashorsAPValue",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        }
+      },
+      "LastHitData": [
+        {
+          "{6166b756}": "TotalOnHitDamage",
+          "__type": "LastHitData"
+        }
+      ],
+      "mAbilityHasteMod": 15,
+      "mFlatMagicDamageMod": 80,
+      "mPercentAttackSpeedMod": 0.5,
+      "mCategories": [
+        "AttackSpeed",
+        "SpellDamage",
+        "OnHit",
+        "AbilityHaste"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        16,
+        2
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "3115",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_3115_Name",
+            "keyBrief": "Item_3115_Brief",
+            "keyTooltip": "Item_3115_Tooltip",
+            "keyColloquialism": "Item_3115_Colloquialism",
+            "keyInventoryOnlyText": "Item_3115_InventoryOnlyText",
+            "keyTooltipExternal": "Item_3115_TooltipExternal"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AbilityPower",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "AttackSpeed",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "AbilityHaste",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_3115_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_3115_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_3115_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/3115_mage_t3_nashorstooth.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/3115_Mage_T3_NashorsTooth.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/3115_Mage_T3_NashorsTooth.png",
+        "epicness": 5,
+        "__type": "ItemDataClient"
+      },
+      "__type": "ItemData"
+    }
+  },
+  "strings": {
+    "entries": {
+      "generatedtip_item_1004_description": "<section></section><section><attention>%i:scaleManaRegen%@PercentBaseMPRegenMod*100@%</attention>基础法力回复</section><section></section><section></section><section><flavorText></flavorText></section>",
+      "generatedtip_item_1027_description": "<section></section><section><attention>%i:scaleMana% @FlatMPPoolMod@</attention>法力</section><section></section><section></section><section><flavorText></flavorText></section>",
+      "generatedtip_item_2065_description": "<section></section><section><attention>%i:scaleAP%@FlatMagicDamageMod@</attention>法术强度<br><attention>%i:scaleCooldown%@AbilityHasteMod@</attention>技能急速<br><attention>%i:scaleMS%@PercentMovementSpeedMod*100@%</attention>移动速度<br><attention>%i:scaleManaRegen%@PercentBaseMPRegenMod*100@%</attention>基础法力回复</section><section></section><section>%i:activeEffect% <active>鼓舞演讲</active> {{ Item_Cooldown }}<br>为附近友军们提供持续@BuffDuration@秒的<speed>@ActiveMoveSpeed*100@%移动速度</speed>。</section><section><flavorText></flavorText></section>",
+      "item_cooldown": "%i:cooldown% (@Cooldown@秒)",
+      "generatedtip_item_3118_description": "<section></section><section><attention>%i:scaleAP%@FlatMagicDamageMod@</attention>法术强度<br><attention>%i:scaleMana% @FlatMPPoolMod@</attention>法力<br><attention>%i:scaleCooldown%@AbilityHasteMod@</attention>技能急速</section><section><passive>蔑视</passive><br>获得@UltimateHaste@终极技能急速。<br><br><passive>憎恨之雾</passive><br>在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面@GroundDuration@秒，每秒造成<magicDamage>@GroundBurnDamagePerTickTooltipOnly@魔法伤害</magicDamage>并削减其<scaleMR>@MagicResistanceShred@魔法抗性</scaleMR>。<br></section><section></section><section><flavorText></flavorText></section>",
+      "generatedtip_item_1036_description": "<section></section><section><attention>%i:scaleAD%@FlatPhysicalDamageMod@</attention>攻击力</section><section></section><section></section><section><flavorText></flavorText></section>",
+      "generatedtip_item_2503_description": "<section></section><section><attention>%i:scaleAP%@FlatMagicDamageMod@</attention>法术强度<br><attention>%i:scaleMana% @FlatMPPoolMod@</attention>法力<br><attention>%i:scaleCooldown%@AbilityHasteMod@</attention>技能急速</section><section><passive>邪焰</passive><br>伤害型技能造成每秒<magicDamage>@BurnDamagePerSecondCalc@额外魔法伤害</magicDamage>，持续@BurnDuration@秒。<br><br><passive>黯炎</passive><br>被你的<passive>邪焰</passive>影响的每个敌方英雄、史诗级野怪和大型野怪都会为你提供<scaleAP>@APPerStack*100@%法术强度</scaleAP>。 </section><section></section><section><flavorText>'黑雾需要一团程度与之相配的火焰。'</flavorText></section>",
+      "generatedtip_item_3100_description": "<section></section><section><attention>%i:scaleAP%@FlatMagicDamageMod@</attention>法术强度<br><attention>%i:scaleMS%@PercentMovementSpeedMod*100@%</attention>移动速度<br><attention>%i:scaleCooldown%@AbilityHasteMod@</attention>技能急速</section><section><passive>咒刃</passive>{{ Item_Cooldown}}<br>施放技能后，你在@SpellBladeDuration@秒内的下一次攻击会获得<attackSpeed>@SheenASBuff*100@%攻击速度</attackSpeed>并造成<magicDamage>@SpellbladeDamage@额外魔法伤害</magicDamage>{{ Item_Keyword_OnHit }}。</section><section></section><section><flavorText></flavorText></section>",
+      "item_keyword_onhit": "%i:OnHit%<OnHit>攻击特效</OnHit>",
+      "generatedtip_item_3115_description": "<section></section><section><attention>%i:scaleAP%@FlatMagicDamageMod@</attention>法术强度<br><attention>%i:scaleAS%@PercentAttackSpeedMod*100@%</attention>攻击速度<br><attention>%i:scaleCooldown%@AbilityHasteMod@</attention>技能急速</section><section><passive>艾卡西亚之咬</passive><br>普攻造成<magicDamage>@TotalOnHitDamage@额外魔法伤害</magicDamage> {{ Item_Keyword_OnHit }}。</section><section></section><section><flavorText></flavorText></section>"
+    }
+  }
+}

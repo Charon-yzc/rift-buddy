@@ -9,12 +9,15 @@ import {stageServerData,loadServerData} from '../services/server-data-store.mjs'
 import {buildSourceKey,DEFAULT_BUILD_SOURCE} from '../src/core/build-source.mjs';
 import {rankingKey} from '../src/core/rankings.mjs';
 import {characterSourceURL,dataDragonMechanicURL} from '../src/core/mechanic-source.mjs';
+import {applyFeedBundle,validateFeedBundle} from '../services/data-feed.mjs';
+const pools=JSON.parse(await fs.readFile(new URL('../data/hex-hero-observations.json',import.meta.url)));
 const seedRoot=fileURLToPath(new URL('../data/',import.meta.url)),seed=await loadServerSeed(seedRoot);
 const network={stats:()=>({requests:0,bytes:0,blocked:{}}),fetcher:()=>assert.fail('unit test must not use network')};
 function sources(){return {
  game:async()=>structuredClone(seed.game),rankings:async(data,source)=>structuredClone(seed.rankings.entries[rankingKey(seed.game.patch,source)]),
  builds:async(hero,role)=>structuredClone(seed.builds.entries[buildSourceKey(hero.id,role,DEFAULT_BUILD_SOURCE,seed.game.patch)]),
  hex:async hero=>structuredClone(seed['hex-builds'].entries[hero.id]),
+ patchNotes:async()=>structuredClone(seed.game.patchNotes),
 };}
 async function temporary(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-collector-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;}
 
@@ -51,14 +54,48 @@ test('new patch without matching complete statistics cannot replace a working ca
 test('offline round retains timestamps and never reports a fresh successful update',async t=>{
  const root=await temporary(t);const first=await stageServerData(root,seed);
  const offline=async()=>{throw Object.assign(Error('paused'),{code:'SOURCE_PAUSED'});};
- const result=await collectServerData({root,seedRoot,network,providers:{game:offline,rankings:offline,builds:offline,hex:offline}});
- assert.equal(result.state,'partial');assert.equal(result.changed,false);assert.equal(result.release,first.pointer.release);
+ const result=await collectServerData({root,seedRoot,network,providers:{game:offline,rankings:offline,builds:offline,hex:offline,patchNotes:offline}});
+ assert.equal(result.state,'partial');assert.equal(result.changed,true);assert.notEqual(result.release,first.pointer.release);
  for(const state of Object.values(result.datasets)){assert.equal(state.failed,1);assert.equal(state.lastCompleteAt,null);}
- assert.deepEqual((await loadServerData(root)).bundle,seed);
+ assert.deepEqual((await loadServerData(root)).bundle,{...seed,game:{...seed.game,patchNotes:{...seed.game.patchNotes,unavailable:true}}});
 });
 test('older analysis is rejected even when fetched today; bad data never changes the pointer',async t=>{
  const root=await temporary(t);const first=await stageServerData(root,seed),providers=sources();
  providers.rankings=async(data,source)=>{const ref=structuredClone(seed.rankings.entries[rankingKey(data.patch,source)]);ref.analyzedAt='2020-01-01T00:00:00Z';ref.fetchedAt=new Date().toISOString();return ref;};
  const result=await collectServerData({root,seedRoot,network,providers,maxChampions:1});
  assert.equal(result.datasets.rankings.failed,6);assert.equal(result.changed,false);assert.equal(result.release,first.pointer.release);
+});
+test('official-note outage keeps real prior records while a complete primary round remains publishable',async t=>{
+ const root=await temporary(t);await stageServerData(root,seed);const providers=sources();providers.patchNotes=async()=>{throw Error('official page structure changed');};
+ const result=await collectServerData({root,seedRoot,network,providers});assert.equal(result.state,'ok');assert.equal(result.datasets['patch-notes'].failed,1);assert.equal(result.datasets['patch-notes'].optional,true);assert.equal(result.datasets['patch-notes'].lastCompleteAt,null);
+ assert.deepEqual((await loadServerData(root)).bundle.game.patchNotes,{...seed.game.patchNotes,unavailable:true});
+});
+
+test('optional hero pools follow signed Hex data without overwriting a newer local build or admitting player records',async t=>{
+ const root=await temporary(t),providers=sources(),hero=seed.game.champions[0];
+ // Synthetic evidence isolates server merging without claiming a live 4.0 pool.
+ const prior=seed['hex-builds'].entries[hero.id],later=new Date(Date.parse(prior.poolEvidence?.fetchedAt||prior.fetchedAt)+3600000).toISOString();
+ const evidence={champion:hero.id,patch:seed.game.patch,source:'Mayhem:Meta',sourceUrl:`https://mayhemmeta.com/champions/${hero.id.toLowerCase()}?patch=${seed.game.patch}`,fetchedAt:later,kind:'selected-game-counts',rows:[{id:1058,games:10,withheld:false}]};
+ providers.hexPoolIndex=async()=>new Map([[hero.key,hero.id.toLowerCase()]]);providers.hexPool=async()=>evidence;
+ const result=await collectServerData({root,seedRoot,network,providers,maxChampions:1,collectHexPools:true});assert.equal(result.datasets['hex-pools'].changed,1);
+ const bundle=(await loadServerData(root)).bundle;assert.deepEqual(bundle['hex-builds'].entries[hero.id].poolEvidence,evidence);validateFeedBundle(bundle,seed.game);
+ const local={...structuredClone(seed.game),rankings:{},buildSources:{},hexBuilds:structuredClone(seed['hex-builds'].entries)},before=local.hexBuilds[hero.id];before.fetchedAt=new Date(Date.parse(before.fetchedAt)+86400000).toISOString();before.core[0].samples=987654;
+ applyFeedBundle(local,bundle);assert.equal(local.hexBuilds[hero.id].core[0].samples,987654);assert.deepEqual(local.hexBuilds[hero.id].poolEvidence,evidence);
+ const invalid=structuredClone(bundle);invalid['hex-builds'].entries[hero.id].poolEvidence.rows[0].player='not-allowed';assert.throws(()=>validateFeedBundle(invalid,seed.game),/不兼容/);
+ providers.hexPool=async()=>{throw Error('source unavailable');};const retained=await collectServerData({root,seedRoot,network,providers,maxChampions:1,collectHexPools:true});assert.equal(retained.datasets['hex-pools'].failed,1);assert.deepEqual((await loadServerData(root)).bundle['hex-builds'].entries[hero.id].poolEvidence,evidence);
+});
+
+test('supplementary source failure is visible but cannot freeze valid primary collection',async t=>{
+ const root=await temporary(t),providers=sources();providers.hexPoolIndex=async()=>{throw Error('optional source unavailable');};
+ const result=await collectServerData({root,seedRoot,network,providers,collectHexPools:true});assert.equal(result.state,'ok');assert.equal(result.datasets['hex-pools'].state,'partial');assert.equal(result.datasets['hex-pools'].optional,true);
+});
+
+test('unavailable pool patch uses one index request, keeps observations and allows complete primary publication',async t=>{
+ const root=await temporary(t),first=await stageServerData(root,seed),providers=sources();let requests=0,heroRequests=0;
+ const index=seed.game.champions.map(c=>({champion_id:c.key,slug:c.id.toLowerCase()})),flight=value=>'<script>self.__next_f.push([1,'+JSON.stringify('1:'+JSON.stringify(value)+'\n')+'])</script>';
+ const bounded={stats:()=>({requests,bytes:0,blocked:{}}),fetcher:async url=>{requests++;assert.equal(url,'https://mayhemmeta.com/');return new Response(flight(index)+flight({defaultPatch:'16.19',servablePatches:['16.19']}));}};
+ providers.hexPool=async()=>{heroRequests++;assert.fail('Unavailable patch must not query heroes');};
+ const result=await collectServerData({root,seedRoot,network:bounded,providers,collectHexPools:true});
+ assert.equal(result.state,'ok');assert.equal(requests,1);assert.equal(heroRequests,0);const optional=result.datasets['hex-pools'];assert.equal(optional.optional,true);assert.equal(optional.state,'partial');assert.equal(optional.checked,0);assert.equal(optional.failed,1);assert.equal(optional.skipped,seed.game.champions.length);assert.match(optional.errors[0].message,new RegExp(seed.game.patch.replace('.','\\.')));
+ assert.equal(result.release,first.pointer.release);assert.deepEqual((await loadServerData(root)).bundle['hex-builds'],seed['hex-builds']);
 });

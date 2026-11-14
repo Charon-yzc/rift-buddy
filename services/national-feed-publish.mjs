@@ -22,5 +22,9 @@ export async function publishNationalFeed({data,publicRoot,keyFile,keyId='data-2
  const publishedAt=clock(),sequence=Math.max(Date.parse(publishedAt),(prior?.sequence||0)+1),payload=validateNationalFeed({schema:1,kind:'national-rankings',provider:'tencent101',patch:data.patch,publishedAt,sequence,entries},data);
  if(prior?.patch===data.patch&&Object.entries(entries).some(([key,ref])=>!prior.entries[key]||ref.sourceDate<prior.entries[key].sourceDate))throw Error('国服来源日期倒退，保留已发布资料');
  const bytes=Buffer.from(JSON.stringify(payload)),envelope={keyId,payload:bytes.toString('base64'),signature:sign(null,bytes,privateKey).toString('base64')};verifyNationalEnvelope(envelope,data,{keys});
- await atomicJSON(destination,envelope);return {patch:payload.patch,publishedAt,sequence,counts:Object.fromEntries(Object.entries(entries).map(([key,ref])=>[key,Object.values(ref.boards).reduce((n,rows)=>n+rows.length,0)])),network:network.stats()};
+ // The service uses a restrictive umask. Make only the public feed readable
+ // by Caddy, and set file permissions before its atomic promotion.
+ const folder=path.dirname(destination);await fs.mkdir(folder,{recursive:true});
+ for(const dir of [path.dirname(folder),folder])await fs.chmod(dir,0o755);
+ await atomicJSON(destination,envelope,{mode:0o644});return {patch:payload.patch,publishedAt,sequence,counts:Object.fromEntries(Object.entries(entries).map(([key,ref])=>[key,Object.values(ref.boards).reduce((n,rows)=>n+rows.length,0)])),network:network.stats()};
 }

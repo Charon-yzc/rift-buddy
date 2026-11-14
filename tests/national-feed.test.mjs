@@ -7,12 +7,13 @@ import vm from 'node:vm';
 import {generateKeyPairSync,sign} from 'node:crypto';
 import {parseNationalRankings,NATIONAL_TIERS,nationalKey} from '../src/core/national-reference.mjs';
 import {publishNationalFeed} from '../services/national-feed-publish.mjs';
+import {atomicJSON} from '../services/data.mjs';
 import {verifyNationalEnvelope,fetchNationalFeed,NATIONAL_FEED_PATH} from '../services/national-feed.mjs';
 import {createNationalReferenceCache} from '../services/national-reference.mjs';
 import {nationalBuildView} from '../src/national-reference-view.mjs';
 import {createNationalReferenceController} from '../src/national-reference-controller.mjs';
 
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/national-reference-16.20.json',import.meta.url))),now='2026-10-20T10:30:00.000Z',clock=()=>now;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/national-reference-16.20.json',import.meta.url))),now='2026-10-20T10:30:00.000Z',clock=()=>now;
 const pair=generateKeyPairSync('ed25519'),keys={test:pair.publicKey.export({type:'spki',format:'pem'})};
 const rank=tier=>parseNationalRankings(fixture.rankings,{data,tier,fetchedAt:now});
 const signed=(sequence,transform=x=>x)=>{const entries=Object.fromEntries(NATIONAL_TIERS.map(t=>{const ref=transform(rank(t.id));return [ref.key,ref];})),payload={schema:1,kind:'national-rankings',provider:'tencent101',patch:data.patch,publishedAt:now,sequence,entries},bytes=Buffer.from(JSON.stringify(payload)),envelope={keyId:'test',payload:bytes.toString('base64'),signature:sign(null,bytes,pair.privateKey).toString('base64')};return {payload,envelope};};
@@ -26,6 +27,31 @@ test('real Ed25519 publication succeeds twice and retains signed bytes on a part
  await assert.rejects(publishNationalFeed({...options,fetchReference:async input=>{if(input.tier==='diamond_plus')throw Error('partial');return rank(input.tier);}}),/partial/);assert.deepEqual(await fs.readFile(destination),bytes);
  const other=generateKeyPairSync('ed25519');await assert.rejects(publishNationalFeed({...options,keys:{test:other.publicKey.export({format:'pem',type:'spki'})}}),/固定公钥/);assert.deepEqual(await fs.readFile(destination),bytes);
  await assert.rejects(publishNationalFeed({...options,fetchReference:async input=>({...rank(input.tier),sourceDate:'2026-10-18'})}),/日期倒退/);assert.deepEqual(await fs.readFile(destination),bytes);
+});
+
+test('public national feed remains readable by a separate web-server user under the service umask',{skip:process.platform==='win32'},async t=>{
+ const root=await temporary(t),keyFile=path.join(root,'key.pem'),destination=path.join(root,NATIONAL_FEED_PATH);
+ await fs.writeFile(keyFile,pair.privateKey.export({type:'pkcs8',format:'pem'}),{mode:0o600});
+ const before=process.umask(0o027);
+ try{
+  const options={data,publicRoot:root,keyFile,keyId:'test',keys,clock,network:{fetcher:()=>{throw Error('unexpected network');},stats:()=>({})},fetchReference:async input=>rank(input.tier)};
+  for(let i=0;i<2;i++){
+   await publishNationalFeed(options);
+   assert.equal((await fs.stat(destination)).mode&0o777,0o644);
+   for(const dir of [path.dirname(path.dirname(destination)),path.dirname(destination)])assert.equal((await fs.stat(dir)).mode&0o777,0o755);
+   assert.equal(verifyNationalEnvelope(JSON.parse(await fs.readFile(destination)),data,{keys}).sequence,Date.parse(now)+i);
+  }
+  assert.equal((await fs.stat(keyFile)).mode&0o777,0o600);
+  const privateCache=path.join(root,'private-cache.json');await atomicJSON(privateCache,{local:true});
+  assert.equal((await fs.stat(privateCache)).mode&0o777,0o640);
+ }finally{process.umask(before);}
+});
+
+test('permission preparation failure leaves the previous atomic JSON bytes intact',async t=>{
+ const root=await temporary(t),file=path.join(root,'feed.json');await atomicJSON(file,{sequence:1});
+ const bytes=await fs.readFile(file);
+ await assert.rejects(atomicJSON(file,{sequence:2},{mode:-1}));assert.deepEqual(await fs.readFile(file),bytes);
+ assert.deepEqual((await fs.readdir(root)).sort(),['feed.json']);
 });
 
 test('signature verification rejects tampering, missing scopes and fabricated samples',()=>{
@@ -51,8 +77,9 @@ test('accepted sequence rejects replay and equivocation after restart without re
  feed=signed(101);assert.equal((await createNationalReferenceCache(options)({...input,force:true})).refreshError,null);
 });
 
-test('unavailable project feed uses only the fixed public endpoint and permits direct fallback',async()=>{
- let calls=0;assert.equal(await fetchNationalFeed(data,{clock,fetcher:async(url,options)=>{calls++;assert.match(url,/^https:\/\/data\.riftbuddy\.dpdns\.org\/national\/v1\/latest\.json$/);assert.equal(options.redirect,'error');return new Response('',{status:404});}}),null);assert.equal(calls,1);
+test('unavailable project feed checks only the two fixed public endpoints and permits direct fallback',async()=>{
+ const calls=[];assert.equal(await fetchNationalFeed(data,{clock,fetcher:async(url,options)=>{calls.push(url);assert.equal(options.redirect,'error');return new Response('',{status:404});}}),null);
+ assert.deepEqual(calls,['https://data.riftbuddy.dpdns.org/national/v1/latest.json','https://rift-buddy-data.3-27-57-181.sslip.io/national/v1/latest.json']);
 });
 
 test('a damaged disk signature does not permanently block a newly verified server batch',async t=>{
@@ -119,9 +146,10 @@ test('an older authentic bundle renders immediately while a normal guarded refre
 });
 
 test('the actual bundled national snapshot verifies with the production pin and renders its offline origin',async()=>{
- const envelope=JSON.parse(await fs.readFile(new URL('../data/national-feed.json',import.meta.url))),payload=verifyNationalEnvelope(envelope,data);
- assert.equal(Object.keys(payload.entries).length,3);assert.equal(payload.patch,data.patch);
- const {nationalRankingsView}=await import('../src/national-reference-view.mjs');assert.match(nationalRankingsView(data,{state:{reference:Object.values(payload.entries)[0],bundled:true}}),/内置参考/);
+ const current=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),envelope=JSON.parse(await fs.readFile(new URL('../data/national-feed.json',import.meta.url))),historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.21/game.json',import.meta.url)));
+ assert.throws(()=>verifyNationalEnvelope(envelope,historical),/版本或格式不匹配/);const payload=verifyNationalEnvelope(envelope,current);
+ assert.equal(Object.keys(payload.entries).length,3);assert.equal(payload.patch,current.patch);
+ const {nationalRankingsView}=await import('../src/national-reference-view.mjs');assert.match(nationalRankingsView(current,{state:{reference:Object.values(payload.entries)[0],bundled:true}}),/内置参考/);
 });
 
 test('actual app base acceptance invalidates both completed and in-flight national overlays',async()=>{
@@ -130,8 +158,8 @@ test('actual app base acceptance invalidates both completed and in-flight nation
  for(const pending of [false,true]){
   let generation=1,resolve;const response=new Promise(r=>{resolve=r;}),overlay={innerHTML:'old content',querySelector:()=>true};
   const controller=createNationalReferenceController({request:()=>response,getData:()=>data,getGeneration:()=>generation});let task;if(pending)task=controller.refresh({kind:'build',tier:'emerald_plus',champion:'Yasuo',role:'mid'});
-  const context=vm.createContext({data,nationalDetail:{generation:1,input:{kind:'build',patch:data.patch,tier:'emerald_plus',champion:'Yasuo',role:'mid'}},overlay,dataState:{baseGeneration:()=>generation},nationalState:()=>controller,nationalBuildView,bindPlayerBuildPreferences(){},dataReady:true,recommendationKey:()=>'',recommendationInput:()=>({}),markResultStale(){},cancelRecommendation(){},render(){},buildView:null,queueCompanionRecommendation(){}});
-  vm.runInContext(repaint+'\n'+accept,context);generation=2;context.acceptDataState({data,origin:'remote',baseChanged:true},'');assert.match(overlay.innerHTML,/基础资料已变化/);assert.doesNotMatch(overlay.innerHTML,/核心组合/);
+  const context=vm.createContext({data,nationalDetail:{generation:1,input:{kind:'build',patch:data.patch,tier:'emerald_plus',champion:'Yasuo',role:'mid'}},overlay,dataState:{baseGeneration:()=>generation},nationalState:()=>controller,nationalBuildView,bindPlayerBuildPreferences(){},dataReady:true,recommendationFactoryGeneration:0,results:[],offset:0,resultsSignature:'',recommendationKey:()=>'',recommendationInput:()=>({}),markResultStale(){},cancelRecommendation(){},render(){},buildView:null,queueCompanionRecommendation(){}});
+  vm.runInContext(repaint+'\n'+accept,context);generation=2;context.acceptDataState({data,origin:'remote',baseChanged:true,keys:[]},'');assert.match(overlay.innerHTML,/基础资料已变化/);assert.doesNotMatch(overlay.innerHTML,/核心组合/);
   resolve({reference:null});if(task)await task;assert.match(overlay.innerHTML,/基础资料已变化/);
  }
 });

@@ -1,5 +1,5 @@
-import {escape as e} from './ui.mjs';
-const num=value=>Number.isFinite(value)?value.toLocaleString('zh-CN',{maximumFractionDigits:2}):'未读取';
+import {escape as e,formatNumber} from './ui.mjs';
+const num=value=>Number.isFinite(value)?formatNumber(value,2):'未读取';
 const AXES=Object.freeze([['damage','英雄伤害'],['damageTaken','承受伤害'],['gold','金币'],['cs','补刀'],['kda','KDA'],['kp','参团率'],['heal','治疗']]);
 const finite=value=>Number.isFinite(value)&&value>=0;
 export function historyDamageComposition(participant,kind='damage'){

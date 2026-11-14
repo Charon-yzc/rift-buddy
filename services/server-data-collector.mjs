@@ -12,6 +12,10 @@ import {validReference,validHexReference,compareBuildPatches} from '../src/core/
 import {rankingKey,validRankingReference} from '../src/core/rankings.mjs';
 import {defaultBuildJobs} from '../src/core/default-build-jobs.mjs';
 import {createGenerationRecipe} from './data-generation.mjs';
+import {fetchHexPoolIndex,fetchHexPoolEvidence} from './hex-pool-sources.mjs';
+import {validHexPoolRecord,mergeHexPoolEvidence} from '../src/core/hex-pool-evidence.mjs';
+import {fetchPatchNotes,loadPatchNotes} from './patch-notes.mjs';
+import {preferredPatchNotes,validPatchNotes} from '../src/core/patch-notes.mjs';
 
 const scopes=BUILD_REGIONS.flatMap(region=>BUILD_TIERS.map(tier=>({region:region.id,tier:tier.id})));
 const counts=bundle=>Object.fromEntries(['rankings','builds','hex-builds'].map(name=>[name,Object.keys(bundle[name].entries).length]));
@@ -19,6 +23,7 @@ const errorText=error=>String(error?.message||error).replace(/[\r\n]/g,' ').slic
 
 export async function loadServerSeed(root){
  const game=await loadSnapshot(root);
+ const notes=await loadPatchNotes(root,game);if(notes.patches.length)game.patchNotes=preferredPatchNotes(game,game.patchNotes,notes);
  const [rankings,builds,hex]=await Promise.all([loadRankings([root],game),loadBuildSources([root],game),loadHexBuilds([root],game)]);
  const bundle={game,rankings:{schema:1,entries:rankings},builds:{schema:2,entries:builds},'hex-builds':{schema:1,entries:hex}};
  validateServerData(bundle);return bundle;
@@ -36,7 +41,7 @@ export function serverBuildJobs(bundle,champions=bundle.game.champions){
 // Called under an OS-held flock by the deployment. Every refresh keeps source
 // patch/scope; a new base patch is held back until all ranking scopes validate.
 export async function collectServerData({root,seedRoot,clock=()=>new Date().toISOString(),network=createServerDataFetch(),
- providers={},maxChampions=null,onProgress=()=>{}}){
+ providers={},maxChampions=null,collectHexPools=false,onProgress=()=>{}}){
  if(maxChampions!==null&&(!Number.isInteger(maxChampions)||maxChampions<1))throw Error('采集数量无效');
  const current=await loadServerData(root),previous=current?.bundle||await loadServerSeed(seedRoot);
  let priorStatus={};try{priorStatus=JSON.parse(await fs.readFile(path.join(root,'status.json'),'utf8'));}catch{}
@@ -57,10 +62,25 @@ export async function collectServerData({root,seedRoot,clock=()=>new Date().toIS
   const candidate=await (providers.game||collectSnapshot)(()=>{},game,{readJSON:network.readJSON,recheckVersion:true});
   validateServerGame(candidate);
   const next=candidate.version.split('.').map(Number),old=game.version.split('.').map(Number);
-  if((next[0]-old[0]||next[1]-old[1]||next[2]-old[2])<0||candidate.contentRevision<game.contentRevision)throw Error('拒绝基础资料版本回退');
+  // Content revisions include patch-specific formulas and are comparable only within a patch.
+  if((next[0]-old[0]||next[1]-old[1]||next[2]-old[2])<0||(candidate.patch===game.patch&&candidate.contentRevision<game.contentRevision))throw Error('拒绝基础资料版本回退');
+  // Patch notes are independently rechecked below; a base fetch must not drop
+  // previously verified official records on a same-patch refresh.
+  if(game.patchNotes)candidate.patchNotes=preferredPatchNotes(candidate,candidate.patchNotes,game.patchNotes);
   if(!contentEqual(game,candidate)){game=candidate;base.changed++;}
  }catch(error){fail(base,'game',error);}
  finish(base);
+ const notes=begin('patch-notes',1);notes.optional=true;await checkpoint();
+ let previousNotes=game.patchNotes;
+ try{
+  // Existing server candidates predate this field. Carry the reviewed bundled
+  // history/region annotations into their first real official-page refresh.
+  previousNotes=preferredPatchNotes(game,game.patchNotes,await loadPatchNotes(seedRoot,game));
+  notes.checked++;const incoming=await (providers.patchNotes||fetchPatchNotes)(game,{fetcher:network.fetcher,previous:previousNotes});
+  if(!validPatchNotes(incoming,game)||incoming.patches[0]?.patch!==game.patch)throw Error('官方版本改动未覆盖当前补丁');
+  if(!contentEqual(game.patchNotes,incoming)){game={...game,patchNotes:incoming};notes.changed++;}
+ }catch(error){fail(notes,'patch-notes',error);if(previousNotes)game={...game,patchNotes:{...previousNotes,unavailable:true}};}
+ finish(notes);
  const bundle=compatibleBundle(previous,game);await checkpoint();
  const rankings=begin('rankings',scopes.length);await checkpoint();
  for(const source of scopes){
@@ -94,16 +114,35 @@ export async function collectServerData({root,seedRoot,clock=()=>new Date().toIS
    if(ref.patch!==game.patch||!validHexReference(ref,champion,game))throw Error('海克斯资料版本或英雄不匹配');
    const old=bundle['hex-builds'].entries[champion.id];
    if(old&&compareBuildPatches(ref.patch,old.patch)<0)throw Error('拒绝海克斯资料版本回退');
-   if(!contentEqual(ref,old)){bundle['hex-builds'].entries[champion.id]=ref;hex.changed++;}
+   const next=mergeHexPoolEvidence(ref,old);if(!contentEqual(next,old)){bundle['hex-builds'].entries[champion.id]=next;hex.changed++;}
   }catch(error){fail(hex,champion.id,error);if(['SOURCE_PAUSED','ROUND_LIMIT'].includes(error.code)){hex.skipped=champions.length-hex.checked;break;}}
   if(hex.checked%25===0)await checkpoint();
  }
  if(maxChampions!==null)hex.skipped+=Math.max(0,game.champions.length-champions.length);
  finish(hex);
+ if(collectHexPools){
+  // Supplementary public observations use the same lock/network budgets and
+  // signed Hex file. Their outage must not freeze valid base/build updates.
+  const pools=begin('hex-pools',game.champions.length);pools.optional=true;await checkpoint();
+  try{
+   const index=await (providers.hexPoolIndex||fetchHexPoolIndex)({patch:game.patch,fetcher:network.fetcher});
+   for(const champion of champions){
+    pools.checked++;try{
+     const ref=bundle['hex-builds'].entries[champion.id],slug=index.get(champion.key);
+     if(ref?.patch!==game.patch||!slug)throw Error('缺少同版本英雄来源，保留已有记录');
+     const evidence=await (providers.hexPool||fetchHexPoolEvidence)(champion,{patch:game.patch,slug,fetcher:network.fetcher});
+     if(!validHexPoolRecord(evidence,champion.id,game.patch))throw Error('英雄选取记录不匹配');
+     const next=mergeHexPoolEvidence(ref,{poolEvidence:evidence});if(!contentEqual(next,ref)){bundle['hex-builds'].entries[champion.id]=next;pools.changed++;}
+    }catch(error){fail(pools,champion.id,error);if(['SOURCE_PAUSED','ROUND_LIMIT'].includes(error.code)){pools.skipped=champions.length-pools.checked;break;}}
+    if(pools.checked%25===0)await checkpoint();
+   }
+  }catch(error){fail(pools,'index',error);pools.skipped=champions.length;}
+  if(maxChampions!==null)pools.skipped+=Math.max(0,game.champions.length-champions.length);finish(pools);await checkpoint();
+ }
  try{
   const result=await stageServerData(root,bundle,{expectedRelease:current?.pointer.release||null,clock});
   status.release=result.pointer.release;status.changed=result.changed;status.coverage=counts(result.bundle);
-  status.state=maxChampions!==null||status.generationError||Object.values(status.datasets).some(state=>state.state!=='ok')?'partial':'ok';
+  status.state=maxChampions!==null||status.generationError||Object.values(status.datasets).some(state=>!state.optional&&state.state!=='ok')?'partial':'ok';
  }catch(error){status.state='failed';status.error=errorText(error);}
  status.checkedAt=clock();await checkpoint();return status;
 }

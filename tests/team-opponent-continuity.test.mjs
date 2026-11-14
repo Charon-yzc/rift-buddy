@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -12,8 +13,8 @@ import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {companionPlanView} from '../src/companion-view.mjs';
 
-const data=JSON.parse(await fs.readFile('data/game.json'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const graph=createCooperationGraph(data.champions);
 function planFor(members){
  const slots=createSlots().map(slot=>{
@@ -87,7 +88,7 @@ test('the sidebar and restored guide share the selected team order and lose with
  const guide=prepareGuideOpponent(selectGuide(null,selection),selection,'Janna',{gameId:'3201',enemyIds:['Janna']});
  const restored=validateGuideState(JSON.parse(JSON.stringify({...guide,stage:'key'})));
  const live={available:true,champion:'Syndra',mode:'rift',mapId:11,queueId:420,at:Date.now(),level:7,gold:800,gameTime:900,inventory:[],skills:{Q:3,W:1,E:1,R:0},enemies:[{id:'Janna',name:'迦娜',level:7,items:[],itemsKnown:true}],allies:[]};
- const model=createGuideModel(data,restored,live),html=renderGuide({model},'team',false,()=>'<img>');
+ const model=createGuideModel(data,restored,live),html=heroCoachView(model.coach);
  assert.equal(model.coach.matchup.enemy.id,'Janna');
  assert.deepEqual(model.coach.unlearned,[]);
  for(const step of saved.steps)assert.ok(model.coach.sequence.includes(step)&&html.includes(step));

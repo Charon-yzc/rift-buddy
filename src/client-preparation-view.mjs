@@ -3,9 +3,11 @@ import {escape as e,button} from './ui.mjs';
 import {champSelectGameId} from './core/rune-context.mjs';
 
 export function clientPreparationPlan(data,plan){
- if(!plan||plan.selection.mode!=='rift'||!plan.build.runePage)return null;
+ if(!plan||plan.selection.mode!=='rift'&&!(plan.selection.mode==='hex'&&plan.selection.preselectOnly!==false))return null;
  const {selection:s,build:b}=plan,champion=data.champions.find(c=>c.id===s.id);
  if(!champion)return null;
+ if(s.mode==='hex')return {hexHover:true,value:{champion:s.id,mode:'hex',preselectOnly:true},fingerprint:JSON.stringify([s.id,'hex','hover-only'])};
+ if(!plan.build.runePage)return null;
  const value={champion:s.id,role:s.role,mode:s.mode,page:structuredClone(b.runePage),summoners:[...b.summoners],preserveFlashSlot:!['d','f'].includes(data.flashSlot),itemSet:createItemSet(champion,b,data)};
  return {value,fingerprint:JSON.stringify([value,b.skillOrder,b.first,b.priority,s.comboId||''])};
 }

@@ -1,0 +1,5700 @@
+{
+ "schema": 2,
+ "patch": "16.21",
+ "scope": "hex-public-bench-base-kit",
+ "reviewedAt": "2026-10-22",
+ "basis": "Current Data Dragon P/QWER text and complete tooltips, with disputed character fields checked separately. Full character hashes pin reviewed inputs; this is not a full-script correctness certification. Pending fields never imply absence. Conditions describe potential base-kit tools, not ready spells or team strength.",
+ "definitions": {
+  "frontline": "近身防御或近战续战手段；不以数量衡量主坦强度",
+  "engage": "主动接触留人工具；被动、形态、标记及就绪条件仍须满足",
+  "peel": "直接友军治疗/护盾/防御或专门阻断、隔离威胁；普通硬控不自动双计",
+  "sustain": "技能/被动支持的普攻循环、短周期或持续伤害；普通无加成普攻和回血不独立证明",
+  "poke": "不必本人贴身投入的远程命中消耗，仍有射程、目标和站位条件"
+ },
+ "champions": {
+  "Aatrox": "704fae1c4fa3f868",
+  "Ahri": "bde1d83c334a89af",
+  "Akali": "f0307e458639e894",
+  "Akshan": "d87d64a4b0fce5f0",
+  "Alistar": "e2aa1310b144ff1f",
+  "Ambessa": "3ca2d90676f07976",
+  "Amumu": "958a576cfa8191dd",
+  "Anivia": "52343f9ffaa815a9",
+  "Annie": "4cdab07f3ab9d0c4",
+  "Aphelios": "a16a2bc3afe40b1c",
+  "Ashe": "f363e1846cfe0370",
+  "AurelionSol": "0feb05c65d40708e",
+  "Aurora": "c92013de35c40185",
+  "Azir": "02bb8bad1b6571dc",
+  "Bard": "59e4186e87276c5f",
+  "Belveth": "0a1b79cfb9f31b5e",
+  "Blitzcrank": "27f6b75f8d6eeb18",
+  "Brand": "dfe0f7f6ef8e7e6e",
+  "Braum": "ae3aa48403ffcbe5",
+  "Briar": "c27bce7ec0937640",
+  "Caitlyn": "d19bdcd858382502",
+  "Camille": "d8925ce8a69d2250",
+  "Cassiopeia": "74ace7fa9d54e0e4",
+  "Chogath": "1d4374b6281eb0e1",
+  "Corki": "bf698b12d7779645",
+  "Darius": "d9caeab82e4a949f",
+  "Diana": "0c1ee1b395e630d3",
+  "Draven": "6e70cb90d9331e71",
+  "DrMundo": "4f965c27d85177a6",
+  "Ekko": "d17ece4a263656b8",
+  "Elise": "5429cb162ef90291",
+  "Evelynn": "12dfa2ca186e0f5a",
+  "Ezreal": "c2201358b91fa06b",
+  "Fiddlesticks": "a90e07bce987ea67",
+  "Fiora": "f06589f734c844bf",
+  "Fizz": "3f7ce07d9dc8e9a7",
+  "Galio": "62214853523131ad",
+  "Gangplank": "a95425b6c963e756",
+  "Garen": "da16a590f3304db3",
+  "Gnar": "52048713e2c4916d",
+  "Gragas": "5703c0be06b9ebf2",
+  "Graves": "ea75172ee2199edb",
+  "Gwen": "94ed9252d63745ca",
+  "Hecarim": "f9c4c9b8aea59e68",
+  "Heimerdinger": "0b504cfaed10dfb6",
+  "Hwei": "357b22785623158b",
+  "Illaoi": "ba605a46a85c0de4",
+  "Irelia": "1a72d78b2846711a",
+  "Ivern": "f4b498c5991475d6",
+  "Janna": "174e8cfdc4e26ceb",
+  "JarvanIV": "c9d96bc727699c9b",
+  "Jax": "1776e83d7e3a24c7",
+  "Jayce": "0fdfa691d0af2471",
+  "Jhin": "226e6c11b8a992f5",
+  "Jinx": "98d589f2c16be412",
+  "Kaisa": "792e7d85c3acdc09",
+  "Kalista": "1793244f0dc8a65c",
+  "Karma": "36385f1555005577",
+  "Karthus": "c1de84b19ac00ffe",
+  "Kassadin": "a4049833b3044fcc",
+  "Katarina": "98848fc7138b49b3",
+  "Kayle": "24bd683389a6d92b",
+  "Kayn": "b84a81ee9773b8f5",
+  "Kennen": "acea9254a0f94a5c",
+  "Khazix": "38a8021ce6d0bb36",
+  "Kindred": "b089b055eca4104f",
+  "Kled": "2c036fdf669b6aa1",
+  "KogMaw": "ba006aa34e05e235",
+  "KSante": "7aff85aec07e75db",
+  "Leblanc": "7c6be3d94aa080db",
+  "LeeSin": "f9459e15e5d6deca",
+  "Leona": "2b7d4e998553b365",
+  "Lillia": "5abf3f00c1f24aac",
+  "Lissandra": "599da97edcf817b9",
+  "Locke": "ac4fe776c9f85034",
+  "Lucian": "cd773946a58860de",
+  "Lulu": "5f5091380ca45272",
+  "Lux": "50314ad04c92f1a6",
+  "Malphite": "1cef2e2fdec84d8d",
+  "Malzahar": "573be40165ebd14c",
+  "Maokai": "e196429fdd9138f9",
+  "MasterYi": "035280b4b46c8b34",
+  "Mel": "005f11b8be4651c1",
+  "Milio": "9176ff8b22c1f1c9",
+  "MissFortune": "10b496d2ce7c344d",
+  "MonkeyKing": "d8e1f17e61bc6c8d",
+  "Mordekaiser": "fcf2ef1cfc551e84",
+  "Morgana": "e0588c7ab7dba463",
+  "Naafiri": "490e0d502915c350",
+  "Nami": "b10366f1187813b9",
+  "Nasus": "874ad429f86eeb0b",
+  "Nautilus": "67da151a84906467",
+  "Neeko": "d6f4984cd7330b72",
+  "Nidalee": "e54aff9035f36827",
+  "Nilah": "30e5ef1b4f79390e",
+  "Nocturne": "2759f235cb713880",
+  "Nunu": "8f44e57080d4e3bf",
+  "Olaf": "71e89d2c6166e5dc",
+  "Orianna": "6897daa00a80bf73",
+  "Ornn": "aec2b0070700de64",
+  "Pantheon": "ade6cc95e4c6b966",
+  "Poppy": "af33a45e62ad30e5",
+  "Pyke": "750b7cf6d1187481",
+  "Qiyana": "ae1343f33f784408",
+  "Quinn": "96eaff1d877b5c1a",
+  "Rakan": "69d7edc48cac55e5",
+  "Rammus": "f1863a22e11c5376",
+  "RekSai": "d32c8960fd032e39",
+  "Rell": "bec49be1ddcf29c0",
+  "Renata": "040340652360d067",
+  "Renekton": "5a98c4b4b1f08e37",
+  "Rengar": "37409a7c0d60e8e8",
+  "Riven": "250743f905f1d048",
+  "Rumble": "8a349d0b8197b1d4",
+  "Ryze": "b4f669f0eec5ae8a",
+  "Samira": "fb97a340c89c0ba1",
+  "Sejuani": "1d8d94f1d8414573",
+  "Senna": "5e547c9cf10f2a05",
+  "Seraphine": "18e4440868d92eb5",
+  "Sett": "76c5b480536d4f6c",
+  "Shaco": "ea2b12296434e0e4",
+  "Shen": "e59438000b98dd56",
+  "Shyvana": "49c78c78a1f500be",
+  "Singed": "65d32cdacd60176e",
+  "Sion": "0852586a5d53c2bc",
+  "Sivir": "6c42062d13c38ce6",
+  "Skarner": "a7d61444d5300266",
+  "Smolder": "5f9af800584064ad",
+  "Sona": "2313d851c59e6f93",
+  "Soraka": "46ec394f508ebcc0",
+  "Swain": "2df9ea554c5ac91d",
+  "Sylas": "d74306dcea26b698",
+  "Syndra": "6fd0f8bd70c981dd",
+  "TahmKench": "9635271a9add58c5",
+  "Taliyah": "164392e23c74360e",
+  "Talon": "803d6527b92e969a",
+  "Taric": "d7034e2662bef2b0",
+  "Teemo": "b29454e3375baf8c",
+  "Thresh": "766a02f3f37aa314",
+  "Tristana": "931894a6ac7e80f4",
+  "Trundle": "63bbe05e19260ce3",
+  "Tryndamere": "9990ba943e8299c8",
+  "TwistedFate": "4b3a9807b94dcc47",
+  "Twitch": "ab3e76d629cf2787",
+  "Udyr": "fdaba836f9c37b70",
+  "Urgot": "42adf07c563030c7",
+  "Varus": "643e042201703827",
+  "Vayne": "0287a9893e0d8431",
+  "Veigar": "b0c876605f73d7f8",
+  "Velkoz": "4fc6f59617324dce",
+  "Vex": "9302ca0521a22970",
+  "Vi": "ed4ccc20b476dc0e",
+  "Viego": "61185e81ee691f67",
+  "Viktor": "0bd74fc675981fd6",
+  "Vladimir": "1b5e1102e29e8138",
+  "Volibear": "bf39a7d23077a7fc",
+  "Warwick": "782fd9ea17e96a22",
+  "Xayah": "6218a12d2240d28e",
+  "Xerath": "c6bf3b1c613437cd",
+  "XinZhao": "a57e1ed1962c6064",
+  "Yasuo": "d36ebea001e3d1cb",
+  "Yone": "9f3493c27921664f",
+  "Yorick": "d0022b1425908bc9",
+  "Yunara": "01aaf8a5e404cd88",
+  "Yuumi": "74372983c2c1dbfe",
+  "Zaahen": "747e69d1f5137702",
+  "Zac": "79df9b9e7571e89c",
+  "Zed": "ca93141fef21a473",
+  "Zeri": "e4b5046a1a9b42bb",
+  "Ziggs": "301986c8fed3e8fb",
+  "Zilean": "60f40731a1259a4a",
+  "Zoe": "d218618e341a560e",
+  "Zyra": "f653495a90d1586e"
+ },
+ "sourceAnchors": {
+  "Aatrox": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "704fae1c4fa3f868",
+   "observedAt": "2026-10-21T19:28:20.236Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Aatrox",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/aatrox/aatrox.bin.json",
+     "sha256": "2533012e5717496209662d782b1902695745760c672771435459c8624f3ac7eb"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "083fc08a4cfd49b6"
+    }
+   }
+  },
+  "Ahri": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "bde1d83c334a89af",
+   "observedAt": "2026-10-21T19:28:20.239Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Ahri",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/ahri/ahri.bin.json",
+     "sha256": "7c53539d053f4bc18d564247c1bf33cd969637e151b5409fd23476a5a5c3598c"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e4656df5a2cc81d8"
+    }
+   }
+  },
+  "Akali": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "f0307e458639e894",
+   "observedAt": "2026-10-21T19:28:20.241Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Akali",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/akali/akali.bin.json",
+     "sha256": "2d5e2719d766f7bdb80b728c3136d0e825f0349c24cc2087c14cf7a4cfbdd0db"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e49ef2d9ffbe30e3"
+    }
+   }
+  },
+  "Akshan": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d87d64a4b0fce5f0",
+   "observedAt": "2026-10-21T19:28:20.242Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Akshan",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/akshan/akshan.bin.json",
+     "sha256": "62c42c8027551a913e166ddb76b134e19861193ae8a8c3a566d917f1b2f8d4fa"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "80b17a17f25ba06f"
+    }
+   }
+  },
+  "Alistar": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "e2aa1310b144ff1f",
+   "observedAt": "2026-10-21T19:28:20.243Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Alistar",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+     "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "60b70b49d6326ac5"
+    }
+   }
+  },
+  "Ambessa": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "3ca2d90676f07976",
+   "observedAt": "2026-10-21T19:28:20.244Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Ambessa",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/ambessa/ambessa.bin.json",
+     "sha256": "05bf908cc051ed70faa408c123c7ef82471cbc8a9cebbedecb54f73ca583bf02"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "da82e5dfac78f49d"
+    }
+   }
+  },
+  "Amumu": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "958a576cfa8191dd",
+   "observedAt": "2026-10-21T19:28:20.327Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Amumu",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/amumu/amumu.bin.json",
+     "sha256": "32ae8f1ffe870b3a94dd62e285bf7b2dedca0cc730abeabccf197d56f5174de3"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "8166548fe1af8c89"
+    }
+   }
+  },
+  "Anivia": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "52343f9ffaa815a9",
+   "observedAt": "2026-10-21T19:28:20.329Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Anivia",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/anivia/anivia.bin.json",
+     "sha256": "c0a7fec988a4af4386b82c5eca35a7c895461a4c30f6af5bb772f199387eef79"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "d7796f24d403cc8c"
+    }
+   }
+  },
+  "Annie": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "4cdab07f3ab9d0c4",
+   "observedAt": "2026-10-21T19:28:20.330Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Annie",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/annie/annie.bin.json",
+     "sha256": "639eb1e2a65e1fccac7797899348741f46f0b8fe1be6e39a0e67810c89721af7"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e388b73359b4c909"
+    }
+   }
+  },
+  "Aphelios": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "a16a2bc3afe40b1c",
+   "observedAt": "2026-10-21T19:28:20.331Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Aphelios",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/aphelios/aphelios.bin.json",
+     "sha256": "74327859d80e03b1654258c4ba2a2bc609dfcfece0b3fc9d7cb0b35d4140e8df"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "ac55a790c915bb91"
+    }
+   }
+  },
+  "Ashe": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "f363e1846cfe0370",
+   "observedAt": "2026-10-21T19:28:20.333Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Ashe",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json",
+     "sha256": "ada00af1ea15a42094a914a05794e0d3cedcb66c150ed52e8d3762b8d12dc6b5"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "1ab1be4161ebeecc"
+    }
+   }
+  },
+  "AurelionSol": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "0feb05c65d40708e",
+   "observedAt": "2026-10-21T19:28:20.334Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "AurelionSol",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/aurelionsol/aurelionsol.bin.json",
+     "sha256": "48b613586dd4d13d04c49140758eac0c5183fef0e615b4b5b1a653411fce7f93"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "1e1ed30a0f63af68"
+    }
+   }
+  },
+  "Aurora": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "c92013de35c40185",
+   "observedAt": "2026-10-21T19:28:20.336Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Aurora",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/aurora/aurora.bin.json",
+     "sha256": "795eccab2dfff3eb7104c81f79d051569d84efe19b41a9ab658ed6f4a08286b8"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "88d81f500bbc1c61"
+    }
+   }
+  },
+  "Azir": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "02bb8bad1b6571dc",
+   "observedAt": "2026-10-21T19:28:20.337Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Azir",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/azir/azir.bin.json",
+     "sha256": "c22a74e9c46802c23c74a73e371532d530b94f8eda10f1e53467adee0fd73b28"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "412209156e395c06"
+    }
+   }
+  },
+  "Bard": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "59e4186e87276c5f",
+   "observedAt": "2026-10-21T19:28:20.338Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Bard",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/bard/bard.bin.json",
+     "sha256": "4b73426120b4a794709001352620eeb7b5644f1b7c78d674aee68a5e2b0ac692"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "20f447261a6d2716"
+    }
+   }
+  },
+  "Belveth": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "0a1b79cfb9f31b5e",
+   "observedAt": "2026-10-21T19:28:20.340Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Belveth",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/belveth/belveth.bin.json",
+     "sha256": "a9dd6c8d6e94e2b0ff1f97576fba4c833792d70c9d19ecc36a6e0a6b9b1108be"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "0e180db7dbc7f653"
+    }
+   }
+  },
+  "Blitzcrank": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "27f6b75f8d6eeb18",
+   "observedAt": "2026-10-21T19:28:20.340Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Blitzcrank",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/blitzcrank/blitzcrank.bin.json",
+     "sha256": "f97fb1c78233b7a9d86c8e48e8f79f45bdfcf9a4357e72cc0ee312982d0fffb1"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "420c31b55a789119"
+    }
+   }
+  },
+  "Brand": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "dfe0f7f6ef8e7e6e",
+   "observedAt": "2026-10-21T19:28:20.340Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Brand",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/brand/brand.bin.json",
+     "sha256": "6fa48fcc58833650750981e3f64657fdd6ba8392741ee11947fd48d6a7da96d4"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "12112af12e321441"
+    }
+   }
+  },
+  "Braum": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ae3aa48403ffcbe5",
+   "observedAt": "2026-10-21T19:28:20.341Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Braum",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+     "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e136059064aa1034"
+    }
+   }
+  },
+  "Briar": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "c27bce7ec0937640",
+   "observedAt": "2026-10-21T19:28:20.341Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Briar",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/briar/briar.bin.json",
+     "sha256": "fed8d84d514e5621b05992dbc96057c5a43dda2a92e2142bb964871e7fae18ee"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "a56183c54c52c784"
+    }
+   }
+  },
+  "Caitlyn": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d19bdcd858382502",
+   "observedAt": "2026-10-21T19:28:20.341Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Caitlyn",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+     "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "6c728252e5826813"
+    }
+   }
+  },
+  "Camille": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d8925ce8a69d2250",
+   "observedAt": "2026-10-21T19:28:20.342Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Camille",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/camille/camille.bin.json",
+     "sha256": "032045fc45a37b5c7e01084660a1e374e98463d64bfbfb16238213f44a028907"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "67751120f662608d"
+    }
+   }
+  },
+  "Cassiopeia": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "74ace7fa9d54e0e4",
+   "observedAt": "2026-10-21T19:28:20.342Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Cassiopeia",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/cassiopeia/cassiopeia.bin.json",
+     "sha256": "57e4216d0882399f0a68f8087cab824c7ae331040c9a6e74cf7ab6379e69c737"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "328eb9f058249ee8"
+    }
+   }
+  },
+  "Chogath": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "1d4374b6281eb0e1",
+   "observedAt": "2026-10-21T19:28:20.343Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Chogath",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/chogath/chogath.bin.json",
+     "sha256": "b30a18292e6b5e093bcb556dcef07ef1e45015830678d4ddff41de95cbca70de"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "1a863670bec3f963"
+    }
+   }
+  },
+  "Corki": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "bf698b12d7779645",
+   "observedAt": "2026-10-21T19:28:20.343Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Corki",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/corki/corki.bin.json",
+     "sha256": "2738a7906a0e91d1c8f35f29cffc3263697cbe4777c9fc0661d872592ae76b8b"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "67e76fae7d2c0a44"
+    }
+   }
+  },
+  "Darius": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d9caeab82e4a949f",
+   "observedAt": "2026-10-21T19:28:20.343Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Darius",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/darius/darius.bin.json",
+     "sha256": "ddd4ad4cea2c3bd6c26655dfd54e9641084640bb43a7d13a1aade572e442db6e"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "0051a3ebe3cd3a71"
+    }
+   }
+  },
+  "Diana": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "0c1ee1b395e630d3",
+   "observedAt": "2026-10-21T19:28:20.344Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Diana",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/diana/diana.bin.json",
+     "sha256": "fb9d9bc84621daf0df393c08c655f8798c75baecc7bd6f871867126813e4925f"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "d9313d8c48c88394"
+    }
+   }
+  },
+  "Draven": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "6e70cb90d9331e71",
+   "observedAt": "2026-10-21T19:28:20.344Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Draven",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/draven/draven.bin.json",
+     "sha256": "530f1eee4e7bfe9fbe6dc5ba9711aad33f15e3dd9dc81378e217a090fc319747"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "b7e878515739012b"
+    }
+   }
+  },
+  "DrMundo": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "4f965c27d85177a6",
+   "observedAt": "2026-10-21T19:28:20.344Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "DrMundo",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/drmundo/drmundo.bin.json",
+     "sha256": "fbd58123cf7f38d552b6b877dc5f4dafc0e7b24178cfe7a8f56152affc1b5d92"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "6541b61e26cdad84"
+    }
+   }
+  },
+  "Ekko": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d17ece4a263656b8",
+   "observedAt": "2026-10-21T19:28:20.350Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Ekko",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/ekko/ekko.bin.json",
+     "sha256": "cc5b259955ce7c0062fb8a1e38e742b587f0f10a70c91945ccc62b2db7a14fc5"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "d146dbafe0178dc0"
+    }
+   }
+  },
+  "Elise": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "5429cb162ef90291",
+   "observedAt": "2026-10-21T19:28:20.351Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Elise",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/elise/elise.bin.json",
+     "sha256": "8a721ee2df45d859bc047662d4283847469f95ce62595a3a2e97f30390e52a55"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "000ddd3584c2cf29"
+    }
+   }
+  },
+  "Evelynn": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "12dfa2ca186e0f5a",
+   "observedAt": "2026-10-21T19:28:20.351Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Evelynn",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/evelynn/evelynn.bin.json",
+     "sha256": "9971035ec98da0adfcce81a28c328b10ee3d01c762ad12a581671eac7723edca"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "64e1ac3ea9bf1e8e"
+    }
+   }
+  },
+  "Ezreal": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "c2201358b91fa06b",
+   "observedAt": "2026-10-21T19:28:20.351Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Ezreal",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/ezreal/ezreal.bin.json",
+     "sha256": "017fe85cc1493ac674d9ff34600edfa48ec7af0f20cde53c12f184ea6d6b40a1"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "6b1155906c9a8a0b"
+    }
+   }
+  },
+  "Fiddlesticks": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "a90e07bce987ea67",
+   "observedAt": "2026-10-21T19:28:20.352Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Fiddlesticks",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/fiddlesticks/fiddlesticks.bin.json",
+     "sha256": "793263c23ecb6dce3269d629270c0303777b8cb44b31f399fb20ba734fcc34e3"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "fcdd8d135bbf747f"
+    }
+   }
+  },
+  "Fiora": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "f06589f734c844bf",
+   "observedAt": "2026-10-21T19:28:20.352Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Fiora",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/fiora/fiora.bin.json",
+     "sha256": "090506b4d3dd2d7319a8f915c4ab60b8055f06d2335fe8fb5124df6b6561e25c"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "f93af67e3da46305"
+    }
+   }
+  },
+  "Fizz": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "3f7ce07d9dc8e9a7",
+   "observedAt": "2026-10-21T19:28:20.352Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Fizz",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/fizz/fizz.bin.json",
+     "sha256": "bedd278c3c76bbf521274692f82e575dcc56e8b74be879c3cd5c6823913f5009"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "ee9d07be39d28ab9"
+    }
+   }
+  },
+  "Galio": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "62214853523131ad",
+   "observedAt": "2026-10-21T19:28:20.353Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Galio",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+     "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e3a8cfa71c0b2970"
+    }
+   }
+  },
+  "Gangplank": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "a95425b6c963e756",
+   "observedAt": "2026-10-21T19:28:20.353Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Gangplank",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/gangplank/gangplank.bin.json",
+     "sha256": "5a232d6960866995f2ecaa20479a2ab6357adc50edc60e5f22d50abb3060f67c"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "7b9ddd39cfa14347"
+    }
+   }
+  },
+  "Garen": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "da16a590f3304db3",
+   "observedAt": "2026-10-21T19:28:20.353Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Garen",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/garen/garen.bin.json",
+     "sha256": "1f70b1e66d622e433606d551b6f23f5d170deba6dc4347ddff88fa9e6053a710"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "63254cd43dff2e1d"
+    }
+   }
+  },
+  "Gnar": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "52048713e2c4916d",
+   "observedAt": "2026-10-21T19:28:20.354Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Gnar",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/gnar/gnar.bin.json",
+     "sha256": "cc87c8f64a6e0ee34a67523558951c142fa411d519625fbbf2a9f4af34a8f270"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "eaa8e8b3d5cb0bd6"
+    }
+   }
+  },
+  "Gragas": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "5703c0be06b9ebf2",
+   "observedAt": "2026-10-21T19:28:20.426Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Gragas",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/gragas/gragas.bin.json",
+     "sha256": "5b7a63175a2c0e545c74b391cf34237baa809689ccb1b126250ff7d243b5148d"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "34e130a71102aad7"
+    }
+   }
+  },
+  "Graves": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ea75172ee2199edb",
+   "observedAt": "2026-10-21T19:28:20.426Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Graves",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/graves/graves.bin.json",
+     "sha256": "9b4618aabfaf278a604ee9a59972ea4650d42aa659039f3314a110a748351e2a"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "177b5090af77b3cf"
+    }
+   }
+  },
+  "Gwen": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "94ed9252d63745ca",
+   "observedAt": "2026-10-21T19:28:20.426Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Gwen",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/gwen/gwen.bin.json",
+     "sha256": "fde56c4e7aef9c24c89959e4a94e35d9456ced213d8589f6dbb12e0fc26ecb04"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "f5954f9fcb6d02f3"
+    }
+   }
+  },
+  "Hecarim": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "f9c4c9b8aea59e68",
+   "observedAt": "2026-10-21T19:28:20.427Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Hecarim",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/hecarim/hecarim.bin.json",
+     "sha256": "8107a10cc214af38a79ff9f0551fd3a8c77231a1998aeda6f8b5a6c0bf8a4dc1"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "2a4e6af555abb6c6"
+    }
+   }
+  },
+  "Heimerdinger": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "0b504cfaed10dfb6",
+   "observedAt": "2026-10-21T19:28:20.427Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Heimerdinger",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/heimerdinger/heimerdinger.bin.json",
+     "sha256": "0e859b836f961615d2c7690d2e7e9cba20019129714daf84f53dd92d59291123"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "a42663f5aae5af9c"
+    }
+   }
+  },
+  "Hwei": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "357b22785623158b",
+   "observedAt": "2026-10-21T19:28:20.427Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Hwei",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/hwei/hwei.bin.json",
+     "sha256": "432285db911de128098ca01317bc135933fba477da091654a7742f23c754ae04"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "5220abe71b75d212"
+    }
+   }
+  },
+  "Illaoi": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ba605a46a85c0de4",
+   "observedAt": "2026-10-21T19:28:20.428Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Illaoi",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/illaoi/illaoi.bin.json",
+     "sha256": "444d120e7d535c864fbd6559d2eab012415ab7be0b68af28ca8f5bc6e69baf67"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "39a403ddae7730f5"
+    }
+   }
+  },
+  "Irelia": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "1a72d78b2846711a",
+   "observedAt": "2026-10-21T19:28:20.428Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Irelia",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/irelia/irelia.bin.json",
+     "sha256": "7b55cefdb6738c5eca5e2b6fd076f4eba3d4f0c97ef11a99eed4e1c7102f3f51"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "44842f520e22c165"
+    }
+   }
+  },
+  "Ivern": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "f4b498c5991475d6",
+   "observedAt": "2026-10-21T19:28:20.428Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Ivern",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/ivern/ivern.bin.json",
+     "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "a8c07de58a4e8f6d"
+    }
+   }
+  },
+  "Janna": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "174e8cfdc4e26ceb",
+   "observedAt": "2026-10-21T19:28:20.429Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Janna",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/janna/janna.bin.json",
+     "sha256": "4cec640827c538d66a8dba07f2330b0d11a6749bdbf85691628f6a2fd08320cf"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "59f8d2d99e76564e"
+    }
+   }
+  },
+  "JarvanIV": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "c9d96bc727699c9b",
+   "observedAt": "2026-10-21T19:28:20.429Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "JarvanIV",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/jarvaniv/jarvaniv.bin.json",
+     "sha256": "6dfa4b87b045841df8ae4ffb982baf6308b5b5e34108ed8cfd3ae73141f9d141"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "62ea4f1e9467d2b7"
+    }
+   }
+  },
+  "Jax": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "1776e83d7e3a24c7",
+   "observedAt": "2026-10-21T19:28:20.429Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Jax",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/jax/jax.bin.json",
+     "sha256": "ef33ab080cbdbb35cabda5172f687bcba9d7e2c49c62cf9c7e4cfe8903d27f28"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "bfaaae4c0ee698a4"
+    }
+   }
+  },
+  "Jayce": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "0fdfa691d0af2471",
+   "observedAt": "2026-10-21T19:28:20.429Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Jayce",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/jayce/jayce.bin.json",
+     "sha256": "d2abb137e1bb08081dc488651c00c70e8a4e5b604d370765d615b8f4c6bd52b5"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "cc14b04ba18aeb5e"
+    }
+   }
+  },
+  "Jhin": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "226e6c11b8a992f5",
+   "observedAt": "2026-10-21T19:28:20.430Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Jhin",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
+     "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "3aaa1bcaed04d760"
+    }
+   }
+  },
+  "Jinx": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "98d589f2c16be412",
+   "observedAt": "2026-10-21T19:28:20.430Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Jinx",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/jinx/jinx.bin.json",
+     "sha256": "5ca25fc97c2da4874b88de6faec7dcfd5ea991b8edd1773d9a2cb9ecd5b2091f"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "18a489971bd9889a"
+    }
+   }
+  },
+  "Kaisa": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "792e7d85c3acdc09",
+   "observedAt": "2026-10-21T19:28:20.430Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Kaisa",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+     "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e793368118ed867a"
+    }
+   }
+  },
+  "Kalista": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "1793244f0dc8a65c",
+   "observedAt": "2026-10-21T19:28:20.431Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Kalista",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/kalista/kalista.bin.json",
+     "sha256": "d9745c7fdf99f1ec7baded98bba9547e6b6f0a9ec604edce4f88f0dbdfe30b39"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "44f72f75e4385140"
+    }
+   }
+  },
+  "Karma": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "36385f1555005577",
+   "observedAt": "2026-10-21T19:28:20.431Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Karma",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/karma/karma.bin.json",
+     "sha256": "7b6328b43d94f80ea6eec0998d8f81d9e54f3f8c6bb7a37a12ebbd04d569bcf5"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "1f2620463bdb38d1"
+    }
+   }
+  },
+  "Karthus": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "c1de84b19ac00ffe",
+   "observedAt": "2026-10-21T19:28:20.431Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Karthus",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/karthus/karthus.bin.json",
+     "sha256": "b4ac31106c87eec4085d1e93d37f54357a0dc5bbffd92b2fc08a4ab4c1dd8dfc"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "74e873421db425cc"
+    }
+   }
+  },
+  "Kassadin": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "a4049833b3044fcc",
+   "observedAt": "2026-10-21T19:28:20.432Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Kassadin",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/kassadin/kassadin.bin.json",
+     "sha256": "0e1403e5655c55ce0b156d7293ca7a9b67e4d059cc921397736cfb5b47222e82"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "a24da5c05e98cd5a"
+    }
+   }
+  },
+  "Katarina": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "98848fc7138b49b3",
+   "observedAt": "2026-10-21T19:28:20.432Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Katarina",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/katarina/katarina.bin.json",
+     "sha256": "6cf261f42c08dc7cad52bbaf91309e1db259836d265ec0fe8a833d6f8bec2360"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "4e7c2f4db28dab8c"
+    }
+   }
+  },
+  "Kayle": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "24bd683389a6d92b",
+   "observedAt": "2026-10-21T19:28:20.432Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Kayle",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/kayle/kayle.bin.json",
+     "sha256": "c1e9422851c8d29227427f204b92d005a842e9c1685ee491a9193c64bc82eef3"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "3fa2585bed59105f"
+    }
+   }
+  },
+  "Kayn": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "b84a81ee9773b8f5",
+   "observedAt": "2026-10-21T19:28:20.432Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Kayn",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/kayn/kayn.bin.json",
+     "sha256": "f196227faf9a2beb0d83b298636769eeb5465dd015f5397ac0139bad8f43e586"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "b01cec8dfc64f2f8"
+    }
+   }
+  },
+  "Kennen": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "acea9254a0f94a5c",
+   "observedAt": "2026-10-21T19:28:20.433Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Kennen",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/kennen/kennen.bin.json",
+     "sha256": "1f304430b94732440506d967be3a786532dbcfb840ef8e08c76200f74f6f8553"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "8217ba3a90c36528"
+    }
+   }
+  },
+  "Khazix": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "38a8021ce6d0bb36",
+   "observedAt": "2026-10-21T19:28:20.433Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Khazix",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/khazix/khazix.bin.json",
+     "sha256": "a879eab089e0f2a823065a04c4d8766b97acce378447ddae1cefec4621f17c7d"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "489aef7095c0a316"
+    }
+   }
+  },
+  "Kindred": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "b089b055eca4104f",
+   "observedAt": "2026-10-21T19:28:20.433Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Kindred",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/kindred/kindred.bin.json",
+     "sha256": "c9ad94593cde53e26f5382a09be44bed274f4ec29a63fedd51500aecaa852c85"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "70b671b76c9f1fba"
+    }
+   }
+  },
+  "Kled": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "2c036fdf669b6aa1",
+   "observedAt": "2026-10-21T19:28:20.434Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Kled",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/kled/kled.bin.json",
+     "sha256": "513484b68eee2ba7306bb3cfa4ee4fdfb2040eff55d9b0aeba2d4bb31f9689f3"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e1d98c79d5420cac"
+    }
+   }
+  },
+  "KogMaw": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ba006aa34e05e235",
+   "observedAt": "2026-10-21T19:28:20.434Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "KogMaw",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/kogmaw/kogmaw.bin.json",
+     "sha256": "2b7676bd783ef9d58380c1f10aefff5546e71946ba21c91bd44980befeb0376c"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "ad3707a256c213e5"
+    }
+   }
+  },
+  "KSante": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "7aff85aec07e75db",
+   "observedAt": "2026-10-21T19:28:20.434Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "KSante",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/ksante/ksante.bin.json",
+     "sha256": "e02f140f4c0d4528cfbea56ca70e7098fcab424821ec03f93e56fb63f93bb91e"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "b9823f303cf354fa"
+    }
+   }
+  },
+  "Leblanc": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "7c6be3d94aa080db",
+   "observedAt": "2026-10-21T19:28:20.435Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Leblanc",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/leblanc/leblanc.bin.json",
+     "sha256": "889d0275962fac17c4c8ce0536d4930548acabccfe0a122f7fe979a6e1f9d357"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "4b02fbdb42c5987e"
+    }
+   }
+  },
+  "LeeSin": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "f9459e15e5d6deca",
+   "observedAt": "2026-10-21T19:28:20.435Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "LeeSin",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/leesin/leesin.bin.json",
+     "sha256": "dedb71d6b7311cb46c30a5ab8160d9a6fce2abc2eedff722a7dd18b1f59df8a3"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "ff3d80024e24db09"
+    }
+   }
+  },
+  "Leona": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "2b7d4e998553b365",
+   "observedAt": "2026-10-21T19:28:20.435Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Leona",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+     "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "7ff3b8a69842091d"
+    }
+   }
+  },
+  "Lillia": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "5abf3f00c1f24aac",
+   "observedAt": "2026-10-21T19:28:20.435Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Lillia",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/lillia/lillia.bin.json",
+     "sha256": "33930a7b757bc2faa64a56c0c313d49013a5ae579710ee4c045edb4f16e9bb71"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "56de693659da9302"
+    }
+   }
+  },
+  "Lissandra": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "599da97edcf817b9",
+   "observedAt": "2026-10-21T19:28:20.436Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Lissandra",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/lissandra/lissandra.bin.json",
+     "sha256": "a6ec51003dc0dd7956bc6f5aad1e6e6d61cd0d506eb59e91e651b7866cb4cbfe"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "f6bc405fcfcae9d6"
+    }
+   }
+  },
+  "Locke": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ac4fe776c9f85034",
+   "observedAt": "2026-10-21T19:28:20.436Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Locke",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/locke/locke.bin.json",
+     "sha256": "f37e1af026e2df51ee1515c9f3e0b333f897332897da1eb24fe2c0120758d98c"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "1cfc28720fae4074"
+    }
+   }
+  },
+  "Lucian": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "cd773946a58860de",
+   "observedAt": "2026-10-21T19:28:20.436Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Lucian",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/lucian/lucian.bin.json",
+     "sha256": "51e857476efee2f2d23e408d47540fb6c4cb9778572b2e9341d1273833876871"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "ddbca92e2885ac11"
+    }
+   }
+  },
+  "Lulu": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "5f5091380ca45272",
+   "observedAt": "2026-10-21T19:28:20.436Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Lulu",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+     "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "33e697bcb063b28b"
+    }
+   }
+  },
+  "Lux": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "50314ad04c92f1a6",
+   "observedAt": "2026-10-21T19:28:20.437Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Lux",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/lux/lux.bin.json",
+     "sha256": "9223cdf0a3d94223309fc69eb0c3865444b2884004b443dbcd066e70ffe0b952"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "cc7818802b8d5fc7"
+    }
+   }
+  },
+  "Malphite": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "1cef2e2fdec84d8d",
+   "observedAt": "2026-10-21T19:28:20.437Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Malphite",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/malphite/malphite.bin.json",
+     "sha256": "5a179a096f00299a2fbe60453c0b2b14aec2fbb1f93d0a6da3f1f43515c44d34"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "998655a1cdd4352a"
+    }
+   }
+  },
+  "Malzahar": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "573be40165ebd14c",
+   "observedAt": "2026-10-21T19:28:20.437Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Malzahar",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/malzahar/malzahar.bin.json",
+     "sha256": "8ccc1397ea4398dcaf6db6ae128964c2e5ed11fefad368a8e0e21d89bc1dad6b"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "0f2001ea738afd77"
+    }
+   }
+  },
+  "Maokai": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "e196429fdd9138f9",
+   "observedAt": "2026-10-21T19:28:20.439Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Maokai",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/maokai/maokai.bin.json",
+     "sha256": "f98e3805d9418eb9f2e04d3f7e0a3901c615289d7ce6a53b34720c3474541248"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "afdcc912b22e75cf"
+    }
+   }
+  },
+  "MasterYi": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "035280b4b46c8b34",
+   "observedAt": "2026-10-21T19:28:20.440Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "MasterYi",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/masteryi/masteryi.bin.json",
+     "sha256": "40a3490967e42db2eb3a3c4ed25e40d6ab18670226cc505dc6864cb551dc57b1"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "962193dba45a1a53"
+    }
+   }
+  },
+  "Mel": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "005f11b8be4651c1",
+   "observedAt": "2026-10-21T19:28:20.440Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Mel",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/mel/mel.bin.json",
+     "sha256": "07d7ab98a7576cde9bf618a9a114da9953a5928fca56c05bf967d62b091f56f6"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "cd94e6b83839dc9d"
+    }
+   }
+  },
+  "Milio": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "9176ff8b22c1f1c9",
+   "observedAt": "2026-10-21T19:28:20.440Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Milio",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+     "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "32194f4e3319e474"
+    }
+   }
+  },
+  "MissFortune": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "10b496d2ce7c344d",
+   "observedAt": "2026-10-21T19:28:20.440Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "MissFortune",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+     "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "45c6c8d43f1a5c2f"
+    }
+   }
+  },
+  "MonkeyKing": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d8e1f17e61bc6c8d",
+   "observedAt": "2026-10-21T19:28:20.441Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "MonkeyKing",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/monkeyking/monkeyking.bin.json",
+     "sha256": "d09c7a65a77eb30b36113b707aecc05e71046b4048c22b444b25e90821afb5ed"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "bda828b502e12757"
+    }
+   }
+  },
+  "Mordekaiser": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "fcf2ef1cfc551e84",
+   "observedAt": "2026-10-21T19:28:20.441Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Mordekaiser",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/mordekaiser/mordekaiser.bin.json",
+     "sha256": "7408e9e2a90fb8a82c06fd3466a1589c1cffbfa6b3eeb80768e50c009d541f9d"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "500869a15bcb9118"
+    }
+   }
+  },
+  "Morgana": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "e0588c7ab7dba463",
+   "observedAt": "2026-10-21T19:28:20.441Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Morgana",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/morgana/morgana.bin.json",
+     "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "57d5f698304a1f45"
+    }
+   }
+  },
+  "Naafiri": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "490e0d502915c350",
+   "observedAt": "2026-10-21T19:28:20.442Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Naafiri",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/naafiri/naafiri.bin.json",
+     "sha256": "35ec8da57bf654ce0a8a7b3d3a68b78888fa1c0d1e330cd098c15ffa2cfeb97d"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "48cae89495cd6a6b"
+    }
+   }
+  },
+  "Nami": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "b10366f1187813b9",
+   "observedAt": "2026-10-21T19:28:20.442Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Nami",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+     "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "d41e55e60af3c37e"
+    }
+   }
+  },
+  "Nasus": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "874ad429f86eeb0b",
+   "observedAt": "2026-10-21T19:28:20.442Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Nasus",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/nasus/nasus.bin.json",
+     "sha256": "84684dd72fdc582cf32a3575ba554812c760fe4ab1a9607475f459890980375c"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "670b62c30716c8ed"
+    }
+   }
+  },
+  "Nautilus": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "67da151a84906467",
+   "observedAt": "2026-10-21T19:28:20.442Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Nautilus",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+     "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "21ceeeee51e3b384"
+    }
+   }
+  },
+  "Neeko": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d6f4984cd7330b72",
+   "observedAt": "2026-10-21T19:28:20.443Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Neeko",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/neeko/neeko.bin.json",
+     "sha256": "0d2d79949fbeecdbb851ae627b1dfa189ceab975e17627c57c8f7de546d9d12a"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "1d597517ddd4f92e"
+    }
+   }
+  },
+  "Nidalee": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "e54aff9035f36827",
+   "observedAt": "2026-10-21T19:28:20.443Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Nidalee",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/nidalee/nidalee.bin.json",
+     "sha256": "f5c3a3abf2db4ddfe9a86ad3f27f03b36b2bcd063b64900ab5d55108ecd43180"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "60b5273e0f23a85d"
+    }
+   }
+  },
+  "Nilah": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "30e5ef1b4f79390e",
+   "observedAt": "2026-10-21T19:28:20.443Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Nilah",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+     "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "2f18ee1a98588cd1"
+    }
+   }
+  },
+  "Nocturne": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "2759f235cb713880",
+   "observedAt": "2026-10-21T19:28:20.443Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Nocturne",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/nocturne/nocturne.bin.json",
+     "sha256": "93338da160b2ed4c8ff61ee45eac0e21363f69939f6202524c29910e7beabf58"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "7e6432fe64cf372b"
+    }
+   }
+  },
+  "Nunu": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "8f44e57080d4e3bf",
+   "observedAt": "2026-10-21T19:28:20.444Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Nunu",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/nunu/nunu.bin.json",
+     "sha256": "67dd9b93b8f4a6a81ef708291d4223d06323b67979755f1391599b92473fe472"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "bc9ade1baeb3270d"
+    }
+   }
+  },
+  "Olaf": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "71e89d2c6166e5dc",
+   "observedAt": "2026-10-21T19:28:20.444Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Olaf",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/olaf/olaf.bin.json",
+     "sha256": "76fd5eb072e7b649e8f9bb7f0200168ef2a28c8342480f385aeedcd24c658284"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "2276fc7d556626c9"
+    }
+   }
+  },
+  "Orianna": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "6897daa00a80bf73",
+   "observedAt": "2026-10-21T19:28:20.444Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Orianna",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/orianna/orianna.bin.json",
+     "sha256": "b1c48967c70298c50b2324aed6a5c501348eac8811984027ba7598fd54801573"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "032f33bbd9d369d4"
+    }
+   }
+  },
+  "Ornn": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "aec2b0070700de64",
+   "observedAt": "2026-10-21T19:28:20.445Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Ornn",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/ornn/ornn.bin.json",
+     "sha256": "933e1f225d9230fe272c8978a8b3f586e07780a0909181d18b13ebd288306060"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "3b1b1c0431079787"
+    }
+   }
+  },
+  "Pantheon": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ade6cc95e4c6b966",
+   "observedAt": "2026-10-21T19:28:20.445Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Pantheon",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/pantheon/pantheon.bin.json",
+     "sha256": "0acb5fa598525639a78e444a98a3e50cc46533843446d17657921c3639dd23df"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "0ab565075cf8e870"
+    }
+   }
+  },
+  "Poppy": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "af33a45e62ad30e5",
+   "observedAt": "2026-10-21T19:28:20.445Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Poppy",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+     "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "984283b0f66ff725"
+    }
+   }
+  },
+  "Pyke": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "750b7cf6d1187481",
+   "observedAt": "2026-10-21T19:28:20.446Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Pyke",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/pyke/pyke.bin.json",
+     "sha256": "86f12c6d02089846d871822760da759289bc2a1a4907782ba8e53372afb5c041"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "2fc94ca452c59007"
+    }
+   }
+  },
+  "Qiyana": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ae1343f33f784408",
+   "observedAt": "2026-10-21T19:28:20.446Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Qiyana",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/qiyana/qiyana.bin.json",
+     "sha256": "ad88026f8536f8b5ffb78f7ceeb9be36492982ca2c59038531524d4e481b0c7d"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "a532de390949b6d9"
+    }
+   }
+  },
+  "Quinn": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "96eaff1d877b5c1a",
+   "observedAt": "2026-10-21T19:28:20.446Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Quinn",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/quinn/quinn.bin.json",
+     "sha256": "bbb2756d253d9b1ad3b4b73b243366e36c91cb8f550654ebe615b2a6ec5d4825"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "646da0026bf9e301"
+    }
+   }
+  },
+  "Rakan": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "69d7edc48cac55e5",
+   "observedAt": "2026-10-21T19:28:20.446Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Rakan",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+     "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "14165b7ab2f27514"
+    }
+   }
+  },
+  "Rammus": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "f1863a22e11c5376",
+   "observedAt": "2026-10-21T19:28:20.447Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Rammus",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/rammus/rammus.bin.json",
+     "sha256": "15ad2ce3a25a8e064438fb06479ba10563c0aff6239b635a4f84f15eb8145110"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "7826ab9afdaf8fd0"
+    }
+   }
+  },
+  "RekSai": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d32c8960fd032e39",
+   "observedAt": "2026-10-21T19:28:20.447Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "RekSai",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/reksai/reksai.bin.json",
+     "sha256": "8b5f85c396547f461f715e2d0a09edfca17862c180637895875cd39512225cd1"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "3133a81b52491c4c"
+    }
+   }
+  },
+  "Rell": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "bec49be1ddcf29c0",
+   "observedAt": "2026-10-21T19:28:20.447Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Rell",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/rell/rell.bin.json",
+     "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "f5469dea7fbc0dcb"
+    }
+   }
+  },
+  "Renata": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "040340652360d067",
+   "observedAt": "2026-10-21T19:28:20.448Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Renata",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+     "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "849f2ea81ec5e47e"
+    }
+   }
+  },
+  "Renekton": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "5a98c4b4b1f08e37",
+   "observedAt": "2026-10-21T19:28:20.448Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Renekton",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/renekton/renekton.bin.json",
+     "sha256": "c5a2ab3b185afe8f3477592ac9137808dd1f315d4fb407143c25c2e528aaf152"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "1b5d01b58ae2dfac"
+    }
+   }
+  },
+  "Rengar": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "37409a7c0d60e8e8",
+   "observedAt": "2026-10-21T19:28:20.448Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Rengar",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/rengar/rengar.bin.json",
+     "sha256": "e2e97e8e3cb202d4aaa9481df841c8040e1b8c7356d870a84760fabd5ede9f6b"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "a340ab4d1d71dccd"
+    }
+   }
+  },
+  "Riven": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "250743f905f1d048",
+   "observedAt": "2026-10-21T19:28:20.449Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Riven",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/riven/riven.bin.json",
+     "sha256": "df300621f17e5f3fc8da8708ec9eda050a330710655b66def6105633c4645610"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "3769b0a18a5ca181"
+    }
+   }
+  },
+  "Rumble": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "8a349d0b8197b1d4",
+   "observedAt": "2026-10-21T19:28:20.449Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Rumble",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/rumble/rumble.bin.json",
+     "sha256": "b0691be6a2b5d9fc1d3ea31b5eabb7335458f4738e5be775ac9074ccc5d93646"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "b24e1536e120ad82"
+    }
+   }
+  },
+  "Ryze": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "b4f669f0eec5ae8a",
+   "observedAt": "2026-10-21T19:28:20.449Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Ryze",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/ryze/ryze.bin.json",
+     "sha256": "55b188b8ab627a1c9fa8f6c81b3d2d642da6cfe0dd7fc94bd8bcfb505fb35323"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e7adafbe320c260c"
+    }
+   }
+  },
+  "Samira": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "fb97a340c89c0ba1",
+   "observedAt": "2026-10-21T19:28:20.449Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Samira",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/samira/samira.bin.json",
+     "sha256": "66207c6c2fbf270bfa686b40c2e39d6197c632bd26e959c7c75ed3843d6a24bb"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "12851dd9ef379ec4"
+    }
+   }
+  },
+  "Sejuani": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "1d8d94f1d8414573",
+   "observedAt": "2026-10-21T19:28:20.450Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Sejuani",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/sejuani/sejuani.bin.json",
+     "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "7cc5989bda48fb2b"
+    }
+   }
+  },
+  "Senna": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "5e547c9cf10f2a05",
+   "observedAt": "2026-10-21T19:28:20.450Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Senna",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/senna/senna.bin.json",
+     "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "58582c22f3d6346b"
+    }
+   }
+  },
+  "Seraphine": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "18e4440868d92eb5",
+   "observedAt": "2026-10-21T19:28:20.450Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Seraphine",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+     "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "b29132146d6ad36b"
+    }
+   }
+  },
+  "Sett": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "76c5b480536d4f6c",
+   "observedAt": "2026-10-21T19:28:20.451Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Sett",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/sett/sett.bin.json",
+     "sha256": "432de9e0a6a3d5fe63d551f27a3f491e42e775cd1b25747664228f53343ea9f4"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "d105f0a4b5c99060"
+    }
+   }
+  },
+  "Shaco": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ea2b12296434e0e4",
+   "observedAt": "2026-10-21T19:28:20.451Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Shaco",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/shaco/shaco.bin.json",
+     "sha256": "1af1a820ae1fdf778ed9e2c284d376e4d24803f69dd8d898d21f309d783df297"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "7abc8f79225d9e14"
+    }
+   }
+  },
+  "Shen": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "e59438000b98dd56",
+   "observedAt": "2026-10-21T19:28:20.451Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Shen",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/shen/shen.bin.json",
+     "sha256": "ff70810a319271f9cc076508d6e6a5d877b06899ac6f69516963d975575284e5"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "56dbf98c4bc9628e"
+    }
+   }
+  },
+  "Shyvana": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "49c78c78a1f500be",
+   "observedAt": "2026-10-21T19:28:20.452Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Shyvana",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/shyvana/shyvana.bin.json",
+     "sha256": "c32280b6edd192d94fed0a0176b796c53f74c4476e41863a5c81502ee092717e"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "4b26e0190d63c293"
+    }
+   }
+  },
+  "Singed": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "65d32cdacd60176e",
+   "observedAt": "2026-10-21T19:28:20.452Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Singed",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/singed/singed.bin.json",
+     "sha256": "1c22b7efd0ffea9631ee518e7f5ebbee0dd5618b6603bb49bbd5531024d5a848"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "56d7c605cce7a1a7"
+    }
+   }
+  },
+  "Sion": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "0852586a5d53c2bc",
+   "observedAt": "2026-10-21T19:28:20.452Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Sion",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/sion/sion.bin.json",
+     "sha256": "d78a9dc86390b3f25099939467de83f4cce5d5e4dc5fd171237ae84ded0d869d"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e93d37d5494eda42"
+    }
+   }
+  },
+  "Sivir": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "6c42062d13c38ce6",
+   "observedAt": "2026-10-21T19:28:20.452Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Sivir",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/sivir/sivir.bin.json",
+     "sha256": "12c68a433a466cff6396e4e8642834ae342650bb54d7b4251a10152b501703b4"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "6b46b8e16bb65277"
+    }
+   }
+  },
+  "Skarner": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "a7d61444d5300266",
+   "observedAt": "2026-10-21T19:28:20.453Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Skarner",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/skarner/skarner.bin.json",
+     "sha256": "56019778abb2ee41e81b85e42ec04d97abc7c85b390025ac0ce1f27b42519aa4"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "13f4a3c2709e12c8"
+    }
+   }
+  },
+  "Smolder": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "5f9af800584064ad",
+   "observedAt": "2026-10-21T19:28:20.453Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Smolder",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/smolder/smolder.bin.json",
+     "sha256": "82145a258cf89ebcf1d8329a941ce55c76c8c7c95d874d559203160e6ce95f60"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e270c656917313cc"
+    }
+   }
+  },
+  "Sona": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "2313d851c59e6f93",
+   "observedAt": "2026-10-21T19:28:20.453Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Sona",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/sona/sona.bin.json",
+     "sha256": "8ad8fdcf17aff949bc7a9f8b6e0c7235f396346f7cba27f7bff26528975560a1"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "8146f69f6cdef897"
+    }
+   }
+  },
+  "Soraka": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "46ec394f508ebcc0",
+   "observedAt": "2026-10-21T19:28:20.454Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Soraka",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/soraka/soraka.bin.json",
+     "sha256": "efdf1cfccf0fbb6bb3de9f8e2e7e5641eb0e628955c602dbe93be699b2ce8e83"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "43b0fc1302f2816c"
+    }
+   }
+  },
+  "Swain": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "2df9ea554c5ac91d",
+   "observedAt": "2026-10-21T19:28:20.527Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Swain",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
+     "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "f08241c738bc1369"
+    }
+   }
+  },
+  "Sylas": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d74306dcea26b698",
+   "observedAt": "2026-10-21T19:28:20.528Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Sylas",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/sylas/sylas.bin.json",
+     "sha256": "f213eafa82b0884eed8b6c2f806cd8a6cd3f53601618d4f9c0a63126dfd5ddfa"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "87b4235f2423638d"
+    }
+   }
+  },
+  "Syndra": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "6fd0f8bd70c981dd",
+   "observedAt": "2026-10-21T19:28:20.528Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Syndra",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/syndra/syndra.bin.json",
+     "sha256": "e42adeaf766c60a65630d3a83c9520d4f5eeae4690aa9c523e9119635286d938"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "5426d3509eaceba8"
+    }
+   }
+  },
+  "TahmKench": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "9635271a9add58c5",
+   "observedAt": "2026-10-21T19:28:20.528Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "TahmKench",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/tahmkench/tahmkench.bin.json",
+     "sha256": "2c4d245e198a57458a95879789133f011276421c3cbc2f5a5293507a8ba34073"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "324a3700d293797b"
+    }
+   }
+  },
+  "Taliyah": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "164392e23c74360e",
+   "observedAt": "2026-10-21T19:28:20.528Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Taliyah",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+     "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "b2732603887d7e5f"
+    }
+   }
+  },
+  "Talon": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "803d6527b92e969a",
+   "observedAt": "2026-10-21T19:28:20.529Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Talon",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/talon/talon.bin.json",
+     "sha256": "fbda1ef76456e8f840685c51ea629c67b4517ac9d34c305664d8f85a888ec494"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "f72448db2b00bb05"
+    }
+   }
+  },
+  "Taric": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d7034e2662bef2b0",
+   "observedAt": "2026-10-21T19:28:20.529Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Taric",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+     "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "a0599325a1012892"
+    }
+   }
+  },
+  "Teemo": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "b29454e3375baf8c",
+   "observedAt": "2026-10-21T19:28:20.529Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Teemo",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/teemo/teemo.bin.json",
+     "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "0795d6a5dc4ba5bb"
+    }
+   }
+  },
+  "Thresh": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "766a02f3f37aa314",
+   "observedAt": "2026-10-21T19:28:20.530Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Thresh",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
+     "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "9d08c31186ec4f58"
+    }
+   }
+  },
+  "Tristana": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "931894a6ac7e80f4",
+   "observedAt": "2026-10-21T19:28:20.530Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Tristana",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/tristana/tristana.bin.json",
+     "sha256": "62d0dcaec7b4f7498a55af4d7ca3a30ac433fa08913fa095194a5c920dfb7891"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "dedfd8b3d11580bb"
+    }
+   }
+  },
+  "Trundle": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "63bbe05e19260ce3",
+   "observedAt": "2026-10-21T19:28:20.530Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Trundle",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/trundle/trundle.bin.json",
+     "sha256": "cc871076dceaa7cd474c1dc994f3c0e859ac814e4f687307eb693f61bcc48847"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "1d69ff1938c31389"
+    }
+   }
+  },
+  "Tryndamere": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "9990ba943e8299c8",
+   "observedAt": "2026-10-21T19:28:20.530Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Tryndamere",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/tryndamere/tryndamere.bin.json",
+     "sha256": "e181cc3b757253793fafacf96aa32cc6f5ed15724415629074157d75ac08f944"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "c1e046cb2e38b31b"
+    }
+   }
+  },
+  "TwistedFate": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "4b3a9807b94dcc47",
+   "observedAt": "2026-10-21T19:28:20.531Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "TwistedFate",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/twistedfate/twistedfate.bin.json",
+     "sha256": "ec60137c806e0ca6e86bad8bcf6a216b8295761503dbb7a61eddc6b7e82bf4f4"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "f83bddbc2f7bb85b"
+    }
+   }
+  },
+  "Twitch": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ab3e76d629cf2787",
+   "observedAt": "2026-10-21T19:28:20.531Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Twitch",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+     "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "461e810ef4e30853"
+    }
+   }
+  },
+  "Udyr": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "fdaba836f9c37b70",
+   "observedAt": "2026-10-21T19:28:20.531Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Udyr",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/udyr/udyr.bin.json",
+     "sha256": "232eb625661d9ea907bf679c345760e5e3c0bd7a4c2a2c79757c77cb2ea01c57"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "5e4ce0224042a71b"
+    }
+   }
+  },
+  "Urgot": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "42adf07c563030c7",
+   "observedAt": "2026-10-21T19:28:20.531Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Urgot",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/urgot/urgot.bin.json",
+     "sha256": "89d94e0e3d144588d5d147245d223973969c90f54588d723cac03ad81801e8e0"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "f77d3041ea706f72"
+    }
+   }
+  },
+  "Varus": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "643e042201703827",
+   "observedAt": "2026-10-21T19:28:20.532Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Varus",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
+     "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "7b616ac861086a8b"
+    }
+   }
+  },
+  "Vayne": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "0287a9893e0d8431",
+   "observedAt": "2026-10-21T19:28:20.532Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Vayne",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/vayne/vayne.bin.json",
+     "sha256": "33694471c394311b26fbe6293ca50a0f40fd8995c4d0136c606d03725562ba81"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "b68f21a8631fe4af"
+    }
+   }
+  },
+  "Veigar": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "b0c876605f73d7f8",
+   "observedAt": "2026-10-21T19:28:20.532Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Veigar",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
+     "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "0d5181fbdf1760ef"
+    }
+   }
+  },
+  "Velkoz": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "4fc6f59617324dce",
+   "observedAt": "2026-10-21T19:28:20.533Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Velkoz",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/velkoz/velkoz.bin.json",
+     "sha256": "d7083b07c94482f1814bd603cd7831d0de5fd1ba1170dc9b5ff386793ab08ffb"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "83d561abb744eab5"
+    }
+   }
+  },
+  "Vex": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "9302ca0521a22970",
+   "observedAt": "2026-10-21T19:28:20.533Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Vex",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/vex/vex.bin.json",
+     "sha256": "5b17001fbb9729d6e42f65f71542cfe0e5e34bcee648f1cc5413c6725ca8d0b6"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "933650e1024cdaa0"
+    }
+   }
+  },
+  "Vi": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ed4ccc20b476dc0e",
+   "observedAt": "2026-10-21T19:28:20.533Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Vi",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/vi/vi.bin.json",
+     "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "8c5f2d227a1d26cb"
+    }
+   }
+  },
+  "Viego": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "61185e81ee691f67",
+   "observedAt": "2026-10-21T19:28:20.533Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Viego",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/viego/viego.bin.json",
+     "sha256": "0b49991c3a4dd8aed0e97f623dfcd277e5c693a5f9a7eff07cf2bdf7179b2863"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "d5b6622648148ffc"
+    }
+   }
+  },
+  "Viktor": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "0bd74fc675981fd6",
+   "observedAt": "2026-10-21T19:28:20.534Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Viktor",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/viktor/viktor.bin.json",
+     "sha256": "adff371fb352f4765fe4360f7451fe77a0f8312275ccdc41d0b325c6fb0c7e09"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "ef737928ffc1b9ac"
+    }
+   }
+  },
+  "Vladimir": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "1b5e1102e29e8138",
+   "observedAt": "2026-10-21T19:28:20.534Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Vladimir",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/vladimir/vladimir.bin.json",
+     "sha256": "4794c21eb80a4fcb49af01e894ec5ad8047667e3647a0c8fe2b3538eebbaad57"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "a1fec3f30e5fc1b9"
+    }
+   }
+  },
+  "Volibear": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "bf39a7d23077a7fc",
+   "observedAt": "2026-10-21T19:28:20.534Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Volibear",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/volibear/volibear.bin.json",
+     "sha256": "ec12da034e4cfecc17c38d4d3368793d30a0c56d08fa723af06a071d3555022c"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "340dacf5c50799b2"
+    }
+   }
+  },
+  "Warwick": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "782fd9ea17e96a22",
+   "observedAt": "2026-10-21T19:28:20.535Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Warwick",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/warwick/warwick.bin.json",
+     "sha256": "94528d3cd6460c28cea8c488c49b33325bd817bbec0ccbd2983a3f3a8829e854"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "841c32c7739bb470"
+    }
+   }
+  },
+  "Xayah": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "6218a12d2240d28e",
+   "observedAt": "2026-10-21T19:28:20.535Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Xayah",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/xayah/xayah.bin.json",
+     "sha256": "94e7c4f849daefb1f7967fda0b4abd1848747fceb9ff04b2530e00471f848de5"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "ef84e7c599b03475"
+    }
+   }
+  },
+  "Xerath": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "c6bf3b1c613437cd",
+   "observedAt": "2026-10-21T19:28:20.535Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Xerath",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/xerath/xerath.bin.json",
+     "sha256": "cd93216a854d592f605c11be9bb9e00acd9f35dab0bf98828909809f94145796"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "fe85c3d422f63fd0"
+    }
+   }
+  },
+  "XinZhao": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "a57e1ed1962c6064",
+   "observedAt": "2026-10-21T19:28:20.536Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "XinZhao",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/xinzhao/xinzhao.bin.json",
+     "sha256": "c936e533dfcf1d9aea4d10a25be9ddf7030e919d749f0080a2d901c7c557b5a8"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "91fb047d7f4d7d62"
+    }
+   }
+  },
+  "Yasuo": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d36ebea001e3d1cb",
+   "observedAt": "2026-10-21T19:28:20.536Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Yasuo",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+     "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "5c4d9aa5346ca2f7"
+    }
+   }
+  },
+  "Yone": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "9f3493c27921664f",
+   "observedAt": "2026-10-21T19:28:20.536Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Yone",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/yone/yone.bin.json",
+     "sha256": "686924ad8cd0bf22941513230c18e6acdc5f9ac2d02755e8d369a51155d70112"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "165686224e19c3fc"
+    }
+   }
+  },
+  "Yorick": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d0022b1425908bc9",
+   "observedAt": "2026-10-21T19:28:20.536Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Yorick",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/yorick/yorick.bin.json",
+     "sha256": "4bc027b1f2db7accce572e711cbe7f6c1363e6ea143e898bf6f6b59acbaf6723"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "d5cb7b29d100f7b7"
+    }
+   }
+  },
+  "Yunara": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "01aaf8a5e404cd88",
+   "observedAt": "2026-10-21T19:28:20.537Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Yunara",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/yunara/yunara.bin.json",
+     "sha256": "b9a6a3759e1fa3828f493e63f097c23897a6f92a390e7404b703f24653f8f592"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "a0e8ac488585a6a0"
+    }
+   }
+  },
+  "Yuumi": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "74372983c2c1dbfe",
+   "observedAt": "2026-10-21T19:28:20.537Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Yuumi",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/yuumi/yuumi.bin.json",
+     "sha256": "b65fd4e92df3a120fe88ee2ebd588f55a7f1a642f249c22d0668eae860f9c3aa"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "2bfcd21ddb05bd3f"
+    }
+   }
+  },
+  "Zaahen": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "747e69d1f5137702",
+   "observedAt": "2026-10-21T19:28:20.537Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Zaahen",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/zaahen/zaahen.bin.json",
+     "sha256": "3137314e1a6fb2be4de32e485c2bcba1a98188bd49795be4944ebf3e6b90eb83"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "643bc39abd471010"
+    }
+   }
+  },
+  "Zac": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "79df9b9e7571e89c",
+   "observedAt": "2026-10-21T19:28:20.538Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Zac",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/zac/zac.bin.json",
+     "sha256": "40df6abd439891c7e6733966c1ec367a15392cb8b52754a7df145b6b854f0ff5"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "cf22bab2f64d09f2"
+    }
+   }
+  },
+  "Zed": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "ca93141fef21a473",
+   "observedAt": "2026-10-21T19:28:20.538Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Zed",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/zed/zed.bin.json",
+     "sha256": "10f7b0cb59955597accd8a7d4f0457f65311f0832f6cf78b670f2ef9ab470f6e"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "c6ae82cc77eb60d7"
+    }
+   }
+  },
+  "Zeri": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "e4b5046a1a9b42bb",
+   "observedAt": "2026-10-21T19:28:20.538Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Zeri",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/zeri/zeri.bin.json",
+     "sha256": "709a5b68794967ec275e7fd5c1ca11c9289ea72da65f946b0652a4cdfade41ed"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "0b2a7f8ab974859e"
+    }
+   }
+  },
+  "Ziggs": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "301986c8fed3e8fb",
+   "observedAt": "2026-10-21T19:28:20.539Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Ziggs",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/ziggs/ziggs.bin.json",
+     "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "fdb99302b5ecb565"
+    }
+   }
+  },
+  "Zilean": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "60f40731a1259a4a",
+   "observedAt": "2026-10-21T19:28:20.539Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Zilean",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+     "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "3e2480aa7362c964"
+    }
+   }
+  },
+  "Zoe": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "d218618e341a560e",
+   "observedAt": "2026-10-21T19:28:20.539Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Zoe",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/zoe/zoe.bin.json",
+     "sha256": "ab1f95a80d4c5419819ca4866ed010dd044e8a091dc36243454ee908473baa69"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "d54715e1579901ee"
+    }
+   }
+  },
+  "Zyra": {
+   "schema": 1,
+   "kind": "explicit-review",
+   "reviewCoverage": "summary-v1",
+   "legacyFingerprint": "f653495a90d1586e",
+   "observedAt": "2026-10-21T19:28:20.539Z",
+   "input": {
+    "schema": 1,
+    "normalizer": 1,
+    "champion": "Zyra",
+    "patch": "16.21",
+    "version": "16.21.1",
+    "locale": "zh_CN",
+    "character": {
+     "algorithm": "canonical-json-sha256-v1",
+     "url": "https://raw.communitydragon.org/16.21/game/data/characters/zyra/zyra.bin.json",
+     "sha256": "18f1cd91897b66a60a6c5c3b7205668e4c2ceb6305ce5e1e4e86d0cf649f89d3"
+    },
+    "dataDragon": {
+     "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+     "fingerprint": "e6ad7484cbc1effe"
+    }
+   }
+  }
+ },
+ "traits": {
+  "Aatrox": {
+   "frontline": "被动/E/R支持近战回血承伤",
+   "engage": "E配Q外沿击飞/W命中后拉回，须命中、位置与牵绳条件",
+   "peel": null,
+   "sustain": "连续Q与被动普攻循环",
+   "poke": null
+  },
+  "Ahri": {
+   "frontline": null,
+   "engage": "R接近配E魅惑，须首目标命中与R窗口",
+   "peel": "E明确可打断位移",
+   "sustain": null,
+   "poke": "Q远程往返消耗"
+  },
+  "Akali": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "Q短冷却与技能后被动普攻循环，须能量、命中与走出圆环",
+   "poke": null
+  },
+  "Akshan": {
+   "frontline": {
+    "pending": "被动第三次命中英雄自盾，远程周期盾的近身承接用途待核"
+   },
+   "engage": null,
+   "peel": {
+    "pending": "W击杀恶人后复活队友，尚未核实救援归类"
+   },
+   "sustain": "被动双发与三环普攻",
+   "poke": "Q穿透路径消耗"
+  },
+  "Alistar": {
+   "frontline": "R限时减伤",
+   "engage": "W接Q近身控制",
+   "peel": "被动友军治疗与W击退隔离",
+   "sustain": null,
+   "poke": null
+  },
+  "Ambessa": {
+   "frontline": "W近身护盾",
+   "engage": "R命中后压制与晕眩",
+   "peel": null,
+   "sustain": "被动技能后普攻回能循环",
+   "poke": null
+  },
+  "Amumu": {
+   "frontline": "E降低所受伤害",
+   "engage": "Q命中接近/R范围控制",
+   "peel": null,
+   "sustain": "W持续伤害与E受击减冷却",
+   "poke": null
+  },
+  "Anivia": {
+   "frontline": null,
+   "engage": "Q终点爆炸或重施提前爆炸晕眩，须命中",
+   "peel": "W冰墙隔离",
+   "sustain": "R持续区域伤害",
+   "poke": "Q远程路径伤害，不必本人跟进"
+  },
+  "Annie": {
+   "frontline": null,
+   "engage": "被动蓄好后的技能晕眩",
+   "peel": "E可给友军护盾",
+   "sustain": "Q短周期伤害，须蓝量与目标",
+   "poke": "Q可远程点选消耗，射程有限仍须站位"
+  },
+  "Aphelios": {
+   "frontline": null,
+   "engage": {
+    "pending": "坠明留人依赖当前武器，未确认武器"
+   },
+   "peel": null,
+   "sustain": "武器普攻与弹药循环",
+   "poke": {
+    "pending": "通碧远射依赖当前武器，未确认武器"
+   }
+  },
+  "Ashe": {
+   "frontline": null,
+   "engage": "R远程命中晕眩",
+   "peel": null,
+   "sustain": "Q与普攻循环",
+   "poke": "W远程扇形消耗"
+  },
+  "AurelionSol": {
+   "frontline": null,
+   "engage": "基础R范围晕眩，升级为击飞另须星尘条件",
+   "peel": null,
+   "sustain": "Q持续吐息",
+   "poke": {
+    "pending": "Q持续施法的射程与站位条件待核"
+   }
+  },
+  "Aurora": {
+   "frontline": {
+    "pending": "被动灵物治疗本人，远程三环恢复的近身承接用途待核"
+   },
+   "engage": {
+    "pending": "R限制区域的主动留人能力待核"
+   },
+   "peel": null,
+   "sustain": {
+    "pending": "三环与技能循环的持续输出边界待核"
+   },
+   "poke": "Q/E远程命中消耗"
+  },
+  "Azir": {
+   "frontline": "E冲向士兵获得护盾，须士兵与施法窗口",
+   "engage": "士兵配E/Q位移与R推回",
+   "peel": "R推开敌人并立墙",
+   "sustain": "W士兵普攻持续输出",
+   "poke": null
+  },
+  "Bard": {
+   "frontline": null,
+   "engage": {
+    "pending": "R双向范围凝滞也影响队友，先手用途与双向风险待核"
+   },
+   "peel": "W可治疗友军",
+   "sustain": null,
+   "poke": "Q远程弹体伤害；眩晕另须第二目标或地形"
+  },
+  "Belveth": {
+   "frontline": "E期间减伤与吸血",
+   "engage": "Q接近配W击飞，须Q方向可用与W命中",
+   "peel": null,
+   "sustain": "普攻与Q循环",
+   "poke": null
+  },
+  "Blitzcrank": {
+   "frontline": "被动触发护盾",
+   "engage": "Q命中拉回",
+   "peel": null,
+   "sustain": null,
+   "poke": null
+  },
+  "Brand": {
+   "frontline": null,
+   "engage": "先让目标燃烧再命中Q才晕眩，须两技能顺序与命中",
+   "peel": null,
+   "sustain": "被动持续灼烧",
+   "poke": "Q/W远程消耗"
+  },
+  "Braum": {
+   "frontline": "W防御属性与E举盾",
+   "engage": "R命中击飞",
+   "peel": "W给友军防御与E拦截",
+   "sustain": null,
+   "poke": null
+  },
+  "Briar": {
+   "frontline": "E减伤治疗与R状态抗性",
+   "engage": "Q/R主动接近控制",
+   "peel": "E蓄力击退隔离",
+   "sustain": "W与被动普攻循环",
+   "poke": null
+  },
+  "Caitlyn": {
+   "frontline": null,
+   "engage": {
+    "pending": "W须敌人踩陷阱才禁锢，主动区域留人用途待核"
+   },
+   "peel": {
+    "pending": "陷阱封路是否属于专门保护待核"
+   },
+   "sustain": "被动周期爆头普攻循环",
+   "poke": "Q远程路径消耗"
+  },
+  "Camille": {
+   "frontline": "被动分类护盾与W外沿近战续航",
+   "engage": "E命中控制/R限制区域",
+   "peel": null,
+   "sustain": "Q强化普攻循环；Q2仍须等待",
+   "poke": null
+  },
+  "Cassiopeia": {
+   "frontline": null,
+   "engage": "R命中面对自己的敌人晕眩，背对仅减速",
+   "peel": "W缚地专门阻断位移",
+   "sustain": "中毒目标上的E循环",
+   "poke": "Q/W远程区域消耗"
+  },
+  "Chogath": {
+   "frontline": "被动恢复与R获得生命",
+   "engage": "Q命中范围击飞",
+   "peel": null,
+   "sustain": "E下三次普攻附伤可循环，须实际攻击与技能可用",
+   "poke": "Q远程落点伤害，延迟仍须命中"
+  },
+  "Corki": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "普攻与E持续输出",
+   "poke": "Q/R远程消耗"
+  },
+  "Darius": {
+   "frontline": "Q外沿命中英雄治疗",
+   "engage": "E短范围主动钩拽，须接触距离",
+   "peel": null,
+   "sustain": "被动流血与Q/普攻循环",
+   "poke": null
+  },
+  "Diana": {
+   "frontline": "W护盾支持近身承伤",
+   "engage": "E接近后R控制",
+   "peel": null,
+   "sustain": "被动攻速与第三击循环",
+   "poke": null
+  },
+  "Draven": {
+   "frontline": null,
+   "engage": null,
+   "peel": "E击退隔离",
+   "sustain": "Q旋斧普攻循环",
+   "poke": "E远程路径伤害，无需本人跟进"
+  },
+  "DrMundo": {
+   "frontline": "被动与R恢复支持续战",
+   "engage": null,
+   "peel": null,
+   "sustain": "E普攻增益循环",
+   "poke": "Q远程命中消耗"
+  },
+  "Ekko": {
+   "frontline": "W延迟后本人进入区域获盾；R须可施放且回到先前落点回血",
+   "engage": "W区域命中配E接近",
+   "peel": null,
+   "sustain": "W被动对低血量英雄的普攻附伤，须目标满足生命阈值",
+   "poke": "Q远程往返消耗"
+  },
+  "Elise": {
+   "frontline": "蜘蛛形态普攻附伤并回复本人，须实际普攻",
+   "engage": "人形E命中先晕眩，可再变蜘蛛跟进",
+   "peel": null,
+   "sustain": "蜘蛛形态W与被动普攻",
+   "poke": "人形W远程消耗"
+  },
+  "Evelynn": {
+   "frontline": "R短时不可选并向后传送，须R可用；不是持续承伤",
+   "engage": {
+    "pending": "W等待魅惑后接触的开团条件待核"
+   },
+   "peel": null,
+   "sustain": "Q连续施放",
+   "poke": {
+    "pending": "Q安全站位与射程待核"
+   }
+  },
+  "Ezreal": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "Q与被动攻速循环",
+   "poke": "Q远程命中消耗；W须后续自己的攻击/技能引爆"
+  },
+  "Fiddlesticks": {
+   "frontline": "W吸取伤害治疗，须站定引导且可被打断",
+   "engage": "R进场与Q恐惧，须满足相应条件",
+   "peel": null,
+   "sustain": "W/R持续伤害",
+   "poke": "E远程消耗"
+  },
+  "Fiora": {
+   "frontline": "被动近战回血与W招架",
+   "engage": null,
+   "peel": "R击破全部四处破绽，或至少击破一处后目标在标记期间死亡，才生成友军治疗区",
+   "sustain": "Q/E/破绽循环",
+   "poke": null
+  },
+  "Fizz": {
+   "frontline": "被动固定减伤与E短时不可选；非长时免伤",
+   "engage": "R命中后的控制",
+   "peel": null,
+   "sustain": "W强化普攻与持续伤害",
+   "poke": null
+  },
+  "Galio": {
+   "frontline": "W减伤与魔法护盾",
+   "engage": "E命中或R落点控制",
+   "peel": "R以友军为目标提供保护，须满足落点条件",
+   "sustain": {
+    "pending": "Q持续龙卷风区域的覆盖与持续输出边界待核"
+   },
+   "poke": "Q远程区域消耗"
+  },
+  "Gangplank": {
+   "frontline": "W解除限制并回复自身生命，须技能可用",
+   "engage": null,
+   "peel": null,
+   "sustain": "Q短冷却与被动近战灼烧，桶刷新另有条件",
+   "poke": "Q/E命中消耗，桶链需布置"
+  },
+  "Garen": {
+   "frontline": "W防御与被动恢复",
+   "engage": null,
+   "peel": null,
+   "sustain": {
+    "pending": "E持续数秒与输出间隙的持续性边界待核"
+   },
+   "poke": null
+  },
+  "Gnar": {
+   "frontline": "巨型形态支持承伤，须满足怒气变形",
+   "engage": "巨型形态W/R命中控制",
+   "peel": "巨型形态R击退附近敌人，可隔开威胁；小型形态不可默认使用",
+   "sustain": "小型形态W三环与普攻循环",
+   "poke": "小型形态Q消耗"
+  },
+  "Gragas": {
+   "frontline": "被动治疗与W减伤",
+   "engage": "E/R主动控制",
+   "peel": "R击退隔离，方向仍须控制",
+   "sustain": null,
+   "poke": "Q远程区域消耗"
+  },
+  "Graves": {
+   "frontline": "E叠加防御属性，须维持层数",
+   "engage": null,
+   "peel": null,
+   "sustain": "弹药普攻与E装填循环",
+   "poke": "Q远程路径与延迟爆炸，靠墙加速另有条件"
+  },
+  "Gwen": {
+   "frontline": "近战被动治疗与W区域防御，圈内敌人不受圈外限制",
+   "engage": null,
+   "peel": null,
+   "sustain": "E/普攻/Q循环",
+   "poke": null
+  },
+  "Hecarim": {
+   "frontline": "W支持近战续战",
+   "engage": "E接触控制与R恐惧",
+   "peel": "E接触击退目标，须近身/方向/E窗口，方向可能不利",
+   "sustain": "Q短周期伤害",
+   "poke": null
+  },
+  "Heimerdinger": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "Q炮台持续攻击，依赖炮台存活",
+   "poke": "W/E远程消耗"
+  },
+  "Hwei": {
+   "frontline": null,
+   "engage": "E各分支可恐惧、延迟禁锢或拖拽，须选择分支与命中",
+   "peel": "WW可为区域内友军提供护盾",
+   "sustain": "QE岩浆池持续伤害，须敌人留在路径与蓝量",
+   "poke": "QW/QE远程消耗"
+  },
+  "Illaoi": {
+   "frontline": "触手命中英雄回血",
+   "engage": null,
+   "peel": null,
+   "sustain": "W驱动触手重复攻击",
+   "poke": "Q远程直线触手伤害，无需先拉魂"
+  },
+  "Irelia": {
+   "frontline": "W减伤与Q治疗",
+   "engage": "E命中配Q或R接近",
+   "peel": null,
+   "sustain": "被动/普攻/Q循环，重置须标记或击杀",
+   "poke": null
+  },
+  "Ivern": {
+   "frontline": null,
+   "engage": "Q命中后可接近目标，须有人跟进",
+   "peel": "E友军护盾",
+   "sustain": "W草内或离草短时间普攻附伤，须草丛状态",
+   "poke": null
+  },
+  "Janna": {
+   "frontline": null,
+   "engage": "Q释放后路径击飞，蓄力影响范围/时长",
+   "peel": "E友军盾、R治疗与击退",
+   "sustain": "被动普攻附加随额外移速的魔法伤害，仍须实际普攻",
+   "poke": "Q蓄力后远程路径伤害"
+  },
+  "JarvanIV": {
+   "frontline": "W近身护盾",
+   "engage": "EQ命中或R限制区域",
+   "peel": {
+    "pending": "R地形可隔内外也会困友军，友方保护用途待核"
+   },
+   "sustain": "E被动攻速/主动范围攻速支持普攻循环",
+   "poke": null
+  },
+  "Jax": {
+   "frontline": "E闪避与R抗性，均有限时窗口",
+   "engage": "Q接近配E控制",
+   "peel": null,
+   "sustain": "被动攻速/W/普攻循环",
+   "poke": null
+  },
+  "Jayce": {
+   "frontline": "炮切锤形态后获得护甲/魔抗，不能叠用炮形态射程",
+   "engage": null,
+   "peel": "锤形态E击退隔离",
+   "sustain": "炮W三次攻速/锤W持续区与普攻回蓝，须切换形态与技能窗口",
+   "poke": "炮形态QE远程消耗"
+  },
+  "Jhin": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "固定四发、第四发与正常换弹构成普攻循环；攻速不直接提高射速",
+   "poke": "W远程命中消耗"
+  },
+  "Jinx": {
+   "frontline": null,
+   "engage": {
+    "pending": "E须敌人触发陷阱才禁锢，主动区域留人用途待核"
+   },
+   "peel": {
+    "pending": "E封路是否属于专门保护待核"
+   },
+   "sustain": "Q与普攻循环",
+   "poke": "W远程命中消耗"
+  },
+  "Kaisa": {
+   "frontline": "R向带电浆敌人附近位移并获限时盾，须标记/落点/就绪",
+   "engage": null,
+   "peel": null,
+   "sustain": "被动/E与普攻循环",
+   "poke": "W远程消耗；进化返冷却另有条件"
+  },
+  "Kalista": {
+   "frontline": null,
+   "engage": "R投出誓约者，须友方配合接触",
+   "peel": "R把誓约者拉回保护",
+   "sustain": "普攻与E撕裂循环",
+   "poke": null
+  },
+  "Karma": {
+   "frontline": {
+    "pending": "E自盾与RW条件治疗是否符合近身承伤用途待核"
+   },
+   "engage": {
+    "pending": "W灵链须维持至结束才禁锢，先手口径待核"
+   },
+   "peel": "E友军盾；RE邻近友军盾须梵咒可用",
+   "sustain": {
+    "pending": "被动伤害返R冷却与Q/R循环的持续输出边界待核；不以RW回血为依据"
+   },
+   "poke": "Q远程命中爆炸消耗；RQ须梵咒可用"
+  },
+  "Karthus": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "Q短周期与E持续区域伤害",
+   "poke": "Q远程区域消耗"
+  },
+  "Kassadin": {
+   "frontline": "被动魔法减伤与Q短时魔法盾，仅限魔法伤害",
+   "engage": null,
+   "peel": null,
+   "sustain": "W普攻附伤与R/E循环；不沿用E旧充能摘要",
+   "poke": "Q可远程点选消耗，射程有限仍须站位"
+  },
+  "Katarina": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": {
+    "pending": "击杀重置与R短引导的持续输出边界待核"
+   },
+   "poke": null
+  },
+  "Kayle": {
+   "frontline": null,
+   "engage": null,
+   "peel": "W友军治疗/R无敌",
+   "sustain": "被动与普攻循环，远程/焰浪须相应等级",
+   "poke": null
+  },
+  "Kayn": {
+   "frontline": {
+    "pending": "暗裔恢复与影流形态不同，尚未确认变身"
+   },
+   "engage": {
+    "pending": "暗裔W击飞依赖变身，未确认形态"
+   },
+   "peel": null,
+   "sustain": {
+    "pending": "基础Q/W反复伤害的持续循环待核；不以暗裔回血证明持续输出"
+   },
+   "poke": "基础W远程直线伤害，无需投入Q；形态影响射程"
+  },
+  "Kennen": {
+   "frontline": null,
+   "engage": "E进场/R及被动控制须叠印",
+   "peel": null,
+   "sustain": "W每第五次攻击附伤与E结束限时攻速",
+   "poke": "Q远程命中消耗"
+  },
+  "Khazix": {
+   "frontline": "W爆炸小区域内本人治疗，须本人贴近而非仅远射",
+   "engage": null,
+   "peel": null,
+   "sustain": "Q基础短冷却可重复近身伤害；进化孤立返冷却另有条件",
+   "poke": "W远程消耗"
+  },
+  "Kindred": {
+   "frontline": null,
+   "engage": null,
+   "peel": "R区域防死/结束治疗也作用敌人",
+   "sustain": "普攻与Q/W循环",
+   "poke": null
+  },
+  "Kled": {
+   "frontline": "坐骑生命、再上马与R盾，须相应状态",
+   "engage": "R进场或Q命中后拉回",
+   "peel": null,
+   "sustain": "W四次攻速循环",
+   "poke": "骑乘Q首段远程伤害，后续拉回另须牵绳"
+  },
+  "KogMaw": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "W与普攻循环",
+   "poke": "E/R远程消耗"
+  },
+  "KSante": {
+   "frontline": "W防御与技能承伤；R后属性变化",
+   "engage": "Q/W/R主动控制",
+   "peel": "E可给友军护盾",
+   "sustain": "Q与被动普攻循环",
+   "poke": null
+  },
+  "Leblanc": {
+   "frontline": null,
+   "engage": {
+    "pending": "E延迟束缚配位移的开团条件待核"
+   },
+   "peel": null,
+   "sustain": null,
+   "poke": "Q/E远程命中消耗"
+  },
+  "LeeSin": {
+   "frontline": "W护盾/近战吸血，依赖技能窗口",
+   "engage": "Q命中接近配R控制",
+   "peel": "W友军盾/R击退隔离",
+   "sustain": "被动攻速与回能循环",
+   "poke": "Q远程命中消耗"
+  },
+  "Leona": {
+   "frontline": "W防御窗口",
+   "engage": "E/R命中主动控制",
+   "peel": null,
+   "sustain": null,
+   "poke": null
+  },
+  "Lillia": {
+   "frontline": null,
+   "engage": "先施梦尘再R昏睡，须印记与R就绪",
+   "peel": null,
+   "sustain": "被动持续伤害与Q循环",
+   "poke": "E远程消耗"
+  },
+  "Lissandra": {
+   "frontline": "自R凝滞并回复，期间不能常规行动；敌方R无此自保",
+   "engage": "E接近配W/R控制",
+   "peel": {
+    "pending": "一般硬控是否构成专门保护待核"
+   },
+   "sustain": "Q短周期路径伤害，须蓝量与命中",
+   "poke": "Q路径消耗"
+  },
+  "Locke": {
+   "frontline": {
+    "pending": "W先持续损失生命再返还并治疗，恢复计算与承接窗口待核"
+   },
+   "engage": null,
+   "peel": null,
+   "sustain": "被动与强化普攻循环",
+   "poke": "Q远程三颗大钉本身造成伤害，普攻引爆是额外收益"
+  },
+  "Lucian": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "被动双枪循环",
+   "poke": "Q穿透消耗需目标/路线，W可远程命中"
+  },
+  "Lulu": {
+   "frontline": null,
+   "engage": {
+    "pending": "敌方W变形的主动留人口径待核，友方W不能同时默认施放"
+   },
+   "peel": "W/E/R友军保护",
+   "sustain": "皮克斯随跟随者每次攻击发弹；跟随队友时不能同时算本人",
+   "poke": "Q远程路径消耗"
+  },
+  "Lux": {
+   "frontline": null,
+   "engage": "Q束缚前两个命中敌人，须弹体命中",
+   "peel": "W可给路径上的友军护盾",
+   "sustain": null,
+   "poke": "Q/E远程命中消耗"
+  },
+  "Malphite": {
+   "frontline": "被动护盾与W防御",
+   "engage": "R命中主动控制",
+   "peel": null,
+   "sustain": null,
+   "poke": "Q可远程点选消耗，射程有限仍须站位"
+  },
+  "Malzahar": {
+   "frontline": {
+    "pending": "被动首次受伤防护与短残留的近身承接用途待核"
+   },
+   "engage": "R主动压制须距离内站定引导，可被打断",
+   "peel": null,
+   "sustain": "E持续伤害与W召唤物",
+   "poke": "Q远程区域消耗"
+  },
+  "Maokai": {
+   "frontline": "被动近战治疗",
+   "engage": "W接触/R区域控制",
+   "peel": "Q击退隔离",
+   "sustain": null,
+   "poke": "E远程布置消耗"
+  },
+  "MasterYi": {
+   "frontline": "W限时引导治疗与减伤；不能同时常规攻击",
+   "engage": null,
+   "peel": null,
+   "sustain": "被动/E/R与普攻循环",
+   "poke": null
+  },
+  "Mel": {
+   "frontline": {
+    "pending": "W本人屏障/自盾的近身承接用途待核；不是友军护盾"
+   },
+   "engage": "E中心区域禁锢，外围仅减速",
+   "peel": {
+    "pending": "W反射覆盖队友威胁依赖站位，不能等同友军盾"
+   },
+   "sustain": {
+    "pending": "被动追加弹体的持续循环口径待核"
+   },
+   "poke": "Q/E远程消耗"
+  },
+  "Milio": {
+   "frontline": null,
+   "engage": null,
+   "peel": "W/E/R友军治疗、护盾与解除控制",
+   "sustain": null,
+   "poke": "Q远程命中后弹起爆炸伤害"
+  },
+  "MissFortune": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "W攻速与被动换目标普攻循环",
+   "poke": "Q弹射/E区域消耗，弹射须目标条件"
+  },
+  "MonkeyKing": {
+   "frontline": "被动护甲与恢复",
+   "engage": "E接近配R控制",
+   "peel": null,
+   "sustain": "Q/E与普攻循环",
+   "poke": null
+  },
+  "Mordekaiser": {
+   "frontline": "W护盾与治疗",
+   "engage": "E命中主动拉回",
+   "peel": {
+    "pending": "R隔开单名威胁时本人也离开队友，保护用途待核"
+   },
+   "sustain": "被动持续区与普攻循环",
+   "poke": null
+  },
+  "Morgana": {
+   "frontline": null,
+   "engage": "Q首目标命中禁锢，无需本人接近",
+   "peel": "E友军魔法护盾与控制防护",
+   "sustain": "W持续区域伤害",
+   "poke": "Q/W远程消耗"
+  },
+  "Naafiri": {
+   "frontline": "R首次接近后须时限内参与击杀取得重施机会，第二次施放才获盾",
+   "engage": null,
+   "peel": null,
+   "sustain": "犬群与连续Q输出",
+   "poke": "Q远程命中消耗"
+  },
+  "Nami": {
+   "frontline": null,
+   "engage": "Q/R命中主动控制",
+   "peel": "W可治疗友军",
+   "sustain": {
+    "pending": "E可自用或给队友下数次攻击/技能附伤，次数与持续循环口径待核"
+   },
+   "poke": "Q远程落点伤害或W直接选敌伤害"
+  },
+  "Nasus": {
+   "frontline": "被动吸血与R生命/抗性",
+   "engage": null,
+   "peel": null,
+   "sustain": "Q强化普攻循环",
+   "poke": "E远程区域消耗"
+  },
+  "Nautilus": {
+   "frontline": "W护盾",
+   "engage": "Q/R主动控制",
+   "peel": null,
+   "sustain": "W盾存留时普攻附持续伤害，盾被打破即失去",
+   "poke": null
+  },
+  "Neeko": {
+   "frontline": null,
+   "engage": "R接近后范围控制",
+   "peel": null,
+   "sustain": "W每第三次普攻附伤，须实际普攻命中",
+   "poke": "Q远程区域消耗"
+  },
+  "Nidalee": {
+   "frontline": null,
+   "engage": null,
+   "peel": "人形E可治疗友军",
+   "sustain": "人E给目标攻速可供本人普攻，须选择自身；两形态技能不能同时施放",
+   "poke": "人形Q远程命中消耗"
+  },
+  "Nilah": {
+   "frontline": "W闪避/减伤与近战治疗",
+   "engage": "E接近配R控制",
+   "peel": "W分享防御/R按伤害治疗队友",
+   "sustain": "Q强化与普攻循环",
+   "poke": null
+  },
+  "Nocturne": {
+   "frontline": "W限时格挡下一敌方技能/被动近战治疗，须施法窗口",
+   "engage": "R接近配E控制",
+   "peel": null,
+   "sustain": "被动与普攻循环",
+   "poke": null
+  },
+  "Nunu": {
+   "frontline": "Q治疗支持承伤",
+   "engage": "W/E/R主动控制",
+   "peel": null,
+   "sustain": "被动触发并存留时给本人攻速与范围普攻",
+   "poke": null
+  },
+  "Olaf": {
+   "frontline": "W盾、R抗性与近战续战，须相应状态",
+   "engage": null,
+   "peel": null,
+   "sustain": "被动与普攻循环",
+   "poke": "Q远程命中消耗"
+  },
+  "Orianna": {
+   "frontline": null,
+   "engage": "R拉拽须球的位置条件",
+   "peel": "E友军护盾与防御属性",
+   "sustain": "被动普攻附伤，连续攻击同一目标增伤",
+   "poke": "Q/W远程消耗"
+  },
+  "Ornn": {
+   "frontline": "被动防御属性",
+   "engage": "E地形碰撞/R命中控制",
+   "peel": null,
+   "sustain": null,
+   "poke": null
+  },
+  "Pantheon": {
+   "frontline": "E正面限时免伤",
+   "engage": "W主动接近点控",
+   "peel": null,
+   "sustain": {
+    "pending": "被动普攻/技能叠层的持续循环口径待核"
+   },
+   "poke": "蓄力Q远程消耗"
+  },
+  "Poppy": {
+   "frontline": "W防御属性与被动盾",
+   "engage": "E墙撞/R控制须地形或蓄力",
+   "peel": "W阻断突进/R隔离",
+   "sustain": null,
+   "poke": null
+  },
+  "Pyke": {
+   "frontline": null,
+   "engage": "Q/E命中主动控制",
+   "peel": null,
+   "sustain": null,
+   "poke": {
+    "pending": "Q的安全重复消耗口径待核"
+   }
+  },
+  "Qiyana": {
+   "frontline": null,
+   "engage": "R/河流Q控制须墙体或属性条件",
+   "peel": "R首段冲击波击退，地形爆炸另有条件",
+   "sustain": null,
+   "poke": {
+    "pending": "Q安全距离与属性条件待核"
+   }
+  },
+  "Quinn": {
+   "frontline": null,
+   "engage": {
+    "pending": "E接近击退后本人后撤的主动留人用途待核"
+   },
+   "peel": "E将目标击退且本人后撤，须目标与站位可用",
+   "sustain": "被动与W攻速循环",
+   "poke": "Q远程命中消耗"
+  },
+  "Rakan": {
+   "frontline": "被动周期自盾支持近身，须等待刷新",
+   "engage": "W/R主动接近控制",
+   "peel": "Q命中后靠近队友治疗/E友军盾",
+   "sustain": null,
+   "poke": null
+  },
+  "Rammus": {
+   "frontline": "W防御状态",
+   "engage": "Q/E/R主动接近控制",
+   "peel": {
+    "pending": "E强制敌人攻击本人，火力转移是否计友方保护待核"
+   },
+   "sustain": null,
+   "poke": null
+  },
+  "RekSai": {
+   "frontline": "先命中积怒再潜地消怒回血；潜地不能攻击",
+   "engage": "E隧道接W击飞，须潜地形态",
+   "peel": null,
+   "sustain": "Q强化普攻循环",
+   "poke": "潜地Q远程消耗"
+  },
+  "Rell": {
+   "frontline": "W护盾与防御属性",
+   "engage": "W/R主动接近控制",
+   "peel": null,
+   "sustain": "被动普攻附伤/W披甲态攻速，须相应形态",
+   "poke": null
+  },
+  "Renata": {
+   "frontline": null,
+   "engage": "R远程狂暴控制",
+   "peel": "E友军盾/W救援；复活须击杀条件",
+   "sustain": {
+    "pending": "被动标记与W攻速可支持循环，同目标标记未被消费时的伤害条件待核"
+   },
+   "poke": "E远程飞弹/爆炸伤害，无需接近"
+  },
+  "Renekton": {
+   "frontline": "Q近战治疗/R生命",
+   "engage": "E接近配W控制",
+   "peel": null,
+   "sustain": {
+    "pending": "W/怒气循环的短爆发与持续边界待核"
+   },
+   "poke": null
+  },
+  "Rengar": {
+   "frontline": "W近战回复",
+   "engage": "R接近配强化E，须残暴条件",
+   "peel": null,
+   "sustain": "Q攻速与普攻循环",
+   "poke": "E远程投掷伤害，强化束缚另须残暴"
+  },
+  "Riven": {
+   "frontline": "E近身护盾",
+   "engage": "Q第三段/W近身控制",
+   "peel": null,
+   "sustain": "被动普攻与Q循环",
+   "poke": null
+  },
+  "Rumble": {
+   "frontline": "W限时自盾；危险温度增强仍须满足状态",
+   "engage": {
+    "pending": "R缓速区域是否构成主动开团待核"
+   },
+   "peel": null,
+   "sustain": "Q持续喷火与过热普攻",
+   "poke": "E远程命中消耗"
+  },
+  "Ryze": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "被动与短周期Q/E循环",
+   "poke": "Q远程命中消耗"
+  },
+  "Samira": {
+   "frontline": "W短时摧毁周围敌方弹体，只阻弹体而非通用免伤",
+   "engage": null,
+   "peel": "W限时消除敌方弹体",
+   "sustain": "被动/普攻/R循环；R须叠评价",
+   "poke": "远处Q为弹体伤害，近处改为刀斩"
+  },
+  "Sejuani": {
+   "frontline": "被动防御与近战技能承伤",
+   "engage": "Q/R主动控制",
+   "peel": null,
+   "sustain": null,
+   "poke": null
+  },
+  "Senna": {
+   "frontline": null,
+   "engage": "W首目标命中后延迟对周围禁锢，须命中与延迟条件",
+   "peel": "Q友军治疗/R护盾",
+   "sustain": "被动与普攻循环",
+   "poke": "Q穿线消耗须可选目标"
+  },
+  "Seraphine": {
+   "frontline": null,
+   "engage": "R远程控制",
+   "peel": "W友军盾；治疗须已有盾等条件",
+   "sustain": null,
+   "poke": "Q/E远程消耗"
+  },
+  "Sett": {
+   "frontline": "被动恢复与W豪意护盾",
+   "engage": "E/R主动近身控制",
+   "peel": {
+    "pending": "R扛敌位移方向可能隔开威胁或带向友军，保护用途待核"
+   },
+   "sustain": "被动双拳与Q循环",
+   "poke": null
+  },
+  "Shaco": {
+   "frontline": null,
+   "engage": null,
+   "peel": {
+    "pending": "盒子恐惧是否属于专门反突进待核"
+   },
+   "sustain": "W触发后持续攻击，须盒子存活；背后普攻/R幻像另有位置或存活条件",
+   "poke": "E可远程点选消耗，射程有限仍须站位"
+  },
+  "Shen": {
+   "frontline": "被动护盾与W闪避",
+   "engage": "E主动嘲讽接触",
+   "peel": "W/R友军保护",
+   "sustain": "Q三次普攻附伤可循环，穿英雄额外增强另有条件",
+   "poke": null
+  },
+  "Shyvana": {
+   "frontline": "当前重做被动防御与W护盾",
+   "engage": "当前R沿途恐惧，须怒气/龙形态条件",
+   "peel": null,
+   "sustain": "Q附伤与普攻减Q冷却循环",
+   "poke": "E远程命中消耗"
+  },
+  "Singed": {
+   "frontline": "R防御属性与恢复",
+   "engage": "E/W限制区域控制",
+   "peel": "W缚地/E隔开敌人",
+   "sustain": "Q持续毒伤",
+   "poke": null
+  },
+  "Sion": {
+   "frontline": "W生命成长与护盾",
+   "engage": "Q蓄力/R方向命中控制",
+   "peel": null,
+   "sustain": null,
+   "poke": "E首段远程伤害；推小兵穿线另有条件"
+  },
+  "Sivir": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "W弹射与普攻循环",
+   "poke": "Q远程路径消耗"
+  },
+  "Skarner": {
+   "frontline": "W护盾",
+   "engage": "E/R主动控制，R有目标数量限制",
+   "peel": {
+    "pending": "E/R转移敌方位置的友方保护用途依路径/方向待核"
+   },
+   "sustain": "被动持续伤害与Q强化普攻",
+   "poke": {
+    "pending": "Q拾石投掷的安全距离条件待核"
+   }
+  },
+  "Smolder": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "Q叠层与普攻循环",
+   "poke": "W/R远程消耗；叠层效果须达到门槛"
+  },
+  "Sona": {
+   "frontline": null,
+   "engage": "R命中主动控制",
+   "peel": "W友军治疗与护盾",
+   "sustain": {
+    "pending": "短周期Q与被动普攻的持续循环口径待核"
+   },
+   "poke": "Q远程命中消耗"
+  },
+  "Soraka": {
+   "frontline": null,
+   "engage": {
+    "pending": "E延迟禁锢的先手条件待核"
+   },
+   "peel": "W/R可治疗友军",
+   "sustain": {
+    "pending": "Q重复伤害与短周期持续输出边界待核"
+   },
+   "poke": "Q远程区域消耗"
+  },
+  "Swain": {
+   "frontline": "被动生命/治疗与R续战",
+   "engage": "E命中主动留人",
+   "peel": null,
+   "sustain": "Q/R持续输出，R依赖范围内敌人",
+   "poke": "W远程区域消耗"
+  },
+  "Sylas": {
+   "frontline": "W近战回血",
+   "engage": "E二段命中主动控制",
+   "peel": null,
+   "sustain": "被动强化普攻循环",
+   "poke": "Q远程命中消耗"
+  },
+  "Syndra": {
+   "frontline": null,
+   "engage": "QE命中控制，须球的位置条件",
+   "peel": "E明确击退隔离",
+   "sustain": {
+    "pending": "Q周期/碎晶后双充能的持续输出边界待核"
+   },
+   "poke": "Q远程区域消耗"
+  },
+  "TahmKench": {
+   "frontline": "E灰血与护盾",
+   "engage": "W命中主动控制",
+   "peel": "R可吞友军保护，须选择友方目标",
+   "sustain": "被动普攻与Q循环",
+   "poke": "Q远程命中消耗"
+  },
+  "Taliyah": {
+   "frontline": null,
+   "engage": "W命中/R地形限制",
+   "peel": "E反突进与W隔离",
+   "sustain": "Q连续投石，掘石场形态仍需考虑",
+   "poke": "Q远程路径消耗"
+  },
+  "Talon": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": {
+    "pending": "短时流血的持续输出口径待核"
+   },
+   "poke": "W远程路径消耗"
+  },
+  "Taric": {
+   "frontline": "自身护甲与近战防御",
+   "engage": "E延迟直线晕眩，可移动瞄准；友军镜像不是本人控制前提",
+   "peel": "Q/W/R友军保护",
+   "sustain": "被动双击返技能冷却循环",
+   "poke": null
+  },
+  "Teemo": {
+   "frontline": null,
+   "engage": null,
+   "peel": {
+    "pending": "Q致盲防普攻是否归专门保护待核"
+   },
+   "sustain": "E与普攻循环",
+   "poke": "Q/R陷阱消耗，陷阱须布置"
+  },
+  "Thresh": {
+   "frontline": "被动收魂成长护甲；W给本人及首名触灯笼友方护盾",
+   "engage": "Q命中主动拉回",
+   "peel": "W灯笼盾/拉回与E击退",
+   "sustain": {
+    "pending": "E普攻附伤的最低值与灵魂条件待核"
+   },
+   "poke": "Q首段远程伤害，不强制二次Q接近"
+  },
+  "Tristana": {
+   "frontline": null,
+   "engage": {
+    "pending": "跳入配R控制的主动留人条件待核"
+   },
+   "peel": "R击退隔离",
+   "sustain": "Q与普攻循环",
+   "poke": null
+  },
+  "Trundle": {
+   "frontline": "被动/R近战续战与偷取抗性",
+   "engage": "E柱体限制区域",
+   "peel": "E柱体可隔开威胁",
+   "sustain": "Q/W与普攻循环",
+   "poke": null
+  },
+  "Tryndamere": {
+   "frontline": "R限时不死与近战Q恢复，须技能可用",
+   "engage": null,
+   "peel": null,
+   "sustain": "被动与普攻循环",
+   "poke": null
+  },
+  "TwistedFate": {
+   "frontline": null,
+   "engage": "R接近配黄牌，须选牌/目标条件",
+   "peel": null,
+   "sustain": "E周期普攻与攻速循环",
+   "poke": "Q远程路径消耗"
+  },
+  "Twitch": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "被动毒与普攻循环",
+   "poke": "W远程区域施加被动持续毒伤，非瞬间爆发"
+  },
+  "Udyr": {
+   "frontline": "W护盾与近战续战",
+   "engage": "E主动接触控制",
+   "peel": null,
+   "sustain": "Q/R姿态与普攻循环，觉醒有状态条件",
+   "poke": null
+  },
+  "Urgot": {
+   "frontline": "E近身护盾",
+   "engage": "E主动接触控制",
+   "peel": "E将首名英雄投向本人身后，须正确站位且避免扔向友军",
+   "sustain": "W与被动循环；永久W须相应等级",
+   "poke": "Q远程落点伤害，无需接E"
+  },
+  "Varus": {
+   "frontline": null,
+   "engage": "R远程控制，蔓延仍需时间和距离",
+   "peel": null,
+   "sustain": "W与普攻循环",
+   "poke": "Q/E远程消耗"
+  },
+  "Vayne": {
+   "frontline": null,
+   "engage": {
+    "pending": "E击退且撞墙才晕眩，主动留人站位/地形条件待核"
+   },
+   "peel": "E击退隔离，撞墙控制另须地形",
+   "sustain": "W与普攻循环",
+   "poke": null
+  },
+  "Veigar": {
+   "frontline": null,
+   "engage": "E区域限制",
+   "peel": {
+    "pending": "E边缘晕眩尚不足以独立证明专门阻断突进，保护用途待核"
+   },
+   "sustain": "Q短周期伤害，须蓝量与命中；不视W显示0为零冷却",
+   "poke": "Q/W远程命中消耗"
+  },
+  "Velkoz": {
+   "frontline": null,
+   "engage": "E落点击飞，近身命中改为击退",
+   "peel": "E近身击退隔离",
+   "sustain": {
+    "pending": "R短引导的持续输出边界待核"
+   },
+   "poke": "Q/W远程路径消耗"
+  },
+  "Vex": {
+   "frontline": "W自盾并伤害周围，近身防护不依赖恐惧就绪",
+   "engage": "R接近配被动恐惧，须被动就绪",
+   "peel": "被动恐惧明确打断位移，须就绪",
+   "sustain": {
+    "pending": "Q重复伤害不依赖恐惧，持续输出边界待核"
+   },
+   "poke": "Q/E远程消耗"
+  },
+  "Vi": {
+   "frontline": "被动周期护盾",
+   "engage": "Q/R主动控制",
+   "peel": {
+    "pending": "R路径击退是否适合专门隔离待核"
+   },
+   "sustain": "W与普攻循环",
+   "poke": null
+  },
+  "Viego": {
+   "frontline": {
+    "pending": "接触阵亡敌方幽魂治疗须击杀后机会，近身承伤用途待核"
+   },
+   "engage": "W命中主动控制",
+   "peel": "R落点击退最低生命百分比主目标之外的敌人，不能推走该主目标",
+   "sustain": "被动/Q与普攻循环",
+   "poke": null
+  },
+  "Viktor": {
+   "frontline": null,
+   "engage": {
+    "pending": "W延迟晕眩区的先手条件待核"
+   },
+   "peel": {
+    "pending": "W延迟区域控制的专门保护口径待核"
+   },
+   "sustain": {
+    "pending": "Q周期与R持续伤害的持续输出边界待核"
+   },
+   "poke": "E远程路径消耗"
+  },
+  "Vladimir": {
+   "frontline": "Q治疗/W规避与被动生命",
+   "engage": null,
+   "peel": null,
+   "sustain": "Q循环输出",
+   "poke": {
+    "pending": "Q安全站位距离待核"
+   }
+  },
+  "Volibear": {
+   "frontline": "W再次命中续战/E护盾",
+   "engage": "Q/R主动控制",
+   "peel": null,
+   "sustain": "被动/普攻/W循环，W续疗须同一目标",
+   "poke": "E远程延迟区域伤害，本人护盾才须进入圈"
+  },
+  "Warwick": {
+   "frontline": "被动/Q续战与E减伤",
+   "engage": "E/R主动控制",
+   "peel": null,
+   "sustain": "被动/普攻/Q循环",
+   "poke": null
+  },
+  "Xayah": {
+   "frontline": null,
+   "engage": null,
+   "peel": {
+    "pending": "E羽毛封路的专门保护条件待核"
+   },
+   "sustain": "被动/W与普攻循环",
+   "poke": "Q远程路径消耗"
+  },
+  "Xerath": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": {
+    "pending": "Q周期伤害与持续输出边界待核，不以R长冷却代替判断"
+   },
+   "poke": "Q/W/E/R远程消耗，仍须命中与施法站位"
+  },
+  "XinZhao": {
+   "frontline": "被动治疗与R远方免伤",
+   "engage": "E接近配Q第三击控制",
+   "peel": "R击退隔离，挑战目标不被击退",
+   "sustain": "Q/W与普攻循环",
+   "poke": null
+  },
+  "Yasuo": {
+   "frontline": "被动移动蓄满后受英雄/野怪伤害触发限时盾",
+   "engage": "Q须叠至第三段，Q3/EQ3可主动击飞；R须已有击飞",
+   "peel": "W阻挡敌方弹体",
+   "sustain": "Q与普攻循环",
+   "poke": {
+    "pending": "Q第三段远程风须先积层，远程消耗用途待核"
+   }
+  },
+  "Yone": {
+   "frontline": "W命中敌方单位才获盾，命中英雄另增加盾",
+   "engage": "Q第三段/R主动控制，Q须叠层",
+   "peel": null,
+   "sustain": "被动/Q与普攻循环",
+   "poke": null
+  },
+  "Yorick": {
+   "frontline": "Q近战普攻回复生命，对非英雄回复削减，须实际攻击",
+   "engage": "W延迟成墙限制敌方道路，可被破坏且敌人可提前离开",
+   "peel": "W延迟成墙后阻挡敌人、不挡友军，须墙未被击破",
+   "sustain": "雾行者/R召唤物与Q输出",
+   "poke": "E远程命中消耗"
+  },
+  "Yunara": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "被动/Q与普攻循环，R强化形态不能同时默认全可用",
+   "poke": "W远程命中消耗"
+  },
+  "Yuumi": {
+   "frontline": null,
+   "engage": null,
+   "peel": "E/R友军保护，须附身/友军关系条件",
+   "sustain": {
+    "pending": "E未附身时可给本人攻速，附身时改给队友，循环用途待核"
+   },
+   "poke": "Q远程命中消耗"
+  },
+  "Zaahen": {
+   "frontline": "被动复活与Q/R近身续战，须叠层/次数条件",
+   "engage": "W/E/R主动接触控制",
+   "peel": null,
+   "sustain": "被动/Q与普攻循环",
+   "poke": null
+  },
+  "Zac": {
+   "frontline": "被动拾块恢复",
+   "engage": "E/R主动控制",
+   "peel": null,
+   "sustain": "W短冷却且拾粘液返冷却，须近身、拾块与生命资源",
+   "poke": "Q首段远程伤害，不强制第二次普攻"
+  },
+  "Zed": {
+   "frontline": "R对敌施放时短时不可选，重施回影须窗口；不是持续承伤",
+   "engage": null,
+   "peel": null,
+   "sustain": "Q/E短周期伤害，W同技能命中回能另须条件",
+   "poke": "Q/W配影子远程消耗；不沿用R旧偷攻击力摘要"
+  },
+  "Zeri": {
+   "frontline": null,
+   "engage": null,
+   "peel": null,
+   "sustain": "Q与普攻循环",
+   "poke": "W远程消耗，地形强化须穿墙"
+  },
+  "Ziggs": {
+   "frontline": null,
+   "engage": null,
+   "peel": "W击退隔离，方向仍须控制",
+   "sustain": "Q短周期与技能减少被动强化普攻等待",
+   "poke": "Q/E远程区域消耗"
+  },
+  "Zilean": {
+   "frontline": null,
+   "engage": {
+    "pending": "双Q同位命中与等待的主动先手条件待核"
+   },
+   "peel": "R限时复活，须目标在时限内死亡",
+   "sustain": null,
+   "poke": "Q远程区域消耗"
+  },
+  "Zoe": {
+   "frontline": null,
+   "engage": "E命中后延迟昏睡，后续伤害会唤醒",
+   "peel": null,
+   "sustain": {
+    "pending": "被动技能后一次普攻的持续循环口径待核"
+   },
+   "poke": "Q/E配R的远程消耗"
+  },
+  "Zyra": {
+   "frontline": null,
+   "engage": "E路径禁锢；R延迟击飞另须目标停留",
+   "peel": {
+    "pending": "一般范围控制的专门保护口径待核"
+   },
+   "sustain": "植物持续攻击，依赖存活",
+   "poke": "Q/E远程命中消耗"
+  }
+ }
+}

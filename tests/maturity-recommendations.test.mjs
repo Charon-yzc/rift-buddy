@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -10,9 +11,9 @@ import {teamFavoriteId,findSavedTeam} from '../src/core/team-favorites.mjs';
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {profile} from '../src/core/rules.mjs';
 
-const game=JSON.parse(await fs.readFile('data/game.json','utf8'));
+const game=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
 const fixture=JSON.parse(await fs.readFile('tests/fixtures/opgg-unlisted-positions.json','utf8'));
-const buildEntries=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const buildEntries=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 
 test('every supported Rift hero position has a validated offline source and complete rune alternatives in the real resolver',()=>{
  const data={...game,builds:buildEntries};

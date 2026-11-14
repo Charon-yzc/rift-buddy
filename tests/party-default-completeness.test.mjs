@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -12,8 +13,8 @@ import {completeGearPlan} from '../src/core/complete-gear.mjs';
 import {createItemSet} from '../src/core/item-sets.mjs';
 import {BUNDLED_CATALOG,catalogIssues} from '../src/core/catalog.mjs';
 
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 data.catalogInfo=catalogIssues(BUNDLED_CATALOG,data);
 const hero=id=>data.champions.find(c=>c.id===id);
 const slotsFor=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role],manualPosition:!!picks[s.role]}));

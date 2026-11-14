@@ -1,3 +1,4 @@
+import {skillSummary} from '../src/core/skill-summary.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,16 +9,14 @@ const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snaps
 
 const data=JSON.parse(await fs.readFile('data/game.json'));
 
-test('guide view displays level 1 skill recommendation highlight when level 1',()=>{
+test('one-line skill widget retains opening, priority and next available skill',()=>{
  const selection=selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'});
  const live={available:true,champion:'Ashe',mode:'rift',at:Date.now(),level:1,skills:{Q:0,W:0,E:0,R:0},inventory:[],gold:500};
  const model=createGuideModel(data,selection,live);
  assert.equal(model.nextSkill,'W','Recommended next skill is W for level 1 Ashe');
 
  const html=renderGuide({model,connected:true,phase:'InProgress'},'overview',false,()=>'<img>');
- assert.match(html,/1级首点推荐/);
- assert.match(html,/建议首点 <strong>W<\/strong>/);
- assert.match(html,/主W副Q/);
+ const summary=skillSummary(model);assert.match(summary.text,/^W→Q→/);assert.match(summary.text,/主W 副Q/);assert.match(summary.detail,/当前可升 W/);assert.doesNotMatch(html,/1级首点推荐/);
 
  // After level 1 point is spent (level 2 with W=1)
  const liveLevel2={available:true,champion:'Ashe',mode:'rift',at:Date.now(),level:2,skills:{Q:0,W:1,E:0,R:0},inventory:[],gold:500};
@@ -25,5 +24,5 @@ test('guide view displays level 1 skill recommendation highlight when level 1',(
  assert.equal(modelLevel2.nextSkill,'Q');
  const htmlLevel2=renderGuide({model:modelLevel2,connected:true,phase:'InProgress'},'overview',false,()=>'<img>');
  assert.doesNotMatch(htmlLevel2,/1级首点推荐/);
- assert.match(htmlLevel2,/有技能点可升 <strong>Q<\/strong>/);
+ assert.match(skillSummary(modelLevel2).detail,/当前可升 Q/);assert.equal(skillSummary(modelLevel2).text,summary.text);
 });

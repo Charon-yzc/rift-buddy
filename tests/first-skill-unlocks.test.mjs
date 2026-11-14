@@ -1,9 +1,10 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
 import {legalSkillPrefix,legalSkillOrder,fillSkillOrder,editSkillOrder,skillOptions,nextSkill,recommendSkill,validateCustomSkillOrder,validateSavedSkillOrder,orderPriority} from '../src/core/skill-advice.mjs';
 import {getBuild} from '../src/core/builds.mjs';import {skillEditorView} from '../src/skill-editor-view.mjs';import {selectedBuildFields} from '../src/core/build-favorites.mjs';import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';import {captureRoomConfigurations,roomPreparation} from '../src/core/room-configuration.mjs';import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
 import {defaultState,validateState,saveState,readState,createBackup,mergeState} from '../services/storage.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const live=(level,skills={Q:0,W:0,E:0,R:0})=>({matched:true,level,skills});
 // Same-patch Riot CharacterRecords/Root.SpellLevelUpInfoList, via game-file mirror:
 // https://raw.communitydragon.org/16.20/game/data/characters/shen/shen.bin.json
