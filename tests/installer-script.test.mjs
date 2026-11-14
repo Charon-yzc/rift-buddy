@@ -20,6 +20,12 @@ test('interactive finish page offers launching the installed app',()=>{
  assert.match(script,/MUI_FINISHPAGE_RUN_TEXT "启动开黑搭子"/);
  assert.ok(script.indexOf('!define MUI_FINISHPAGE_RUN ')<script.indexOf('!insertmacro MUI_PAGE_FINISH'));
 });
+test('incremental installers default to silent mode for older clients while full installers keep the wizard',()=>{
+ const delta=installerScript({...args,baseManifest:'C:\\previous\\install.json'});
+ assert.match(delta,/^SilentInstall silent$/m);
+ assert.doesNotMatch(installerScript(args),/^SilentInstall /m);
+ assert.doesNotMatch(delta,/^\s*Exec(?:Shell|Wait)? .*开黑搭子\.exe/m,'Silent success must not restart the app');
+});
 test('installer explains replacement scope and reports a missing failure reason without claiming recovery',()=>{
  const script=installerScript(args);
  assert.match(script,/MUI_WELCOMEPAGE_TEXT.*先备份旧程序.*收藏与配置保留/);

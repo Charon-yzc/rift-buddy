@@ -28,7 +28,7 @@ OutFile ${quote(output)}
 InstallDir "$LOCALAPPDATA\\Programs\\${registryId}"
 InstallDirRegKey HKCU "Software\\${registryId}" "InstallDir"
 RequestExecutionLevel user
-Var PreviousInstallDir
+${baseManifest?'SilentInstall silent\n':''}Var PreviousInstallDir
 SetCompressor /SOLID lzma
 VIProductVersion "${version}.0"
 VIAddVersionKey /LANG=2052 "ProductName" "开黑搭子"

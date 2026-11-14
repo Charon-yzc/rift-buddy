@@ -302,7 +302,12 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
   if(hash.digest('hex')!==record.sha256){await cleanup({partials:false});throw Error('安装包完整性复验不一致，已删除；请重新下载');}
   if(dryRun){const witness={file:record.file,sha256:record.sha256,bytes:record.bytes,at:new Date().toISOString()};await atomicJSON(storeFile+'.dry-run.json',witness);return {launched:false,dryRun:true,...witness};}
   return new Promise((resolve,reject)=>{
-   const child=spawnImpl(record.file,{detached:true,stdio:'ignore'});
+   // NSIS /S skips the wizard and finish-page launch. /D must be last and
+   // unquoted, even with spaces; quote argv0 separately for cache paths with spaces.
+   const incremental=record.kind==='incremental';
+   const args=incremental?['/S',`/D=${path.resolve(installDir)}`]:[];
+   const options={detached:true,stdio:'ignore',...(incremental?{windowsHide:true,windowsVerbatimArguments:true,argv0:`"${record.file}"`}:{})};
+   const child=spawnImpl(record.file,args,options);
    child.once('error',reject);
    child.once('spawn',()=>{child.unref?.();resolve({launched:true,file:record.file});});
   });

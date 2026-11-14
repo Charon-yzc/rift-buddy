@@ -27,6 +27,16 @@ test('download and paused states distinguish preserving progress from discarding
  assert.match(paused,/已暂停增量包/);assert.match(paused,/继续下载/);assert.match(paused,/data-action="app-update-cancel"/);assert.doesNotMatch(paused,/data-action="app-update-pause"/);
  for(const phase of ['pausing','cancelling'])assert.match(appUpdatePanel({...base,update:{...transfer,phase}}),/data-action="app-update-cancel"[^>]*disabled/);
 });
+test('incremental update explains background installation and manual reopening',()=>{
+ const record={version:'0.59.58',kind:'incremental',bytes:2048};
+ const ready=appUpdatePanel({...base,update:{phase:'ready',record}});
+ assert.match(ready,/退出并安装/);assert.match(ready,/后台自动完成更新，无需操作安装向导/);
+ assert.match(ready,/下次手动打开即为新版，不会自动重启/);
+ const installing=appUpdatePanel({...base,update:{phase:'installing',record}});
+ assert.match(installing,/准备后台更新/);assert.match(installing,/启动失败会保留助手和重试入口/);
+ const full=appUpdatePanel({...base,update:{phase:'ready',record:{...record,kind:'full'}}});
+ assert.doesNotMatch(full,/后台自动完成更新|无需操作安装向导/);
+});
 test('panel escapes untrusted text and shows the current version',()=>{
  const html=appUpdatePanel({...base,version:'0.44.0<script>',update:{phase:'error',error:'<b>boom</b>'}});
  assert.ok(html.includes('软件更新'));assert.ok(!html.includes('<script>'));assert.ok(html.includes('&lt;script&gt;'));assert.ok(html.includes('&lt;b&gt;boom&lt;/b&gt;'));

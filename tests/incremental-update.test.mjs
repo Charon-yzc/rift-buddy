@@ -5,7 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
 import http from 'node:http';
-import {once} from 'node:events';
+import {once,EventEmitter} from 'node:events';
 import {payloadManifest,deltaPayload,installManifestText,INSTALL_MANIFEST,validateInstallManifest,appendDeltaPackage} from '../scripts/installer-payload.mjs';
 import {installedPayload} from '../services/incremental-update.mjs';
 import {createAppUpdateService} from '../services/app-update.mjs';
@@ -22,7 +22,7 @@ test('publishing another base retains existing deltas and rejects invalid or dup
  assert.throws(()=>appendDeltaPackage(JSON.stringify(next),{...entry('98.1.0'),file:'../escape.exe'},release.version));
 });
 async function fixture(t){
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-incremental-')),installDir=path.join(root,'installed'),tempDir=path.join(root,'download');await fs.mkdir(installDir);await fs.writeFile(path.join(installDir,'app.bin'),'unchanged native runtime');
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-incremental-')),installDir=path.join(root,'installed app 开黑搭子'),tempDir=path.join(root,'download cache 更新');await fs.mkdir(installDir);await fs.writeFile(path.join(installDir,'app.bin'),'unchanged native runtime');
  const base=await payloadManifest(installDir,'99.0.0');await fs.writeFile(path.join(installDir,INSTALL_MANIFEST),installManifestText(base));
  const deltaBytes=Buffer.from('synthetic incremental installer'),fullBytes=Buffer.from('synthetic complete installer'),name=deltaFileName('99.0.0',release.version);
  const delta={schema:1,version:release.version,packages:[{from:'99.0.0',baseManifestSha256:sha(installManifestText(base)),file:name,bytes:deltaBytes.length,sha256:sha(deltaBytes)}]},manifest=Buffer.from(JSON.stringify(delta));
@@ -39,6 +39,26 @@ test('file delta retains unchanged runtime bytes and lists exact removed and cha
 test('incremental download uses validated installed bytes and never downloads the complete installer',async t=>{
  const f=await fixture(t),progress=[],record=await f.service.download(release,{onProgress:p=>progress.push(p)});
  assert.equal(record.kind,'incremental');assert.deepEqual(await fs.readFile(record.file),f.deltaBytes);assert.ok(!f.hits.includes(`RiftBuddy-${release.version}-Setup.exe`));assert.ok(progress.some(p=>p.kind==='incremental'));assert.equal((await f.service.install()).dryRun,true);
+});
+test('incremental install silently targets the running copy and remains retryable until spawn succeeds',async t=>{
+ const f=await fixture(t),record=await f.service.download(release),calls=[];
+ let child,unrefs=0,started=Promise.withResolvers();
+ const service=createAppUpdateService({...f.options,dryRun:false,spawnImpl:(file,args,options)=>{
+  calls.push({file,args,options});child=new EventEmitter();child.unref=()=>unrefs++;started.resolve();return child;
+ }});
+ const first=service.install();await started.promise;
+ assert.equal(unrefs,0);
+ const failure=assert.rejects(first,/EACCES/);child.emit('error',Error('EACCES blocked'));await failure;
+ assert.equal((await service.pending()).file,record.file);
+ started=Promise.withResolvers();let settled=false;
+ const retry=service.install().then(result=>{settled=true;return result;});await started.promise;
+ assert.equal(settled,false);assert.equal(unrefs,0);
+ child.emit('spawn');assert.equal((await retry).launched,true);assert.equal(unrefs,1);
+ assert.equal(calls.length,2);
+ for(const call of calls){
+  assert.equal(call.file,record.file);assert.deepEqual(call.args,['/S',`/D=${f.installDir}`]);
+  assert.deepEqual(call.options,{detached:true,stdio:'ignore',windowsHide:true,windowsVerbatimArguments:true,argv0:`"${record.file}"`});
+ }
 });
 test('a release without delta metadata uses the independently verified full installer',async t=>{
  const f=await fixture(t);f.routes.delete(deltaManifestName(release.version));
