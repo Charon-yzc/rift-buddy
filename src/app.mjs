@@ -2034,7 +2034,7 @@ async function performSync(manual=true,fresh=false){
   if(dragPick)pendingDragRender=true;else if(manual||activeAppSelect||windowLayout.docked&&changed||!document.activeElement?.matches('input,select'))render();
   if(buildView&&(renderedBuildContext!==buildSelectionContext(buildView.build)||previousMatchups!==matchupContext()))renderBuild();
  }}
- refreshClientClock();queueCompanionRecommendation();prefetchRankedDraft().catch(()=>{});if(sharedClient?.receivedAt&&sharedClient.receivedAt===client.receivedAt)sharedClient=null;if(sharedClient)setTimeout(()=>sync(false),0);
+ refreshClientClock();queueCompanionRecommendation();prefetchRankedDraft().catch(()=>{});if(sharedClient?.receivedAt&&sharedClient.receivedAt===client.receivedAt&&sharedClient.gameDisplay===client.gameDisplay)sharedClient=null;if(sharedClient)setTimeout(()=>sync(false),0);
 }
 function reflectRunePending(){
  reflectItemSetPending();
@@ -2227,6 +2227,14 @@ document.addEventListener('click',async event=>{
  if(configuration?.readOnly&&!readOnlyConfigurationAction(action))assertConfigurationEditable(configuration);
  if(action==='window-info'||action==='window-info-refresh'){await showWindowInfo(action==='window-info-refresh');return;}
  if(action==='window-info-copy'){if(!currentWindowInfo)throw Error('请先读取窗口资料');await api.copy(windowInfoText(currentWindowInfo));toast('窗口资料已复制');return;}
+ if(action==='game-display-borderless'||action==='game-display-dismiss'){
+  if(!api.gameDisplay)return;
+  const borderless=action==='game-display-borderless',controls=[...el.closest('.game-display-notice').querySelectorAll('button')];
+  for(const button of controls)button.disabled=true;
+  try{await api.gameDisplay(borderless?'borderless':'dismiss');delete client.gameDisplay;render();if(borderless)toast('已保存无边框，进局时生效');}
+  finally{for(const button of controls)button.disabled=false;}
+  return;
+ }
  if(action==='theme-open'){closeOverlay();updateThemeDialog(overlay,saved.preferences.presentation);return;}
  if(action==='presentation-open'){updatePresentationDialog(overlay,saved.preferences.presentation);return;}
   if(action==='presentation'){const change={field:el.dataset.field,value:el.dataset.field==='textScale'?Number(el.dataset.value):el.dataset.value},panel=overlay.firstElementChild;const themeOnly=!!overlay.querySelector('.theme-settings');saved.preferences.presentation=await api.presentation(change);render();if(panel&&overlay.firstElementChild===panel){if(themeOnly)updateThemeDialog(overlay,saved.preferences.presentation);else updatePresentationDialog(overlay,saved.preferences.presentation);}return;}
@@ -2708,7 +2716,7 @@ try{api.onHexRound?.(acceptHexRound);stopDataUpdates=api.onData?.(acceptSharedDa
   await restorePreparationSnapshot(boot.preparationSnapshot);render();api.onChampionUsage?.(acceptChampionUsage);api.championUsage?.().then(acceptChampionUsage).catch(()=>{});api.onClient?.(value=>{
    acceptOngoingClient(value);
   if(value?.connecting&&syncing){client={...client,...value};render();return;}
-  if(value?.connected===false&&!value.connecting||value?.receivedAt&&value.receivedAt!==client.receivedAt)sharedClient=value;
+  if(value?.connected===false&&!value.connecting||value?.receivedAt&&(value.receivedAt!==client.receivedAt||value.gameDisplay!==client.gameDisplay))sharedClient=value;
   if(!syncing&&(saved.preferences.autoSync!==false||sharedClient))sync(false);
  });const ready=await api.ready?.();await restorePreparationSnapshot(ready?.preparationSnapshot);if(ready?.state&&ready.revision>Math.max(stateRevision,externalState?.revision||0)){externalState=ready;drainExternalState();}queueCompanionRecommendation();if(saved.preferences.autoSync!==false)sync(false,{fresh:true});else if(client.receivedAt){sharedClient=client;sync(false);}
  

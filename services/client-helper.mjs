@@ -13,6 +13,7 @@ import {readState} from './storage.mjs';
 import {launchHelper} from './helper-launch.mjs';
 import {createMatchHistoryService} from './match-history.mjs';
 import {fetchPostGameReport} from './post-game.mjs';
+import {gameDisplayContext} from './game-display.mjs';
 const pipePattern=/^\\\\\.\\pipe\\rift-buddy-[a-f0-9]{32}$/;
 const tokenPattern=/^[a-f0-9]{64}$/;
 function sameSecret(actual,expected){return typeof actual==='string'&&tokenPattern.test(actual)&&crypto.timingSafeEqual(Buffer.from(actual,'hex'),Buffer.from(expected,'hex'));}
@@ -54,6 +55,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
     if(request.operation==='ping')result={ready:true};
     else if(request.operation==='liveDictionary'){const auth=await discoverClient(config.installPath).catch(()=>null);result=await liveClientDictionary(auth);}
      else if(request.operation==='status')result=await clientSnapshot(config.installPath,{partyIds:request.payload?.partyIds});
+     else if(request.operation==='gameDisplayContext')result=await gameDisplayContext(config.installPath,{includeInstallDir:request.payload?.includeInstallDir===true});
      else if(request.operation==='postGame')result=await readPostGame({installPath:config.installPath,own:request.payload?.own,game:request.payload?.game});
      else if(request.operation==='matchHistory'){socket.setTimeout(60000,()=>socket.destroy());result=await matchHistory.execute(request.payload?.operation,request.payload?.payload);}
     else if(request.operation==='applyRunes'){
@@ -120,6 +122,13 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
   const route=transport;
   const result=route.kind==='helper'?await send(route.config,'postGame',{own,game}):await fetchPostGameReport({installPath:route.installPath,own,game});
   if(!transportCurrent(token))throw Error('赛后读取通道已变化');return result;
+ }
+ async function displayContext(token,includeInstallDir){
+  if(!transportCurrent(token))throw Error('客户端连接已变化，请重试');
+  const route=transport,options={includeInstallDir};
+  const result=route.kind==='helper'?await send(route.config,'gameDisplayContext',options):await gameDisplayContext(route.installPath,options);
+  if(!transportCurrent(token))throw Error('客户端连接已变化，请重试');
+  return result;
  }
  async function statusWithTransport(installPath,partyIds=[]){
   if(closed)throw Error('连接已取消');const version=lifecycle,captured=config;
@@ -191,7 +200,7 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
   }});
   selectionOwner=owner;return owner;
  }
- return {ensure,active:()=>!!config,captureSelection,history,postGame,statusWithTransport,transportCurrent,liveDictionary,
+ return {ensure,active:()=>!!config,captureSelection,history,postGame,displayContext,statusWithTransport,transportCurrent,liveDictionary,
    request:(operation,payload)=>{if(!config)throw new Error('连接助手尚未就绪，请重试读取');return send(config,operation,payload,['prepareSelection','matchHistory'].includes(operation)?60000:12000);},
   status:async(installPath,partyIds=[])=> (await statusWithTransport(installPath,partyIds)).client,
   shutdown:async()=>{closed=true;writeEpoch++;revokeTransport();if(config){try{await send(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},

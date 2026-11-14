@@ -18,13 +18,18 @@ html{width:100%;height:100%}
 .hex-micro-line .hex-micro-augments img{width:24px;height:24px}
 .hex-micro-line .hex-micro-items .hex-micro-icon{width:24px;height:24px}
 .hex-micro-line .hex-micro-items img{width:20px;height:20px}
-.hex-economy-line{justify-content:space-between;gap:6px;color:#b5cbd3;font:9px/10px "Microsoft YaHei UI",sans-serif;font-variant-numeric:tabular-nums}
-.hex-economy-line>div{display:grid;grid-template-columns:repeat(5,24px);gap:2px}
+.hex-economy-line{height:54px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 6px;padding:2px 6px;color:#b5cbd3;font:9px/10px "Microsoft YaHei UI",sans-serif;font-variant-numeric:tabular-nums}
+.hex-economy-line>div:is(.ally,.enemy){display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}
 .hex-economy-line .enemy{color:#d1b6af}
-.hex-economy-line span{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.hex-economy-line>div:is(.ally,.enemy) span{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
 .hex-economy-line img{width:21px;height:21px;border-radius:2px}
 .hex-economy-line small{font:inherit;white-space:nowrap}
 .hex-economy-line .hex-micro-empty{width:24px;height:32px}
+.hex-economy-totals{display:flex;align-items:center;justify-content:space-between;gap:3px;min-height:15px;padding-top:2px;border-top:1px solid #b9ccd32e;white-space:nowrap;font-size:10px;line-height:12px}
+.hex-economy-totals .ally{color:#cce7ee}.hex-economy-totals .enemy{color:#e2c7c1}
+.hex-economy-totals b{color:#c2cbd1;font-weight:600}.hex-economy-totals [data-economy-diff=ahead]{color:#7ce6a3}.hex-economy-totals [data-economy-diff=behind]{color:#ff9497}
+.hex-economy-line .hex-economy-totals{grid-column:1/-1;justify-content:center;gap:12px}
+[data-kind=economy][data-layout=line] #hex-micro-root{height:54px}
 
 /* The first recipe and every full card share the same two-row geometry. */
 .hex-micro-route,[data-kind=routes] .hex-micro-line:not(.hex-micro-pending){display:grid;grid-template-columns:max-content minmax(72px,1fr);align-items:center;column-gap:6px;row-gap:4px}

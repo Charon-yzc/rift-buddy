@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  onHexRound:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('hex-round',listener);return()=>ipcRenderer.removeListener('hex-round',listener);},
  dataSnapshot:()=>ipcRenderer.invoke('data-snapshot'),
  windowInfo:()=>ipcRenderer.invoke('window-info'),
+ gameDisplay:action=>ipcRenderer.invoke('game-display',action),
  presentation:change=>ipcRenderer.invoke('presentation',change),
  onPresentation:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('presentation-update',listener);return()=>ipcRenderer.removeListener('presentation-update',listener);},
  saveState:(state,base,preparationGuard=null,sourceEpoch)=>ipcRenderer.invoke('save-state',state,base,preparationGuard,sourceEpoch),

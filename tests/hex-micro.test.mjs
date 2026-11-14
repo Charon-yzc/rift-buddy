@@ -17,7 +17,30 @@ test('micro economy shows public holdings only; missing bags and unknown prices 
  live.roster[1].itemsKnown=true;assert.equal(hexEconomyCells(publicEquipment(data,live),'enemy')[0].value,0);
  live.roster[1].inventory=[{id:'9999',count:1}];assert.equal(hexEconomyCells(publicEquipment(data,live),'enemy')[0].value,null);
  assert.ok(hexEconomyCells(publicEquipment(data,{available:false}),'ally').every(p=>p===null));
- const html=hexEconomyView(equipment,image);assert.doesNotMatch(html,/999999/);assert.equal((html.match(/class="hex-economy-/g)||[]).length,4);assert.match(html,/>400</);
+ const html=hexEconomyView(equipment,image);assert.doesNotMatch(html,/999999/);assert.equal((html.match(/class="hex-economy-(icons|values)/g)||[]).length,4);assert.match(html,/>400</);
+});
+
+test('both economy layouts show full-team equipment totals and the signed ally difference',()=>{
+ const ids=['Ashe','Jhin','Lux','Ahri','Sona'],fixture={...data,champions:ids.map(id=>({id,name:id}))};
+ const roster=['ally','enemy'].flatMap(side=>ids.map(champion=>({champion,side,itemsKnown:true,inventory:[{id:side==='ally'?'1001':'2003',count:1}]})));
+ const view=()=>{
+  const model={mode:'rift',equipment:publicEquipment(fixture,{teamKnown:true,roster})};
+  const payload=hexMicroPayload({model},'economy');
+  return [hexEconomyView(payload.equipment,image),hexMicroLineView(payload,image)];
+ };
+ for(const html of view()){
+  assert.match(html,/>我 1,500</);assert.match(html,/>敌 250</);
+  assert.match(html,/data-economy-diff="ahead"[^>]*>\+1,250</);
+ }
+ for(const row of roster.filter(row=>row.side==='enemy'))row.inventory=[{id:'1001',count:2}];
+ for(const html of view())assert.match(html,/data-economy-diff="behind"[^>]*>-1,500</);
+ for(const row of roster.filter(row=>row.side==='enemy'))row.inventory=[{id:'1001',count:1}];
+ for(const html of view())assert.match(html,/data-economy-diff="tied"[^>]*>0</);
+ roster.at(-1).itemsKnown=false;
+ for(const html of view()){
+  assert.match(html,/>我 1,500</);assert.match(html,/>敌 —</);
+  assert.match(html,/data-economy-diff="pending"[^>]*>—</);
+ }
 });
 
 test('micro routes retain all paired icons and expose every route to scrolling',()=>{
@@ -37,7 +60,7 @@ test('one-line route keeps all paired icons and provenance',()=>{
 test('micro positions stay independent of Rift layout and follow the game display at both text scales',()=>{
  const area={x:-1920,y:0,width:1920,height:1040},game={x:-1800,y:40,width:1600,height:900};
  const small=hexMicroPlacement('economy',null,area,game),large=hexMicroPlacement('routes',null,area,game,1.25);
- assert.deepEqual(small,{x:-1788,y:96,width:168,height:118});assert.equal(large.width,80);assert.equal(large.height,80);assert.equal(large.y,96);
+ assert.deepEqual(small,{x:-1788,y:96,width:168,height:134});assert.equal(large.width,80);assert.equal(large.height,80);assert.equal(large.y,96);
  const offset=hexMicroOffset({...large,x:-1600,y:120},area,game);assert.deepEqual(offset,{x:200,y:80});
  assert.equal(hexMicroPlacement('routes',offset,area,game).x,-1600);
  assert.deepEqual(validateHexWindows({economy:{x:10,y:20,width:900},routes:{x:Infinity,y:3},extra:'private'}),{economy:{x:10,y:20}});

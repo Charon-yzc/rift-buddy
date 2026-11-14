@@ -19,6 +19,8 @@ internal static class WindowObserver {
     [DllImport("user32.dll")] private static extern bool SetProcessDpiAwarenessContext(IntPtr context);
     [DllImport("user32.dll")] private static extern bool SetProcessDPIAware();
     [DllImport("dwmapi.dll")] private static extern int DwmGetWindowAttribute(IntPtr window, int attribute, out Rect rect, int size);
+    [DllImport("shell32.dll")] private static extern int SHQueryUserNotificationState(out int state);
+    private const int RunningExclusiveDirect3D = 3;
     private sealed class WindowInfo {
         public int x, y, width, height;
         public bool minimized, foreground;
@@ -37,26 +39,40 @@ internal static class WindowObserver {
             uint pid; GetWindowThreadProcessId(window, out pid);
             if (!pids.Contains(pid) || !IsWindowVisible(window)) return true;
             Rect r;
-            if (DwmGetWindowAttribute(window, 9, out r, Marshal.SizeOf(typeof(Rect))) != 0 && !GetWindowRect(window, out r)) return true;
+            if ((DwmGetWindowAttribute(window, 9, out r, Marshal.SizeOf(typeof(Rect))) != 0 || !Usable(r)) && !GetWindowRect(window, out r)) return true;
+            if (!Usable(r)) return true;
             var current = new WindowInfo { x = r.Left, y = r.Top, width = r.Right - r.Left, height = r.Bottom - r.Top, minimized = IsIconic(window), foreground = window == active };
-            if (current.width < 200 || current.height < 100) return true;
             if (best == null || current.foreground || !best.foreground && (long)current.width * current.height > (long)best.width * best.height) best = current;
             return true;
         }, IntPtr.Zero);
         return best;
+    }
+    private static bool Usable(Rect r) { return r.Right - r.Left >= 200 && r.Bottom - r.Top >= 100; }
+    private static bool ExclusiveFullscreen() {
+        try { int state; return SHQueryUserNotificationState(out state) == 0 && state == RunningExclusiveDirect3D; }
+        catch (EntryPointNotFoundException) { return false; }
     }
     private static int Main(string[] args) {
         try { SetProcessDpiAwarenessContext(new IntPtr(-4)); } catch { try { SetProcessDPIAware(); } catch { } }
         bool once = args.Length == 1 && args[0] == "--once";
         if (args.Length > 0 && !once) return 2;
         var json = new JavaScriptSerializer();
+        uint lastExclusiveGamePid = 0;
         if (!once) ThreadPool.QueueUserWorkItem(unused => { try { Console.In.ReadToEnd(); } catch { } running = false; });
         do {
             try {
                 var active = GetForegroundWindow();
                 var client = Find(Pids("LeagueClientUx"), active);
-                var game = Find(Pids("League of Legends"), active);
-                Console.WriteLine(json.Serialize(new { client, game }));
+                var gamePids = Pids("League of Legends");
+                var game = Find(gamePids, active);
+                uint foregroundPid = 0;
+                if (active != IntPtr.Zero) GetWindowThreadProcessId(active, out foregroundPid);
+                bool gameForeground = gamePids.Contains(foregroundPid);
+                // Opening the assistant can minimize the game. Keep the last
+                // foreground sample for the current game process only.
+                if (!gamePids.Contains(lastExclusiveGamePid)) lastExclusiveGamePid = 0;
+                if (gameForeground) lastExclusiveGamePid = ExclusiveFullscreen() ? foregroundPid : 0;
+                Console.WriteLine(json.Serialize(new { client, game, gameProcessPresent = gamePids.Count > 0, gameExclusiveFullscreen = lastExclusiveGamePid != 0 }));
                 Console.Out.Flush();
             } catch { return 1; }
             if (once) break;

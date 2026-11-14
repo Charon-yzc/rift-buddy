@@ -24,5 +24,6 @@ module.exports=function createWindowPeek({root,getWindow,getArea,title,onRestore
   // calls must not postpone cleanup; a quick fold can still reuse this tab.
   releaseTimer=setTimeout(()=>{releaseTimer=null;if(!folded&&tab===idle){tab=null;if(!idle.isDestroyed())idle.destroy();}},250);releaseTimer.unref?.();}}
  function restore(){unfold();onRestore();return true;}
- return {fold,sync,unfold,active:()=>folded,visible:()=>folded&&shown,destroy:()=>{cancelRelease();folded=false;shown=false;const closing=tab;tab=null;closing?.destroy();}};
+ const info=()=>folded&&tab&&!tab.isDestroyed()?{bounds:tab.getBounds(),visible:tab.isVisible(),layout:'edge'}:null;
+ return {fold,sync,unfold,active:()=>folded,visible:()=>folded&&shown,info,destroy:()=>{cancelRelease();folded=false;shown=false;const closing=tab;tab=null;closing?.destroy();}};
 };

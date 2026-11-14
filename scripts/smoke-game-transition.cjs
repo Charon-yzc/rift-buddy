@@ -27,6 +27,7 @@ async function run(){
   assert.equal(options.port,23456);assert.equal(options.method||'GET','GET','A real rune write must never occur in this test');
   if(p==='/lol-summoner/v1/current-summoner')return {value:{gameName:'隔离阶段玩家',tagLine:'TEST'}};
   if(p==='/lol-gameflow/v1/gameflow-phase')return {value:phase};
+  if(p==='/data-store/v1/install-dir')return {value:path.join(root,'client-fixture')};
   if(p==='/lol-gameflow/v1/session')return gameId?{value:{gameData:{gameId,mapId:mapId(),queue:{id:mode==='hex'?2400:430,gameMode:gameMode()}}}}:{status:404,value:{}};
   if(p==='/lol-lobby/v2/lobby')return {status:404,value:{}};
   if(p==='/lol-champ-select/v1/session'){
@@ -52,6 +53,33 @@ async function run(){
   return Promise.race([main.webContents.executeJavaScript(code,true),delay(8000).then(()=>{throw Error('Main renderer did not finish: '+code);})]);
  };
  await until(()=>js('!!document.querySelector("[data-action=guide-current]")'),'UI missing');const status=async()=>{console.log('TRANSITION STATUS '+phase+' '+gameId+' '+hero);const result=await js('window.buddy.client(true)');console.log('TRANSITION OBSERVED '+phase+' '+gameId);return result;},state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
+ const riftGuideWindow=()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/guide.html'));
+ if(!source){
+  const fixture=path.join(root,'client-fixture','Config','game.cfg'),original=await fs.readFile(fixture,'utf8');
+  await until(()=>observer,'Native observer did not start');
+  const clientBounds={...screen.dipToScreenRect(null,screen.getPrimaryDisplay().workArea),foreground:false,minimized:false};
+  observer.stdout.emit('data',JSON.stringify({client:clientBounds,game:null,gameProcessPresent:false})+'\n');
+  await js('document.querySelector("[data-action=navigate][data-route=settings]").click()');
+  // In this fixture automatic sync is off; drive the real client read and
+  // render path with the existing manual connection control.
+  await js('document.querySelector("[data-client-connect]").click()');
+  const action='[data-action=game-display-borderless]';
+  await until(()=>js(`!!document.querySelector('${action}')`),'Fullscreen switch did not appear automatically');
+  const side=await until(()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().includes('surface=companion')),'Selecting sidebar did not open');
+  const sidebar=code=>side.webContents.executeJavaScript(code,true);
+  await until(()=>sidebar(`!!document.querySelector('${action}')`),'Fullscreen switch missing from the selection sidebar');
+  assert.equal(await fs.readFile(fixture,'utf8'),original,'Displaying the action must not edit the game');
+  phase='GameStart';
+  await assert.rejects(js('window.buddy.gameDisplay("borderless")'),/游戏目录已变化|下一局|进局前/);
+  assert.equal(await fs.readFile(fixture,'utf8'),original);
+  phase='ChampSelect';
+  await sidebar(`document.querySelector('${action}').click()`);
+  await until(async()=>await fs.readFile(fixture,'utf8')===original.replace('WindowMode=0','WindowMode=2'),'Borderless click did not update the fixture');
+  await until(()=>js(`!document.querySelector('${action}')`),'Successful choice did not dismiss the notice');
+  await until(()=>sidebar(`!document.querySelector('${action}')`),'Sidebar still offers switching after success');
+  observer.stdout.emit('data','{"client":null,"game":null,"gameProcessPresent":false}\n');
+  await js('document.querySelector("[data-action=navigate][data-route=draft]").click()');
+ }
  // Change preferences through the renderer that owns them. A raw IPC save
  // leaves that renderer's preferences stale and a later preparation save can
  // overwrite the fixture's change; that is not the user's settings flow.
@@ -64,7 +92,7 @@ async function run(){
   await until(async()=>(await state()).preferences.autoLive===patch.autoLive,'Live preference did not persist');
   await js('document.querySelector("[data-action=navigate][data-route=draft]").click()');
  };
- await status();assert.equal((await state()).guide.selection.id,'Ashe','First selection must prepare a guide without opening one');assert.equal(windows.some(w=>w.webContents.getURL().endsWith('/src/guide.html')),false,'Selection prepares without displaying the in-game window');phase='GameStart';await status();phase='InProgress';await status();const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'Automatic guide missing'),gjs=code=>Promise.race([guide.webContents.executeJavaScript(code,true),delay(8000).then(()=>{throw Error('Guide renderer did not finish: '+code);})]);await until(()=>gjs('!!window.guide'),'Guide preload missing');await until(()=>gjs('!!document.querySelector(".compact-next")'),'Guide UI missing');await until(()=>guide.isVisible(),'Fresh installation must auto-show its first guide');phase='ChampSelect';await status();
+ await status();assert.equal((await state()).guide.selection.id,'Ashe','First selection must prepare a guide without opening one');assert.equal(!!riftGuideWindow(),false,'Selection prepares without displaying the in-game window');phase='GameStart';await status();phase='InProgress';await status();const guide=await until(riftGuideWindow,'Automatic guide missing'),gjs=code=>Promise.race([guide.webContents.executeJavaScript(code,true),delay(8000).then(()=>{throw Error('Guide renderer did not finish: '+code);})]);await until(()=>gjs('!!window.guide'),'Guide preload missing');await until(()=>gjs('!!document.querySelector(".compact-next")'),'Guide UI missing');await until(()=>guide.isVisible(),'Fresh installation must auto-show its first guide');phase='ChampSelect';await status();
  await gjs('window.guide.control("hide")');phase='GameStart';await status();assert.equal(guide.isVisible(),false,'Loading must not auto-show the guide before entering the game');phase='InProgress';await status();assert.equal(guide.isVisible(),false,'A hidden guide must stay hidden through same-game phase jitter');assert.equal((await state()).guide.selection.role,'support','Explicit manual position must survive the formal client role');assert.equal(liveRequests,0,'Disabled live must never read the local game API');
  // The first live inventory arrives after the selection session has disappeared.
  await prefs({autoLive:true});liveAvailable=true;await js('window.buddy.openGuide()');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model.live.matched)'),'First live data missing');assert.equal((await state()).guide.selection.role,'support','Manual role lost after ChampSelect');assert.ok(liveRequests>=3);
@@ -108,6 +136,10 @@ async function run(){
    if(data.patch==='16.22')assert.ok(rows.find(row=>row.kind==='routes').routes.some(route=>route.augments.length&&route.items.length),'Current Mayhem route needs augments and equipment');
    assert.ok(rows.find(row=>row.kind==='economy').equipment.available);
    assert.equal(guide.isVisible(),false,'Mayhem must not show the Rift equipment window');
+   const report=await js('window.buddy.windowInfo()');
+   assert.equal(report.guideMode,'hex');
+   assert.equal(report.guideWidgets.routes.visible,true);
+   assert.equal(report.guideWidgets.economy.visible,true);
   }else{
    await until(()=>guide.isVisible(),'Rift must auto-show even when gameflow session returns 404');
    const {model}=await gjs('window.guide.bootstrap()');assert.equal(model.champion.id,hero);assert.equal(model.live.matched,true);assert.equal(model.matchId,null);
@@ -127,7 +159,7 @@ async function run(){
  }
  if(!source){
   await until(()=>observer,'Native observer did not start');
-  const gameWindow=present=>observer.stdout.emit('data',JSON.stringify({client:null,game:present?{...screen.dipToScreenRect(null,screen.getPrimaryDisplay().workArea),foreground:true,minimized:false}:null})+'\n');
+  const gameWindow=(present,exclusive=false)=>observer.stdout.emit('data',JSON.stringify({client:null,game:present?{...screen.dipToScreenRect(null,screen.getPrimaryDisplay().workArea),foreground:true,minimized:false}:null,gameProcessPresent:present||exclusive,gameExclusiveFullscreen:exclusive})+'\n');
   for(const [nextMode,clientPhase] of [['rift','Lobby'],['hex','GameStart']]){
    mode=nextMode;phase=clientPhase;gameId='';hero=mode==='rift'?'Amumu':'Camille';practice=mode==='rift';liveAvailable=true;
    await status();const before=await state();
@@ -140,6 +172,10 @@ async function run(){
    if(mode==='rift')assert.equal((await gjs('window.guide.bootstrap()')).model?.champion.id,hero);
    else assert.ok((await Promise.all(shown.map(w=>w.webContents.executeJavaScript('window.hexMicro.bootstrap().then(p=>p.hero?.id)',true)))).every(id=>id===hero));
    assert.deepEqual((await state()).guide,before.guide,'Observed game window is only evidence for display');
+   gameWindow(false,true);
+   const report=await js('window.buddy.windowInfo()');
+   assert.equal(report.observedGame,null);
+   assert.equal(report.gameExclusiveFullscreen,true,'Window check lost the fullscreen observation when geometry disappeared');
    gameWindow(false);await delay(150);assert.ok(shown.every(w=>w.isVisible()),'One missed native frame must keep the overlays');
    await delay(5000);gameWindow(false);await until(()=>shown.every(w=>!w.isVisible()),'Observed game exit left its overlays open');
   }

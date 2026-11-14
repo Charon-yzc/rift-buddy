@@ -113,5 +113,10 @@ module.exports=function createHexMicroWindows({root,getState,setState,getPayload
  // Forward pointer coordinates without intercepting game clicks. Only the
  // drag strip, explicit controls and an overflowing list accept mouse input.
  const pointer=setInterval(()=>{for(const kind of HEX_WINDOWS){const e=entries[kind],win=e.win;if(!win||win.isDestroyed()||!win.isVisible()||!active())continue;const p=screen.getCursorScreenPoint(),b=win.getBounds(),x=p.x-b.x,y=p.y-b.y,inside=x>=0&&y>=0&&x<b.width&&y<b.height,s=e.payload?.scale||1,control=e.regions.some(r=>x>=r.x&&x<r.x+r.width&&y>=r.y&&y<r.y+r.height),header=e.layout==='line'?x>b.width-58*s&&y<40*s:y<20*s;win.setIgnoreMouseEvents(!(inside&&(header||control)),{forward:true});win.webContents.send('hex-micro-pointer',inside?{x,y}:null);}},40);pointer.unref?.();
- return {show,resume,suspend,hide,publish,visible,requested,reset,fit:()=>{for(const k of HEX_WINDOWS){fit(k);entries[k].peek.sync(!suspended&&active()&&enabled(k)&&entries[k].requested&&entries[k].payload?.active);}},info:()=>Object.fromEntries(HEX_WINDOWS.map(k=>[k,{requested:entries[k].requested,visible:!!entries[k].win?.isVisible(),layout:entries[k].peek.active()?'edge':entries[k].layout,bounds:entries[k].win?.getBounds()}])),destroy:()=>{placementEpoch++;clearInterval(pointer);hideTooltip();tooltip?.destroy();for(const e of Object.values(entries)){clearTimeout(e.timer);e.peek.destroy();e.win?.destroy();}}};
+ function info(){return Object.fromEntries(HEX_WINDOWS.map(kind=>{
+  const {win,peek,requested,layout}=entries[kind];
+  const surface=peek.active()?peek.info?.():win&&!win.isDestroyed()?{visible:win.isVisible(),layout,bounds:win.getBounds()}:null;
+  return [kind,{...surface,requested}];
+ }));}
+ return {show,resume,suspend,hide,publish,visible,requested,reset,info,fit:()=>{for(const k of HEX_WINDOWS){fit(k);entries[k].peek.sync(!suspended&&active()&&enabled(k)&&entries[k].requested&&entries[k].payload?.active);}},destroy:()=>{placementEpoch++;clearInterval(pointer);hideTooltip();tooltip?.destroy();for(const e of Object.values(entries)){clearTimeout(e.timer);e.peek.destroy();e.win?.destroy();}}};
 };
