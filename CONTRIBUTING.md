@@ -2,6 +2,8 @@
 
 欢迎修复问题、改进交互和补充经过核实的组合。先阅读 [开发指南](docs/development.md)、[AGENTS.md](AGENTS.md) 与 [素材和权利说明](NOTICE.md)。
 
+整理视频研究资料时，按 [视频资料采集与笔记流程](docs/research/video-notes-workflow.md) 保存来源、时间戳与版本证据，并区分待采集记录、完成笔记和已复核机制。可复用 [视频笔记模板](docs/research/video-note-template.md)。
+
 ## 提交方式
 
 1. Fork 本仓库，拉取自己的 Fork，在新分支上修改。无需取得本仓库的直接写入权限。
