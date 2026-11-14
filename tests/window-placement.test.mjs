@@ -62,6 +62,8 @@ test('native snapshots accept bounded geometry only and drop unrelated window da
  const raw={x:-1200,y:10,width:1280,height:720,foreground:true,minimized:false,title:'private title',token:'not geometry'};
  assert.deepEqual(windowSnapshot({client:raw}).client,{x:-1200,y:10,width:1280,height:720,foreground:true,minimized:false});
  for(const v of [{...raw,width:Infinity},{...raw,x:0.5},{...raw,x:999999},{...raw,height:0}])assert.equal(windowSnapshot({game:v}).game,null);
+ assert.deepEqual(windowSnapshot({gameProcessPresent:true,gameExclusiveFullscreen:true,pid:42}),{client:null,game:null,gameProcessPresent:true,gameExclusiveFullscreen:true});
+ assert.equal(windowSnapshot({gameProcessPresent:false,gameExclusiveFullscreen:true}).gameExclusiveFullscreen,false);
 });
 test('automatic companion defaults on, opt-out survives saving and partial backup import',()=>{
  assert.equal(validateState(defaultState()).preferences.clientCompanion,true);

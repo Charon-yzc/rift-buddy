@@ -121,11 +121,13 @@ async function run(){
  assert.equal(await j(side,'document.querySelector("[data-stage=\\"2\\"]").querySelectorAll("img").length'),0);
  side.webContents.setZoomFactor(1);mode='rift';ownHero='LeeSin';gameId++;phase='InProgress';await j(main,'window.buddy.client(true)');await j(main,'window.buddy.openGuide({id:"LeeSin",role:"jungle",mode:"rift"})');
  const gear=await until(()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/guide.html')),'Rift card missing');await until(()=>j(gear,'!!document.querySelector(".compact-guide-main")'),'Compact not rendered');
- let allowLive=false,heldLive=[];
+ let allowLive=false,heldLive=[],enemyItem=2003;
  https.get=(options,callback)=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,2999);
-  const own={riotId:'isolated-live-player',rawChampionName:'game_character_displayname_LeeSin',team:'ORDER',position:'JUNGLE',items:[]};
-  const values={'/liveclientdata/activeplayer':{riotId:own.riotId,currentGold:425,level:1},'/liveclientdata/playerlist':[own],'/liveclientdata/gamestats':{gameMode:'CLASSIC',mapNumber:11,gameTime:25},'/liveclientdata/eventdata':{Events:[]}};
+  const own={riotId:'isolated-live-player',rawChampionName:'game_character_displayname_LeeSin',team:'ORDER',position:'JUNGLE',items:[{itemID:1001,count:1}]};
+  const team=(ids,team,itemID)=>ids.map(id=>({rawChampionName:'game_character_displayname_'+id,team,items:[{itemID,count:1}]}));
+  const players=[own,...team(['Ahri','Ashe','Lux','Sona'],'ORDER',1001),...team(['Garen','Jhin','Annie','Nami','Warwick'],'CHAOS',enemyItem)];
+  const values={'/liveclientdata/activeplayer':{riotId:own.riotId,currentGold:425,level:1},'/liveclientdata/playerlist':players,'/liveclientdata/gamestats':{gameMode:'CLASSIC',mapNumber:11,gameTime:25},'/liveclientdata/eventdata':{Events:[]}};
   const request=new EventEmitter(),send=()=>{assert.ok(Object.hasOwn(values,options.path));const response=new EventEmitter();response.statusCode=200;callback(response);response.emit('data',Buffer.from(JSON.stringify(values[options.path])));response.emit('end');};
   if(allowLive)queueMicrotask(send);else heldLive.push(send);
   return request;
@@ -138,6 +140,18 @@ async function run(){
   await until(()=>heldLive.length===4,'Recovered guide did not request live updates');
  }finally{allowLive=true;for(const reply of heldLive)reply();heldLive=[];}
  await until(()=>j(gear,'window.guide.bootstrap().then(p=>p.model.live?.gold===425)'),'Live data did not appear after guide recovery');
+ const totals=()=>j(economy,`(()=>{const row=document.querySelector('.hex-economy-totals');if(!row)return null;const diff=row.querySelector('b'),rect=row.getBoundingClientRect();return {ally:row.querySelector('.ally').textContent,enemy:row.querySelector('.enemy').textContent,diff:diff.textContent,color:getComputedStyle(diff).color,fits:rect.bottom<=innerHeight&&rect.right<=innerWidth&&[...row.children].every(child=>child.getBoundingClientRect().right<=rect.right+.01)};})()`);
+ await until(async()=>(await totals())?.diff==='+1,250','Complete public equipment did not show a team lead');
+ await capture('economy-team-lead.png',economy);
+ assert.deepEqual(await totals(),{ally:'我 1,500',enemy:'敌 250',diff:'+1,250',color:'rgb(124, 230, 163)',fits:true});
+ await j(main,'window.buddy.openGuide()');
+ await until(()=>j(economy,'window.hexMicro.bootstrap().then(({context,view})=>window.hexMicro.control("line",{context,view}))'),'Economy line control did not accept the current view');
+ await until(()=>j(economy,'document.documentElement.dataset.layout==="line"'),'Economy did not switch to compact layout');
+ enemyItem=1036;
+ await j(main,'window.buddy.openGuide()');
+ await until(async()=>(await totals())?.diff==='-250','Live enemy equipment did not update the team difference');
+ assert.deepEqual(await totals(),{ally:'我 1,500',enemy:'敌 1,750',diff:'-250',color:'rgb(255, 148, 151)',fits:true});
+ await capture('economy-team-trail.png',economy);
  for(const [action,value]of [['layout','details'],['ball'],['strip'],['collapse']])assert.equal(await j(gear,`window.guide.control(${JSON.stringify(action)},${JSON.stringify(value)}).then(()=>false,()=>true)`),true);
  assert.equal(await j(gear,'!!document.querySelector("[data-tab],[data-action=layout]")'),false);assert(gear.getBounds().width<=500&&gear.getBounds().height<=400);await capture('rift-gear.png',gear);
 

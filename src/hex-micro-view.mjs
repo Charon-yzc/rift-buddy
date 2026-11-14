@@ -13,16 +13,27 @@ export function hexEconomyCells(equipment,side){
  });
 }
 
+const goldNumber=new Intl.NumberFormat('zh-CN',{maximumFractionDigits:0});
+const formatGold=value=>Number.isFinite(value)?goldNumber.format(value):'—';
+function hexEconomyTotals(equipment){
+ const ally=equipment?.ally?.value,enemy=equipment?.enemy?.value,difference=equipment?.difference;
+ const known=equipment?.available===true,hasDifference=known&&[ally,enemy,difference].every(Number.isFinite);
+ const status=hasDifference?(difference>0?'ahead':difference<0?'behind':'tied'):'pending';
+ const diffText=hasDifference?(difference>0?'+':'')+formatGold(difference):'—';
+ const diffLabel=hasDifference?(difference>0?'我方领先 '+diffText:difference<0?'我方落后 '+formatGold(Math.abs(difference)):'双方持平'):'差值待读取';
+ return `<div class="hex-economy-totals" role="group" aria-label="队伍装备总价值"><span class="ally" aria-label="我方 ${formatGold(known?ally:null)}">我 ${formatGold(known?ally:null)}</span><span class="enemy" aria-label="敌方 ${formatGold(known?enemy:null)}">敌 ${formatGold(known?enemy:null)}</span><b data-economy-diff="${status}" aria-label="${diffLabel}">${diffText}</b></div>`;
+}
+
 export function hexEconomyView(equipment,image){
  const rows=side=>{
   const cells=hexEconomyCells(equipment,side);
   return `<div class="hex-economy-icons ${side}" aria-label="${side==='ally'?'我方':'敌方'}英雄">${cells.map(p=>p?`<span data-micro-hint="${e(p.name+' · 公开装备价值')}">${image('champion',p.id,p.name)}</span>`:'<span class="hex-micro-empty" aria-label="英雄尚未读取"></span>').join('')}</div><div class="hex-economy-values ${side}" aria-label="公开装备标价估算">${cells.map(p=>`<span data-micro-hint="${e(p?p.name+' · '+(p.value===null?'装备尚未读全':p.value+' 金，按公开装备标价估算'):'尚未读取')}">${p?.value===null||!p?'—':p.value}</span>`).join('')}</div>`;
  };
- return `<div class="hex-micro-economy">${rows('ally')}${rows('enemy')}</div>`;
+ return `<div class="hex-micro-economy">${rows('ally')}${rows('enemy')}${hexEconomyTotals(equipment)}</div>`;
 }
 
 export function hexMicroLineView(value,image){
- if(value.kind==='economy')return `<div class="hex-micro-line hex-economy-line">${['ally','enemy'].map(side=>`<div class="${side}">${hexEconomyCells(value.equipment,side).map(p=>p?`<span data-micro-hint="${e(p.name+' · 公开装备价值')}">${image('champion',p.id,p.name)}<small>${p.value??'—'}</small></span>`:'<span class="hex-micro-empty"></span>').join('')}</div>`).join('')}</div>`;
+ if(value.kind==='economy')return `<div class="hex-micro-line hex-economy-line">${['ally','enemy'].map(side=>`<div class="${side}">${hexEconomyCells(value.equipment,side).map(p=>p?`<span data-micro-hint="${e(p.name+' · 公开装备价值')}">${image('champion',p.id,p.name)}<small>${p.value??'—'}</small></span>`:'<span class="hex-micro-empty"></span>').join('')}</div>`).join('')}${hexEconomyTotals(value.equipment)}</div>`;
  const route=value.routes?.[0];
  if(!route)return `<div class="hex-micro-line hex-micro-pending" data-micro-pending="true">${image('champion',value.hero?.id,value.hero?.name)}<span>—</span></div>`;
  const icons=(rows,kind)=>rows.map(entry=>`<button type="button" class="hex-micro-icon${entry.core?' is-core':''}" data-micro-kind="${kind}" data-micro-id="${e(entry.id)}" aria-label="${e((entry.required?'玩法必需 · ':route.kind==='item-synergy'?'联动条件 · ':entry.core?'核心 · ':'备选 · ')+entry.name)}">${image(kind,entry.id,entry.name)}</button>`).join('');

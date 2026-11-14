@@ -117,6 +117,32 @@ async function boot(){
   ...(app.isPackaged?{helperExecutable:path.join(helperRoot,'node.exe'),helperEntry:path.join(helperRoot,'electron/client-helper-entry.mjs'),helperBundleRoot:helperRoot,launcherExecutable:path.join(helperRoot,'connection-launcher.exe')}:{}) ,
    onProgress:message=>{usageCollector?.observe({connected:false},null);publishWindows('client-update',{connected:false,connecting:true,phase:'Offline',message});}});
   const readClientStatus=async()=>{const read=await helper.statusWithTransport(state.preferences?.installPath,state.preferences?.partyIds);latestHistoryTransport=read.transport;return read.client;};
+ const {canSetGameDisplay,readGameDisplayMode,saveBorderless}=await import('../services/game-display.mjs');
+ let gameDisplay=null,gameDisplayScan=null,gameDisplaySaving=false,ignoredGameDisplay=null;
+ const wantsGameDisplay=client=>client.connected&&canSetGameDisplay(client.phase)&&state.preferences.guideAutoShow!==false&&
+  ['guideEquipment','guideEconomy','guideSkills','guideJungle'].some(key=>state.preferences[key]!==false);
+ const canReadGameDisplay=client=>wantsGameDisplay(client)&&observedWindows?.gameProcessPresent===false&&!observedWindows.game;
+ const showGameDisplay=client=>canReadGameDisplay(client)&&gameDisplay?.mode==='fullscreen'&&gameDisplay.transport===latestHistoryTransport&&
+  ignoredGameDisplay!==latestHistoryTransport&&helper.transportCurrent(latestHistoryTransport);
+ function scanGameDisplay(){
+  const transport=latestHistoryTransport,previous=gameDisplay;
+  if(!canReadGameDisplay(latestClient)||!transport||gameDisplayScan||gameDisplaySaving||ignoredGameDisplay===transport||gameDisplay?.transport===transport&&Date.now()-gameDisplay.at<8000)return;
+  gameDisplayScan=(async()=>{
+   let mode='unknown',directory;
+   try{
+    const current=await helper.displayContext(transport,true);
+    if(canSetGameDisplay(current.phase)&&current.directory){directory=current.directory;mode=await readGameDisplayMode(directory);}
+   }catch{}
+   if(gameDisplaySaving||gameDisplay!==previous||ignoredGameDisplay===transport||transport!==latestHistoryTransport||!helper.transportCurrent(transport)||!canReadGameDisplay(latestClient))return;
+   gameDisplay={mode,transport,directory,at:Date.now()};
+   publishWindows('client-update',forRenderer(latestClient));
+  })().finally(()=>gameDisplayScan=null);
+ }
+ function assertGameDisplayWritable(transport){
+  if(transport!==latestHistoryTransport||!helper.transportCurrent(transport)||!wantsGameDisplay(latestClient))throw Error('当前已无法切换，下一局开始前可以重试');
+  const age=Date.now()-observedAt;
+  if(age<0||age>=OBSERVATION_MAX_AGE_MS||observedWindows?.gameProcessPresent!==false||observedWindows.game)throw Error('请在进局前切换，游戏运行时无法应用');
+ }
   guard('match-history',async(operation,payload)=>{
    if(!['page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))throw Error('不支持此战绩操作');
    return helper.history(operation,payload);
@@ -547,7 +573,7 @@ async function boot(){
  const decorateRoom=snapshot=>{const identity=snapshot?.mode==='idle'?'':snapshot?.room||'';if(identity!==ballotRoom){roomBallot=null;roomPublicShare=null;ballotRoom=identity;}return decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});};
  // The sandboxed renderer never needs the lobby identifier or the raw identity
  // used as the room nickname: only this process derives the room from them.
- const forRenderer=client=>{if(!client)return client;const {own,party,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(own?.riotId?{playerName:own.riotId}:{}),...(party?{party:cleanParty}:{})};};
+ const forRenderer=client=>{if(!client)return client;const {own,party,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(showGameDisplay(client)?{gameDisplay:'fullscreen'}:{}),...(own?.riotId?{playerName:own.riotId}:{}),...(party?{party:cleanParty}:{})};};
  // Closing the auto room always clears the whole auto state, so a later
  // re-enable starts clean instead of inheriting a stale failure or pin. The
  // cancelled key lets an in-flight handshake tell a local close apart from a
@@ -775,7 +801,24 @@ async function boot(){
  },true);
  guard('data-snapshot',()=>({data,revision:dataRevision}));
  const {windowInfo}=await import('../services/window-info.mjs');
- guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:forRenderer(latestClient),companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
+ guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:forRenderer(latestClient),companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game,gameProcessPresent:observedWindows?.gameProcessPresent,gameExclusiveFullscreen:observedWindows?.gameExclusiveFullscreen}));
+ guard('game-display',async action=>{
+  if(!['borderless','dismiss'].includes(action))throw Error('不支持的窗口设置');
+  if(gameDisplaySaving||!showGameDisplay(latestClient))throw Error('当前窗口提示已变化');
+  const {transport,directory}=gameDisplay;
+  if(action==='dismiss'){ignoredGameDisplay=transport;publishWindows('client-update',forRenderer(latestClient));return;}
+  const assertWritable=()=>assertGameDisplayWritable(transport);
+  assertWritable();gameDisplaySaving=true;
+  try{
+   const current=await helper.displayContext(transport,true);
+   if(!canSetGameDisplay(current.phase)||current.directory!==directory)throw Error('客户端状态或游戏目录已变化，请重试');
+   await saveBorderless(directory,{confirm:async()=>{
+    if(!canSetGameDisplay((await helper.displayContext(transport,false)).phase))throw Error('游戏已开始，请在下一局开始前切换');
+   },beforeWrite:assertWritable});
+   gameDisplay={mode:'borderless',transport,directory,at:Date.now()};
+   publishWindows('client-update',forRenderer(latestClient));
+  }catch(error){gameDisplay.at=0;throw error;}finally{gameDisplaySaving=false;}
+ });
  guard('companion-mode',(value,{surface})=>{if(typeof value!=='boolean')throw Error('窗口模式格式不正确');const operation=companion.setMode(value);return {...companion.layout(surface),opened:value?operation.docked:undefined,reason:operation.reason};},true);
  guard('open-main-page',destination=>{
   if(!destination||!['settings','reference'].includes(destination.route)||destination.route==='reference'&&(!data.champions.some(c=>c.id===destination.id)||!['skills','changes'].includes(destination.tab)))throw Error('页面不正确');
@@ -1062,7 +1105,7 @@ async function boot(){
    if(keepMainHidden&&!mainHeldForGame&&!mainExplicitInGame&&win){win.hide();mainRelease.request(win);}
    else if(!keepMainHidden){mainExplicitInGame=false;mainRelease.cancel();if(!win&&!mainDismissed)createWindow({automatic:true});}
    mainHeldForGame=keepMainHidden;
-   queueRoomAuto();publishWindows('client-update',forRenderer(latestClient));setImmediate(()=>applyStagedSelection());
+   queueRoomAuto();publishWindows('client-update',forRenderer(latestClient));scanGameDisplay();setImmediate(()=>applyStagedSelection());
    // A confirmed draft can display the plan while the game API is loading.
    // The same read can supply the hero later when the draft wasn't observed.
    if(readFirstLive&&!liveTask)pollLive(true).catch(()=>diagnostic('initial live read failed'));
@@ -1509,7 +1552,7 @@ async function boot(){
  const checkStatistics=()=>{if(state.preferences.autoCheck!==false&&!quitting)dataFeed.check().catch(()=>{});};
  dataFeedStartup=setTimeout(checkStatistics,10000);dataFeedTimer=setInterval(checkStatistics,60000);
  diagnostic(`guide-hotkey-registered ${guideHotkeyAvailable}`);
- try{const {observeWindows}=await import('../services/window-observer.mjs');windowObserver=await observeWindows({root,onSnapshot:value=>{const previousObservationAge=Date.now()-observedAt,previousSafeClient=!!observedWindows?.client&&!observedWindows?.game&&previousObservationAge>=0&&previousObservationAge<OBSERVATION_MAX_AGE_MS;const dip=rect=>rect?{...rect,...screen.screenToDipRect(null,rect)}:null;const clientBounds=dip(value.client),gameBounds=dip(value.game);observedWindows={client:value.client?{pixels:value.client,dip:clientBounds,minimized:value.client.minimized,foreground:value.client.foreground}:null,game:value.game?{pixels:value.game,dip:gameBounds,minimized:value.game.minimized,foreground:value.game.foreground}:null};observedAt=Date.now();const safeClient=!!observedWindows.client&&!observedWindows.game;if(!safeClient)clientWakePending=false;else if(!previousSafeClient)clientWakePending=true;mainPeek.sync(true,!!clientBounds?.foreground||!!gameBounds?.foreground);companion.observe(clientBounds);guide.setGameBounds(gameBounds);observeGameWindow(!!gameBounds);if(wakeClientRead())status().catch(()=>{});},onError:message=>{observedWindows=null;observedAt=0;clientWakePending=false;mainPeek.sync(true,false);companion.observe(null);observeGameWindow(false,true);diagnostic(message);}});}catch{diagnostic('window observer unavailable');}
+ try{const {observeWindows}=await import('../services/window-observer.mjs');windowObserver=await observeWindows({root,onSnapshot:value=>{const previousObservationAge=Date.now()-observedAt,previousSafeClient=!!observedWindows?.client&&!observedWindows?.game&&previousObservationAge>=0&&previousObservationAge<OBSERVATION_MAX_AGE_MS;const dip=rect=>rect?{...rect,...screen.screenToDipRect(null,rect)}:null;const clientBounds=dip(value.client),gameBounds=dip(value.game);observedWindows={client:value.client?{pixels:value.client,dip:clientBounds,minimized:value.client.minimized,foreground:value.client.foreground}:null,game:value.game?{pixels:value.game,dip:gameBounds,minimized:value.game.minimized,foreground:value.game.foreground}:null,gameProcessPresent:value.gameProcessPresent,gameExclusiveFullscreen:value.gameExclusiveFullscreen};observedAt=Date.now();const safeClient=!!observedWindows.client&&!observedWindows.game;if(!safeClient)clientWakePending=false;else if(!previousSafeClient)clientWakePending=true;mainPeek.sync(true,!!clientBounds?.foreground||!!gameBounds?.foreground);companion.observe(clientBounds);guide.setGameBounds(gameBounds);observeGameWindow(!!gameBounds);if(wakeClientRead())status().catch(()=>{});},onError:message=>{observedWindows=null;observedAt=0;clientWakePending=false;mainPeek.sync(true,false);companion.observe(null);observeGameWindow(false,true);diagnostic(message);}});}catch{diagnostic('window observer unavailable');}
  if(process.argv.includes('--show-guide'))guide.show();
  diagnostic(`hotkey-registered ${hotkeyAvailable}`);
 }

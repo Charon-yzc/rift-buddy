@@ -3,9 +3,12 @@ import fs from 'node:fs/promises';import path from 'node:path';import {spawn} fr
 import {defaultState,saveState} from '../services/storage.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 const root=await fs.mkdtemp(path.resolve('.local/game-transition-smoke-')),state=defaultState();
-state.preferences.autoSync=false;state.preferences.clientCompanion=false;state.preferences.autoCheck=false;state.preferences.appUpdateCheck=false;state.preferences.autoLive=false;state.preferences.installPath=path.join(root,'client-fixture');
+state.preferences.autoSync=false;state.preferences.clientCompanion=true;state.preferences.autoCheck=false;state.preferences.appUpdateCheck=false;state.preferences.autoLive=false;state.preferences.installPath=path.join(root,'client-fixture');
 state.draft={slots:createSlots(),style:'balanced',scope:'party',clientGameId:'101',playerPosition:{role:'support',cellId:1}};
 Object.assign(state.draft.slots.find(s=>s.role==='support'),{champion:'Ashe',locked:true,manualPosition:true,clientCellId:1});
-await fs.mkdir(state.preferences.installPath);await fs.writeFile(path.join(state.preferences.installPath,'lockfile'),'LeagueClient:1:23456:isolated-test-only:https');await saveState(root,state);
+await fs.mkdir(path.join(state.preferences.installPath,'Config'),{recursive:true});await fs.writeFile(path.join(state.preferences.installPath,'lockfile'),'LeagueClient:1:23456:isolated-test-only:https');
+await fs.writeFile(path.join(state.preferences.installPath,'LeagueClient.exe'),'isolated fixture marker');
+await fs.writeFile(path.join(state.preferences.installPath,'Config','game.cfg'),'[General]\r\nWindowMode=0\r\nWidth=2560\r\n');
+await saveState(root,state);
 const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-game-transition.cjs')],{cwd:path.resolve('.'),env:{...process.env,RIFT_BUDDY_USER_DATA:root},windowsHide:true,stdio:'inherit'});
 const timer=setTimeout(()=>child.kill(),90000);try{const[code]=await once(child,'exit');if(code!==0)throw Error(`Game transition smoke failed (${code}); ${root}`);await fs.writeFile('.local/latest-game-transition-smoke.json',JSON.stringify({root},null,2));}finally{clearTimeout(timer);}

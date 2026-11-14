@@ -3,34 +3,10 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {discoverClient,lcuRequest} from './lcu.mjs';
 import {itemSetTitlePrefix,validateItemSet} from '../src/core/item-sets.mjs';
+import {installedGameDirectory,localDirectory as directory,samePath} from './game-installation.mjs';
 let pending=Promise.resolve();
-const samePath=(a,b)=>path.resolve(a).toLowerCase()===path.resolve(b).toLowerCase();
-async function directory(filename,io){
- const absolute=path.resolve(filename),root=path.parse(absolute).root;
- let current=root;
- for(const part of absolute.slice(root.length).split(path.sep).filter(Boolean)){
-  current=path.join(current,part);const stat=await io.lstat(current);
-  if(!stat.isDirectory()||stat.isSymbolicLink())throw Error('游戏目录包含重定向或异常文件，请使用导出 JSON');
- }
- if(!samePath(await io.realpath(absolute),absolute))throw Error('游戏目录包含重定向，请使用导出 JSON');
- return absolute;
-}
-async function marker(root,name,io){
- try{const stat=await io.lstat(path.join(root,name));return stat.isFile()&&!stat.isSymbolicLink();}catch{return false;}
-}
 async function recommendedDirectory(installDir,champion,io){
- if(typeof installDir!=='string'||installDir.length>500||!path.isAbsolute(installDir)||/[\r\n\0]/.test(installDir)||/^(?:\\\\|\/\/)/.test(installDir)||path.resolve(installDir)===path.parse(path.resolve(installDir)).root)throw Error('客户端未提供可确认的本地游戏目录，请使用导出 JSON');
- const installed=await directory(installDir,io),name=path.basename(installed).toLowerCase();let game;
- if(name==='leagueclient'&&await marker(installed,'LeagueClient.exe',io)){
-  game=await directory(path.join(installed,'..','Game'),io);
-  if(!await marker(game,'League of Legends.exe',io))throw Error('未能确认国服游戏目录，请使用导出 JSON');
- }else if(await marker(installed,'LeagueClient.exe',io))game=installed;
- else if(name==='game'&&await marker(installed,'League of Legends.exe',io))game=installed;
- else{
-  const client=await directory(path.join(installed,'LeagueClient'),io),candidate=await directory(path.join(installed,'Game'),io);
-  if(!await marker(client,'LeagueClient.exe',io)||!await marker(candidate,'League of Legends.exe',io))throw Error('未能确认游戏目录，请使用导出 JSON');
-  game=candidate;
- }
+ const game=await installedGameDirectory(installDir,io);
  let target=game;
  // On-disk sets are scoped by their directory, not associatedChampions.
  if(!/^[A-Za-z][A-Za-z0-9]{0,49}$/.test(champion.id))throw Error('无法确认英雄装备集目录，请使用导出 JSON');
@@ -124,7 +100,7 @@ async function writeItemSet({itemSet,data,installPath=''},{discover=discoverClie
  const champion=data.champions.find(c=>c.key===selected.associatedChampions[0]);let target,game;
  try{({target,game}=await recommendedDirectory(await request(auth,'/data-store/v1/install-dir'),champion,io));}catch(error){
   if(error.code==='EACCES'||error.code==='EPERM')throw Error('没有写入游戏目录的权限，请确认 Windows 权限后重试，或导出 JSON');
-  if(error.code)throw Error('未能确认游戏装备集目录，请使用导出 JSON');throw error;
+  if(error.code)throw Error('未能确认游戏装备集目录，请使用导出 JSON');throw Error(error.message+'，请使用导出 JSON');
  }
  const filename=path.join(target,selected.uid+'.json'),task=(async()=>{
   const legacyDirectory=path.join(game,'Config','Global','Recommended'),legacyFilename=path.join(legacyDirectory,selected.uid+'.json');let legacy=null;

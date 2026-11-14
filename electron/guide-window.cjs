@@ -242,7 +242,14 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
    else if(behavior==='collapse'&&!isHex()&&!isStrip()){await save({...getState(),compact:true,collapsed:false});applyMode();}
   }
  }
- return {show,hide,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);peek.destroy();skill.destroy();jungle.destroy();micro.destroy();win?.destroy();},isVisible:()=>micro.visible()||peek.visible()||!!win?.isVisible()||skill.visible()||jungle.visible(),window:()=>win,windowInfo:()=>usesHexMicro()?{hexWindows:micro.info(),visible:micro.visible(),mode:'hex'}:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),compact:isCompact(),skillWidget:skill.info(),jungleWidget:jungle.info(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
+ function windowInfo(){
+  const mode=usesHexMicro()?'hex':'rift',widgets=micro.info();
+  const common={mode,autoShow:getPreferences().guideAutoShow!==false,economy:widgets.economy};
+  if(mode==='hex')return {...common,routes:widgets.routes};
+  const equipment=peek.active()?peek.info?.():win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null;
+  return {...equipment,...common,skill:skill.info(),jungle:jungle.info()};
+ }
+ return {show,hide,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,windowInfo,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);peek.destroy();skill.destroy();jungle.destroy();micro.destroy();win?.destroy();},isVisible:()=>micro.visible()||peek.visible()||!!win?.isVisible()||skill.visible()||jungle.visible(),window:()=>win};
 };
 module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;
 module.exports.cursorInBounds=cursorInBounds;

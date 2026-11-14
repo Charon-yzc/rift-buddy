@@ -14,7 +14,7 @@ export function windowSnapshot(raw){
   if(!value||!['x','y','width','height'].every(k=>Number.isInteger(value[k]))||value.width<200||value.height<100||value.width>20000||value.height>20000||Math.abs(value.x)>50000||Math.abs(value.y)>50000)return null;
   return {x:value.x,y:value.y,width:value.width,height:value.height,minimized:value.minimized===true,foreground:value.foreground===true};
  };
- return {client:bounds(raw?.client),game:bounds(raw?.game)};
+ return {client:bounds(raw?.client),game:bounds(raw?.game),gameProcessPresent:typeof raw?.gameProcessPresent==='boolean'?raw.gameProcessPresent:null,gameExclusiveFullscreen:raw?.gameProcessPresent===true&&raw?.gameExclusiveFullscreen===true};
 }
 export async function observeWindows({root,onSnapshot,onError=()=>{}}){
  if(process.platform!=='win32')return {stop(){}};
